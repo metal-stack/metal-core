@@ -1,0 +1,18 @@
+version: "3"
+
+services:
+  pixiecore:
+    image: danderson/pixiecore
+    container_name: pixiecore
+    command: ["api", "http://172.17.0.1:4242"]
+    network_mode: bridge
+
+  metalcore:
+    build: .
+    image: metalcore
+    container_name: metalcore
+    ports:
+      - "4242:4242"
+    depends_on:
+      - pixiecore
+    network_mode: bridge
