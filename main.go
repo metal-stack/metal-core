@@ -36,16 +36,16 @@ func imageEndpoint(w http.ResponseWriter, r *http.Request) {
 	resp := struct {
 		K string   `json:"kernel"`
 		I []string `json:"initrd"`
+		C string   `json:"cmdline"`
 	}{
-		K: "http://tinycorelinux.net/7.x/x86/release/distribution_files/vmlinuz64",
+		K: "file:///image/pxeboot-kernel",
 		I: []string{
-			"http://tinycorelinux.net/7.x/x86/release/distribution_files/rootfs.gz",
-			"http://tinycorelinux.net/7.x/x86/release/distribution_files/modules64.gz",
+			"file:///image/pxeboot-initrd.img",
 		},
+		C: "console=tty0",
 	}
 
 	if err := json.NewEncoder(w).Encode(&resp); err != nil {
 		panic(err)
 	}
 }
-
