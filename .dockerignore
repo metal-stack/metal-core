@@ -3,4 +3,5 @@
 bin
 docker-compose.yaml
 Dockerfile
+images
 *.md

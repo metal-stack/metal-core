@@ -9,15 +9,15 @@ import (
 
 func bootEndpoint(w http.ResponseWriter, r *http.Request) {
 	mac := mux.Vars(r)["mac"]
-	log.Printf("Serving boot config for mac: %s", mac)
+	log.Printf("Serving boot config for mac \"%v\"", mac)
 	resp := struct {
 		K string   `json:"kernel"`
 		I []string `json:"initrd"`
 		C string   `json:"cmdline"`
 	}{
-		K: "file:///image/pxeboot-kernel",
+		K: "file:///images/pxeboot-kernel",
 		I: []string{
-			"file:///image/pxeboot-initrd.img",
+			"file:///images/pxeboot-initrd.img",
 		},
 		C: "console=tty0",
 	}

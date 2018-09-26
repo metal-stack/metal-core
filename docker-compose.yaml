@@ -1,11 +1,15 @@
-version: "3"
+version: "2"
 
 services:
   pixiecore:
     image: danderson/pixiecore
     container_name: pixiecore
-    command: ["api", "http://172.17.0.1:4242"]
-    network_mode: bridge
+    command: ["api", "http://10.10.10.10:4242"]
+    volumes:
+      - ./images:/images
+    networks:
+      metalcore:
+        ipv4_address: 10.10.10.2
 
   metalcore:
     build: .
@@ -15,4 +19,14 @@ services:
       - "4242:4242"
     depends_on:
       - pixiecore
-    network_mode: bridge
+    networks:
+      metalcore:
+        ipv4_address: 10.10.10.10
+
+networks:
+  metalcore:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.10.10.0/24
+          gateway: 10.10.10.1
