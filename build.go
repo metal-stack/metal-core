@@ -10,3 +10,8 @@ import (
 func Build() error {
 	return sh.Run("go", "build", "-o", "bin/metalcore")
 }
+
+// Creates the binary in the current directory. It will overwrite any existing binary.
+func Docker() error {
+	return sh.Run("docker", "build", "-t", "metalcore", ".")
+}
