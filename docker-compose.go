@@ -8,9 +8,10 @@ import (
 
 // Starts a test environment.
 func Up() error {
-	if err := Build(); err != nil {
+	build := Build{}
+	if err := build.Binary(); err != nil {
 		return err
 	}
-	return sh.Run("docker-compose", "up")
+	return sh.Run("docker-compose", "up", "--build")
 }
 

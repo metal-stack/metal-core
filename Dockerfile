@@ -10,7 +10,7 @@ ENV CGO_ENABLED=0 \
 
 RUN go mod download \
  && go get github.com/magefile/mage \
- && mage build
+ && mage build:binary
 
 FROM alpine:latest
 
