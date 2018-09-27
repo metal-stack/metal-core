@@ -16,11 +16,10 @@ func bootEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	log.Infof("Request metal API for a device with mac \"%v\"", mac)
 
-	statusCode, device := metal_api.FindDevice(mac)
+	statusCode, devices := metal_api.FindDevice(mac)
 
 	var response interface{}
-	if statusCode == http.StatusOK {
-		device.Log()
+	if statusCode == http.StatusOK && len(devices) > 0 {
 		log.Error("Device should not be available")
 		response = createBootNothingResponse()
 	} else {

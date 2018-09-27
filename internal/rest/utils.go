@@ -3,10 +3,11 @@ package rest
 import (
 	"encoding/json"
 	"fmt"
-	log "github.com/sirupsen/logrus"
-	"gopkg.in/resty.v1"
 	"net/http"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
+	"gopkg.in/resty.v1"
 )
 
 func RespondError(w http.ResponseWriter, errorCode int, msg string) {
