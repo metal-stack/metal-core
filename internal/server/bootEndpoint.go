@@ -40,7 +40,11 @@ func createBootDiscoveryImage() interface{} {
 	} else {
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
-		cmdLine = strings.TrimSpace(body)
+		if err != nil {
+			log.Error("pxeboot-cmdline could not be retrieved")
+		} else {
+			cmdLine = strings.TrimSpace(string(body))
+		}
 	}
 	return struct {
 		Kernel      string   `json:"kernel"`
