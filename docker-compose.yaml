@@ -4,12 +4,10 @@ services:
   pixiecore:
     image: danderson/pixiecore
     container_name: pixiecore
-    command: ["api", "http://10.10.10.10:4242"]
+    command: ["api", "http://localhost:4242", "--dhcp-no-bind"]
     volumes:
       - ./images:/images
-    networks:
-      metalcore:
-        ipv4_address: 10.10.10.2
+    network_mode: host
 
   metalcore:
     build: .
@@ -19,14 +17,7 @@ services:
       - "4242:4242"
     depends_on:
       - pixiecore
-    networks:
-      metalcore:
-        ipv4_address: 10.10.10.10
-
-networks:
-  metalcore:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 10.10.10.0/24
-          gateway: 10.10.10.1
+    network_mode: host
+    environment:
+      - METALCORE_LOG_LEVEL=DEBUG
+      - METALCORE_SERVER_PORT=4242

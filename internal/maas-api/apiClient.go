@@ -1,2 +1,0 @@
-package maas_api
-

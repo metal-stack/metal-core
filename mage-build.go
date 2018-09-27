@@ -9,12 +9,13 @@ import (
 
 type Build mg.Namespace
 
-// Creates the binary metalcore in the bin subdirectory. It will overwrite any existing binary.
+// Create the binary metalcore in the bin subdirectory (it will overwrite any existing binary)
 func (Build) Binary() error {
+	Fmt()
 	return sh.Run("go", "build", "-o", "bin/metalcore")
 }
 
-// Creates the docker image metalcore that runs the binary metalcore by default.
+// Create the docker image metalcore that runs the binary metalcore by default
 func (b Build) Image() error {
 	if err := b.Binary(); err != nil {
 		return err

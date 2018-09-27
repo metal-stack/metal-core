@@ -2,7 +2,7 @@
 
 package main
 
-// Run all tests.
+// Run all tests
 func Test() error {
 	return nil
 }
