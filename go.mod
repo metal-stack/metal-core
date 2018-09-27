@@ -6,4 +6,5 @@ require (
 	github.com/kelseyhightower/envconfig v1.3.0
 	github.com/magefile/mage v1.6.2
 	github.com/sirupsen/logrus v1.1.0
+	gopkg.in/resty.v1 v1.9.1
 )

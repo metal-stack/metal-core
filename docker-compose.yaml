@@ -1,6 +1,18 @@
 version: "2"
 
 services:
+  metal-api:
+    image: maas-service_maas-api
+    container_name: metal-api
+    tty: true
+    ports:
+      - "8080:8080"
+    network_mode: host
+    environment:
+      METAL_API_WITH_MOCK_DATA: "true"
+      METAL_API_BIND_ADDR: localhost
+    command: /maas-api
+
   pixiecore:
     image: danderson/pixiecore
     container_name: pixiecore
@@ -15,9 +27,12 @@ services:
     container_name: metalcore
     ports:
       - "4242:4242"
-    depends_on:
-      - pixiecore
     network_mode: host
     environment:
-      - METALCORE_LOG_LEVEL=DEBUG
-      - METALCORE_SERVER_PORT=4242
+      METALCORE_LOG_LEVEL: DEBUG
+      METALCORE_SERVER_PROTOCOL: http
+      METALCORE_SERVER_ADDRESS: localhost
+      METALCORE_SERVER_PORT: 4242
+      METALCORE_METAL_API_PROTOCOL: http
+      METALCORE_METAL_API_ADDRESS: localhost
+      METALCORE_METAL_API_PORT: 8080

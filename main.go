@@ -2,7 +2,8 @@ package main
 
 import (
 	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/domain"
-	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/rest"
+	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/metal-api"
+	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/server"
 	"github.com/kelseyhightower/envconfig"
 	log "github.com/sirupsen/logrus"
 	"os"
@@ -13,6 +14,7 @@ var logLevels map[string]log.Level
 
 func init() {
 	//log.SetFormatter(&log.JSONFormatter{})
+	log.SetFormatter(&log.TextFormatter{})
 	log.SetOutput(os.Stdout)
 	logLevels = make(map[string]log.Level, 6)
 	logLevels["DEBUG"] = log.DebugLevel
@@ -32,7 +34,10 @@ func main() {
 	log.SetLevel(fetchLogLevel(config.LogLevel))
 	config.Log()
 
-	rest.RunAPIServer(config.ServerPort)
+	// inject config
+	metal_api.Config = config
+
+	server.RunAPIServer(config.ServerProtocol, config.ServerAddress, config.ServerPort)
 }
 
 func fetchLogLevel(level string) log.Level {

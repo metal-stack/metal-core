@@ -1,4 +1,4 @@
-package rest
+package server
 
 import (
 	"fmt"
@@ -8,20 +8,24 @@ import (
 	"time"
 )
 
-func RunAPIServer(port int) {
+func RunAPIServer(protocol string, address string, port int) {
 	router := mux.NewRouter()
 	router.HandleFunc("/v1/boot/{mac}", bootEndpoint).Methods("GET").Name("boot")
 	router.Use(loggingMiddleware)
 
 	srv := &http.Server{
-		Addr:         fmt.Sprintf("0.0.0.0:%d", port),
+		Addr:         fmt.Sprintf("%v:%d", address, port),
 		WriteTimeout: time.Second * 15,
 		ReadTimeout:  time.Second * 15,
 		IdleTimeout:  time.Second * 60,
 		Handler:      router,
 	}
 
-	log.WithField("port", port).Info("Starting API Server")
+	log.WithFields(log.Fields{
+		"protocol": protocol,
+		"address":  address,
+		"port":     port,
+	}).Info("Starting API Server")
 
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal(err)

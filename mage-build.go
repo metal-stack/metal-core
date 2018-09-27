@@ -20,5 +20,5 @@ func (b Build) Image() error {
 	if err := b.Binary(); err != nil {
 		return err
 	}
-	return sh.Run("docker", "build", "-t", "metalcore", ".")
+	return sh.Run("docker-compose", "build")
 }
