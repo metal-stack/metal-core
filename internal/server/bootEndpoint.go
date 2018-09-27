@@ -16,7 +16,7 @@ func bootEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	log.Infof("Request metal API for a device with mac \"%v\"", mac)
 
-	statusCode, devices := metal_api.FindDevice(mac)
+	statusCode, devices := metal_api.FindDevices(mac)
 
 	var response interface{}
 	if statusCode == http.StatusOK && len(devices) > 0 {
@@ -25,13 +25,13 @@ func bootEndpoint(w http.ResponseWriter, r *http.Request) {
 	} else {
 		log.WithField("statusCode", statusCode).
 			Info("Device not found")
-		response = createBootDiscoveryImage()
+		response = createBootDiscoveryImageResponse()
 	}
 
 	rest.Respond(w, statusCode, response)
 }
 
-func createBootDiscoveryImage() interface{} {
+func createBootDiscoveryImageResponse() interface{} {
 	cmdLine := "console=tty0"
 	resp, err := http.Get("https://blobstore.fi-ts.io/metal/images/pxeboot-cmdline")
 	if err != nil {

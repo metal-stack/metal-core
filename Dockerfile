@@ -3,7 +3,7 @@ ENV CGO_ENABLED=0 \
     GO111MODULE=on \
     GOOS=linux
 WORKDIR /
-COPY go.mod go.sum /
+COPY go.mod  /
 RUN go mod download \
  && go get github.com/magefile/mage
 COPY ./ /
