@@ -1,11 +1,12 @@
 package server
 
 import (
+	"net/http"
+
 	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/metal-api"
 	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/rest"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 )
 
 func bootEndpoint(w http.ResponseWriter, r *http.Request) {
@@ -30,16 +31,17 @@ func bootEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func createBootDiscoveryImage() interface{} {
+	cmdLine, err := http.Get("https://blobstore.fi-ts.io/metal/images/pxeboot-cmdline")
 	return struct {
 		Kernel      string   `json:"kernel"`
 		InitRamDisk []string `json:"initrd"`
 		CommandLine string   `json:"cmdline"`
 	}{
-		Kernel: "file:///images/pxeboot-kernel",
+		Kernel: "https://blobstore.fi-ts.io/metal/images/pxeboot-kernel",
 		InitRamDisk: []string{
-			"file:///images/pxeboot-initrd.img",
+			"https://blobstore.fi-ts.io/metal/images/pxeboot-initrd.img",
 		},
-		CommandLine: "console=tty0",
+		CommandLine: cmdLine,
 	}
 }
 
