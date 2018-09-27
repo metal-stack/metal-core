@@ -1,7 +1,9 @@
 package server
 
 import (
+	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/metal-api"
 	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/rest"
@@ -31,7 +33,15 @@ func bootEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func createBootDiscoveryImage() interface{} {
-	cmdLine, err := http.Get("https://blobstore.fi-ts.io/metal/images/pxeboot-cmdline")
+	cmdLine := "console=tty0"
+	resp, err := http.Get("https://blobstore.fi-ts.io/metal/images/pxeboot-cmdline")
+	if err != nil {
+		log.Error("pxeboot-cmdline could not be retrieved")
+	} else {
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		cmdLine = strings.TrimSpace(body)
+	}
 	return struct {
 		Kernel      string   `json:"kernel"`
 		InitRamDisk []string `json:"initrd"`
