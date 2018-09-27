@@ -35,12 +35,12 @@ func createBootDiscoveryImage() interface{} {
 	cmdLine := "console=tty0"
 	resp, err := http.Get("https://blobstore.fi-ts.io/metal/images/pxeboot-cmdline")
 	if err != nil {
-		log.Error("pxeboot-cmdline could not be retrieved")
+		log.Errorf("pxeboot-cmdline could not be retrieved: %v", err)
 	} else {
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			log.Error("pxeboot-cmdline could not be retrieved")
+			log.Errorf("pxeboot-cmdline could not be retrieved: %v", err)
 		} else {
 			cmdLine = strings.TrimSpace(string(body))
 		}
