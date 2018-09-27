@@ -1,0 +1,10 @@
+---
+version: '1'
+name: metalcore
+username: metal
+registry-host: registry.fi-ts.io
+builds:
+  -
+    name: "metalcore"
+    tags:
+      - latest
