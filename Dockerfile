@@ -11,5 +11,7 @@ RUN mage build:binary
 
 FROM alpine:latest
 LABEL maintainer FI-TS Devops <devops@f-i-ts.de>
+RUN apk update \
+ && apk add ca-certificates
 COPY --from=builder /bin/metalcore /
 ENTRYPOINT ["/metalcore"]
