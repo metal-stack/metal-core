@@ -1,7 +1,7 @@
 package server
 
 import (
-	"io/ioutil"
+	"gopkg.in/resty.v1"
 	"net/http"
 	"strings"
 
@@ -11,6 +11,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type BootResponse struct {
+	Kernel      string   `json:"kernel"`
+	InitRamDisk []string `json:"initrd"`
+	CommandLine string   `json:"cmdline"`
+}
+
 func bootEndpoint(w http.ResponseWriter, r *http.Request) {
 	mac := mux.Vars(r)["mac"]
 
@@ -19,41 +25,28 @@ func bootEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	statusCode, devices := metal_api.FindDevices(mac)
 
-	var response interface{}
-	if len(devices) > 0 {
-		log.WithFields(log.Fields{
-			"statusCode": statusCode,
-			"mac": mac,
-		}).Error("There should not exist a device with given mac")
-		response = createBootNothingResponse()
-	} else {
+	if statusCode == http.StatusOK && len(devices) == 0 {
 		log.WithField("statusCode", statusCode).
 			Info("Device not found")
-		response = createBootDiscoveryImageResponse()
+		rest.Respond(w, http.StatusOK, createBootDiscoveryImageResponse())
+	} else {
+		log.WithFields(log.Fields{
+			"statusCode": statusCode,
+			"mac":        mac,
+		}).Error("There should not exist a device with given mac")
+		rest.Respond(w, http.StatusAccepted, createBootTinyCoreLinuxResponse())
 	}
-
-	rest.Respond(w, statusCode, response)
 }
 
-func createBootDiscoveryImageResponse() interface{} {
+func createBootDiscoveryImageResponse() BootResponse {
 	cmdLine := "console=tty0"
-	resp, err := http.Get("https://blobstore.fi-ts.io/metal/images/pxeboot-cmdline")
-	if err != nil {
-		log.Errorf("pxeboot-cmdline could not be retrieved: %v", err)
+	if response, err := resty.R().Get("https://blobstore.fi-ts.io/metal/images/pxeboot-cmdline"); err != nil {
+		log.WithField("err", err).
+			Error("File 'pxeboot-cmdline' could not be retrieved")
 	} else {
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			log.Errorf("pxeboot-cmdline could not be retrieved: %v", err)
-		} else {
-			cmdLine = strings.TrimSpace(string(body))
-		}
+		cmdLine = strings.TrimSpace(string(response.Body()))
 	}
-	return struct {
-		Kernel      string   `json:"kernel"`
-		InitRamDisk []string `json:"initrd"`
-		CommandLine string   `json:"cmdline"`
-	}{
+	return BootResponse{
 		Kernel: "https://blobstore.fi-ts.io/metal/images/pxeboot-kernel",
 		InitRamDisk: []string{
 			"https://blobstore.fi-ts.io/metal/images/pxeboot-initrd.img",
@@ -62,15 +55,12 @@ func createBootDiscoveryImageResponse() interface{} {
 	}
 }
 
-func createBootNothingResponse() interface{} {
-	return struct {
-		Kernel      string   `json:"kernel"`
-		InitRamDisk []string `json:"initrd"`
-		CommandLine string   `json:"cmdline"`
-	}{
-		Kernel: "file:///images/pxeboot-kernel",
+func createBootTinyCoreLinuxResponse() BootResponse {
+	return BootResponse{
+		Kernel: "http://tinycorelinux.net/7.x/x86/release/distribution_files/vmlinuz64",
 		InitRamDisk: []string{
-			"file:///images/pxeboot-initrd.img",
+			"http://tinycorelinux.net/7.x/x86/release/distribution_files/rootfs.gz",
+			"http://tinycorelinux.net/7.x/x86/release/distribution_files/modules64.gz",
 		},
 		CommandLine: "console=tty0",
 	}

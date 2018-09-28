@@ -10,15 +10,19 @@ import (
 
 // Format all metalcore sources
 func Fmt() {
-	sh.Run("go", "fmt", ".")
-	findPackages := exec.Command("find", ".", "-mindepth", "1", "-type", "d", "-not", "-regex", ".*/\\..*", "-and", "-not", "-regex", ".*/bin.*")
-	if out, err := findPackages.CombinedOutput(); err == nil {
-		packages := strings.Split(string(out[:len(out)-1]), "\n")
-		for _, pkg := range packages {
-			if containsGoSources(pkg) {
-				sh.Run("go", "fmt", pkg)
-			}
+	for _, pkg := range fetchGoPackages() {
+		if containsGoSources(pkg) {
+			sh.Run("go", "fmt", pkg)
 		}
+	}
+}
+
+func fetchGoPackages() []string {
+	findPackages := exec.Command("find", ".", "-mindepth", "1", "-type", "d", "-not", "-regex", ".*/\\..*", "-and", "-not", "-regex", ".*/bin.*")
+	if out, err := findPackages.CombinedOutput(); err == nil && len(out) > 0 {
+		return append(strings.Split(string(out[:len(out)-1]), "\n"), ".")
+	} else {
+		return []string{}
 	}
 }
 

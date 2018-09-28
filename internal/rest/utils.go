@@ -39,7 +39,7 @@ func CreateQueryParameters(keyValuePairs ...string) map[string]string {
 	return m
 }
 
-func Get(protocol string, address string, port int, path string, queryParameters map[string]string, domainObject *interface{}) int {
+func Get(protocol string, address string, port int, path string, queryParameters map[string]string, domainObject interface{}) int {
 	response, err := resty.R().
 		SetQueryParams(queryParameters).
 		SetHeader("Accept", "application/json").

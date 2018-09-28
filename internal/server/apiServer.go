@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func RunAPIServer(address string, port int) {
+func Run(address string, port int) {
 	router := mux.NewRouter()
 	router.HandleFunc("/v1/boot/{mac}", bootEndpoint).Methods("GET").Name("boot")
 	router.Use(loggingMiddleware)

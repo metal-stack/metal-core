@@ -36,7 +36,7 @@ func main() {
 	// inject config
 	metal_api.Config = config
 
-	server.RunAPIServer(config.ServerAddress, config.ServerPort)
+	server.Run(config.ServerAddress, config.ServerPort)
 }
 
 func fetchLogLevel(level string) log.Level {

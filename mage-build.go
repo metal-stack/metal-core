@@ -15,7 +15,7 @@ func (Build) Binary() error {
 	return sh.Run("go", "build", "-o", "bin/metalcore")
 }
 
-// Create the docker image metalcore that runs the binary metalcore by default
+// Create the docker image 'registry.fi-ts.io/metal/metalcore:latest' that runs the binary metalcore by default
 func (b Build) Image() error {
 	if err := b.Binary(); err != nil {
 		return err
