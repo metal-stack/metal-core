@@ -21,10 +21,21 @@ func RegisterDevice(lshw string) (int, domain.Device) {
 	return statusCode, device
 }
 
+func ReportDeviceState(deviceUuid string, state string) int {
+	body := ""
+	//TODO populate body appropriately
+	statusCode := postWithoutResponse("/device/register", body)
+	return statusCode
+}
+
 func get(path string, query map[string]string, domainObject interface{}) int {
 	return rest.Get(Config.MetalApiProtocol, Config.MetalApiAddress, Config.MetalApiPort, path, query, domainObject)
 }
 
 func post(path string, body interface{}, domainObject interface{}) int {
 	return rest.Post(Config.MetalApiProtocol, Config.MetalApiAddress, Config.MetalApiPort, path, body, domainObject)
+}
+
+func postWithoutResponse(path string, body interface{}) int {
+	return rest.PostWithoutResponse(Config.MetalApiProtocol, Config.MetalApiAddress, Config.MetalApiPort, path, body)
 }

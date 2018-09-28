@@ -19,7 +19,11 @@ func RespondError(w http.ResponseWriter, errorCode int, msg string) {
 func Respond(w http.ResponseWriter, returnCode int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(returnCode)
-	if err := json.NewEncoder(w).Encode(payload); err != nil {
+	if payload == nil {
+		log.WithFields(log.Fields{
+			"statusCode": returnCode,
+		}).Info("Sent response")
+	} else if err := json.NewEncoder(w).Encode(payload); err != nil {
 		log.Error(err)
 	} else {
 		log.WithFields(log.Fields{
@@ -53,16 +57,32 @@ func Get(protocol string, address string, port int, path string, queryParameters
 }
 
 func Post(protocol string, address string, port int, path string, body interface{}, domainObject interface{}) int {
-	response, err := resty.R().
-		SetHeader("Accept", "application/json").
-		SetBody(body).
-		Post(fmt.Sprintf("%v://%v:%d/%v", sanitizeProtocol(protocol), sanitizeAddress(address), port, sanitizePath(path)))
+	response, err := post(protocol, address, port, path, body)
 	if err != nil {
 		log.Error(err)
 	} else {
 		unmarshalResponse(response, domainObject)
 	}
 	return response.StatusCode()
+}
+
+func PostWithoutResponse(protocol string, address string, port int, path string, body interface{}) int {
+	response, err := post(protocol, address, port, path, body)
+	if err != nil {
+		log.Error(err)
+	}
+	return response.StatusCode()
+}
+
+func post(protocol string, address string, port int, path string, body interface{}) (*resty.Response, error) {
+	if response, err := resty.R().
+		SetHeader("Accept", "application/json").
+		SetBody(body).
+		Post(fmt.Sprintf("%v://%v:%d/%v", sanitizeProtocol(protocol), sanitizeAddress(address), port, sanitizePath(path))); err != nil {
+		return nil, err
+	} else {
+		return response, nil
+	}
 }
 
 func unmarshalResponse(response *resty.Response, domainObject interface{}) {
