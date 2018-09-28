@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func RunAPIServer(protocol string, address string, port int) {
+func RunAPIServer(address string, port int) {
 	router := mux.NewRouter()
 	router.HandleFunc("/v1/boot/{mac}", bootEndpoint).Methods("GET").Name("boot")
 	router.Use(loggingMiddleware)
@@ -22,9 +22,8 @@ func RunAPIServer(protocol string, address string, port int) {
 	}
 
 	log.WithFields(log.Fields{
-		"protocol": protocol,
-		"address":  address,
-		"port":     port,
+		"address": address,
+		"port":    port,
 	}).Info("Starting API Server")
 
 	if err := srv.ListenAndServe(); err != nil {
@@ -35,7 +34,7 @@ func RunAPIServer(protocol string, address string, port int) {
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.WithField("URI", r.RequestURI).
-			Debug("Request")
+			Debug("Got request")
 		next.ServeHTTP(w, r)
 	})
 }

@@ -13,8 +13,7 @@ import (
 var logLevels map[string]log.Level
 
 func init() {
-	//log.SetFormatter(&log.JSONFormatter{})
-	log.SetFormatter(&log.TextFormatter{})
+	log.SetFormatter(&log.JSONFormatter{})
 	log.SetOutput(os.Stdout)
 	logLevels = make(map[string]log.Level, 6)
 	logLevels["DEBUG"] = log.DebugLevel
@@ -37,7 +36,7 @@ func main() {
 	// inject config
 	metal_api.Config = config
 
-	server.RunAPIServer(config.ServerProtocol, config.ServerAddress, config.ServerPort)
+	server.RunAPIServer(config.ServerAddress, config.ServerPort)
 }
 
 func fetchLogLevel(level string) log.Level {

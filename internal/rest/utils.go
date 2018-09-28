@@ -25,7 +25,7 @@ func Respond(w http.ResponseWriter, returnCode int, payload interface{}) {
 		log.WithFields(log.Fields{
 			"statusCode": returnCode,
 			"payload":    payload,
-		}).Info("Responded")
+		}).Info("Sent response")
 	}
 }
 
@@ -53,7 +53,7 @@ func Get(protocol string, address string, port int, path string, queryParameters
 		log.WithFields(log.Fields{
 			"statusCode": response.StatusCode(),
 			"payload":    string(payload),
-		}).Info("Got")
+		}).Info("Got response")
 	}
 	return response.StatusCode()
 }

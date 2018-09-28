@@ -9,8 +9,7 @@ import (
 type (
 	Config struct {
 		// Valid log levels are: DEBUG, INFO, WARN, ERROR, FATAL and PANIC
-		LogLevel         string `required:"false" default:"DEBUG" desc:"set debug level" envconfig:"log_level"`
-		ServerProtocol   string `required:"false" default:"http" desc:"set server protocol" envconfig:"server_protocol"`
+		LogLevel         string `required:"false" default:"WARN" desc:"set log level" envconfig:"log_level"`
 		ServerAddress    string `required:"false" default:"localhost" desc:"set server address" envconfig:"server_address"`
 		ServerPort       int    `required:"false" default:"4242" desc:"set server port" envconfig:"server_port"`
 		MetalApiProtocol string `required:"false" default:"http" desc:"set metal api protocol" envconfig:"metal_api_protocol"`
@@ -57,13 +56,12 @@ type (
 func (c Config) Log() {
 	log.WithFields(log.Fields{
 		"LogLevel":         c.LogLevel,
-		"ServerProtocol":   c.ServerProtocol,
 		"ServerAddress":    c.ServerAddress,
 		"ServerPort":       c.ServerPort,
 		"MetalApiProtocol": c.MetalApiProtocol,
 		"MetalApiAddress":  c.MetalApiAddress,
 		"MetalApiPort":     c.MetalApiPort,
-	}).Info("Configuration:")
+	}).Info("Configuration")
 }
 
 func (d Device) Log() {
@@ -78,5 +76,5 @@ func (d Device) Log() {
 		"ImageID":      d.Image.ID,
 		"SizeID":       d.Size.ID,
 		"MACAddresses": strings.Join(d.MACAddresses, ", "),
-	}).Info("Device:")
+	}).Info("Device details")
 }
