@@ -51,6 +51,14 @@ type (
 		Size         Size      `json:"size" description:"the size of this device" readOnly:"true"`
 		MACAddresses []string  `json:"macAddresses" description:"the list of mac addresses in this device" readOnly:"true"`
 	}
+	RegisterDeviceRequest struct {
+		UUID       string   `json:"uuid" description:"the uuid of the device to register"`
+		Macs       []string `json:"macs" description:"the mac addresses to register this device with"`
+		FacilityID string   `json:"facilityid" description:"the facility id to register this device with"`
+		SizeID     string   `json:"sizeid" description:"the size id to register this device with"`
+		// Memory     int64  `json:"memory" description:"the size id to assign this device to"`
+		// CpuCores   int    `json:"cpucores" description:"the size id to assign this device to"`
+	}
 )
 
 func (c Config) Log() {

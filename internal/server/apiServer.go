@@ -11,6 +11,7 @@ import (
 func Run(address string, port int) {
 	router := mux.NewRouter()
 	router.HandleFunc("/v1/boot/{mac}", bootEndpoint).Methods("GET").Name("boot")
+	router.HandleFunc("/device/register", registerDeviceEndpoint).Methods("POST").Name("register")
 	router.Use(loggingMiddleware)
 
 	srv := &http.Server{

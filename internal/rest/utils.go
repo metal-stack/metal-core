@@ -44,10 +44,30 @@ func Get(protocol string, address string, port int, path string, queryParameters
 		SetQueryParams(queryParameters).
 		SetHeader("Accept", "application/json").
 		Get(fmt.Sprintf("%v://%v:%d/%v", sanitizeProtocol(protocol), sanitizeAddress(address), port, sanitizePath(path)))
-	payload := response.Body()
 	if err != nil {
 		log.Error(err)
-	} else if err := json.Unmarshal(payload, domainObject); err != nil {
+	} else {
+		unmarshalResponse(response, domainObject)
+	}
+	return response.StatusCode()
+}
+
+func Post(protocol string, address string, port int, path string, body interface{}, domainObject interface{}) int {
+	response, err := resty.R().
+		SetHeader("Accept", "application/json").
+		SetBody(body).
+		Post(fmt.Sprintf("%v://%v:%d/%v", sanitizeProtocol(protocol), sanitizeAddress(address), port, sanitizePath(path)))
+	if err != nil {
+		log.Error(err)
+	} else {
+		unmarshalResponse(response, domainObject)
+	}
+	return response.StatusCode()
+}
+
+func unmarshalResponse(response *resty.Response, domainObject interface{}) {
+	payload := response.Body()
+	if err := json.Unmarshal(payload, domainObject); err != nil {
 		log.Error(err)
 	} else {
 		log.WithFields(log.Fields{
@@ -55,7 +75,6 @@ func Get(protocol string, address string, port int, path string, queryParameters
 			"payload":    string(payload),
 		}).Info("Got response")
 	}
-	return response.StatusCode()
 }
 
 func sanitizeProtocol(protocol string) string {
