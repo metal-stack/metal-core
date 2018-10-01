@@ -12,10 +12,11 @@ import (
 var (
 	logLevels map[string]log.Level
 	config    domain.Config
+	service   metalcore.Service
 )
 
 func main() {
-	metalcore.ApiServer.Run()
+	service.RunServer()
 }
 
 func init() {
@@ -36,7 +37,7 @@ func init() {
 	log.SetLevel(fetchLogLevel(config.LogLevel))
 	config.Log()
 
-	metalcore.CreateAPIServer(config)
+	service = metalcore.NewService(config)
 }
 
 func fetchLogLevel(level string) log.Level {

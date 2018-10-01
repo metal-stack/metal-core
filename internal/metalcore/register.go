@@ -15,7 +15,7 @@ func registerDeviceEndpoint(w http.ResponseWriter, r *http.Request) {
 	} else {
 		log.Info("Register device at Metal API")
 
-		statusCode, device := ApiServer.GetMetalAPIClient().RegisterDevice(string(lshw))
+		statusCode, device := srv.GetMetalAPIClient().RegisterDevice(string(lshw))
 
 		log.WithFields(log.Fields{
 			"statusCode": statusCode,

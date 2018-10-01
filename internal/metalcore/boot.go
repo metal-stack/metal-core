@@ -22,7 +22,7 @@ func bootEndpoint(w http.ResponseWriter, r *http.Request) {
 	log.WithField("mac", mac).
 		Info("Request metal API for a device with given mac")
 
-	statusCode, devices := ApiServer.GetMetalAPIClient().FindDevices(mac)
+	statusCode, devices := srv.GetMetalAPIClient().FindDevices(mac)
 
 	if statusCode == http.StatusOK && len(devices) == 0 {
 		log.WithField("statusCode", statusCode).

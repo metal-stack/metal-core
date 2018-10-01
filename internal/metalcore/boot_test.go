@@ -22,7 +22,7 @@ func TestPXEBoot(t *testing.T) {
 	}()
 
 	go func() {
-		runMetalcoreAPIServer(t)
+		runMetalcoreServer(t)
 	}()
 
 	time.Sleep(200 * time.Millisecond)
@@ -53,7 +53,7 @@ func TestPXEBoot(t *testing.T) {
 	}
 }
 
-func runMetalcoreAPIServer(t *testing.T) {
+func runMetalcoreServer(t *testing.T) {
 	config := domain.Config{
 		ServerAddress: "localhost",
 		ServerPort:    4242,
@@ -61,8 +61,7 @@ func runMetalcoreAPIServer(t *testing.T) {
 	if err := envconfig.Process("metalcore", &config); err != nil {
 		assert.Fail(t, "Cannot fetch configuration")
 	}
-	CreateAPIServer(config)
-	ApiServer.Run()
+	NewService(config).RunServer()
 }
 
 func runMetalAPIServerMock() {

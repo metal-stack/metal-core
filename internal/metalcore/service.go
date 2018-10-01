@@ -3,7 +3,7 @@ package metalcore
 import (
 	"fmt"
 	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/domain"
-	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/metal"
+	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/metalapi"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -11,34 +11,39 @@ import (
 	"time"
 )
 
+var srv Service
+
 type (
-	APIServer interface {
-		GetMetalAPIClient() metal.APIClient
+	Service interface {
+		GetMetalAPIClient() metalapi.Client
 		GetConfig() domain.Config
-		Run()
+		RunServer()
 	}
-	apiServer struct {
-		metalApiClient metal.APIClient
+	service struct {
+		metalApiClient metalapi.Client
 	}
 )
 
-var ApiServer APIServer
-
-func CreateAPIServer(config domain.Config) {
-	ApiServer = apiServer{
-		metalApiClient: metal.NewMetalAPIClient(config),
+func NewService(config domain.Config) Service {
+	srv = service{
+		metalApiClient: metalapi.NewClient(config),
 	}
+	return srv
 }
 
-func (s apiServer) GetMetalAPIClient() metal.APIClient {
+func RunServer() {
+	srv.RunServer()
+}
+
+func (s service) GetMetalAPIClient() metalapi.Client {
 	return s.metalApiClient
 }
 
-func (s apiServer) GetConfig() domain.Config {
+func (s service) GetConfig() domain.Config {
 	return s.GetMetalAPIClient().GetConfig()
 }
 
-func (s apiServer) Run() {
+func (s service) RunServer() {
 	address := s.GetConfig().ServerAddress
 	port := s.GetConfig().ServerPort
 
@@ -72,7 +77,11 @@ func loggingMiddleware(next http.Handler) http.Handler {
 		body, _ := ioutil.ReadAll(r.Body)
 		headers := "{"
 		for k, v := range r.Header {
-			headers += fmt.Sprintf("%v=%v, ", k, v)
+			if len(v) == 1 {
+				headers += fmt.Sprintf("%v=%v, ", k, v[0])
+			} else if len(v) > 1 {
+				headers += fmt.Sprintf("%v=%v, ", k, v)
+			}
 		}
 		if len(headers) > 1 {
 			headers = headers[:len(headers)-1]
