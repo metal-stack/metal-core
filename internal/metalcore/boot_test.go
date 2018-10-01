@@ -3,7 +3,6 @@ package metalcore
 import (
 	"encoding/json"
 	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/domain"
-	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/metal-api"
 	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/rest"
 	"github.com/gorilla/mux"
 	"github.com/kelseyhightower/envconfig"
@@ -18,14 +17,15 @@ import (
 
 func TestPXEBoot(t *testing.T) {
 	// GIVEN
-	config := domain.Config{
-		ServerAddress: "localhost",
-		ServerPort:    4242,
-	}
-	if err := envconfig.Process("metalcore", &config); err != nil {
-		assert.Fail(t, "Cannot fetch configuration")
-	}
-	ApiServer = NewMetalcoreAPIServer(metal_api.NewMetalAPIClient(config))
+	go func() {
+		runMetalAPIServerMock()
+	}()
+
+	go func() {
+		runMetalcoreAPIServer(t)
+	}()
+
+	time.Sleep(200 * time.Millisecond)
 
 	bootResponse := BootResponse{
 		Kernel: "https://blobstore.fi-ts.io/metal/images/pxeboot-kernel",
@@ -36,20 +36,10 @@ func TestPXEBoot(t *testing.T) {
 	}
 	var expected []byte
 	if m, err := json.Marshal(bootResponse); err != nil {
-		assert.Fail(t, "Mashalling should not fail")
+		assert.Fail(t, "Marshalling should not fail")
 	} else {
 		expected = m
 	}
-
-	go func() {
-		runFakeMetalAPIServer()
-	}()
-
-	go func() {
-		ApiServer.Run()
-	}()
-
-	time.Sleep(200 * time.Millisecond)
 
 	// WHEN
 	response, err := fakePXEBootRequest()
@@ -63,11 +53,19 @@ func TestPXEBoot(t *testing.T) {
 	}
 }
 
-func fakePXEBootRequest() (*resty.Response, error) {
-	return resty.R().Get("http://localhost:4242/v1/boot/fake-mac")
+func runMetalcoreAPIServer(t *testing.T) {
+	config := domain.Config{
+		ServerAddress: "localhost",
+		ServerPort:    4242,
+	}
+	if err := envconfig.Process("metalcore", &config); err != nil {
+		assert.Fail(t, "Cannot fetch configuration")
+	}
+	CreateAPIServer(config)
+	ApiServer.Run()
 }
 
-func runFakeMetalAPIServer() {
+func runMetalAPIServerMock() {
 	router := mux.NewRouter()
 	router.HandleFunc("/device/find", findDeviceMockEndpoint).Methods("GET")
 
@@ -91,4 +89,8 @@ func findDeviceMockEndpoint(w http.ResponseWriter, r *http.Request) {
 			},
 		})
 	}
+}
+
+func fakePXEBootRequest() (*resty.Response, error) {
+	return resty.R().Get("http://localhost:4242/v1/boot/fake-mac")
 }

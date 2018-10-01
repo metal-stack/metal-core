@@ -61,20 +61,6 @@ type (
 	}
 )
 
-type (
-	MetalcoreAPIServer interface {
-		GetMetalAPIClient() MetalAPIClient
-		GetConfig() Config
-		Run()
-	}
-	MetalAPIClient interface {
-		GetConfig() Config
-		FindDevices(mac string) (int, []Device)
-		RegisterDevice(lshw string) (int, Device)
-		ReportDeviceState(deviceUuid string, state string) int
-	}
-)
-
 func (c Config) Log() {
 	log.WithFields(log.Fields{
 		"LogLevel":         c.LogLevel,

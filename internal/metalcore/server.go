@@ -3,6 +3,7 @@ package metalcore
 import (
 	"fmt"
 	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/domain"
+	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/metal"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -10,27 +11,34 @@ import (
 	"time"
 )
 
-type MetalcoreApiServer struct {
-	metalApiClient domain.MetalAPIClient
-}
+type (
+	APIServer interface {
+		GetMetalAPIClient() metal.APIClient
+		GetConfig() domain.Config
+		Run()
+	}
+	apiServer struct {
+		metalApiClient metal.APIClient
+	}
+)
 
-var ApiServer domain.MetalcoreAPIServer
+var ApiServer APIServer
 
-func NewMetalcoreAPIServer(metalApiClient domain.MetalAPIClient) domain.MetalcoreAPIServer {
-	return MetalcoreApiServer{
-		metalApiClient: metalApiClient,
+func CreateAPIServer(config domain.Config) {
+	ApiServer = apiServer{
+		metalApiClient: metal.NewMetalAPIClient(config),
 	}
 }
 
-func (s MetalcoreApiServer) GetMetalAPIClient() domain.MetalAPIClient {
+func (s apiServer) GetMetalAPIClient() metal.APIClient {
 	return s.metalApiClient
 }
 
-func (s MetalcoreApiServer) GetConfig() domain.Config {
+func (s apiServer) GetConfig() domain.Config {
 	return s.GetMetalAPIClient().GetConfig()
 }
 
-func (s MetalcoreApiServer) Run() {
+func (s apiServer) Run() {
 	address := s.GetConfig().ServerAddress
 	port := s.GetConfig().ServerPort
 

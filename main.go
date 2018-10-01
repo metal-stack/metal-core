@@ -2,7 +2,6 @@ package main
 
 import (
 	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/domain"
-	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/metal-api"
 	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/metalcore"
 	"github.com/kelseyhightower/envconfig"
 	log "github.com/sirupsen/logrus"
@@ -37,8 +36,7 @@ func init() {
 	log.SetLevel(fetchLogLevel(config.LogLevel))
 	config.Log()
 
-	metalApiClient := metal_api.NewMetalAPIClient(config)
-	metalcore.ApiServer = metalcore.NewMetalcoreAPIServer(metalApiClient)
+	metalcore.CreateAPIServer(config)
 }
 
 func fetchLogLevel(level string) log.Level {
