@@ -1,7 +1,6 @@
-package server
+package metalcore
 
 import (
-	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/metal-api"
 	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/rest"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -16,7 +15,7 @@ func registerDeviceEndpoint(w http.ResponseWriter, r *http.Request) {
 	} else {
 		log.Info("Register device at Metal API")
 
-		statusCode, device := metal_api.RegisterDevice(string(lshw))
+		statusCode, device := ApiServer.GetMetalAPIClient().RegisterDevice(string(lshw))
 
 		log.WithFields(log.Fields{
 			"statusCode": statusCode,

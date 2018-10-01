@@ -1,11 +1,10 @@
-package server
+package metalcore
 
 import (
 	"gopkg.in/resty.v1"
 	"net/http"
 	"strings"
 
-	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/metal-api"
 	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/rest"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
@@ -23,7 +22,7 @@ func bootEndpoint(w http.ResponseWriter, r *http.Request) {
 	log.WithField("mac", mac).
 		Info("Request metal API for a device with given mac")
 
-	statusCode, devices := metal_api.FindDevices(mac)
+	statusCode, devices := ApiServer.GetMetalAPIClient().FindDevices(mac)
 
 	if statusCode == http.StatusOK && len(devices) == 0 {
 		log.WithField("statusCode", statusCode).

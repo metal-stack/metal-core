@@ -1,4 +1,4 @@
-package server
+package metalcore
 
 import (
 	"encoding/json"
@@ -17,10 +17,15 @@ import (
 )
 
 func TestPXEBoot(t *testing.T) {
-	// given
-	if err := envconfig.Process("metalcore", &metal_api.Config); err != nil {
-		assert.Fail(t, "Could not inject config")
+	// GIVEN
+	config := domain.Config{
+		ServerAddress: "localhost",
+		ServerPort:    4242,
 	}
+	if err := envconfig.Process("metalcore", &config); err != nil {
+		assert.Fail(t, "Cannot fetch configuration")
+	}
+	ApiServer = NewMetalcoreAPIServer(metal_api.NewMetalAPIClient(config))
 
 	bootResponse := BootResponse{
 		Kernel: "https://blobstore.fi-ts.io/metal/images/pxeboot-kernel",
@@ -40,17 +45,16 @@ func TestPXEBoot(t *testing.T) {
 		runFakeMetalAPIServer()
 	}()
 
-	// Run metalcore server
 	go func() {
-		Run("localhost", 4242)
+		ApiServer.Run()
 	}()
 
 	time.Sleep(200 * time.Millisecond)
 
-	// when
+	// WHEN
 	response, err := fakePXEBootRequest()
 
-	// then
+	// THEN
 	if err != nil {
 		assert.Fail(t, "Valid PXE boot response expected", "\nExpected: %v\nActual: %v", string(expected), err)
 	} else {

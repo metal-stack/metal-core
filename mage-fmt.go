@@ -18,7 +18,7 @@ func Fmt() {
 }
 
 func fetchGoPackages() []string {
-	findPackages := exec.Command("find", ".", "-mindepth", "1", "-type", "d", "-not", "-regex", ".*/\\..*", "-and", "-not", "-regex", ".*/bin.*")
+	findPackages := exec.Command("find", ".", "-mindepth", "1", "-type", "d")
 	if out, err := findPackages.CombinedOutput(); err == nil && len(out) > 0 {
 		return append(strings.Split(string(out[:len(out)-1]), "\n"), ".")
 	} else {

@@ -3,14 +3,21 @@ package main
 import (
 	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/domain"
 	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/metal-api"
-	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/server"
+	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/metalcore"
 	"github.com/kelseyhightower/envconfig"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"strings"
 )
 
-var logLevels map[string]log.Level
+var (
+	logLevels map[string]log.Level
+	config    domain.Config
+)
+
+func main() {
+	metalcore.ApiServer.Run()
+}
 
 func init() {
 	log.SetFormatter(&log.JSONFormatter{})
@@ -22,10 +29,7 @@ func init() {
 	logLevels["ERROR"] = log.ErrorLevel
 	logLevels["FATAL"] = log.FatalLevel
 	logLevels["PANIC"] = log.PanicLevel
-}
 
-func main() {
-	var config domain.Config
 	if err := envconfig.Process("metalcore", &config); err != nil {
 		log.Error("Configuration error", "error", err)
 		os.Exit(1)
@@ -33,10 +37,8 @@ func main() {
 	log.SetLevel(fetchLogLevel(config.LogLevel))
 	config.Log()
 
-	// inject config
-	metal_api.Config = config
-
-	server.Run(config.ServerAddress, config.ServerPort)
+	metalApiClient := metal_api.NewMetalAPIClient(config)
+	metalcore.ApiServer = metalcore.NewMetalcoreAPIServer(metalApiClient)
 }
 
 func fetchLogLevel(level string) log.Level {

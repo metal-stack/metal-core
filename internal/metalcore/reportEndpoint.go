@@ -1,7 +1,6 @@
-package server
+package metalcore
 
 import (
-	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/metal-api"
 	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/rest"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
@@ -22,7 +21,7 @@ func reportDeviceStateEndpoint(w http.ResponseWriter, r *http.Request) {
 			"state":      state,
 		}).Info("Report Metal API about device state")
 
-		statusCode := metal_api.ReportDeviceState(deviceUuid, string(state))
+		statusCode := ApiServer.GetMetalAPIClient().ReportDeviceState(deviceUuid, string(state))
 
 		log.WithFields(log.Fields{
 			"statusCode": statusCode,
