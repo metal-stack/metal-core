@@ -9,7 +9,7 @@ import (
 type (
 	Config struct {
 		// Valid log levels are: DEBUG, INFO, WARN, ERROR, FATAL and PANIC
-		LogLevel         string `required:"false" default:"WARN" desc:"set log level" envconfig:"log_level"`
+		LogLevel         string `required:"false" default:"INFO" desc:"set log level" envconfig:"log_level"`
 		ServerAddress    string `required:"false" default:"localhost" desc:"set server address" envconfig:"server_address"`
 		ServerPort       int    `required:"false" default:"4242" desc:"set server port" envconfig:"server_port"`
 		MetalApiProtocol string `required:"false" default:"http" desc:"set metal api protocol" envconfig:"metal_api_protocol"`
@@ -58,6 +58,8 @@ type (
 		SizeID     string   `json:"sizeid" description:"the size id to register this device with"`
 		// Memory     int64  `json:"memory" description:"the size id to assign this device to"`
 		// CpuCores   int    `json:"cpucores" description:"the size id to assign this device to"`
+	}
+	SwitchPort struct {
 	}
 )
 

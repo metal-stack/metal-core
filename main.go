@@ -47,5 +47,5 @@ func fetchLogLevel(level string) log.Level {
 			return v
 		}
 	}
-	return log.WarnLevel
+	return log.InfoLevel
 }

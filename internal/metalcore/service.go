@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/domain"
 	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/metalapi"
+	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/netswitch"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -15,18 +16,21 @@ var srv Service
 
 type (
 	Service interface {
-		GetMetalAPIClient() metalapi.Client
 		GetConfig() domain.Config
+		GetMetalAPIClient() metalapi.Client
+		GetNetSwitchClient() netswitch.Client
 		RunServer()
 	}
 	service struct {
-		metalApiClient metalapi.Client
+		metalApiClient  metalapi.Client
+		netSwitchClient netswitch.Client
 	}
 )
 
 func NewService(config domain.Config) Service {
 	srv = service{
-		metalApiClient: metalapi.NewClient(config),
+		metalApiClient:  metalapi.NewClient(config),
+		netSwitchClient: netswitch.NewClient(config),
 	}
 	return srv
 }
@@ -35,12 +39,16 @@ func RunServer() {
 	srv.RunServer()
 }
 
+func (s service) GetConfig() domain.Config {
+	return s.GetMetalAPIClient().GetConfig()
+}
+
 func (s service) GetMetalAPIClient() metalapi.Client {
 	return s.metalApiClient
 }
 
-func (s service) GetConfig() domain.Config {
-	return s.GetMetalAPIClient().GetConfig()
+func (s service) GetNetSwitchClient() netswitch.Client {
+	return s.netSwitchClient
 }
 
 func (s service) RunServer() {
@@ -49,8 +57,9 @@ func (s service) RunServer() {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/v1/boot/{mac}", bootEndpoint).Methods("GET").Name("boot")
-	router.HandleFunc("/device/register", registerDeviceEndpoint).Methods("POST").Name("register")
-	router.HandleFunc("/report/{deviceUuid}", reportDeviceStateEndpoint).Methods("POST").Name("report")
+	router.HandleFunc("/device/register/{deviceUuid}", registerEndpoint).Methods("POST").Name("register")
+	router.HandleFunc("/report/{deviceUuid}", reportEndpoint).Methods("POST").Name("report")
+	router.HandleFunc("/ready/{deviceUuid}", reportEndpoint).Methods("POST").Name("report")
 	router.Use(loggingMiddleware)
 
 	srv := &http.Server{
@@ -96,7 +105,7 @@ func loggingMiddleware(next http.Handler) http.Handler {
 			"contentLength": r.ContentLength,
 			"body":          body,
 			"headers":       headers,
-		}).Debug("Got request")
+		}).Info("Got request")
 		next.ServeHTTP(w, r)
 	})
 }
