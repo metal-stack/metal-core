@@ -1,13 +1,11 @@
 package metalcore
 
 import (
-	"gopkg.in/resty.v1"
-	"net/http"
-	"strings"
-
 	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/rest"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/resty.v1"
+	"net/http"
 )
 
 type BootResponse struct {
@@ -43,7 +41,7 @@ func createBootDiscoveryImageResponse() BootResponse {
 		log.WithField("err", err).
 			Error("File 'pxeboot-cmdline' could not be retrieved")
 	} else {
-		cmdLine = strings.TrimSpace(string(response.Body()))
+		cmdLine = rest.BytesToString(response.Body())
 	}
 	return BootResponse{
 		Kernel: "https://blobstore.fi-ts.io/metal/images/pxeboot-kernel",

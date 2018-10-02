@@ -36,7 +36,10 @@ func (c client) FindDevices(mac string) (int, []domain.Device) {
 }
 
 func (c client) RegisterDevice(deviceUuid string, lshw []byte) (int, domain.Device) {
-	request := domain.RegisterDeviceRequest{}
+	request := domain.RegisterDeviceRequest{
+		UUID: deviceUuid,
+		Macs: []string{},
+	}
 	//TODO populate request with appropriate values from lshw
 	var device domain.Device
 	statusCode := c.post("/device/register", request, &device)
@@ -46,7 +49,7 @@ func (c client) RegisterDevice(deviceUuid string, lshw []byte) (int, domain.Devi
 func (c client) ReportDeviceState(deviceUuid string, state string) int {
 	body := ""
 	//TODO populate body appropriately
-	statusCode := c.postWithoutResponse("/device/register", body)
+	statusCode := c.postWithoutResponse("/device/report", body)
 	return statusCode
 }
 

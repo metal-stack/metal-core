@@ -21,7 +21,7 @@ func reportEndpoint(w http.ResponseWriter, r *http.Request) {
 			"state":      state,
 		}).Info("Inform Metal API about device state")
 
-		statusCode := srv.GetMetalAPIClient().ReportDeviceState(deviceUuid, string(state))
+		statusCode := srv.GetMetalAPIClient().ReportDeviceState(deviceUuid, rest.BytesToString(state))
 
 		logger := log.WithFields(log.Fields{
 			"deviceUuid": deviceUuid,

@@ -44,10 +44,16 @@ func CreateQueryParameters(keyValuePairs ...string) map[string]string {
 }
 
 func Get(protocol string, address string, port int, path string, queryParameters map[string]string, domainObject interface{}) int {
+	uri := createUri(protocol, address, port, path)
+	log.WithFields(log.Fields{
+		"method": "GET",
+		"URI":    uri,
+		"header": "Accept=application/json",
+	}).Debug("Rest call")
 	response, err := resty.R().
 		SetQueryParams(queryParameters).
 		SetHeader("Accept", "application/json").
-		Get(fmt.Sprintf("%v://%v:%d/%v", sanitizeProtocol(protocol), sanitizeAddress(address), port, sanitizePath(path)))
+		Get(uri)
 	if err != nil {
 		log.Error(err)
 	} else {
@@ -75,13 +81,30 @@ func PostWithoutResponse(protocol string, address string, port int, path string,
 }
 
 func post(protocol string, address string, port int, path string, body interface{}) (*resty.Response, error) {
-	if response, err := resty.R().
-		SetHeader("Accept", "application/json").
-		SetBody(body).
-		Post(fmt.Sprintf("%v://%v:%d/%v", sanitizeProtocol(protocol), sanitizeAddress(address), port, sanitizePath(path))); err != nil {
+	uri := createUri(protocol, address, port, path)
+
+	logger := log.WithFields(log.Fields{
+		"method": "POST",
+		"URI":    uri,
+		"header": "Content-Type=application/json",
+		"body":   body,
+	})
+
+	if bodyJson, err := json.Marshal(body); err != nil {
+		logger.Error("Failed to marshal body")
 		return nil, err
 	} else {
-		return response, nil
+		logger.WithField("body", BytesToString(bodyJson)).
+			Debug("Rest call")
+
+		if response, err := resty.R().
+			SetHeader("Content-Type", "application/json").
+			SetBody(bodyJson).
+			Post(uri); err != nil {
+			return nil, err
+		} else {
+			return response, nil
+		}
 	}
 }
 
@@ -92,9 +115,13 @@ func unmarshalResponse(response *resty.Response, domainObject interface{}) {
 	} else {
 		log.WithFields(log.Fields{
 			"statusCode": response.StatusCode(),
-			"payload":    string(payload),
-		}).Info("Got response")
+			"payload":    BytesToString(payload),
+		}).Debug("Got response")
 	}
+}
+
+func createUri(protocol string, address string, port int, path string) string {
+	return fmt.Sprintf("%v://%v:%d/%v", sanitizeProtocol(protocol), sanitizeAddress(address), port, sanitizePath(path))
 }
 
 func sanitizeProtocol(protocol string) string {
@@ -112,4 +139,8 @@ func sanitizePath(path string) string {
 	} else {
 		return path
 	}
+}
+
+func BytesToString(b []byte) string {
+	return string(b)
 }

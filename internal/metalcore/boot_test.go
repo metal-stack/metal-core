@@ -46,9 +46,9 @@ func TestPXEBoot(t *testing.T) {
 
 	// THEN
 	if err != nil {
-		assert.Fail(t, "Valid PXE boot response expected", "\nExpected: %v\nActual: %v", string(expected), err)
+		assert.Fail(t, "Valid PXE boot response expected", "\nExpected: %v\nActual: %v", rest.BytesToString(expected), err)
 	} else {
-		assert.Equal(t, string(expected), strings.TrimSpace(string(response.Body())))
+		assert.Equal(t, rest.BytesToString(expected), strings.TrimSpace(rest.BytesToString(response.Body())))
 		assert.Equal(t, http.StatusOK, response.StatusCode())
 	}
 }

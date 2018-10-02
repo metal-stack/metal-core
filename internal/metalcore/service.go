@@ -5,6 +5,7 @@ import (
 	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/domain"
 	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/metalapi"
 	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/netswitch"
+	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/rest"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -58,8 +59,8 @@ func (s service) RunServer() {
 	router := mux.NewRouter()
 	router.HandleFunc("/v1/boot/{mac}", bootEndpoint).Methods("GET").Name("boot")
 	router.HandleFunc("/device/register/{deviceUuid}", registerEndpoint).Methods("POST").Name("register")
-	router.HandleFunc("/report/{deviceUuid}", reportEndpoint).Methods("POST").Name("report")
-	router.HandleFunc("/ready/{deviceUuid}", reportEndpoint).Methods("POST").Name("report")
+	router.HandleFunc("/device/report/{deviceUuid}", reportEndpoint).Methods("POST").Name("report")
+	router.HandleFunc("/device/ready/{deviceUuid}", readyEndpoint).Methods("POST").Name("ready")
 	router.Use(loggingMiddleware)
 
 	srv := &http.Server{
@@ -103,9 +104,9 @@ func loggingMiddleware(next http.Handler) http.Handler {
 			"host":          r.Host,
 			"URI":           r.RequestURI,
 			"contentLength": r.ContentLength,
-			"body":          body,
+			"body":          rest.BytesToString(body),
 			"headers":       headers,
-		}).Info("Got request")
+		}).Debug("Got request")
 		next.ServeHTTP(w, r)
 	})
 }

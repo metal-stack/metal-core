@@ -11,7 +11,6 @@ import (
 
 // Run all tests
 func Test() error {
-	Fmt()
 	errorCnt := 0
 	for _, pkg := range fetchGoPackages() {
 		if containsGoTests(pkg) {
