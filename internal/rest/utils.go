@@ -10,6 +10,18 @@ import (
 	"gopkg.in/resty.v1"
 )
 
+type ParamsType int
+
+const (
+	QueryParameters ParamsType = iota
+	PathParameters
+)
+
+type Params struct {
+	Type ParamsType
+	Map  map[string]string
+}
+
 func RespondError(w http.ResponseWriter, errorCode int, msg string) {
 	log.WithField("statusCode", errorCode).
 		Error(msg)
@@ -33,27 +45,38 @@ func Respond(w http.ResponseWriter, returnCode int, payload interface{}) {
 	}
 }
 
-func CreateQueryParameters(keyValuePairs ...string) map[string]string {
+func CreateParams(paramsType ParamsType, keyValuePairs ...string) *Params {
 	m := make(map[string]string)
 	for i := range keyValuePairs {
 		if i%2 == 0 {
 			m[keyValuePairs[i]] = keyValuePairs[i+1]
 		}
 	}
-	return m
+	return &Params{
+		Type: paramsType,
+		Map:  m,
+	}
 }
 
-func Get(protocol string, address string, port int, path string, queryParameters map[string]string, domainObject interface{}) int {
+func Get(protocol string, address string, port int, path string, params *Params, domainObject interface{}) int {
 	uri := createUri(protocol, address, port, path)
 	log.WithFields(log.Fields{
 		"method": "GET",
 		"URI":    uri,
 		"header": "Accept=application/json",
 	}).Debug("Rest call")
-	response, err := resty.R().
-		SetQueryParams(queryParameters).
-		SetHeader("Accept", "application/json").
-		Get(uri)
+
+	request := resty.R().
+		SetHeader("Accept", "application/json")
+	if params != nil {
+		if params.Type == QueryParameters {
+			request.SetQueryParams(params.Map)
+		} else {
+			request.SetPathParams(params.Map)
+		}
+	}
+
+	response, err := request.Get(uri)
 	if err != nil {
 		log.Error(err)
 	} else {
@@ -62,8 +85,8 @@ func Get(protocol string, address string, port int, path string, queryParameters
 	return response.StatusCode()
 }
 
-func Post(protocol string, address string, port int, path string, body interface{}, domainObject interface{}) int {
-	response, err := post(protocol, address, port, path, body)
+func Post(protocol string, address string, port int, path string, params *Params, body interface{}, domainObject interface{}) int {
+	response, err := post(protocol, address, port, path, params, body)
 	if err != nil {
 		log.Error(err)
 	} else {
@@ -72,15 +95,15 @@ func Post(protocol string, address string, port int, path string, body interface
 	return response.StatusCode()
 }
 
-func PostWithoutResponse(protocol string, address string, port int, path string, body interface{}) int {
-	response, err := post(protocol, address, port, path, body)
+func PostWithoutResponse(protocol string, address string, port int, path string, params *Params, body interface{}) int {
+	response, err := post(protocol, address, port, path, params, body)
 	if err != nil {
 		log.Error(err)
 	}
 	return response.StatusCode()
 }
 
-func post(protocol string, address string, port int, path string, body interface{}) (*resty.Response, error) {
+func post(protocol string, address string, port int, path string, params *Params, body interface{}) (*resty.Response, error) {
 	uri := createUri(protocol, address, port, path)
 
 	logger := log.WithFields(log.Fields{
@@ -97,10 +120,18 @@ func post(protocol string, address string, port int, path string, body interface
 		logger.WithField("body", BytesToString(bodyJson)).
 			Debug("Rest call")
 
-		if response, err := resty.R().
+		request := resty.R().
 			SetHeader("Content-Type", "application/json").
-			SetBody(bodyJson).
-			Post(uri); err != nil {
+			SetBody(bodyJson)
+		if params != nil {
+			if params.Type == QueryParameters {
+				request.SetQueryParams(params.Map)
+			} else {
+				request.SetPathParams(params.Map)
+			}
+		}
+
+		if response, err := request.Post(uri); err != nil {
 			return nil, err
 		} else {
 			return response, nil

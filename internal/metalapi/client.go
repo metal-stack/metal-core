@@ -10,6 +10,7 @@ type (
 		GetConfig() domain.Config
 		FindDevices(mac string) (int, []domain.Device)
 		RegisterDevice(deviceUuid string, lshw []byte) (int, domain.Device)
+		InstallImage(deviceUuid string) (int, domain.Image)
 		ReportDeviceState(deviceUuid string, state string) int
 		GetSwitchPorts(deviceUuid string) (int, []domain.SwitchPort)
 		Ready(deviceUuid string) int
@@ -31,7 +32,7 @@ func (c client) GetConfig() domain.Config {
 
 func (c client) FindDevices(mac string) (int, []domain.Device) {
 	var devices []domain.Device
-	statusCode := c.get("/device/find", rest.CreateQueryParameters("mac", mac), &devices)
+	statusCode := c.get("/device/find", rest.CreateParams(rest.QueryParameters, "mac", mac), &devices)
 	return statusCode, devices
 }
 
@@ -44,14 +45,20 @@ func (c client) RegisterDevice(deviceUuid string, lshw []byte) (int, domain.Devi
 	}
 	//TODO populate request with appropriate values from lshw
 	var device domain.Device
-	statusCode := c.post("/device/register", request, &device)
+	statusCode := c.post("/device/register", nil, request, &device)
 	return statusCode, device
+}
+
+func (c client) InstallImage(deviceUuid string) (int, domain.Image) {
+	var image domain.Image
+	statusCode := c.get("/image", rest.CreateParams(rest.PathParameters, "id", "Alpine 3.8"), &image)
+	return statusCode, image
 }
 
 func (c client) ReportDeviceState(deviceUuid string, state string) int {
 	body := ""
 	//TODO populate body appropriately
-	statusCode := c.postWithoutResponse("/device/report", body)
+	statusCode := c.postWithoutResponse("/device/report", nil, body)
 	return statusCode
 }
 
@@ -59,25 +66,25 @@ func (c client) GetSwitchPorts(deviceUuid string) (int, []domain.SwitchPort) {
 	body := ""
 	var switchPorts []domain.SwitchPort
 	//TODO populate body appropriately
-	statusCode := c.post("/device/switch-ports", body, &switchPorts)
+	statusCode := c.post("/device/switch-ports", nil, body, &switchPorts)
 	return statusCode, switchPorts
 }
 
 func (c client) Ready(deviceUuid string) int {
 	body := ""
 	//TODO populate body appropriately
-	statusCode := c.postWithoutResponse("/device/ready", body)
+	statusCode := c.postWithoutResponse("/device/ready", nil, body)
 	return statusCode
 }
 
-func (c client) get(path string, query map[string]string, domainObject interface{}) int {
-	return rest.Get(c.Config.MetalApiProtocol, c.Config.MetalApiAddress, c.Config.MetalApiPort, path, query, domainObject)
+func (c client) get(path string, params *rest.Params, domainObject interface{}) int {
+	return rest.Get(c.Config.MetalApiProtocol, c.Config.MetalApiAddress, c.Config.MetalApiPort, path, params, domainObject)
 }
 
-func (c client) post(path string, body interface{}, domainObject interface{}) int {
-	return rest.Post(c.Config.MetalApiProtocol, c.Config.MetalApiAddress, c.Config.MetalApiPort, path, body, domainObject)
+func (c client) post(path string, params *rest.Params, body interface{}, domainObject interface{}) int {
+	return rest.Post(c.Config.MetalApiProtocol, c.Config.MetalApiAddress, c.Config.MetalApiPort, path, params, body, domainObject)
 }
 
-func (c client) postWithoutResponse(path string, body interface{}) int {
-	return rest.PostWithoutResponse(c.Config.MetalApiProtocol, c.Config.MetalApiAddress, c.Config.MetalApiPort, path, body)
+func (c client) postWithoutResponse(path string, params *rest.Params, body interface{}) int {
+	return rest.PostWithoutResponse(c.Config.MetalApiProtocol, c.Config.MetalApiAddress, c.Config.MetalApiPort, path, params, body)
 }

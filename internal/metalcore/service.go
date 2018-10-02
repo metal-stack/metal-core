@@ -59,6 +59,7 @@ func (s service) RunServer() {
 	router := mux.NewRouter()
 	router.HandleFunc("/v1/boot/{mac}", bootEndpoint).Methods("GET").Name("boot")
 	router.HandleFunc("/device/register/{deviceUuid}", registerEndpoint).Methods("POST").Name("register")
+	router.HandleFunc("/device/install/{deviceUuid}", installEndpoint).Methods("GET").Name("install")
 	router.HandleFunc("/device/report/{deviceUuid}", reportEndpoint).Methods("POST").Name("report")
 	router.HandleFunc("/device/ready/{deviceUuid}", readyEndpoint).Methods("POST").Name("ready")
 	router.Use(loggingMiddleware)
