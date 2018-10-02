@@ -48,4 +48,4 @@ services:
       - swagger
       - metal-api
     environment:
-      DISCOVER_REPORTURL: http://localhost:4242/device/register/device-uuid
+      DISCOVER_REPORTURL: http://localhost:4242/device/register/1234-1234-1234

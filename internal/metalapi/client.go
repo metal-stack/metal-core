@@ -37,8 +37,10 @@ func (c client) FindDevices(mac string) (int, []domain.Device) {
 
 func (c client) RegisterDevice(deviceUuid string, lshw []byte) (int, domain.Device) {
 	request := domain.RegisterDeviceRequest{
-		UUID: deviceUuid,
-		Macs: []string{},
+		UUID:       deviceUuid,
+		Macs:       []string{},
+		FacilityID: "NBG1",
+		SizeID:     "t1.small.x86",
 	}
 	//TODO populate request with appropriate values from lshw
 	var device domain.Device
