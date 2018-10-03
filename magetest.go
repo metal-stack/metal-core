@@ -11,23 +11,23 @@ import (
 
 // Run all tests
 func Test() error {
-	errorCnt := 0
+	cnt := 0
 	for _, pkg := range fetchGoPackages() {
 		if containsGoTests(pkg) {
 			if err := sh.Run("go", "test", pkg); err != nil {
-				errorCnt++
+				cnt++
 			}
 		}
 	}
-	if errorCnt > 0 {
-		return errors.New(fmt.Sprintf("%d test(s) failed", errorCnt))
+	if cnt > 0 {
+		return errors.New(fmt.Sprintf("%d test(s) failed", cnt))
 	} else {
 		return nil
 	}
 }
 
 func containsGoTests(dir string) bool {
-	findGoTests := exec.Command("find", dir, "-maxdepth", "1", "-type", "f", "-name", "*_test.go")
-	out, err := findGoTests.CombinedOutput()
+	cmd := exec.Command("find", dir, "-maxdepth", "1", "-type", "f", "-name", "*_test.go")
+	out, err := cmd.CombinedOutput()
 	return err == nil && len(out) > 0
 }

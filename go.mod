@@ -1,4 +1,4 @@
-module git.f-i-ts.de/cloud-native/maas/metalcore
+module git.f-i-ts.de/cloud-native/maas/metal-core
 
 require (
 	github.com/gorilla/context v1.1.1 // indirect

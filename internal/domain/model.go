@@ -9,12 +9,12 @@ import (
 type (
 	Config struct {
 		// Valid log levels are: DEBUG, INFO, WARN, ERROR, FATAL and PANIC
-		LogLevel         string `required:"false" default:"INFO" desc:"set log level" envconfig:"log_level"`
-		ServerAddress    string `required:"false" default:"localhost" desc:"set server address" envconfig:"server_address"`
-		ServerPort       int    `required:"false" default:"4242" desc:"set server port" envconfig:"server_port"`
-		MetalApiProtocol string `required:"false" default:"http" desc:"set metal api protocol" envconfig:"metal_api_protocol"`
-		MetalApiAddress  string `required:"false" default:"localhost" desc:"set metal api address" envconfig:"metal_api_address"`
-		MetalApiPort     int    `required:"false" default:"8080" desc:"set metal api port" envconfig:"metal_api_port"`
+		LogLevel    string `required:"false" default:"INFO" desc:"set log level" envconfig:"log_level"`
+		Address     string `required:"false" default:"localhost" desc:"set server address"`
+		Port        int    `required:"false" default:"4242" desc:"set server port"`
+		APIProtocol string `required:"false" default:"http" desc:"set metal api protocol" envconfig:"metal_api_protocol"`
+		APIAddress  string `required:"false" default:"localhost" desc:"set metal api address" envconfig:"metal_api_address"`
+		APIPort     int    `required:"false" default:"8080" desc:"set metal api port" envconfig:"metal_api_port"`
 	}
 	Facility struct {
 		ID          string    `json:"id" description:"a unique ID" unique:"true" modelDescription:"A Facility describes the location where a device is placed."`
@@ -65,12 +65,12 @@ type (
 
 func (c Config) Log() {
 	log.WithFields(log.Fields{
-		"LogLevel":         c.LogLevel,
-		"ServerAddress":    c.ServerAddress,
-		"ServerPort":       c.ServerPort,
-		"MetalApiProtocol": c.MetalApiProtocol,
-		"MetalApiAddress":  c.MetalApiAddress,
-		"MetalApiPort":     c.MetalApiPort,
+		"LogLevel":    c.LogLevel,
+		"Address":     c.Address,
+		"Port":        c.Port,
+		"APIProtocol": c.APIProtocol,
+		"APIAddress":  c.APIAddress,
+		"APIPort":     c.APIPort,
 	}).Info("Configuration")
 }
 

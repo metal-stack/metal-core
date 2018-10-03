@@ -1,7 +1,7 @@
-package metalcore
+package core
 
 import (
-	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/rest"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -21,16 +21,16 @@ func registerEndpoint(w http.ResponseWriter, r *http.Request) {
 
 		statusCode, device := srv.GetMetalAPIClient().RegisterDevice(deviceUuid, lshw)
 
-		logger := log.WithFields(log.Fields{
+		l := log.WithFields(log.Fields{
 			"devideUuid": deviceUuid,
 			"statusCode": statusCode,
 			"device":     device,
 		})
 
 		if statusCode != http.StatusOK {
-			logger.Error("Failed to register device")
+			l.Error("Failed to register device")
 		} else {
-			logger.Info("Device registered")
+			l.Info("Device registered")
 		}
 
 		rest.Respond(w, statusCode, device)

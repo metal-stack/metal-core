@@ -10,157 +10,141 @@ import (
 	"gopkg.in/resty.v1"
 )
 
-type ParamsType int
-
-const (
-	QueryParameters ParamsType = iota
-	PathParameters
+type (
+	Params  map[string]string
+	Request struct {
+		Protocol string
+		Address  string
+		Port     int
+		Path     string
+		Params   *Params
+	}
 )
 
-type Params struct {
-	Type ParamsType
-	Map  map[string]string
-}
-
-func RespondError(w http.ResponseWriter, errorCode int, msg string) {
-	log.WithField("statusCode", errorCode).
-		Error(msg)
-	Respond(w, errorCode, map[string]string{"error": msg})
-}
-
-func Respond(w http.ResponseWriter, returnCode int, payload interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(returnCode)
-	if payload == nil {
-		log.WithFields(log.Fields{
-			"statusCode": returnCode,
-		}).Info("Sent response")
-	} else if err := json.NewEncoder(w).Encode(payload); err != nil {
-		log.Error(err)
-	} else {
-		log.WithFields(log.Fields{
-			"statusCode": returnCode,
-			"payload":    payload,
-		}).Info("Sent response")
+func NewRequest(protocol string, address string, port int, path string, params *Params) *Request {
+	return &Request{
+		Protocol: protocol,
+		Address:  address,
+		Port:     port,
+		Path:     path,
+		Params:   params,
 	}
 }
 
-func CreateParams(paramsType ParamsType, keyValuePairs ...string) *Params {
-	m := make(map[string]string)
-	for i := range keyValuePairs {
-		if i%2 == 0 {
-			m[keyValuePairs[i]] = keyValuePairs[i+1]
-		}
-	}
-	return &Params{
-		Type: paramsType,
-		Map:  m,
-	}
-}
-
-func Get(protocol string, address string, port int, path string, params *Params, domainObject interface{}) int {
-	uri := createUri(protocol, address, port, path)
+func (r *Request) Get() *resty.Response {
+	uri := r.createUri()
 	log.WithFields(log.Fields{
 		"method": "GET",
 		"URI":    uri,
 		"header": "Accept=application/json",
 	}).Debug("Rest call")
 
-	request := resty.R().
+	req := resty.R().
 		SetHeader("Accept", "application/json")
-	if params != nil {
-		if params.Type == QueryParameters {
-			request.SetQueryParams(params.Map)
-		} else {
-			request.SetPathParams(params.Map)
-		}
+	if r.Params != nil {
+		req.SetQueryParams(*r.Params)
 	}
 
-	response, err := request.Get(uri)
+	resp, err := req.Get(uri)
 	if err != nil {
 		log.Error(err)
+		return nil
 	} else {
-		unmarshalResponse(response, domainObject)
+		return resp
 	}
-	return response.StatusCode()
 }
 
-func Post(protocol string, address string, port int, path string, params *Params, body interface{}, domainObject interface{}) int {
-	response, err := post(protocol, address, port, path, params, body)
+func (r *Request) Post(body interface{}) *resty.Response {
+	resp, err := r.post(body)
 	if err != nil {
 		log.Error(err)
+		return nil
 	} else {
-		unmarshalResponse(response, domainObject)
+		return resp
 	}
-	return response.StatusCode()
 }
 
-func PostWithoutResponse(protocol string, address string, port int, path string, params *Params, body interface{}) int {
-	response, err := post(protocol, address, port, path, params, body)
-	if err != nil {
-		log.Error(err)
-	}
-	return response.StatusCode()
-}
+func (r *Request) post(body interface{}) (*resty.Response, error) {
+	uri := r.createUri()
 
-func post(protocol string, address string, port int, path string, params *Params, body interface{}) (*resty.Response, error) {
-	uri := createUri(protocol, address, port, path)
-
-	logger := log.WithFields(log.Fields{
+	l := log.WithFields(log.Fields{
 		"method": "POST",
 		"URI":    uri,
 		"header": "Content-Type=application/json",
 		"body":   body,
 	})
 
-	if bodyJson, err := json.Marshal(body); err != nil {
-		logger.Error("Failed to marshal body")
+	if j, err := json.Marshal(body); err != nil {
+		l.Error("Failed to marshal body")
 		return nil, err
 	} else {
-		logger.WithField("body", BytesToString(bodyJson)).
+		l.WithField("body", string(j)).
 			Debug("Rest call")
 
-		request := resty.R().
+		req := resty.R().
 			SetHeader("Content-Type", "application/json").
-			SetBody(bodyJson)
-		if params != nil {
-			if params.Type == QueryParameters {
-				request.SetQueryParams(params.Map)
-			} else {
-				request.SetPathParams(params.Map)
-			}
+			SetBody(j)
+		if r.Params != nil {
+			req.SetQueryParams(*r.Params)
 		}
 
-		if response, err := request.Post(uri); err != nil {
+		if resp, err := req.Post(uri); err != nil {
 			return nil, err
 		} else {
-			return response, nil
+			return resp, nil
 		}
 	}
 }
 
-func unmarshalResponse(response *resty.Response, domainObject interface{}) {
-	payload := response.Body()
-	if err := json.Unmarshal(payload, domainObject); err != nil {
+func (r *Request) createUri() string {
+	return fmt.Sprintf("%v://%v:%d/%v", sanitizeProtocol(r.Protocol), sanitizeAddress(r.Address), r.Port, sanitizePath(r.Path))
+}
+
+func Respond(w http.ResponseWriter, sc int, body interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(sc)
+	if body == nil {
+		log.WithFields(log.Fields{
+			"statusCode": sc,
+		}).Info("Sent response")
+	} else if err := json.NewEncoder(w).Encode(body); err != nil {
 		log.Error(err)
 	} else {
 		log.WithFields(log.Fields{
-			"statusCode": response.StatusCode(),
-			"payload":    BytesToString(payload),
+			"statusCode": sc,
+			"body":       body,
+		}).Info("Sent response")
+	}
+}
+
+func CreateQueryParams(kv ...string) *Params {
+	p := make(Params)
+	for i := range kv {
+		if i%2 == 0 {
+			p[kv[i]] = kv[i+1]
+		}
+	}
+	return &p
+}
+
+func Unmarshal(resp *resty.Response, v interface{}) {
+	b := resp.Body()
+	if err := json.Unmarshal(b, v); err != nil {
+		log.Error(err)
+	} else {
+		log.WithFields(log.Fields{
+			"statusCode": resp.StatusCode(),
+			"body":       string(b),
 		}).Debug("Got response")
 	}
 }
 
-func createUri(protocol string, address string, port int, path string) string {
-	return fmt.Sprintf("%v://%v:%d/%v", sanitizeProtocol(protocol), sanitizeAddress(address), port, sanitizePath(path))
+func sanitizeProtocol(proto string) string {
+	return strings.TrimSpace(proto)
 }
 
-func sanitizeProtocol(protocol string) string {
-	return strings.TrimSpace(protocol)
-}
-
-func sanitizeAddress(address string) string {
-	return strings.TrimSpace(address)
+func sanitizeAddress(addr string) string {
+	return strings.TrimSpace(addr)
 }
 
 func sanitizePath(path string) string {
@@ -170,8 +154,4 @@ func sanitizePath(path string) string {
 	} else {
 		return path
 	}
-}
-
-func BytesToString(b []byte) string {
-	return string(b)
 }

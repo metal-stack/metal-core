@@ -1,4 +1,4 @@
-version: "2"
+version: '2'
 
 services:
   pixiecore:
@@ -7,19 +7,19 @@ services:
     command: ["api", "http://localhost:4242", "--dhcp-no-bind"]
     network_mode: host
 
-  metalcore:
+  metal-core:
     build:
       context: .
-    image: registry.fi-ts.io/metal/metalcore
-    container_name: metalcore
+    image: registry.fi-ts.io/metal/metal-core
+    container_name: metal-core
     network_mode: host
     environment:
-      METALCORE_LOG_LEVEL: DEBUG
-      METALCORE_SERVER_ADDRESS: localhost
-      METALCORE_SERVER_PORT: 4242
-      METALCORE_METAL_API_PROTOCOL: http
-      METALCORE_METAL_API_ADDRESS: localhost
-      METALCORE_METAL_API_PORT: 8090
+      METAL_CORE_LOG_LEVEL: DEBUG
+      METAL_CORE_ADDRESS: localhost
+      METAL_CORE_PORT: 4242
+      METAL_CORE_METAL_API_PROTOCOL: http
+      METAL_CORE_METAL_API_ADDRESS: localhost
+      METAL_CORE_METAL_API_PORT: 8090
 
   swagger:
     image: swaggerapi/swagger-ui
@@ -45,8 +45,9 @@ services:
     network_mode: host
     depends_on:
       - pixiecore
-      - metalcore
+      - metal-core
       - swagger
       - metal-api
     environment:
-      DISCOVER_REPORTURL: http://localhost:4242/device/register/1234-1234-1234
+      DISCOVER_REPORTURL: http://localhost:4242/device/register
+      DISCOVER_INSTALLURL: http://localhost:4242/device/install

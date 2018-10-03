@@ -13,7 +13,7 @@ RUN go mod download \
 # Copy source code
 COPY ./ ./
 
-# Build metalcore
+# Test and build metal-core
 RUN mage test \
  && mage build:binary
 
@@ -23,6 +23,6 @@ LABEL maintainer FI-TS Devops <devops@f-i-ts.de>
 RUN apk update \
  && apk add ca-certificates
 
-COPY --from=builder /build/bin/metalcore /
+COPY --from=builder /build/bin/metal-core /
 
-CMD ["/metalcore"]
+CMD ["/metal-core"]

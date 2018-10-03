@@ -1,7 +1,7 @@
-package metalcore
+package core
 
 import (
-	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/rest"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/resty.v1"
@@ -20,15 +20,15 @@ func bootEndpoint(w http.ResponseWriter, r *http.Request) {
 	log.WithField("mac", mac).
 		Info("Request metal API for a device with given mac")
 
-	statusCode, devices := srv.GetMetalAPIClient().FindDevices(mac)
+	sc, devs := srv.GetMetalAPIClient().FindDevices(mac)
 
-	if statusCode == http.StatusOK && len(devices) == 0 {
-		log.WithField("statusCode", statusCode).
-			Info("Device not found")
+	if sc == http.StatusOK && len(devs) == 0 {
+		log.WithField("statusCode", sc).
+			Info("Device(s) not found")
 		rest.Respond(w, http.StatusOK, createBootDiscoveryImageResponse())
 	} else {
 		log.WithFields(log.Fields{
-			"statusCode": statusCode,
+			"statusCode": sc,
 			"mac":        mac,
 		}).Error("There should not exist a device with given mac")
 		rest.Respond(w, http.StatusAccepted, createBootTinyCoreLinuxResponse())
@@ -36,19 +36,19 @@ func bootEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func createBootDiscoveryImageResponse() BootResponse {
-	cmdLine := "console=tty0"
-	if response, err := resty.R().Get("https://blobstore.fi-ts.io/metal/images/pxeboot-cmdline"); err != nil {
+	cl := "console=tty0"
+	if resp, err := resty.R().Get("https://blobstore.fi-ts.io/metal/images/pxeboot-cmdline"); err != nil {
 		log.WithField("err", err).
 			Error("File 'pxeboot-cmdline' could not be retrieved")
 	} else {
-		cmdLine = rest.BytesToString(response.Body())
+		cl = string(resp.Body())
 	}
 	return BootResponse{
 		Kernel: "https://blobstore.fi-ts.io/metal/images/pxeboot-kernel",
 		InitRamDisk: []string{
 			"https://blobstore.fi-ts.io/metal/images/pxeboot-initrd.img",
 		},
-		CommandLine: cmdLine,
+		CommandLine: cl,
 	}
 }
 

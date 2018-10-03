@@ -1,7 +1,7 @@
 package netswitch
 
 import (
-	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/domain"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	"net/http"
 )
 
@@ -15,9 +15,9 @@ type (
 	}
 )
 
-func NewClient(config domain.Config) Client {
+func NewClient(cfg domain.Config) Client {
 	return client{
-		Config: config,
+		Config: cfg,
 	}
 }
 

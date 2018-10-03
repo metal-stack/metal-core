@@ -1,9 +1,9 @@
-package metalcore
+package core
 
 import (
 	"encoding/json"
-	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/domain"
-	"git.f-i-ts.de/cloud-native/maas/metalcore/internal/rest"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
 	"github.com/gorilla/mux"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/stretchr/testify/assert"
@@ -22,7 +22,7 @@ func TestPXEBoot(t *testing.T) {
 	}()
 
 	go func() {
-		runMetalcoreServer(t)
+		runMetalCoreServer(t)
 	}()
 
 	time.Sleep(200 * time.Millisecond)
@@ -46,19 +46,19 @@ func TestPXEBoot(t *testing.T) {
 
 	// THEN
 	if err != nil {
-		assert.Fail(t, "Valid PXE boot response expected", "\nExpected: %v\nActual: %v", rest.BytesToString(expected), err)
+		assert.Fail(t, "Valid PXE boot response expected", "\nExpected: %v\nActual: %v", string(expected), err)
 	} else {
-		assert.Equal(t, rest.BytesToString(expected), strings.TrimSpace(rest.BytesToString(response.Body())))
+		assert.Equal(t, string(expected), strings.TrimSpace(string(response.Body())))
 		assert.Equal(t, http.StatusOK, response.StatusCode())
 	}
 }
 
-func runMetalcoreServer(t *testing.T) {
+func runMetalCoreServer(t *testing.T) {
 	config := domain.Config{
-		ServerAddress: "localhost",
-		ServerPort:    4242,
+		Address: "localhost",
+		Port:    4242,
 	}
-	if err := envconfig.Process("metalcore", &config); err != nil {
+	if err := envconfig.Process("metal-core", &config); err != nil {
 		assert.Fail(t, "Cannot fetch configuration")
 	}
 	NewService(config).RunServer()
