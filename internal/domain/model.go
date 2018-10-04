@@ -9,12 +9,13 @@ import (
 type (
 	Config struct {
 		// Valid log levels are: DEBUG, INFO, WARN, ERROR, FATAL and PANIC
-		LogLevel    string `required:"false" default:"INFO" desc:"set log level" envconfig:"log_level"`
-		Address     string `required:"false" default:"localhost" desc:"set server address"`
-		Port        int    `required:"false" default:"4242" desc:"set server port"`
-		APIProtocol string `required:"false" default:"http" desc:"set metal api protocol" envconfig:"metal_api_protocol"`
-		APIAddress  string `required:"false" default:"localhost" desc:"set metal api address" envconfig:"metal_api_address"`
-		APIPort     int    `required:"false" default:"8080" desc:"set metal api port" envconfig:"metal_api_port"`
+		LogLevel       string `required:"false" default:"INFO" desc:"set log level" envconfig:"log_level"`
+		ControlPlaneIP string `required:"true" desc:"set the control plane IP" envconfig:"metal_control_plane_ip"`
+		Address        string `required:"false" default:"localhost" desc:"set server address"`
+		Port           int    `required:"false" default:"4242" desc:"set server port"`
+		APIProtocol    string `required:"false" default:"http" desc:"set metal api protocol" envconfig:"metal_api_protocol"`
+		APIAddress     string `required:"false" default:"localhost" desc:"set metal api address" envconfig:"metal_api_address"`
+		APIPort        int    `required:"false" default:"8080" desc:"set metal api port" envconfig:"metal_api_port"`
 	}
 	Facility struct {
 		ID          string    `json:"id" description:"a unique ID" unique:"true" modelDescription:"A Facility describes the location where a device is placed."  rethinkdb:"id,omitempty"`
@@ -55,7 +56,7 @@ type (
 		MACAddresses []string  `json:"macAddresses" description:"the list of mac addresses in this device" readOnly:"true" rethinkdb:"macAddresses"`
 	}
 	RegisterDeviceRequest struct {
-		ID       string   `json:"id" description:"the id of the device to register"`
+		ID         string   `json:"id" description:"the id of the device to register"`
 		Macs       []string `json:"macs" description:"the mac addresses to register this device with"`
 		FacilityID string   `json:"facilityid" description:"the facility id to register this device with"`
 		SizeID     string   `json:"sizeid" description:"the size id to register this device with"`

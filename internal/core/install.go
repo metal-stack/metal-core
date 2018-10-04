@@ -17,7 +17,7 @@ func installEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	logger := log.WithFields(log.Fields{
 		"statusCode": sc,
-		"deviceId": id,
+		"deviceId":   id,
 	})
 
 	if sc == http.StatusOK {

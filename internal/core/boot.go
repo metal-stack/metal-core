@@ -1,6 +1,8 @@
 package core
 
 import (
+	"fmt"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
@@ -13,6 +15,8 @@ type BootResponse struct {
 	InitRamDisk []string `json:"initrd"`
 	CommandLine string   `json:"cmdline"`
 }
+
+var Config domain.Config
 
 func bootEndpoint(w http.ResponseWriter, r *http.Request) {
 	mac := mux.Vars(r)["mac"]
@@ -43,6 +47,7 @@ func createBootDiscoveryImageResponse() BootResponse {
 	} else {
 		cmdLine = string(resp.Body())
 	}
+	cmdLine += fmt.Sprintf(" METAL_CONTROL_PLANE_IP=%v", Config.ControlPlaneIP)
 	return BootResponse{
 		Kernel: "https://blobstore.fi-ts.io/metal/images/pxeboot-kernel",
 		InitRamDisk: []string{

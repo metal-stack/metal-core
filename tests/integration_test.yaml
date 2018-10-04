@@ -9,6 +9,7 @@ services:
     network_mode: host
     environment:
       METAL_CORE_LOG_LEVEL: DEBUG
+      METAL_CORE_CONTROL_PLANE_IP: localhost
       METAL_CORE_ADDRESS: localhost
       METAL_CORE_PORT: 4242
       METAL_CORE_METAL_API_PROTOCOL: http

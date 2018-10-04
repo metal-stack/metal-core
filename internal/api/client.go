@@ -40,7 +40,7 @@ func (c client) FindDevices(mac string) (int, []domain.Device) {
 
 func (c client) RegisterDevice(deviceId string, lshw []byte) (int, domain.Device) {
 	req := domain.RegisterDeviceRequest{
-		ID:       deviceId,
+		ID:         deviceId,
 		Macs:       []string{},
 		FacilityID: "NBG1",
 		SizeID:     "t1.small.x86",

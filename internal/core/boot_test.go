@@ -32,7 +32,7 @@ func TestPXEBoot(t *testing.T) {
 		InitRamDisk: []string{
 			"https://blobstore.fi-ts.io/metal/images/pxeboot-initrd.img",
 		},
-		CommandLine: "console=tty0 console=ttyS0",
+		CommandLine: "console=tty0 console=ttyS0 METAL_CONTROL_PLANE_IP=localhost",
 	}
 	var expected string
 	if m, err := json.Marshal(br); err != nil {

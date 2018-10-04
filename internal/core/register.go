@@ -22,7 +22,7 @@ func registerEndpoint(w http.ResponseWriter, r *http.Request) {
 		statusCode, device := srv.GetMetalAPIClient().RegisterDevice(deviceId, lshw)
 
 		logger := log.WithFields(log.Fields{
-			"devideId": deviceId,
+			"devideId":   deviceId,
 			"statusCode": statusCode,
 			"device":     device,
 		})
