@@ -14,7 +14,7 @@ RUN go mod download \
 COPY ./ ./
 
 # Test and build metal-core
-RUN mage test \
+RUN mage test:unit \
  && mage build:binary
 
 FROM alpine:3.8

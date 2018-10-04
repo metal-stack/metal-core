@@ -5,15 +5,31 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 )
 
-// Run all tests
-func Test() error {
+type Test mg.Namespace
+
+// Run all unit tests
+func (Test) Unit() error {
+	return runTests(func(dir string) bool {
+		return dir != "./tests"
+	})
+}
+
+// Run all integration tests
+func (Test) Integration() error {
+	return runTests(func(dir string) bool {
+		return dir == "./tests"
+	})
+}
+
+func runTests(filter func(dir string) bool) error {
 	cnt := 0
 	for _, pkg := range fetchGoPackages() {
-		if containsGoTests(pkg) {
-			if err := sh.Run("go", "test", "-v", pkg); err != nil {
+		if containsGoTests(pkg) && filter(pkg) {
+			if err := sh.Run("go", "test", pkg); err != nil {
 				cnt++
 			}
 		}

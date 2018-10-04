@@ -1,4 +1,4 @@
-package core
+package tests
 
 import (
 	"github.com/magefile/mage/sh"

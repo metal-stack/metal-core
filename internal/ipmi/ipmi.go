@@ -1,7 +1,7 @@
 package ipmi
 
 import (
-	"github.com/labstack/gommon/log"
+	log "github.com/sirupsen/logrus"
 	goipmi "github.com/vmware/goipmi"
 )
 
