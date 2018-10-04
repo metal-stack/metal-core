@@ -32,7 +32,8 @@ type (
 func NewService(cfg domain.Config) Service {
 	srv = service{
 		server: &http.Server{
-			WriteTimeout: time.Second * 15,
+			WriteTimeout: 15 * time.Second,
+			ReadTimeout:  15 * time.Second,
 		},
 
 		apiClient:       api.NewClient(cfg),

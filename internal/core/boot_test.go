@@ -27,29 +27,29 @@ func TestPXEBoot(t *testing.T) {
 
 	time.Sleep(200 * time.Millisecond)
 
-	bootResponse := BootResponse{
+	br := BootResponse{
 		Kernel: "https://blobstore.fi-ts.io/metal/images/pxeboot-kernel",
 		InitRamDisk: []string{
 			"https://blobstore.fi-ts.io/metal/images/pxeboot-initrd.img",
 		},
 		CommandLine: "console=tty0 console=ttyS0",
 	}
-	var expected []byte
-	if m, err := json.Marshal(bootResponse); err != nil {
+	var expected string
+	if m, err := json.Marshal(br); err != nil {
 		assert.Fail(t, "Marshalling should not fail")
 	} else {
-		expected = m
+		expected = string(m)
 	}
 
 	// WHEN
-	response, err := fakePXEBootRequest()
+	resp, err := fakePXEBootRequest()
 
 	// THEN
 	if err != nil {
-		assert.Fail(t, "Valid PXE boot response expected", "\nExpected: %v\nActual: %v", string(expected), err)
+		assert.Fail(t, "Valid PXE boot response expected", "\nExpected: %v\nActual: %v", expected, err)
 	} else {
-		assert.Equal(t, string(expected), strings.TrimSpace(string(response.Body())))
-		assert.Equal(t, http.StatusOK, response.StatusCode())
+		assert.Equal(t, expected, strings.TrimSpace(string(resp.Body())))
+		assert.Equal(t, http.StatusOK, resp.StatusCode())
 	}
 }
 
@@ -70,7 +70,7 @@ func runMetalAPIServerMock() {
 
 	server := &http.Server{
 		Addr:    "localhost:8080",
-		Handler: router,
+		Handler: http.TimeoutHandler(router, time.Second, "Timeout!"),
 	}
 
 	if err := server.ListenAndServe(); err != nil {
