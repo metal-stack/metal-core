@@ -10,7 +10,7 @@ type (
 	Config struct {
 		// Valid log levels are: DEBUG, INFO, WARN, ERROR, FATAL and PANIC
 		LogLevel       string `required:"false" default:"INFO" desc:"set log level" envconfig:"log_level"`
-		ControlPlaneIP string `required:"false" desc:"set the control plane IP" envconfig:"metal_control_plane_ip"`
+		ControlPlaneIP string `required:"false" desc:"set the control plane IP" envconfig:"control_plane_ip"`
 		Address        string `required:"false" default:"localhost" desc:"set server address"`
 		Port           int    `required:"false" default:"4242" desc:"set server port"`
 		APIProtocol    string `required:"false" default:"http" desc:"set metal api protocol" envconfig:"metal_api_protocol"`
