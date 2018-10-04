@@ -7,16 +7,21 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
-type Build mg.Namespace
+type BUILD mg.Namespace
 
-// Create the binary metal-core in the bin subdirectory (it will overwrite any existing binary)
-func (Build) Binary() error {
+// Same as build:binary
+func Build() error {
 	Fmt()
 	return sh.Run("go", "build", "-o", "bin/metal-core")
 }
 
+// Create the binary metal-core in the bin subdirectory (it will overwrite any existing binary)
+func (BUILD) Binary() error {
+	return Build()
+}
+
 // Create the docker image 'registry.fi-ts.io/metal/metal-core:latest' that runs the binary metal-core by default
-func (b Build) Image() error {
+func (b BUILD) Image() error {
 	if err := b.Binary(); err != nil {
 		return err
 	}

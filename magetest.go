@@ -9,24 +9,29 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
-type Test mg.Namespace
+type TEST mg.Namespace
 
-// Run all tests
-func (Test) All() error {
+// Same as test:all
+func Test() error {
 	return runTests(func(dir string) bool {
 		return true
 	})
 }
 
+// Run all tests
+func (TEST) All() error {
+	return Test()
+}
+
 // Run all unit tests
-func (Test) Unit() error {
+func (TEST) Unit() error {
 	return runTests(func(dir string) bool {
 		return dir != "./tests"
 	})
 }
 
 // Run all integration tests
-func (Test) Integration() error {
+func (TEST) Integration() error {
 	return runTests(func(dir string) bool {
 		return dir == "./tests"
 	})

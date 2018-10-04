@@ -7,18 +7,22 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
-type Env mg.Namespace
+type ENV mg.Namespace
 
-// Start a test environment
-func (e Env) Up() error {
-	e.Down()
+// Same as env:up
+func Env() error {
+	down()
 	return sh.Run("docker-compose", "up")
 }
 
-// Create metal-core image and starts a test environment
-func (e Env) Create() error {
-	build := Build{}
-	if err := build.Binary(); err != nil {
+// Start a test environment
+func (e ENV) Up() error {
+	return Env()
+}
+
+// Create metal-core image and start a test environment
+func (e ENV) Create() error {
+	if err := Build(); err != nil {
 		return err
 	}
 	if err := sh.Run("docker-compose", "build"); err != nil {
@@ -27,8 +31,8 @@ func (e Env) Create() error {
 	return e.Up()
 }
 
-// Create all metal images and starts a test environment
-func (e Env) CreateAll() error {
+// Create all metal images and start a test environment
+func (e ENV) Create_All() error {
 	if err := sh.Run("docker", "build", "-t", "registry.fi-ts.io/metal/discover", "../discover"); err != nil {
 		return err
 	}
@@ -39,6 +43,10 @@ func (e Env) CreateAll() error {
 }
 
 // Shut down test environment
-func (Env) Down() error {
-	return sh.Run("docker-compose", "down")
+func (ENV) Down() {
+	down()
+}
+
+func down() {
+	sh.Run("docker-compose", "down")
 }
