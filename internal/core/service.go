@@ -64,10 +64,10 @@ func (s service) RunServer() {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/v1/boot/{mac}", bootEndpoint).Methods(http.MethodGet).Name("boot")
-	router.HandleFunc("/device/register/{deviceUuid}", registerEndpoint).Methods(http.MethodPost).Name("register")
-	router.HandleFunc("/device/install/{deviceUuid}", installEndpoint).Methods(http.MethodGet).Name("install")
-	router.HandleFunc("/device/report/{deviceUuid}", reportEndpoint).Methods(http.MethodPost).Name("report")
-	router.HandleFunc("/device/ready/{deviceUuid}", readyEndpoint).Methods(http.MethodPost).Name("ready")
+	router.HandleFunc("/device/register/{deviceId}", registerEndpoint).Methods(http.MethodPost).Name("register")
+	router.HandleFunc("/device/install/{deviceId}", installEndpoint).Methods(http.MethodGet).Name("install")
+	router.HandleFunc("/device/report/{deviceId}", reportEndpoint).Methods(http.MethodPost).Name("report")
+	router.HandleFunc("/device/ready/{deviceId}", readyEndpoint).Methods(http.MethodPost).Name("ready")
 	router.Use(loggingMiddleware)
 
 	server := s.GetServer()

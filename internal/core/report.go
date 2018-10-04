@@ -15,17 +15,17 @@ func reportEndpoint(w http.ResponseWriter, r *http.Request) {
 			"err": err,
 		}).Error("Failed to read request body")
 	} else {
-		uuid := mux.Vars(r)["deviceUuid"]
+		id := mux.Vars(r)["deviceId"]
 
 		log.WithFields(log.Fields{
-			"deviceUuid": uuid,
+			"deviceId": id,
 			"state":      state,
 		}).Info("Inform Metal API about device state")
 
-		sc := srv.GetMetalAPIClient().ReportDeviceState(uuid, string(state))
+		sc := srv.GetMetalAPIClient().ReportDeviceState(id, string(state))
 
 		logger := log.WithFields(log.Fields{
-			"deviceUuid": uuid,
+			"deviceId": id,
 			"statusCode": sc,
 		})
 
@@ -35,10 +35,10 @@ func reportEndpoint(w http.ResponseWriter, r *http.Request) {
 			logger.Info("Device state reported")
 
 			var sp []domain.SwitchPort
-			sc, sp = srv.GetMetalAPIClient().GetSwitchPorts(uuid)
+			sc, sp = srv.GetMetalAPIClient().GetSwitchPorts(id)
 
 			logger = log.WithFields(log.Fields{
-				"deviceUuid":  uuid,
+				"deviceId":  id,
 				"statusCode":  sc,
 				"switchPorts": sp,
 			})
@@ -51,7 +51,7 @@ func reportEndpoint(w http.ResponseWriter, r *http.Request) {
 				sc = srv.GetNetSwitchClient().ConfigurePorts(sp)
 
 				logger = log.WithFields(log.Fields{
-					"deviceUuid":  uuid,
+					"deviceId":  id,
 					"statusCode":  sc,
 					"switchPorts": sp,
 				})

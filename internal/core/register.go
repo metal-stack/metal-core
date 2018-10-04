@@ -14,15 +14,15 @@ func registerEndpoint(w http.ResponseWriter, r *http.Request) {
 			"err": err,
 		}).Error("Unable to read body")
 	} else {
-		deviceUuid := mux.Vars(r)["deviceUuid"]
+		deviceId := mux.Vars(r)["deviceId"]
 
-		log.WithField("deviceUuid", deviceUuid).
+		log.WithField("deviceId", deviceId).
 			Info("Register device at Metal API")
 
-		statusCode, device := srv.GetMetalAPIClient().RegisterDevice(deviceUuid, lshw)
+		statusCode, device := srv.GetMetalAPIClient().RegisterDevice(deviceId, lshw)
 
 		logger := log.WithFields(log.Fields{
-			"devideUuid": deviceUuid,
+			"devideId": deviceId,
 			"statusCode": statusCode,
 			"device":     device,
 		})
