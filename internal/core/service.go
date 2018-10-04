@@ -16,7 +16,7 @@ var srv Service
 
 type (
 	Service interface {
-		GetConfig() domain.Config
+		GetConfig() *domain.Config
 		GetMetalAPIClient() api.Client
 		GetNetSwitchClient() netswitch.Client
 		GetServer() *http.Server
@@ -29,7 +29,7 @@ type (
 	}
 )
 
-func NewService(cfg domain.Config) Service {
+func NewService(cfg *domain.Config) Service {
 	srv = service{
 		server: &http.Server{
 			WriteTimeout: 15 * time.Second,
@@ -42,7 +42,7 @@ func NewService(cfg domain.Config) Service {
 	return srv
 }
 
-func (s service) GetConfig() domain.Config {
+func (s service) GetConfig() *domain.Config {
 	return s.GetMetalAPIClient().GetConfig()
 }
 

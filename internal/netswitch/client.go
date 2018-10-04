@@ -7,21 +7,21 @@ import (
 
 type (
 	Client interface {
-		GetConfig() domain.Config
+		GetConfig() *domain.Config
 		ConfigurePorts([]domain.SwitchPort) int
 	}
 	client struct {
-		Config domain.Config
+		Config *domain.Config
 	}
 )
 
-func NewClient(cfg domain.Config) Client {
+func NewClient(cfg *domain.Config) Client {
 	return client{
 		Config: cfg,
 	}
 }
 
-func (c client) GetConfig() domain.Config {
+func (c client) GetConfig() *domain.Config {
 	return c.Config
 }
 

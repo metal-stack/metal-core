@@ -32,7 +32,7 @@ func TestPXEBoot(t *testing.T) {
 		InitRamDisk: []string{
 			"https://blobstore.fi-ts.io/metal/images/pxeboot-initrd.img",
 		},
-		CommandLine: "console=tty0 console=ttyS0 METAL_CONTROL_PLANE_IP=localhost",
+		CommandLine: "console=tty0 console=ttyS0 METAL_CONTROL_PLANE_IP=",
 	}
 	var expected string
 	if m, err := json.Marshal(br); err != nil {
@@ -61,7 +61,7 @@ func runMetalCoreServer(t *testing.T) {
 	if err := envconfig.Process("metal-core", &config); err != nil {
 		assert.Fail(t, "Cannot fetch configuration")
 	}
-	NewService(config).RunServer()
+	NewService(&config).RunServer()
 }
 
 func runMetalAPIServerMock() {

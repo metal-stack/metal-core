@@ -9,7 +9,7 @@ import (
 
 type (
 	Client interface {
-		GetConfig() domain.Config
+		GetConfig() *domain.Config
 		FindDevices(mac string) (int, []domain.Device)
 		RegisterDevice(deviceId string, lshw []byte) (int, domain.Device)
 		InstallImage(deviceId string) (int, domain.Image)
@@ -18,17 +18,17 @@ type (
 		Ready(deviceId string) int
 	}
 	client struct {
-		Config domain.Config
+		Config *domain.Config
 	}
 )
 
-func NewClient(cfg domain.Config) Client {
+func NewClient(cfg *domain.Config) Client {
 	return client{
 		Config: cfg,
 	}
 }
 
-func (c client) GetConfig() domain.Config {
+func (c client) GetConfig() *domain.Config {
 	return c.Config
 }
 

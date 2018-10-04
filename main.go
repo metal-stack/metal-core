@@ -38,9 +38,7 @@ func init() {
 	log.SetLevel(fetchLogLevel(cfg.LogLevel))
 	cfg.Log()
 
-	core.Config = cfg
-
-	srv = core.NewService(cfg)
+	srv = core.NewService(&cfg)
 }
 
 func fetchLogLevel(lvl string) log.Level {
