@@ -36,19 +36,19 @@ func bootEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func createBootDiscoveryImageResponse() BootResponse {
-	cl := "console=tty0"
+	cmdLine := "console=tty0"
 	if resp, err := resty.R().Get("https://blobstore.fi-ts.io/metal/images/pxeboot-cmdline"); err != nil {
 		log.WithField("err", err).
 			Error("File 'pxeboot-cmdline' could not be retrieved")
 	} else {
-		cl = string(resp.Body())
+		cmdLine = string(resp.Body())
 	}
 	return BootResponse{
 		Kernel: "https://blobstore.fi-ts.io/metal/images/pxeboot-kernel",
 		InitRamDisk: []string{
 			"https://blobstore.fi-ts.io/metal/images/pxeboot-initrd.img",
 		},
-		CommandLine: cl,
+		CommandLine: cmdLine,
 	}
 }
 

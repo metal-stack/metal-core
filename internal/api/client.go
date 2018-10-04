@@ -58,24 +58,24 @@ func (c client) InstallImage(deviceUuid string) (int, domain.Image) {
 }
 
 func (c client) ReportDeviceState(deviceUuid string, state string) int {
-	b := ""
+	body := ""
 	//TODO populate body appropriately
-	sc := c.postWithoutResponse("/device/report", nil, b)
+	sc := c.postWithoutResponse("/device/report", nil, body)
 	return sc
 }
 
 func (c client) GetSwitchPorts(deviceUuid string) (int, []domain.SwitchPort) {
-	b := ""
+	body := ""
 	var sp []domain.SwitchPort
 	//TODO populate body appropriately
-	sc := c.post("/device/switch-ports", nil, b, &sp)
+	sc := c.post("/device/switch-ports", nil, body, &sp)
 	return sc, sp
 }
 
 func (c client) Ready(deviceUuid string) int {
-	b := ""
+	body := ""
 	//TODO populate body appropriately
-	sc := c.postWithoutResponse("/device/ready", nil, b)
+	sc := c.postWithoutResponse("/device/ready", nil, body)
 	return sc
 }
 

@@ -19,18 +19,24 @@ type (
 		GetConfig() domain.Config
 		GetMetalAPIClient() api.Client
 		GetNetSwitchClient() netswitch.Client
+		GetServer() *http.Server
 		RunServer()
 	}
 	service struct {
-		api api.Client
-		ns  netswitch.Client
+		server          *http.Server
+		apiClient       api.Client
+		netSwitchClient netswitch.Client
 	}
 )
 
 func NewService(cfg domain.Config) Service {
 	srv = service{
-		api: api.NewClient(cfg),
-		ns:  netswitch.NewClient(cfg),
+		server: &http.Server{
+			WriteTimeout: time.Second * 15,
+		},
+
+		apiClient:       api.NewClient(cfg),
+		netSwitchClient: netswitch.NewClient(cfg),
 	}
 	return srv
 }
@@ -40,39 +46,39 @@ func (s service) GetConfig() domain.Config {
 }
 
 func (s service) GetMetalAPIClient() api.Client {
-	return s.api
+	return s.apiClient
 }
 
 func (s service) GetNetSwitchClient() netswitch.Client {
-	return s.ns
+	return s.netSwitchClient
+}
+
+func (s service) GetServer() *http.Server {
+	return s.server
 }
 
 func (s service) RunServer() {
 	addr := s.GetConfig().Address
-	p := s.GetConfig().Port
+	port := s.GetConfig().Port
 
-	r := mux.NewRouter()
-	r.HandleFunc("/v1/boot/{mac}", bootEndpoint).Methods("GET").Name("boot")
-	r.HandleFunc("/device/register/{deviceUuid}", registerEndpoint).Methods("POST").Name("register")
-	r.HandleFunc("/device/install/{deviceUuid}", installEndpoint).Methods("GET").Name("install")
-	r.HandleFunc("/device/report/{deviceUuid}", reportEndpoint).Methods("POST").Name("report")
-	r.HandleFunc("/device/ready/{deviceUuid}", readyEndpoint).Methods("POST").Name("ready")
-	r.Use(loggingMiddleware)
+	router := mux.NewRouter()
+	router.HandleFunc("/v1/boot/{mac}", bootEndpoint).Methods(http.MethodGet).Name("boot")
+	router.HandleFunc("/device/register/{deviceUuid}", registerEndpoint).Methods(http.MethodPost).Name("register")
+	router.HandleFunc("/device/install/{deviceUuid}", installEndpoint).Methods(http.MethodGet).Name("install")
+	router.HandleFunc("/device/report/{deviceUuid}", reportEndpoint).Methods(http.MethodPost).Name("report")
+	router.HandleFunc("/device/ready/{deviceUuid}", readyEndpoint).Methods(http.MethodPost).Name("ready")
+	router.Use(loggingMiddleware)
 
-	srv := &http.Server{
-		Addr:         fmt.Sprintf("%v:%d", addr, p),
-		WriteTimeout: time.Second * 15,
-		ReadTimeout:  time.Second * 15,
-		IdleTimeout:  time.Second * 60,
-		Handler:      r,
-	}
+	server := s.GetServer()
+	server.Addr = fmt.Sprintf("%v:%d", addr, port)
+	server.Handler = router
 
 	log.WithFields(log.Fields{
 		"address": addr,
-		"port":    p,
+		"port":    port,
 	}).Info("Starting API Server")
 
-	if err := srv.ListenAndServe(); err != nil {
+	if err := server.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -80,19 +86,19 @@ func (s service) RunServer() {
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
-		b, _ := ioutil.ReadAll(r.Body)
-		h := "{"
+		body, _ := ioutil.ReadAll(r.Body)
+		headers := "{"
 		for k, v := range r.Header {
 			if len(v) == 1 {
-				h += fmt.Sprintf("%v=%v, ", k, v[0])
+				headers += fmt.Sprintf("%v=%v, ", k, v[0])
 			} else if len(v) > 1 {
-				h += fmt.Sprintf("%v=%v, ", k, v)
+				headers += fmt.Sprintf("%v=%v, ", k, v)
 			}
 		}
-		if len(h) > 1 {
-			h = h[:len(h)-1]
+		if len(headers) > 1 {
+			headers = headers[:len(headers)-1]
 		}
-		h += "}"
+		headers += "}"
 		log.WithFields(log.Fields{
 			"remoteAddress": r.RemoteAddr,
 			"method":        r.Method,
@@ -100,8 +106,8 @@ func loggingMiddleware(next http.Handler) http.Handler {
 			"host":          r.Host,
 			"URI":           r.RequestURI,
 			"contentLength": r.ContentLength,
-			"body":          string(b),
-			"headers":       h,
+			"body":          string(body),
+			"headers":       headers,
 		}).Debug("Got request")
 		next.ServeHTTP(w, r)
 	})

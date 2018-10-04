@@ -24,42 +24,42 @@ func reportEndpoint(w http.ResponseWriter, r *http.Request) {
 
 		sc := srv.GetMetalAPIClient().ReportDeviceState(uuid, string(state))
 
-		l := log.WithFields(log.Fields{
+		logger := log.WithFields(log.Fields{
 			"deviceUuid": uuid,
 			"statusCode": sc,
 		})
 
 		if sc != http.StatusOK {
-			l.Error("Failed to report device state")
+			logger.Error("Failed to report device state")
 		} else {
-			l.Info("Device state reported")
+			logger.Info("Device state reported")
 
 			var sp []domain.SwitchPort
 			sc, sp = srv.GetMetalAPIClient().GetSwitchPorts(uuid)
 
-			l = log.WithFields(log.Fields{
+			logger = log.WithFields(log.Fields{
 				"deviceUuid":  uuid,
 				"statusCode":  sc,
 				"switchPorts": sp,
 			})
 
 			if sc != http.StatusOK {
-				l.Error("Failed to retrieve switch ports")
+				logger.Error("Failed to retrieve switch ports")
 			} else {
-				l.Info("Retrieved switch ports")
+				logger.Info("Retrieved switch ports")
 
 				sc = srv.GetNetSwitchClient().ConfigurePorts(sp)
 
-				l = log.WithFields(log.Fields{
+				logger = log.WithFields(log.Fields{
 					"deviceUuid":  uuid,
 					"statusCode":  sc,
 					"switchPorts": sp,
 				})
 
 				if sc != http.StatusOK {
-					l.Error("Failed to configure switch ports")
+					logger.Error("Failed to configure switch ports")
 				} else {
-					l.Info("Switch ports configured")
+					logger.Info("Switch ports configured")
 				}
 			}
 		}

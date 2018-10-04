@@ -21,16 +21,16 @@ func registerEndpoint(w http.ResponseWriter, r *http.Request) {
 
 		statusCode, device := srv.GetMetalAPIClient().RegisterDevice(deviceUuid, lshw)
 
-		l := log.WithFields(log.Fields{
+		logger := log.WithFields(log.Fields{
 			"devideUuid": deviceUuid,
 			"statusCode": statusCode,
 			"device":     device,
 		})
 
 		if statusCode != http.StatusOK {
-			l.Error("Failed to register device")
+			logger.Error("Failed to register device")
 		} else {
-			l.Info("Device registered")
+			logger.Info("Device registered")
 		}
 
 		rest.Respond(w, statusCode, device)

@@ -68,12 +68,12 @@ func runMetalAPIServerMock() {
 	router := mux.NewRouter()
 	router.HandleFunc("/device/find", findDeviceMockEndpoint).Methods("GET")
 
-	srv := &http.Server{
+	server := &http.Server{
 		Addr:    "localhost:8080",
 		Handler: router,
 	}
 
-	if err := srv.ListenAndServe(); err != nil {
+	if err := server.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
 }

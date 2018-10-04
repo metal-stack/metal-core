@@ -1,0 +1,37 @@
+version: '2'
+
+services:
+  metal-core:
+    build:
+      context: .
+    image: registry.fi-ts.io/metal/metal-core
+    container_name: metal-core-test
+    network_mode: host
+    environment:
+      METAL_CORE_LOG_LEVEL: DEBUG
+      METAL_CORE_ADDRESS: localhost
+      METAL_CORE_PORT: 4242
+      METAL_CORE_METAL_API_PROTOCOL: http
+      METAL_CORE_METAL_API_ADDRESS: localhost
+      METAL_CORE_METAL_API_PORT: 8090
+
+  metal-api:
+    image: registry.fi-ts.io/metal/metal-api
+    container_name: metal-api-test
+    tty: true
+    network_mode: host
+    environment:
+      METAL_API_WITH_MOCK_DATA: "true"
+      METAL_API_BIND_ADDR: localhost
+    command: ["/metal-api", "--port", "8090"]
+
+  discover:
+    image: registry.fi-ts.io/metal/discover
+    container_name: discover-test
+    network_mode: host
+    depends_on:
+      - metal-core
+      - metal-api
+    environment:
+      DISCOVER_REPORTURL: http://localhost:4242/device/register
+      DISCOVER_INSTALLURL: http://localhost:4242/device/install

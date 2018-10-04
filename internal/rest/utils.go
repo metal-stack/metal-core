@@ -67,23 +67,23 @@ func (r *Request) Post(body interface{}) *resty.Response {
 func (r *Request) post(body interface{}) (*resty.Response, error) {
 	uri := r.createUri()
 
-	l := log.WithFields(log.Fields{
+	logger := log.WithFields(log.Fields{
 		"method": "POST",
 		"URI":    uri,
 		"header": "Content-Type=application/json",
 		"body":   body,
 	})
 
-	if j, err := json.Marshal(body); err != nil {
-		l.Error("Failed to marshal body")
+	if bodyJson, err := json.Marshal(body); err != nil {
+		logger.Error("Failed to marshal body")
 		return nil, err
 	} else {
-		l.WithField("body", string(j)).
+		logger.WithField("body", string(bodyJson)).
 			Debug("Rest call")
 
 		req := resty.R().
 			SetHeader("Content-Type", "application/json").
-			SetBody(j)
+			SetBody(bodyJson)
 		if r.Params != nil {
 			req.SetQueryParams(*r.Params)
 		}
@@ -128,13 +128,13 @@ func CreateQueryParams(kv ...string) *Params {
 }
 
 func Unmarshal(resp *resty.Response, v interface{}) {
-	b := resp.Body()
-	if err := json.Unmarshal(b, v); err != nil {
+	body := resp.Body()
+	if err := json.Unmarshal(body, v); err != nil {
 		log.Error(err)
 	} else {
 		log.WithFields(log.Fields{
 			"statusCode": resp.StatusCode(),
-			"body":       string(b),
+			"body":       string(body),
 		}).Debug("Got response")
 	}
 }
