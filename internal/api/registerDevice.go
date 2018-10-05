@@ -55,7 +55,7 @@ func (c client) RegisterDevice(deviceId string, hw []byte) (int, *domain.Device)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		log.Errorf("POST of hw to register endpoint did not succeed %v", resp.Status)
+		log.Errorf("POST of hw to register endpoint did not succeed %v: %s", resp.Status, string(body))
 		return resp.StatusCode, nil
 	}
 
