@@ -4,16 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"git.f-i-ts.de/cloud-native/maas/metal-api/pkg/metal"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	log "github.com/sirupsen/logrus"
 )
-
-type registerDeviceRequest struct {
-	UUID       string               `json:"uuid" description:"the product uuid of the device to register"`
-	FacilityID string               `json:"facilityid" description:"the facility id to register this device with"`
-	Hardware   metal.DeviceHardware `json:"hardware" description:"the hardware of this device"`
-}
 
 func (c client) RegisterDevice(deviceId string, hw []byte) (int, *domain.Device) {
 	rdr := domain.RegisterDeviceRequest{}

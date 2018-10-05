@@ -4,7 +4,7 @@ require (
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2
 	github.com/kelseyhightower/envconfig v1.3.0
-	github.com/labstack/gommon v0.2.7
+	github.com/labstack/gommon v0.2.7 // indirect
 	github.com/magefile/mage v1.6.2
 	github.com/mattn/go-colorable v0.0.9 // indirect
 	github.com/mattn/go-isatty v0.0.4 // indirect
