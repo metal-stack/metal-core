@@ -2,9 +2,10 @@ package api
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 )
 
 type registerDeviceRequest struct {
@@ -17,7 +18,7 @@ type registerDeviceRequest struct {
 }
 
 func (c client) RegisterDevice(deviceId string, hw []byte) (int, *domain.Device) {
-	rdr := domain.RegisterDeviceRequest{}
+	rdr := &domain.RegisterDeviceRequest{}
 	if err := json.Unmarshal(hw, rdr); err != nil {
 		log.Error("Cannot unmarshal request body")
 		return http.StatusBadRequest, nil
@@ -26,13 +27,13 @@ func (c client) RegisterDevice(deviceId string, hw []byte) (int, *domain.Device)
 	for i := range rdr.Nics {
 		macs[i] = rdr.Nics[i].MacAddress
 	}
-	sizeId := "t1.small.x86"
+	sizeID := "t1.small.x86"
 	//TODO Fetch sizeId from Metal-API by providing rdr.Memory and rdr.CPUCores values
 	req := registerDeviceRequest{
 		ID:         deviceId,
 		Macs:       macs,
 		FacilityID: c.GetConfig().FacilityID,
-		SizeID:     sizeId,
+		SizeID:     sizeID,
 	}
 	var dev *domain.Device
 	sc := c.postExpect("/device/register", nil, req, dev)
