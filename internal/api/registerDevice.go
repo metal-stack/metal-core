@@ -15,7 +15,10 @@ import (
 func (c client) RegisterDevice(deviceId string, hw []byte) (int, *domain.Device) {
 	rdr := &domain.RegisterDeviceRequest{}
 	if err := json.Unmarshal(hw, rdr); err != nil {
-		log.Errorf("Cannot unmarshal request body of hw:%s error:%v", string(hw), err)
+		logging.Decorate(log.WithFields(log.Fields{
+			"hardware": string(hw),
+			"error":    err,
+		})).Error("Cannot unmarshal request body of hardware")
 		return http.StatusBadRequest, nil
 	}
 

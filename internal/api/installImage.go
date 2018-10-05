@@ -20,19 +20,24 @@ func (c client) InstallImage(deviceId string) (int, *domain.Device) {
 	client := &http.Client{}
 	resp, err := client.Do(httpRequest)
 	if err != nil {
-		log.Debugf("Install request failed: %v", err)
+		log.WithField("error", err).
+			Debug("Install request failed")
 	}
 
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Errorf("unable to read response from wait call %v", err)
+		logging.Decorate(log.WithField("error", err)).
+			Error("unable to read response from wait call")
 		return resp.StatusCode, nil
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		log.Errorf("GET to wait endpoint did not succeed %v: %s", resp.Status, string(body))
+		logging.Decorate(log.WithFields(log.Fields{
+			"status": resp.Status,
+			"body":   string(body),
+		})).Error("GET to wait endpoint did not succeed")
 		return resp.StatusCode, nil
 	}
 
