@@ -23,6 +23,11 @@ func (c client) InstallImage(deviceId string) (int, *domain.Device) {
 		resp, err = client.Do(httpRequest)
 		if err != nil {
 			log.Debugf("Long poll request failed: %v", err)
+		}
+		if resp.StatusCode != http.StatusOK {
+			body, _ := ioutil.ReadAll(resp.Body)
+			log.Errorf("GET to wait endpoint did not succeed %v: %s", resp.Status, string(body))
+			return resp.StatusCode, nil
 		} else {
 			break
 		}
@@ -32,11 +37,6 @@ func (c client) InstallImage(deviceId string) (int, *domain.Device) {
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Errorf("unable to read response from wait call %v", err)
-		return resp.StatusCode, nil
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		log.Errorf("GET to wait endpoint did not succeed %v: %s", resp.Status, string(body))
 		return resp.StatusCode, nil
 	}
 
