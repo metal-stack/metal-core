@@ -57,7 +57,6 @@ func TestPXEBoot(t *testing.T) {
 func runMetalCoreServer(t *testing.T) {
 	os.Setenv("METAL_CORE_CONTROL_PLANE_IP", "localhost")
 	os.Setenv("METAL_CORE_FACILITY_ID", "FRA")
-	os.Setenv("METAL_CORE_SIZE", "t1.small.x86")
 	config := domain.Config{}
 	if err := envconfig.Process("METAL_CORE", &config); err != nil {
 		assert.Fail(t, "Cannot fetch configuration")

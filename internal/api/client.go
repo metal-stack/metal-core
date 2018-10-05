@@ -43,7 +43,7 @@ func (c client) RegisterDevice(deviceId string, hw []byte) (int, domain.Device) 
 		ID:         deviceId,
 		Macs:       []string{},
 		FacilityID: c.GetConfig().FacilityID,
-		SizeID:     c.GetConfig().Size,
+		SizeID:     "t1.small.x86",
 	}
 	//TODO populate request with appropriate values from lshw
 	var dev domain.Device
