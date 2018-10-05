@@ -9,7 +9,7 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
-type INT mg.Namespace
+type TEST mg.Namespace
 
 // Run all tests
 func Test() error {
@@ -19,35 +19,17 @@ func Test() error {
 }
 
 // Run all unit tests
-func Unit() error {
+func (TEST) Unit() error {
 	return runTests(func(dir string) bool {
 		return dir != "./tests"
 	})
 }
 
 // Run all integration tests
-func Int() error {
+func (TEST) Int() error {
 	return runTests(func(dir string) bool {
 		return dir == "./tests"
 	})
-}
-
-// (Re)build metal-core image and run all integration tests
-func (INT) Build() error {
-	b := BUILD{}
-	if err := b.Image(); err != nil {
-		return err
-	}
-	return Int()
-}
-
-// (Re)build all metal images and run all integration tests
-func (INT) Scratch() error {
-	b := BUILD{}
-	if err := b.All(); err != nil {
-		return err
-	}
-	return Int()
 }
 
 func runTests(filter func(dir string) bool) error {

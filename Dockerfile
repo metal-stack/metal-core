@@ -14,8 +14,7 @@ RUN go mod download \
 COPY ./ ./
 
 # Test and build metal-core
-RUN mage test:unit \
- && mage build:binary
+RUN mage test:unit build:bin
 
 FROM alpine:3.8
 LABEL maintainer FI-TS Devops <devops@f-i-ts.de>
