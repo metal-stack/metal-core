@@ -56,14 +56,26 @@ type (
 		SizeID       string    `json:"-" rethinkdb:"sizeid"`
 		MACAddresses []string  `json:"macAddresses" description:"the list of mac addresses in this device" readOnly:"true" rethinkdb:"macAddresses"`
 	}
-	RegisterDeviceRequest struct {
-		ID         string   `json:"id" description:"the id of the device to register"`
-		Macs       []string `json:"macs" description:"the mac addresses to register this device with"`
-		FacilityID string   `json:"facilityid" description:"the facility id to register this device with"`
-		SizeID     string   `json:"sizeid" description:"the size id to register this device with"`
-		// Memory     int64  `json:"memory" description:"the size id to assign this device to"`
-		// CpuCores   int    `json:"cpucores" description:"the size id to assign this device to"`
+	Nic struct {
+		MacAddress string   `json:"mac"`
+		Name       string   `json:"name"`
+		Vendor     string   `json:"vendor"`
+		Features   []string `json:"features"`
 	}
+
+	BlockDevice struct {
+		Name string `json:"name"`
+		Size uint64 `json:"size"`
+	}
+
+	RegisterDeviceRequest struct {
+		UUID     string        `json:"uuid" description:"the uuid of the device to register"`
+		Memory   int64         `json:"memory" description:"the memory in bytes of the device to register"`
+		CPUCores uint32        `json:"cpucores" description:"the cpu core of the device to register"`
+		Nics     []Nic         `json:"nics"`
+		Disks    []BlockDevice `json:"disks"`
+	}
+
 	SwitchPort struct {
 	}
 )

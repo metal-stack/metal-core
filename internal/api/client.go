@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
 	"net/http"
@@ -11,8 +10,8 @@ type (
 	Client interface {
 		GetConfig() *domain.Config
 		FindDevices(mac string) (int, []domain.Device)
-		RegisterDevice(deviceId string, hw []byte) (int, domain.Device)
-		InstallImage(deviceId string) (int, domain.Image)
+		RegisterDevice(deviceId string, hw []byte) (int, *domain.Device)
+		InstallImage(deviceId string) (int, *domain.Image)
 		ReportDeviceState(deviceId string, state string) int
 		GetSwitchPorts(deviceId string) (int, []domain.SwitchPort)
 		Ready(deviceId string) int
@@ -30,31 +29,6 @@ func NewClient(cfg *domain.Config) Client {
 
 func (c client) GetConfig() *domain.Config {
 	return c.Config
-}
-
-func (c client) FindDevices(mac string) (int, []domain.Device) {
-	var devs []domain.Device
-	sc := c.getExpect("/device/find", rest.CreateQueryParams("mac", mac), &devs)
-	return sc, devs
-}
-
-func (c client) RegisterDevice(deviceId string, hw []byte) (int, domain.Device) {
-	req := domain.RegisterDeviceRequest{
-		ID:         deviceId,
-		Macs:       []string{},
-		FacilityID: c.GetConfig().FacilityID,
-		SizeID:     "t1.small.x86",
-	}
-	//TODO populate request with appropriate values from lshw
-	var dev domain.Device
-	sc := c.postExpect("/device/register", nil, req, &dev)
-	return sc, dev
-}
-
-func (c client) InstallImage(deviceId string) (int, domain.Image) {
-	var img domain.Image
-	sc := c.getExpect(fmt.Sprintf("/image/%v", "2"), nil, &img)
-	return sc, img
 }
 
 func (c client) ReportDeviceState(deviceId string, state string) int {
