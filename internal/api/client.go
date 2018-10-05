@@ -1,9 +1,10 @@
 package api
 
 import (
+	"net/http"
+
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
-	"net/http"
 )
 
 type (
@@ -11,7 +12,7 @@ type (
 		GetConfig() *domain.Config
 		FindDevices(mac string) (int, []domain.Device)
 		RegisterDevice(deviceId string, hw []byte) (int, *domain.Device)
-		InstallImage(deviceId string) (int, *domain.Image)
+		InstallImage(deviceId string) (int, *domain.Device)
 		ReportDeviceState(deviceId string, state string) int
 		GetSwitchPorts(deviceId string) (int, []domain.SwitchPort)
 		Ready(deviceId string) int

@@ -1,10 +1,11 @@
 package core
 
 import (
+	"net/http"
+
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 )
 
 func installEndpoint(w http.ResponseWriter, r *http.Request) {
@@ -13,7 +14,7 @@ func installEndpoint(w http.ResponseWriter, r *http.Request) {
 	log.WithField("deviceId", id).
 		Info("Request metal API for an image to install")
 
-	sc, img := srv.GetMetalAPIClient().InstallImage(id)
+	sc, device := srv.GetMetalAPIClient().InstallImage(id)
 
 	logger := log.WithFields(log.Fields{
 		"statusCode": sc,
@@ -22,8 +23,8 @@ func installEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	if sc == http.StatusOK {
 		logger.WithFields(log.Fields{
-			"imageID":  img.ID,
-			"imageURL": img.Url,
+			"imageID":  device.Image.ID,
+			"imageURL": device.Image.Url,
 		}).Info("Got image to install")
 		//rest.Respond(w, http.StatusOK, image.Url)
 		rest.Respond(w, http.StatusOK, "https://blobstore.fi-ts.io/metal/images/os/ubuntu/18.04/img.tar.gz")
