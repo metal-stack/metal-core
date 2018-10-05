@@ -18,6 +18,8 @@ func registerEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.WithField("register hw", string(hw)).
+		Info("Register device")
 	deviceID := mux.Vars(r)["deviceId"]
 
 	log.WithField("deviceId", deviceID).
