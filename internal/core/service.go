@@ -2,17 +2,15 @@ package core
 
 import (
 	"fmt"
+	"net/http"
+	"time"
+
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/api"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/netswitch"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
-	"io/ioutil"
-	"net/http"
-	"time"
 )
-
-var srv Service
 
 type (
 	Service interface {
@@ -28,6 +26,8 @@ type (
 		netSwitchClient netswitch.Client
 	}
 )
+
+var srv Service
 
 func NewService(cfg *domain.Config) Service {
 	srv = service{
@@ -68,7 +68,6 @@ func (s service) RunServer() {
 	router.HandleFunc("/device/install/{deviceId}", installEndpoint).Methods(http.MethodGet).Name("install")
 	router.HandleFunc("/device/report/{deviceId}", reportEndpoint).Methods(http.MethodPost).Name("report")
 	router.HandleFunc("/device/ready/{deviceId}", readyEndpoint).Methods(http.MethodPost).Name("ready")
-	router.Use(loggingMiddleware)
 
 	server := s.GetServer()
 	server.Addr = fmt.Sprintf("%v:%d", addr, port)
@@ -82,34 +81,4 @@ func (s service) RunServer() {
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
-}
-
-func loggingMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
-		body, _ := ioutil.ReadAll(r.Body)
-		headers := "{"
-		for k, v := range r.Header {
-			if len(v) == 1 {
-				headers += fmt.Sprintf("%v=%v, ", k, v[0])
-			} else if len(v) > 1 {
-				headers += fmt.Sprintf("%v=%v, ", k, v)
-			}
-		}
-		if len(headers) > 1 {
-			headers = headers[:len(headers)-1]
-		}
-		headers += "}"
-		log.WithFields(log.Fields{
-			"remoteAddress": r.RemoteAddr,
-			"method":        r.Method,
-			"protocol":      r.Proto,
-			"host":          r.Host,
-			"URI":           r.RequestURI,
-			"contentLength": r.ContentLength,
-			"body":          string(body),
-			"headers":       headers,
-		}).Debug("Got request")
-		next.ServeHTTP(w, r)
-	})
 }
