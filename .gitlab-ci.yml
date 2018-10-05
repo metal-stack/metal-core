@@ -3,12 +3,9 @@ image: registry.cloud.fits/fits/builder:7-dev
 stages:
   - push
 
-# allow resolving dependencies from other repositories
-before_script:
-    - git config --global url."https://$GITLAB_USER_LOGIN:$CI_JOB_TOKEN@git.f-i-ts.de/".insteadOf "https://git.f-i-ts.de/"
-
 push:
   stage: push
-  script: docker-make --exclude-linting-rules rule3 --summary
+  script: 
+    - docker-make --exclude-linting-rules rule3 --summary
   only:
     - master

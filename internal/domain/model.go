@@ -1,9 +1,10 @@
 package domain
 
 import (
-	log "github.com/sirupsen/logrus"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type (
@@ -74,6 +75,19 @@ type (
 		CPUCores uint32        `json:"cpucores" description:"the cpu core of the device to register"`
 		Nics     []Nic         `json:"nics"`
 		Disks    []BlockDevice `json:"disks"`
+	}
+
+	MetalApiDeviceHardware struct {
+		Memory   int64         `json:"memory" description:"the total memory of the device" rethinkdb:"memory"`
+		CPUCores uint32        `json:"cpu_cores" description:"the total memory of the device" rethinkdb:"cpu_cores"`
+		Nics     []Nic         `json:"nics" description:"the list of network interfaces of this device" rethinkdb:"network_interfaces"`
+		Disks    []BlockDevice `json:"disks" description:"the list of block devices of this device" rethinkdb:"block_devices"`
+	}
+
+	MetalApiRegisterDeviceRequest struct {
+		UUID       string                 `json:"uuid" description:"the product uuid of the device to register"`
+		FacilityID string                 `json:"facilityid" description:"the facility id to register this device with"`
+		Hardware   MetalApiDeviceHardware `json:"hardware" description:"the hardware of this device"`
 	}
 
 	SwitchPort struct {

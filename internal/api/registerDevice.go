@@ -21,30 +21,14 @@ func (c client) RegisterDevice(deviceId string, hw []byte) (int, *domain.Device)
 		log.Error("Cannot unmarshal request body")
 		return http.StatusBadRequest, nil
 	}
-	var nics []metal.Nic
-	for _, nic := range rdr.Nics {
-		nics = append(nics, metal.Nic{
-			MacAddress: nic.MacAddress,
-			Name:       nic.Name,
-			Vendor:     nic.Vendor,
-			Features:   nic.Features,
-		})
-	}
-	var disks []metal.BlockDevice
-	for _, disk := range rdr.Disks {
-		disks = append(disks, metal.BlockDevice{
-			Size: disk.Size,
-			Name: disk.Name,
-		})
-	}
-	req := registerDeviceRequest{
+	req := domain.MetalApiRegisterDeviceRequest{
 		UUID:       deviceId,
 		FacilityID: c.GetConfig().FacilityID,
-		Hardware: metal.DeviceHardware{
+		Hardware: domain.MetalApiDeviceHardware{
 			Memory:   rdr.Memory,
 			CPUCores: rdr.CPUCores,
-			Nics:     nics,
-			Disks:    disks,
+			Nics:     rdr.Nics,
+			Disks:    rdr.Disks,
 		},
 	}
 	var dev *domain.Device
