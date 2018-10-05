@@ -11,11 +11,16 @@ import (
 
 type TEST mg.Namespace
 
-// Run all tests
+// Same as test:all
 func Test() error {
 	return runTests(func(dir string) bool {
 		return true
 	})
+}
+
+// Run all tests
+func (TEST) All() error {
+	return Test()
 }
 
 // Run all unit tests

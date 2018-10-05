@@ -9,10 +9,15 @@ import (
 
 type ENV mg.Namespace
 
-// Start a test environment
-func (ENV) Up() error {
+// Same as env:up
+func Env() error {
 	down()
 	return sh.RunV("docker-compose", "up")
+}
+
+// Start a test environment
+func (ENV) Up() error {
+	return Env()
 }
 
 // Shut down test environment

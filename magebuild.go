@@ -9,10 +9,15 @@ import (
 
 type BUILD mg.Namespace
 
-// (Re)build metal-core binary in the bin subdirectory
-func (BUILD) Bin() error {
+// Same as build:bin
+func Build() error {
 	Fmt()
 	return sh.RunV("go", "build", "-o", "bin/metal-core")
+}
+
+// (Re)build metal-core binary in the bin subdirectory
+func (BUILD) Bin() error {
+	return Build()
 }
 
 // (Re)build metal-core image
