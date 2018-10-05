@@ -42,8 +42,8 @@ func (c client) RegisterDevice(deviceId string, hw []byte) (int, domain.Device) 
 	req := domain.RegisterDeviceRequest{
 		ID:         deviceId,
 		Macs:       []string{},
-		FacilityID: "NBG1",
-		SizeID:     "t1.small.x86",
+		FacilityID: c.GetConfig().FacilityID,
+		SizeID:     c.GetConfig().Size,
 	}
 	//TODO populate request with appropriate values from lshw
 	var dev domain.Device

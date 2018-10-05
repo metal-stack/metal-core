@@ -9,8 +9,10 @@ import (
 type (
 	Config struct {
 		// Valid log levels are: DEBUG, INFO, WARN, ERROR, FATAL and PANIC
-		LogLevel       string `required:"false" default:"INFO" desc:"set log level" envconfig:"log_level"`
-		ControlPlaneIP string `required:"false" default:"localhost" desc:"set the control plane IP" envconfig:"control_plane_ip"`
+		LogLevel       string `required:"false" default:"INFO" desc:"set log level" split_words:"true"`
+		ControlPlaneIP string `required:"true" desc:"set the control plane IP" split_words:"true"`
+		FacilityID     string `required:"true" desc:"set the facility ID" split_words:"true"`
+		Size           string `required:"true" desc:"set the size"`
 		Address        string `required:"false" default:"localhost" desc:"set server address"`
 		Port           int    `required:"false" default:"4242" desc:"set server port"`
 		APIProtocol    string `required:"false" default:"http" desc:"set metal api protocol" envconfig:"metal_api_protocol"`
