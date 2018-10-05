@@ -30,6 +30,9 @@ func installEndpoint(w http.ResponseWriter, r *http.Request) {
 	} else {
 		logger.Error("No installation image found")
 		w.WriteHeader(sc)
-		w.Write([]byte("No installation image found"))
+		_, err := w.Write([]byte("No installation image found"))
+		if err != nil {
+			log.Error(err)
+		}
 	}
 }
