@@ -2,18 +2,17 @@ package api
 
 import (
 	"encoding/json"
+	"net/http"
+
+	"git.f-i-ts.de/cloud-native/maas/metal-api/pkg/metal"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 )
 
 type registerDeviceRequest struct {
-	ID         string   `json:"id" description:"the id of the device to register"`
-	Macs       []string `json:"macs" description:"the mac addresses to register this device with"`
-	FacilityID string   `json:"facilityid" description:"the facility id to register this device with"`
-	SizeID     string   `json:"sizeid" description:"the size id to register this device with"`
-	// Memory     int64  `json:"memory" description:"the size id to assign this device to"`
-	// CpuCores   int    `json:"cpucores" description:"the size id to assign this device to"`
+	UUID       string               `json:"uuid" description:"the product uuid of the device to register"`
+	FacilityID string               `json:"facilityid" description:"the facility id to register this device with"`
+	Hardware   metal.DeviceHardware `json:"hardware" description:"the hardware of this device"`
 }
 
 func (c client) RegisterDevice(deviceId string, hw []byte) (int, *domain.Device) {
@@ -22,17 +21,31 @@ func (c client) RegisterDevice(deviceId string, hw []byte) (int, *domain.Device)
 		log.Error("Cannot unmarshal request body")
 		return http.StatusBadRequest, nil
 	}
-	macs := make([]string, len(rdr.Nics))
-	for i := range rdr.Nics {
-		macs[i] = rdr.Nics[i].MacAddress
+	var nics []metal.Nic
+	for _, nic := range rdr.Nics {
+		nics = append(nics, metal.Nic{
+			MacAddress: nic.MacAddress,
+			Name:       nic.Name,
+			Vendor:     nic.Vendor,
+			Features:   nic.Features,
+		})
 	}
-	sizeId := "t1.small.x86"
-	//TODO Fetch sizeId from Metal-API by providing rdr.Memory and rdr.CPUCores values
+	var disks []metal.BlockDevice
+	for _, disk := range rdr.Disks {
+		disks = append(disks, metal.BlockDevice{
+			Size: disk.Size,
+			Name: disk.Name,
+		})
+	}
 	req := registerDeviceRequest{
-		ID:         deviceId,
-		Macs:       macs,
+		UUID:       deviceId,
 		FacilityID: c.GetConfig().FacilityID,
-		SizeID:     sizeId,
+		Hardware: metal.DeviceHardware{
+			Memory:   rdr.Memory,
+			CPUCores: rdr.CPUCores,
+			Nics:     nics,
+			Disks:    disks,
+		},
 	}
 	var dev *domain.Device
 	sc := c.postExpect("/device/register", nil, req, dev)
