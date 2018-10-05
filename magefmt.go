@@ -11,7 +11,7 @@ import (
 func Fmt() {
 	for _, pkg := range fetchGoPackages() {
 		if containsGoSources(pkg) {
-			sh.Run("go", "fmt", pkg)
+			sh.RunV("go", "fmt", pkg)
 		}
 	}
 }

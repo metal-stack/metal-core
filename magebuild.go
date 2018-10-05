@@ -9,21 +9,27 @@ import (
 
 type BUILD mg.Namespace
 
-// Same as build:binary
+// (Re)build metal-core binary in the bin subdirectory
 func Build() error {
 	Fmt()
-	return sh.Run("go", "build", "-o", "bin/metal-core")
+	return sh.RunV("go", "build", "-o", "bin/metal-core")
 }
 
-// Create the binary metal-core in the bin subdirectory (it will overwrite any existing binary)
-func (BUILD) Binary() error {
-	return Build()
-}
-
-// Create the docker image 'registry.fi-ts.io/metal/metal-core:latest' that runs the binary metal-core by default
-func (b BUILD) Image() error {
-	if err := b.Binary(); err != nil {
+// (Re)build metal-core image
+func (BUILD) Image() error {
+	if err := Build(); err != nil {
 		return err
 	}
-	return sh.Run("docker-compose", "build")
+	return sh.RunV("docker-compose", "build")
+}
+
+// (Re)build all metal images, i.e. 'registry.fi-ts.io/metal/[metal-hammer|metal-api|metal-core]:latest'
+func (b BUILD) All() error {
+	if err := sh.RunV("docker", "build", "-t", "registry.fi-ts.io/metal/metal-hammer", "../metal-hammer"); err != nil {
+		return err
+	}
+	if err := sh.RunV("docker-compose", "-f", "../maas-service/docker-compose.yml", "build"); err != nil {
+		return err
+	}
+	return b.Image()
 }

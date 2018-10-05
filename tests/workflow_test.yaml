@@ -9,11 +9,6 @@ services:
     network_mode: host
     environment:
       METAL_CORE_LOG_LEVEL: DEBUG
-      METAL_CORE_CONTROL_PLANE_IP: localhost
-      METAL_CORE_ADDRESS: localhost
-      METAL_CORE_PORT: 4242
-      METAL_CORE_METAL_API_PROTOCOL: http
-      METAL_CORE_METAL_API_ADDRESS: localhost
       METAL_CORE_METAL_API_PORT: 8090
 
   metal-api:
@@ -26,13 +21,10 @@ services:
       METAL_API_BIND_ADDR: localhost
     command: ["/metal-api", "--port", "8090"]
 
-  discover:
-    image: registry.fi-ts.io/metal/discover
-    container_name: discover-test
+  metal-hammer:
+    image: registry.fi-ts.io/metal/metal-hammer
+    container_name: metal-hammer-test
     network_mode: host
     depends_on:
       - metal-core
       - metal-api
-    environment:
-      DISCOVER_REPORTURL: http://localhost:4242/device/register
-      DISCOVER_INSTALLURL: http://localhost:4242/device/install

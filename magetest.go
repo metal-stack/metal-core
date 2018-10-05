@@ -9,39 +9,52 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
-type TEST mg.Namespace
+type INT mg.Namespace
 
-// Same as test:all
+// Run all tests
 func Test() error {
 	return runTests(func(dir string) bool {
 		return true
 	})
 }
 
-// Run all tests
-func (TEST) All() error {
-	return Test()
-}
-
 // Run all unit tests
-func (TEST) Unit() error {
+func Unit() error {
 	return runTests(func(dir string) bool {
 		return dir != "./tests"
 	})
 }
 
 // Run all integration tests
-func (TEST) Integration() error {
+func Int() error {
 	return runTests(func(dir string) bool {
 		return dir == "./tests"
 	})
+}
+
+// (Re)build metal-core image and run all integration tests
+func (INT) Build() error {
+	b := BUILD{}
+	if err := b.Image(); err != nil {
+		return err
+	}
+	return Int()
+}
+
+// (Re)build all metal images and run all integration tests
+func (INT) Scratch() error {
+	b := BUILD{}
+	if err := b.All(); err != nil {
+		return err
+	}
+	return Int()
 }
 
 func runTests(filter func(dir string) bool) error {
 	cnt := 0
 	for _, pkg := range fetchGoPackages() {
 		if containsGoTests(pkg) && filter(pkg) {
-			if err := sh.Run("go", "test", pkg); err != nil {
+			if err := sh.RunV("go", "test", "-count", "1", "-v", pkg); err != nil {
 				cnt++
 			}
 		}

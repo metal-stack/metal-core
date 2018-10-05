@@ -9,7 +9,7 @@ import (
 )
 
 func registerEndpoint(w http.ResponseWriter, r *http.Request) {
-	if lshw, err := ioutil.ReadAll(r.Body); err != nil {
+	if hw, err := ioutil.ReadAll(r.Body); err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("Unable to read body")
@@ -19,7 +19,7 @@ func registerEndpoint(w http.ResponseWriter, r *http.Request) {
 		log.WithField("deviceId", deviceId).
 			Info("Register device at Metal API")
 
-		statusCode, device := srv.GetMetalAPIClient().RegisterDevice(deviceId, lshw)
+		statusCode, device := srv.GetMetalAPIClient().RegisterDevice(deviceId, hw)
 
 		logger := log.WithFields(log.Fields{
 			"devideId":   deviceId,

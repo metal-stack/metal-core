@@ -9,37 +9,28 @@ import (
 
 type ENV mg.Namespace
 
-// Same as env:up
+// Start a test environment
 func Env() error {
 	down()
-	return sh.Run("docker-compose", "up")
+	return sh.RunV("docker-compose", "up")
 }
 
-// Start a test environment
-func (e ENV) Up() error {
+// (Re)build metal-core image and start a test environment
+func (ENV) Build() error {
+	b := BUILD{}
+	if err := b.Image(); err != nil {
+		return err
+	}
 	return Env()
 }
 
-// Create metal-core image and start a test environment
-func (e ENV) Create() error {
-	if err := Build(); err != nil {
+// (Re)build all metal images and start a test environment
+func (ENV) Scratch() error {
+	b := BUILD{}
+	if err := b.All(); err != nil {
 		return err
 	}
-	if err := sh.Run("docker-compose", "build"); err != nil {
-		return err
-	}
-	return e.Up()
-}
-
-// Create all metal images and start a test environment
-func (e ENV) Create_All() error {
-	if err := sh.Run("docker", "build", "-t", "registry.fi-ts.io/metal/discover", "../discover"); err != nil {
-		return err
-	}
-	//if err := sh.Run("docker-compose", "-f", "../maas-service/docker-compose.yml", "build"); err != nil {
-	//	return err
-	//}
-	return e.Create()
+	return Env()
 }
 
 // Shut down test environment
@@ -48,5 +39,5 @@ func (ENV) Down() {
 }
 
 func down() {
-	sh.Run("docker-compose", "down")
+	sh.RunV("docker-compose", "down")
 }

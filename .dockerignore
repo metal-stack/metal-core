@@ -1,6 +1,7 @@
 .dockerignore
 .gitignore
 bin
+tests
 docker-compose.yaml
 Dockerfile
 *.md

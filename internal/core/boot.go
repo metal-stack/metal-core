@@ -44,7 +44,10 @@ func createBootDiscoveryImageResponse() BootResponse {
 	} else {
 		cmdLine = string(resp.Body())
 	}
-	cmdLine += fmt.Sprintf(" METAL_CORE_URL=http://%v:%d", srv.GetConfig().ControlPlaneIP, srv.GetConfig().Port)
+	if len(cmdLine) > 0 {
+		cmdLine += " "
+	}
+	cmdLine += fmt.Sprintf("METAL_CORE_URL=http://%v:%d", srv.GetConfig().ControlPlaneIP, srv.GetConfig().Port)
 	return BootResponse{
 		Kernel: "https://blobstore.fi-ts.io/metal/images/pxeboot-kernel",
 		InitRamDisk: []string{

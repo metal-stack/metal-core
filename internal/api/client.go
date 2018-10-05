@@ -11,7 +11,7 @@ type (
 	Client interface {
 		GetConfig() *domain.Config
 		FindDevices(mac string) (int, []domain.Device)
-		RegisterDevice(deviceId string, lshw []byte) (int, domain.Device)
+		RegisterDevice(deviceId string, hw []byte) (int, domain.Device)
 		InstallImage(deviceId string) (int, domain.Image)
 		ReportDeviceState(deviceId string, state string) int
 		GetSwitchPorts(deviceId string) (int, []domain.SwitchPort)
@@ -34,11 +34,11 @@ func (c client) GetConfig() *domain.Config {
 
 func (c client) FindDevices(mac string) (int, []domain.Device) {
 	var devs []domain.Device
-	sc := c.get("/device/find", rest.CreateQueryParams("mac", mac), &devs)
+	sc := c.getExpect("/device/find", rest.CreateQueryParams("mac", mac), &devs)
 	return sc, devs
 }
 
-func (c client) RegisterDevice(deviceId string, lshw []byte) (int, domain.Device) {
+func (c client) RegisterDevice(deviceId string, hw []byte) (int, domain.Device) {
 	req := domain.RegisterDeviceRequest{
 		ID:         deviceId,
 		Macs:       []string{},
@@ -47,20 +47,20 @@ func (c client) RegisterDevice(deviceId string, lshw []byte) (int, domain.Device
 	}
 	//TODO populate request with appropriate values from lshw
 	var dev domain.Device
-	sc := c.post("/device/register", nil, req, &dev)
+	sc := c.postExpect("/device/register", nil, req, &dev)
 	return sc, dev
 }
 
 func (c client) InstallImage(deviceId string) (int, domain.Image) {
 	var img domain.Image
-	sc := c.get(fmt.Sprintf("/image/%v", "2"), nil, &img)
+	sc := c.getExpect(fmt.Sprintf("/image/%v", "2"), nil, &img)
 	return sc, img
 }
 
 func (c client) ReportDeviceState(deviceId string, state string) int {
 	body := ""
 	//TODO populate body appropriately
-	sc := c.postWithoutResponse("/device/report", nil, body)
+	sc := c.post("/device/report", nil, body)
 	return sc
 }
 
@@ -68,18 +68,18 @@ func (c client) GetSwitchPorts(deviceId string) (int, []domain.SwitchPort) {
 	body := ""
 	var sp []domain.SwitchPort
 	//TODO populate body appropriately
-	sc := c.post("/device/switch-ports", nil, body, &sp)
+	sc := c.postExpect("/device/switch-ports", nil, body, &sp)
 	return sc, sp
 }
 
 func (c client) Ready(deviceId string) int {
 	body := ""
 	//TODO populate body appropriately
-	sc := c.postWithoutResponse("/device/ready", nil, body)
+	sc := c.post("/device/ready", nil, body)
 	return sc
 }
 
-func (c client) get(path string, params *rest.Params, v interface{}) int {
+func (c client) getExpect(path string, params *rest.Params, v interface{}) int {
 	if resp := c.newRequest(path, params).Get(); resp != nil {
 		rest.Unmarshal(resp, v)
 		return resp.StatusCode()
@@ -88,7 +88,7 @@ func (c client) get(path string, params *rest.Params, v interface{}) int {
 	}
 }
 
-func (c client) post(path string, params *rest.Params, body interface{}, v interface{}) int {
+func (c client) postExpect(path string, params *rest.Params, body interface{}, v interface{}) int {
 	if resp := c.newRequest(path, params).Post(body); resp != nil {
 		rest.Unmarshal(resp, v)
 		return resp.StatusCode()
@@ -97,7 +97,7 @@ func (c client) post(path string, params *rest.Params, body interface{}, v inter
 	}
 }
 
-func (c client) postWithoutResponse(path string, params *rest.Params, body interface{}) int {
+func (c client) post(path string, params *rest.Params, body interface{}) int {
 	if resp := c.newRequest(path, params).Post(body); resp != nil {
 		return resp.StatusCode()
 	} else {
