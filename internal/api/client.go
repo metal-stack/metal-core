@@ -1,20 +1,21 @@
 package api
 
 import (
+	"net/http"
+
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
-	"net/http"
 )
 
 type (
 	Client interface {
 		GetConfig() *domain.Config
 		FindDevices(mac string) (int, []domain.Device)
-		RegisterDevice(deviceID string, hw []byte) (int, *domain.Device)
-		InstallImage(deviceID string) (int, *domain.Image)
-		ReportDeviceState(deviceID string, state string) int
-		GetSwitchPorts(deviceID string) (int, []domain.SwitchPort)
-		Ready(deviceID string) int
+		RegisterDevice(deviceId string, hw []byte) (int, *domain.Device)
+		InstallImage(deviceId string) (int, *domain.Device)
+		ReportDeviceState(deviceId string, state string) int
+		GetSwitchPorts(deviceId string) (int, []domain.SwitchPort)
+		Ready(deviceId string) int
 	}
 	client struct {
 		Config *domain.Config
@@ -31,14 +32,14 @@ func (c client) GetConfig() *domain.Config {
 	return c.Config
 }
 
-func (c client) ReportDeviceState(deviceID string, state string) int {
+func (c client) ReportDeviceState(deviceId string, state string) int {
 	body := ""
 	//TODO populate body appropriately
 	sc := c.post("/device/report", nil, body)
 	return sc
 }
 
-func (c client) GetSwitchPorts(deviceID string) (int, []domain.SwitchPort) {
+func (c client) GetSwitchPorts(deviceId string) (int, []domain.SwitchPort) {
 	body := ""
 	var sp []domain.SwitchPort
 	//TODO populate body appropriately
@@ -46,7 +47,7 @@ func (c client) GetSwitchPorts(deviceID string) (int, []domain.SwitchPort) {
 	return sc, sp
 }
 
-func (c client) Ready(deviceID string) int {
+func (c client) Ready(deviceId string) int {
 	body := ""
 	//TODO populate body appropriately
 	sc := c.post("/device/ready", nil, body)

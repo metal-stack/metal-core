@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -43,20 +42,24 @@ type (
 		Changed time.Time `json:"changed" description:"the last changed timestamp" optional:"true" readOnly:"true" rethinkdb:"changed"`
 	}
 	Device struct {
-		ID           string    `json:"id" description:"a unique ID" unique:"true" readOnly:"true" modelDescription:"A device representing a bare metal machine." rethinkdb:"id,omitempty"`
-		Name         string    `json:"name" description:"the name of the device" rethinkdb:"name"`
-		Description  string    `json:"description,omitempty" description:"a description for this machine" optional:"true" rethinkdb:"description"`
-		Created      time.Time `json:"created" description:"the creation time of this machine" optional:"true" readOnly:"true" rethinkdb:"created"`
-		Changed      time.Time `json:"changed" description:"the last changed timestamp" optional:"true" readOnly:"true" rethinkdb:"changed"`
-		Project      string    `json:"project" description:"the project that this device is assigned to" rethinkdb:"project"`
-		Facility     Facility  `json:"facility" description:"the facility assigned to this device" readOnly:"true" rethinkdb:"-"`
-		Image        *Image    `json:"image" description:"the image assigned to this device" readOnly:"true"  rethinkdb:"-"`
-		Size         Size      `json:"size" description:"the size of this device" readOnly:"true" rethinkdb:"-"`
-		FacilityID   string    `json:"-" rethinkdb:"facilityid"`
-		ImageID      string    `json:"-" rethinkdb:"imageid"`
-		SizeID       string    `json:"-" rethinkdb:"sizeid"`
-		MACAddresses []string  `json:"macAddresses" description:"the list of mac addresses in this device" readOnly:"true" rethinkdb:"macAddresses"`
+		ID          string                 `json:"id" description:"a unique ID" unique:"true" readOnly:"true" modelDescription:"A device representing a bare metal machine." rethinkdb:"id,omitempty"`
+		Name        string                 `json:"name" description:"the name of the device" rethinkdb:"name"`
+		Description string                 `json:"description,omitempty" description:"a description for this machine" optional:"true" rethinkdb:"description"`
+		Created     time.Time              `json:"created" description:"the creation time of this machine" optional:"true" readOnly:"true" rethinkdb:"created"`
+		Changed     time.Time              `json:"changed" description:"the last changed timestamp" optional:"true" readOnly:"true" rethinkdb:"changed"`
+		Project     string                 `json:"project" description:"the project that this device is assigned to" rethinkdb:"project"`
+		Facility    Facility               `json:"facility" description:"the facility assigned to this device" readOnly:"true" rethinkdb:"-"`
+		FacilityID  string                 `json:"-" rethinkdb:"facilityid"`
+		Image       *Image                 `json:"image" description:"the image assigned to this device" readOnly:"true"  rethinkdb:"-"`
+		ImageID     string                 `json:"-" rethinkdb:"imageid"`
+		Size        *Size                  `json:"size" description:"the size of this device" readOnly:"true" rethinkdb:"-"`
+		SizeID      string                 `json:"-" rethinkdb:"sizeid"`
+		Hardware    MetalApiDeviceHardware `json:"hardware" description:"the hardware of this device" rethinkdb:"hardware"`
+		IP          string                 `json:"ip" description:"the ip address of the allocated device" rethinkdb:"ip"`
+		Hostname    string                 `json:"hostname" description:"the hostname of the device" rethinkdb:"hostname"`
+		SSHPubKey   string                 `json:"ssh_pub_key" description:"the public ssh key to access the device with" rethinkdb:"sshPubKey"`
 	}
+
 	Nic struct {
 		MacAddress string   `json:"mac"`
 		Name       string   `json:"name"`
@@ -107,15 +110,14 @@ func (c Config) Log() {
 
 func (d Device) Log() {
 	log.WithFields(log.Fields{
-		"ID":           d.ID,
-		"Name":         d.Name,
-		"Description":  d.Description,
-		"Created":      d.Created,
-		"Changed":      d.Changed,
-		"Project":      d.Project,
-		"FacilityID":   d.Facility.ID,
-		"ImageID":      d.Image.ID,
-		"SizeID":       d.Size.ID,
-		"MACAddresses": strings.Join(d.MACAddresses, ", "),
+		"ID":          d.ID,
+		"Name":        d.Name,
+		"Description": d.Description,
+		"Created":     d.Created,
+		"Changed":     d.Changed,
+		"Project":     d.Project,
+		"FacilityID":  d.Facility.ID,
+		"ImageID":     d.Image.ID,
+		"SizeID":      d.Size.ID,
 	}).Info("Device details")
 }

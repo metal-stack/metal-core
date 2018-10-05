@@ -9,28 +9,28 @@ import (
 )
 
 func installEndpoint(w http.ResponseWriter, r *http.Request) {
-	id := mux.Vars(r)["deviceID"]
+	devID := mux.Vars(r)["deviceID"]
 
-	log.WithField("deviceID", id).
+	log.WithField("deviceID", devID).
 		Info("Request metal API for an image to install")
 
-	sc, img := srv.GetMetalAPIClient().InstallImage(id)
+	sc, dev := srv.GetMetalAPIClient().InstallImage(devID)
 
 	logger := log.WithFields(log.Fields{
 		"statusCode": sc,
-		"deviceID":   id,
+		"deviceId":   devID,
 	})
 
 	if sc == http.StatusOK {
 		logger.WithFields(log.Fields{
-			"imageID":  img.ID,
-			"imageURL": img.Url,
+			"imageID":  dev.Image.ID,
+			"imageURL": dev.Image.Url,
 		}).Info("Got image to install")
-		//rest.Respond(w, http.StatusOK, image.Url)
-		rest.Respond(w, http.StatusOK, "https://blobstore.fi-ts.io/metal/images/os/ubuntu/18.04/img.tar.gz")
+		rest.Respond(w, http.StatusOK, dev.Image.Url)
 	} else {
+		errMsg := "No installation image found"
 		logging.Decorate(logger).
-			Error("No installation image found")
-		rest.Respond(w, http.StatusNotFound, nil)
+			Error(errMsg)
+		rest.Respond(w, sc, errMsg)
 	}
 }
