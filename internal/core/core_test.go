@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-var devID = "fake-device-id"
+var devId = "fake-device-id"
 
 func TestLoggingMiddleware(t *testing.T) {
 	// GIVEN
@@ -41,12 +41,12 @@ func TestLoggingMiddleware(t *testing.T) {
 
 func requestPostRegisterDevice() (*resty.Response, error) {
 	rdr := &domain.RegisterDeviceRequest{
-		UUID:  devID,
+		UUID:  devId,
 		Nics:  []domain.Nic{},
 		Disks: []domain.BlockDevice{},
 	}
 	return resty.R().SetBody(rdr).
-		Post(fmt.Sprintf("http://localhost:4244/device/register/%v", devID))
+		Post(fmt.Sprintf("http://localhost:4244/device/register/%v", devId))
 }
 
 func mockRegisterDeviceEndpoint() {
@@ -57,7 +57,7 @@ func mockRegisterDeviceEndpoint() {
 
 func registerDeviceMockEndpoint(w http.ResponseWriter, r *http.Request) {
 	dev := domain.Device{
-		ID: devID,
+		ID: devId,
 	}
 	rest.Respond(w, http.StatusOK, dev)
 }

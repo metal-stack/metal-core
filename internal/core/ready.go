@@ -14,17 +14,17 @@ func readyEndpoint(w http.ResponseWriter, r *http.Request) {
 			"err": err,
 		})).Error("Unable to read body")
 	} else {
-		devID := mux.Vars(r)["deviceID"]
+		devId := mux.Vars(r)["deviceId"]
 
 		log.WithFields(log.Fields{
-			"deviceID": devID,
+			"deviceId": devId,
 			"body":     body,
 		}).Info("Inform Metal API about device readiness")
 
-		sc := srv.GetMetalAPIClient().Ready(devID)
+		sc := srv.GetMetalAPIClient().Ready(devId)
 
 		logger := log.WithFields(log.Fields{
-			"deviceID":   devID,
+			"deviceId":   devId,
 			"statusCode": sc,
 		})
 

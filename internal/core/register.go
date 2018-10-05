@@ -19,17 +19,17 @@ func registerEndpoint(w http.ResponseWriter, r *http.Request) {
 
 		rest.RespondError(w, http.StatusBadRequest, errMsg)
 	} else {
-		devID := mux.Vars(r)["deviceID"]
+		devId := mux.Vars(r)["deviceId"]
 
 		log.WithFields(log.Fields{
-			"deviceID": devID,
+			"deviceId": devId,
 			"hardware": string(hw),
 		}).Info("Register device at Metal API")
 
-		sc, dev := srv.GetMetalAPIClient().RegisterDevice(devID, hw)
+		sc, dev := srv.GetMetalAPIClient().RegisterDevice(devId, hw)
 
 		logger := log.WithFields(log.Fields{
-			"deviceID":   devID,
+			"deviceId":   devId,
 			"statusCode": sc,
 			"device":     dev,
 		})

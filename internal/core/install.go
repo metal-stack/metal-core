@@ -9,16 +9,16 @@ import (
 )
 
 func installEndpoint(w http.ResponseWriter, r *http.Request) {
-	devID := mux.Vars(r)["deviceID"]
+	devId := mux.Vars(r)["deviceId"]
 
-	log.WithField("deviceID", devID).
+	log.WithField("deviceId", devId).
 		Info("Request metal API for an image to install")
 
-	sc, dev := srv.GetMetalAPIClient().InstallImage(devID)
+	sc, dev := srv.GetMetalAPIClient().InstallImage(devId)
 
 	logger := log.WithFields(log.Fields{
 		"statusCode": sc,
-		"deviceId":   devID,
+		"deviceId":   devId,
 	})
 
 	if sc == http.StatusOK {
