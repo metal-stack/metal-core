@@ -19,7 +19,7 @@ func (c client) InstallImage(deviceId string) (int, *domain.Device) {
 	client := &http.Client{}
 	resp, err := client.Do(httpRequest)
 	if err != nil {
-		log.Debugf("Long poll request failed: %v", err)
+		log.Debugf("Install request failed: %v", err)
 	}
 
 	defer resp.Body.Close()
