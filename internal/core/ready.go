@@ -1,6 +1,7 @@
 package core
 
 import (
+	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/logging"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -9,26 +10,27 @@ import (
 
 func readyEndpoint(w http.ResponseWriter, r *http.Request) {
 	if body, err := ioutil.ReadAll(r.Body); err != nil {
-		log.WithFields(log.Fields{
+		logging.Decorate(log.WithFields(log.Fields{
 			"err": err,
-		}).Error("Unable to read body")
+		})).Error("Unable to read body")
 	} else {
-		id := mux.Vars(r)["deviceId"]
+		devID := mux.Vars(r)["deviceID"]
 
 		log.WithFields(log.Fields{
-			"deviceId": id,
+			"deviceID": devID,
 			"body":     body,
 		}).Info("Inform Metal API about device readiness")
 
-		sc := srv.GetMetalAPIClient().Ready(id)
+		sc := srv.GetMetalAPIClient().Ready(devID)
 
 		logger := log.WithFields(log.Fields{
-			"deviceId":   id,
+			"deviceID":   devID,
 			"statusCode": sc,
 		})
 
 		if sc != http.StatusOK {
-			logger.Error("Device not ready")
+			logging.Decorate(logger).
+				Error("Device not ready")
 		} else {
 			logger.Info("Device ready")
 		}

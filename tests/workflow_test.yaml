@@ -8,9 +8,8 @@ services:
     container_name: metal-core-test
     network_mode: host
     environment:
-      METAL_CORE_CONTROL_PLANE_ID: localhost
+      METAL_CORE_CONTROL_PLANE_IP: localhost
       METAL_CORE_FACILITY_ID: FRA
-      METAL_CORE_SIZE: t1.small.x86
       METAL_CORE_LOG_LEVEL: DEBUG
       METAL_CORE_METAL_API_PORT: 8090
 

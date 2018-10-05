@@ -2,6 +2,7 @@ package core
 
 import (
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/logging"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
@@ -11,53 +12,56 @@ import (
 
 func reportEndpoint(w http.ResponseWriter, r *http.Request) {
 	if state, err := ioutil.ReadAll(r.Body); err != nil {
-		log.WithFields(log.Fields{
+		logging.Decorate(log.WithFields(log.Fields{
 			"err": err,
-		}).Error("Failed to read request body")
+		})).Error("Failed to read request body")
 	} else {
-		id := mux.Vars(r)["deviceId"]
+		devID := mux.Vars(r)["deviceID"]
 
 		log.WithFields(log.Fields{
-			"deviceId": id,
+			"deviceID": devID,
 			"state":    state,
 		}).Info("Inform Metal API about device state")
 
-		sc := srv.GetMetalAPIClient().ReportDeviceState(id, string(state))
+		sc := srv.GetMetalAPIClient().ReportDeviceState(devID, string(state))
 
 		logger := log.WithFields(log.Fields{
-			"deviceId":   id,
+			"deviceID":   devID,
 			"statusCode": sc,
 		})
 
 		if sc != http.StatusOK {
-			logger.Error("Failed to report device state")
+			logging.Decorate(logger).
+				Error("Failed to report device state")
 		} else {
 			logger.Info("Device state reported")
 
 			var sp []domain.SwitchPort
-			sc, sp = srv.GetMetalAPIClient().GetSwitchPorts(id)
+			sc, sp = srv.GetMetalAPIClient().GetSwitchPorts(devID)
 
 			logger = log.WithFields(log.Fields{
-				"deviceId":    id,
+				"deviceID":    devID,
 				"statusCode":  sc,
 				"switchPorts": sp,
 			})
 
 			if sc != http.StatusOK {
-				logger.Error("Failed to retrieve switch ports")
+				logging.Decorate(logger).
+					Error("Failed to retrieve switch ports")
 			} else {
 				logger.Info("Retrieved switch ports")
 
 				sc = srv.GetNetSwitchClient().ConfigurePorts(sp)
 
 				logger = log.WithFields(log.Fields{
-					"deviceId":    id,
+					"deviceID":    devID,
 					"statusCode":  sc,
 					"switchPorts": sp,
 				})
 
 				if sc != http.StatusOK {
-					logger.Error("Failed to configure switch ports")
+					logging.Decorate(logger).
+						Error("Failed to configure switch ports")
 				} else {
 					logger.Info("Switch ports configured")
 				}

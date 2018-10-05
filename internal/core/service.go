@@ -1,7 +1,10 @@
 package core
 
 import (
+	"bytes"
 	"fmt"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/logging"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -27,7 +30,9 @@ type (
 	}
 )
 
-var srv Service
+var (
+	srv Service
+)
 
 func NewService(cfg *domain.Config) Service {
 	srv = service{
@@ -64,10 +69,12 @@ func (s service) RunServer() {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/v1/boot/{mac}", bootEndpoint).Methods(http.MethodGet).Name("boot")
-	router.HandleFunc("/device/register/{deviceId}", registerEndpoint).Methods(http.MethodPost).Name("register")
-	router.HandleFunc("/device/install/{deviceId}", installEndpoint).Methods(http.MethodGet).Name("install")
-	router.HandleFunc("/device/report/{deviceId}", reportEndpoint).Methods(http.MethodPost).Name("report")
-	router.HandleFunc("/device/ready/{deviceId}", readyEndpoint).Methods(http.MethodPost).Name("ready")
+	router.HandleFunc("/device/register/{deviceID}", registerEndpoint).Methods(http.MethodPost).Name("register")
+	router.HandleFunc("/device/install/{deviceID}", installEndpoint).Methods(http.MethodGet).Name("install")
+	router.HandleFunc("/device/report/{deviceID}", reportEndpoint).Methods(http.MethodPost).Name("report")
+	router.HandleFunc("/device/ready/{deviceID}", readyEndpoint).Methods(http.MethodPost).Name("ready")
+
+	router.Use(loggingMiddleware)
 
 	server := s.GetServer()
 	server.Addr = fmt.Sprintf("%v:%d", addr, port)
@@ -79,6 +86,40 @@ func (s service) RunServer() {
 	}).Info("Starting API Server")
 
 	if err := server.ListenAndServe(); err != nil {
-		log.Fatal(err)
+		logging.Decorate(log.WithFields(log.Fields{})).
+			Fatal(err)
 	}
+}
+
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+		body, _ := ioutil.ReadAll(r.Body)
+		headers := "{"
+		for k, v := range r.Header {
+			if len(v) == 1 {
+				headers += fmt.Sprintf("%v=%v, ", k, v[0])
+			} else if len(v) > 1 {
+				headers += fmt.Sprintf("%v=%v, ", k, v)
+			}
+		}
+		if len(headers) > 1 {
+			headers = headers[:len(headers)-1]
+		}
+		headers += "}"
+		log.WithFields(log.Fields{
+			"remoteAddress": r.RemoteAddr,
+			"method":        r.Method,
+			"protocol":      r.Proto,
+			"host":          r.Host,
+			"URI":           r.RequestURI,
+			"contentLength": r.ContentLength,
+			"body":          string(body),
+			"headers":       headers,
+		}).Debug("Got request")
+
+		r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+
+		next.ServeHTTP(w, r)
+	})
 }

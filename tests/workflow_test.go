@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"fmt"
 	"github.com/magefile/mage/sh"
 	"github.com/stretchr/testify/assert"
 	"strings"
@@ -27,8 +26,7 @@ func TestWorkflow(t *testing.T) {
 
 	// THEN
 	if out, err := sh.Output("docker", "logs", "metal-core-test"); err != nil {
-		fmt.Println(err)
-		assert.Fail(t, "Failed to fetch docker logs from metal-core-test container")
+		assert.Failf(t, "Failed to fetch docker logs from metal-core-test container", "err=%v", err)
 	} else {
 		index := strings.Index(out, "http://localhost:8090/device/register")
 		assert.NotEqual(t, -1, index, "Metal-APIs register endpoint not called by metal-core-test container")

@@ -1,6 +1,7 @@
 package core
 
 import (
+	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/logging"
 	"io/ioutil"
 	"net/http"
 
@@ -10,35 +11,37 @@ import (
 )
 
 func registerEndpoint(w http.ResponseWriter, r *http.Request) {
-	hw, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		log.WithFields(log.Fields{
+	if hw, err := ioutil.ReadAll(r.Body); err != nil {
+		errMsg := "Unable to read body"
+		logging.Decorate(log.WithFields(log.Fields{
 			"err": err,
-		}).Error("Unable to read body")
-		return
-	}
+		})).Error(errMsg)
 
-	log.WithField("register hw", string(hw)).
-		Info("Register device")
-	deviceID := mux.Vars(r)["deviceId"]
-
-	log.WithField("deviceId", deviceID).
-		Info("Register device at Metal API")
-
-	statusCode, device := srv.GetMetalAPIClient().RegisterDevice(deviceID, hw)
-
-	logger := log.WithFields(log.Fields{
-		"deviceID":   deviceID,
-		"statusCode": statusCode,
-		"device":     device,
-	})
-
-	if statusCode != http.StatusOK {
-		logger.Error("Failed to register device")
+		rest.RespondError(w, http.StatusBadRequest, errMsg)
 	} else {
-		logger.Info("Device registered")
+		devID := mux.Vars(r)["deviceID"]
+
+		log.WithFields(log.Fields{
+			"deviceID": devID,
+			"hardware": string(hw),
+		}).Info("Register device at Metal API")
+
+		sc, dev := srv.GetMetalAPIClient().RegisterDevice(devID, hw)
+
+		logger := log.WithFields(log.Fields{
+			"deviceID":   devID,
+			"statusCode": sc,
+			"device":     dev,
+		})
+
+		if sc != http.StatusOK {
+			errMsg := "Failed to register device"
+			logging.Decorate(logger).
+				Error(errMsg)
+			rest.RespondError(w, sc, errMsg)
+		} else {
+			logger.Info("Device registered")
+			rest.Respond(w, sc, dev)
+		}
 	}
-
-	rest.Respond(w, statusCode, device)
-
 }
