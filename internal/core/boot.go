@@ -43,7 +43,7 @@ func createBootDiscoveryImageResponse() BootResponse {
 	blobstore := "https://blobstore.fi-ts.io/metal/images"
 	prefix := srv.GetConfig().HammerImagePrefix
 	kernel := fmt.Sprintf("%s/%s-kernel", blobstore, prefix)
-	ramdisk := fmt.Sprintf("%s/%s-initrd.img", blobstore, prefix)
+	ramdisk := fmt.Sprintf("%s/%s-initrd.img.gz", blobstore, prefix)
 	cmdlineSource := fmt.Sprintf("%s/%s-cmdline", blobstore, prefix)
 
 	if resp, err := resty.R().Get(cmdlineSource); err != nil {
