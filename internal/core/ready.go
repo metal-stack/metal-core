@@ -17,14 +17,14 @@ func readyEndpoint(w http.ResponseWriter, r *http.Request) {
 		devId := mux.Vars(r)["deviceId"]
 
 		log.WithFields(log.Fields{
-			"deviceId": devId,
+			"deviceID": devId,
 			"body":     body,
 		}).Info("Inform Metal API about device readiness")
 
 		sc := srv.GetMetalAPIClient().Ready(devId)
 
 		logger := log.WithFields(log.Fields{
-			"deviceId":   devId,
+			"deviceID":   devId,
 			"statusCode": sc,
 		})
 

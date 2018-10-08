@@ -19,14 +19,14 @@ func reportEndpoint(w http.ResponseWriter, r *http.Request) {
 		devId := mux.Vars(r)["deviceId"]
 
 		log.WithFields(log.Fields{
-			"deviceId": devId,
+			"deviceID": devId,
 			"state":    state,
 		}).Info("Inform Metal API about device state")
 
 		sc := srv.GetMetalAPIClient().ReportDeviceState(devId, string(state))
 
 		logger := log.WithFields(log.Fields{
-			"deviceId":   devId,
+			"deviceID":   devId,
 			"statusCode": sc,
 		})
 
@@ -40,7 +40,7 @@ func reportEndpoint(w http.ResponseWriter, r *http.Request) {
 			sc, sp = srv.GetMetalAPIClient().GetSwitchPorts(devId)
 
 			logger = log.WithFields(log.Fields{
-				"deviceId":    devId,
+				"deviceID":    devId,
 				"statusCode":  sc,
 				"switchPorts": sp,
 			})
@@ -54,7 +54,7 @@ func reportEndpoint(w http.ResponseWriter, r *http.Request) {
 				sc = srv.GetNetSwitchClient().ConfigurePorts(sp)
 
 				logger = log.WithFields(log.Fields{
-					"deviceId":    devId,
+					"deviceID":    devId,
 					"statusCode":  sc,
 					"switchPorts": sp,
 				})

@@ -10,9 +10,8 @@ import (
 
 func TestWorkflow(t *testing.T) {
 	tearDown()
-	defer func() {
-		tearDown()
-	}()
+	defer kill()
+
 	// GIVEN
 	// Create integration test environment, i.e. spawn metal-core-test, metal-api-test and metal-hammer-test containers
 	go func() {
@@ -22,7 +21,7 @@ func TestWorkflow(t *testing.T) {
 	}()
 
 	// WHEN
-	time.Sleep(5000 * time.Millisecond)
+	time.Sleep(15000 * time.Millisecond)
 
 	// THEN
 	if out, err := sh.Output("docker", "logs", "metal-core-test"); err != nil {
@@ -57,6 +56,10 @@ func forward(out string, s string) string {
 	return out[index:]
 }
 
-func tearDown() {
+func kill() {
 	sh.RunV("docker-compose", "-f", "workflow_test.yaml", "kill")
+}
+
+func tearDown() {
+	sh.RunV("docker-compose", "-f", "workflow_test.yaml", "down", "--remove-orphans")
 }

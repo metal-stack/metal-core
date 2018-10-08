@@ -11,14 +11,14 @@ import (
 func installEndpoint(w http.ResponseWriter, r *http.Request) {
 	devId := mux.Vars(r)["deviceId"]
 
-	log.WithField("deviceId", devId).
+	log.WithField("deviceID", devId).
 		Info("Request metal API for an image to install")
 
 	sc, dev := srv.GetMetalAPIClient().InstallImage(devId)
 
 	logger := log.WithFields(log.Fields{
 		"statusCode": sc,
-		"deviceId":   devId,
+		"deviceID":   devId,
 		"dev":        dev,
 	})
 
@@ -27,7 +27,7 @@ func installEndpoint(w http.ResponseWriter, r *http.Request) {
 			"imageID":  dev.Image.ID,
 			"imageURL": dev.Image.Url,
 		}).Info("Got image to install")
-		rest.Respond(w, http.StatusOK, dev.Image.Url)
+		rest.Respond(w, http.StatusOK, dev)
 	} else {
 		errMsg := "No installation image found"
 		logging.Decorate(logger).

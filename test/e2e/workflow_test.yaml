@@ -29,7 +29,7 @@ services:
       METAL_API_DB_ADDR: localhost:28015
     command: >
       /bin/sh -c "
-        sleep 1;
+        sleep 6;
         /metal-api --port 18081;
       "
 
@@ -39,6 +39,6 @@ services:
     network_mode: host
     command: >
       /bin/sh -c "
-        sleep 3;
+        sleep 9;
         /bin/metal-hammer;
       "

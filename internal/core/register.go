@@ -22,14 +22,14 @@ func registerEndpoint(w http.ResponseWriter, r *http.Request) {
 		devId := mux.Vars(r)["deviceId"]
 
 		log.WithFields(log.Fields{
-			"deviceId": devId,
+			"deviceID": devId,
 			"hardware": string(hw),
 		}).Info("Register device at Metal API")
 
 		sc, dev := srv.GetMetalAPIClient().RegisterDevice(devId, hw)
 
 		logger := log.WithFields(log.Fields{
-			"deviceId":   devId,
+			"deviceID":   devId,
 			"statusCode": sc,
 			"device":     dev,
 		})
