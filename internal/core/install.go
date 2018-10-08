@@ -22,7 +22,7 @@ func installEndpoint(w http.ResponseWriter, r *http.Request) {
 		"dev":        dev,
 	})
 
-	if sc == http.StatusOK && dev != nil && dev.Image != nil{
+	if sc == http.StatusOK && dev != nil && dev.Image != nil {
 		logger.WithFields(log.Fields{
 			"imageID":  dev.Image.ID,
 			"imageURL": dev.Image.Url,

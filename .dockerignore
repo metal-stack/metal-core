@@ -4,5 +4,4 @@ bin
 e2e
 docker-compose.yaml
 Dockerfile
-masterdata
 *.md

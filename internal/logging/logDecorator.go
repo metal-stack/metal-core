@@ -24,13 +24,13 @@ func Decorate(logger *log.Entry) *log.Entry {
 		if pc, file, line, ok := runtime.Caller(i); ok {
 			funcName := runtime.FuncForPC(pc).Name()
 			file, funcName = sanitize(file, funcName)
-			if len(st) > 0{
+			if len(st) > 0 {
 				st += "\n"
 			}
 			st += fmt.Sprintf("%v::%v#%d", file, funcName, line)
 		}
 	}
-	if len(st) >  0 {
+	if len(st) > 0 {
 		return logger.WithField("stackTrace", st)
 	} else {
 		return logger

@@ -21,7 +21,7 @@ func TestWorkflow(t *testing.T) {
 	}()
 
 	// WHEN
-	time.Sleep(15000 * time.Millisecond)
+	time.Sleep(5000 * time.Millisecond)
 
 	// THEN
 	if out, err := sh.Output("docker", "logs", "metal-core-test"); err != nil {
@@ -31,20 +31,13 @@ func TestWorkflow(t *testing.T) {
 		assert.Contains(t, out, expected, "Metal-APIs register endpoint not called by metal-core-test container")
 		out = forward(out, expected)
 
-		expected = "/device/install/1234-1234-1234"
+		expected = "/device/install/230446CC-321C-11B2-A85C-AA62A1C99720"
 		assert.Contains(t, out, expected, "Either Metal-APIs register endpoint threw an error or Metal-Cores install endpoint not called by metal-hammer-test container")
 		out = forward(out, expected)
 
-		expected = "http://localhost:18081/image/2"
-		assert.Contains(t, out, expected, "Either Metal-Cores install endpoint threw an error or Metal-APIs install endpoint not called by metal-core-test container")
+		expected = "http://localhost:18081/device/230446CC-321C-11B2-A85C-AA62A1C99720/wait"
+		assert.Contains(t, out, expected, "Either Metal-Cores install endpoint threw an error or Metal-APIs wait endpoint not called by metal-core-test container")
 		out = forward(out, expected)
-
-		expected = "https://registry.maas/alpine/alpine:3.8"
-		assert.Contains(t, out, expected, "Either Metal-APIs install endpoint threw an error or did not received expected image URL from metal-api-test container")
-		out = forward(out, expected)
-
-		expected = "\"body\":\"https://blobstore.fi-ts.io/metal/images/os/ubuntu/18.04/img.tar.gz\""
-		assert.Contains(t, out, expected, "Did not sent expected response to metal-hammer-test container")
 	}
 }
 

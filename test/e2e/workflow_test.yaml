@@ -2,7 +2,9 @@ version: '2'
 
 services:
   rethinkdb:
-    image: rethinkdb
+    build:
+      context: rethinkdb
+    image: rethinkdb-test
     container_name: rethinkdb-test
     network_mode: host
 
@@ -29,7 +31,7 @@ services:
       METAL_API_DB_ADDR: localhost:28015
     command: >
       /bin/sh -c "
-        sleep 6;
+        sleep 1;
         /metal-api --port 18081;
       "
 
@@ -39,6 +41,6 @@ services:
     network_mode: host
     command: >
       /bin/sh -c "
-        sleep 9;
+        sleep 3;
         /bin/metal-hammer;
       "
