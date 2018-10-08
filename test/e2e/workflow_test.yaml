@@ -10,7 +10,7 @@ services:
 
   metal-core:
     build:
-      context: .
+      context: ../..
     image: registry.fi-ts.io/metal/metal-core
     container_name: metal-core-test
     network_mode: host
