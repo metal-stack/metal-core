@@ -1,7 +1,6 @@
 package api
 
 import (
-	"gopkg.in/resty.v1"
 	"net/http"
 
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
@@ -65,7 +64,7 @@ func (c client) getExpect(path string, queryParams *rest.QueryParams, v interfac
 }
 
 func (c client) postExpect(path string, queryParams *rest.QueryParams, body interface{}, v interface{}) int {
-	if resp := c._post(path, queryParams, body); resp != nil {
+	if resp := c.newRequest(path, queryParams).Post(body); resp != nil {
 		rest.Unmarshal(resp, v)
 		return resp.StatusCode()
 	} else {
@@ -74,18 +73,10 @@ func (c client) postExpect(path string, queryParams *rest.QueryParams, body inte
 }
 
 func (c client) post(path string, queryParams *rest.QueryParams, body interface{}) int {
-	if resp := c._post(path, queryParams, body); resp != nil {
+	if resp := c.newRequest(path, queryParams).Post(body); resp != nil {
 		return resp.StatusCode()
 	} else {
 		return http.StatusInternalServerError
-	}
-}
-
-func (c client) _post(path string, queryParams *rest.QueryParams, body interface{}) *resty.Response {
-	if bodyJson := rest.Marshal(body); len(bodyJson) == 0 {
-		return nil
-	} else {
-		return c.newRequest(path, queryParams).Post(bodyJson)
 	}
 }
 

@@ -78,8 +78,10 @@ func (r *Request) post(body interface{}) (*resty.Response, error) {
 	})
 
 	if bodyJson, err := json.Marshal(body); err != nil {
-		logging.Decorate(logger).
-			Error("Failed to marshal body")
+		logging.Decorate(log.WithFields(log.Fields{
+			"body":  body,
+			"error": err,
+		})).Error("Failed to marshal body")
 		return nil, err
 	} else {
 		logger.WithField("body", string(bodyJson)).
@@ -133,18 +135,6 @@ func CreateQueryParams(kv ...string) *QueryParams {
 		}
 	}
 	return &p
-}
-
-func Marshal(body interface{}) string {
-	if bodyJson, err := json.Marshal(body); err != nil {
-		logging.Decorate(log.WithFields(log.Fields{
-			"body":  body,
-			"error": err,
-		})).Error("Unable to serialize request to json")
-		return ""
-	} else {
-		return string(bodyJson)
-	}
 }
 
 func Unmarshal(resp *resty.Response, v interface{}) {

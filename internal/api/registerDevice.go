@@ -10,7 +10,6 @@ import (
 )
 
 func (c client) RegisterDevice(deviceId string, hw []byte) (int, *domain.Device) {
-	dev := &domain.Device{}
 	rdr := &domain.RegisterDeviceRequest{}
 	if err := json.Unmarshal(hw, rdr); err != nil {
 		logging.Decorate(log.WithFields(log.Fields{
@@ -19,7 +18,7 @@ func (c client) RegisterDevice(deviceId string, hw []byte) (int, *domain.Device)
 		})).Error("Cannot unmarshal request body of hardware")
 		return http.StatusBadRequest, nil
 	}
-	req := domain.MetalApiRegisterDeviceRequest{
+	req := &domain.MetalApiRegisterDeviceRequest{
 		UUID:       deviceId,
 		FacilityID: c.GetConfig().FacilityID,
 		Hardware: domain.MetalApiDeviceHardware{
@@ -29,6 +28,7 @@ func (c client) RegisterDevice(deviceId string, hw []byte) (int, *domain.Device)
 			Disks:    rdr.Disks,
 		},
 	}
+	dev := &domain.Device{}
 	if sc := c.postExpect("/device/register", nil, req, dev); sc != http.StatusOK {
 		logging.Decorate(log.WithFields(log.Fields{
 			"statusCode": sc,
