@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
+	"strings"
 )
 
 type TEST mg.Namespace
@@ -26,14 +27,21 @@ func (TEST) All() error {
 // Run all unit tests
 func (TEST) Unit() error {
 	return runTests(func(dir string) bool {
-		return dir != "./tests"
+		return !strings.HasPrefix(dir, "./test")
 	})
 }
 
 // Run all integration tests
 func (TEST) Int() error {
 	return runTests(func(dir string) bool {
-		return dir == "./tests"
+		return dir == "./test/int"
+	})
+}
+
+// Run all end-to-end tests
+func (TEST) E2e() error {
+	return runTests(func(dir string) bool {
+		return dir == "./test/e2e"
 	})
 }
 

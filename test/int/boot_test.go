@@ -1,8 +1,9 @@
-package core
+package int
 
 import (
 	"encoding/json"
 	"fmt"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/core"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
 	"github.com/gorilla/mux"
@@ -17,6 +18,8 @@ import (
 	"time"
 )
 
+var srv core.Service
+
 func TestPXEBoot(t *testing.T) {
 	// GIVEN
 	go func() {
@@ -29,7 +32,7 @@ func TestPXEBoot(t *testing.T) {
 	}()
 	time.Sleep(100 * time.Millisecond)
 
-	br := BootResponse{
+	br := core.BootResponse{
 		Kernel: "https://blobstore.fi-ts.io/metal/images/pxeboot-kernel",
 		InitRamDisk: []string{
 			"https://blobstore.fi-ts.io/metal/images/pxeboot-initrd.img",
@@ -86,7 +89,8 @@ func runMetalCoreServer(t *testing.T, evenPort int) {
 	if err := envconfig.Process("METAL_CORE", &config); err != nil {
 		assert.Fail(t, "Cannot fetch configuration")
 	}
-	NewService(&config).RunServer()
+	srv = core.NewService(&config)
+	srv.RunServer()
 }
 
 func runMetalAPIMockServer(router *mux.Router) {
