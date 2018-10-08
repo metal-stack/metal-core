@@ -19,9 +19,10 @@ func installEndpoint(w http.ResponseWriter, r *http.Request) {
 	logger := log.WithFields(log.Fields{
 		"statusCode": sc,
 		"deviceId":   devId,
+		"dev":        dev,
 	})
 
-	if sc == http.StatusOK {
+	if sc == http.StatusOK && dev != nil && dev.Image != nil{
 		logger.WithFields(log.Fields{
 			"imageID":  dev.Image.ID,
 			"imageURL": dev.Image.Url,
