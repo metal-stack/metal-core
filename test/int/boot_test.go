@@ -28,7 +28,7 @@ func TestPXEBoot(t *testing.T) {
 	brJson, _ := json.Marshal(core.BootResponse{
 		Kernel: "https://blobstore.fi-ts.io/metal/images/pxeboot-kernel",
 		InitRamDisk: []string{
-			"https://blobstore.fi-ts.io/metal/images/pxeboot-initrd.img",
+			"https://blobstore.fi-ts.io/metal/images/pxeboot-initrd.img.gz",
 		},
 		CommandLine: fmt.Sprintf("console=tty0 console=ttyS0 METAL_CORE_URL=http://localhost:%d", srv.GetConfig().Port),
 	})
