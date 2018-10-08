@@ -2,11 +2,12 @@ package core
 
 import (
 	"fmt"
+	"net/http"
+
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/resty.v1"
-	"net/http"
 )
 
 type BootResponse struct {
@@ -38,9 +39,19 @@ func bootEndpoint(w http.ResponseWriter, r *http.Request) {
 
 func createBootDiscoveryImageResponse() BootResponse {
 	cmdLine := "console=tty0"
-	if resp, err := resty.R().Get("https://blobstore.fi-ts.io/metal/images/pxeboot-cmdline"); err != nil {
-		log.WithField("err", err).
-			Error("File 'pxeboot-cmdline' could not be retrieved")
+
+	blobstore := "https://blobstore.fi-ts.io/metal/images"
+	prefix := srv.GetConfig().HammerImagePrefix
+	kernel := fmt.Sprintf("%s/%s-kernel", blobstore, prefix)
+	ramdisk := fmt.Sprintf("%s/%s-initrd.img", blobstore, prefix)
+	cmdlineSource := fmt.Sprintf("%s/%s-cmdline", blobstore, prefix)
+
+	if resp, err := resty.R().Get(cmdlineSource); err != nil {
+		log.WithFields(log.Fields{
+			"err":           err,
+			"cmdlineSource": cmdlineSource,
+		}).
+			Error("could not retrieve cmdline source")
 	} else {
 		cmdLine = string(resp.Body())
 	}
@@ -49,9 +60,9 @@ func createBootDiscoveryImageResponse() BootResponse {
 	}
 	cmdLine += fmt.Sprintf("METAL_CORE_URL=http://%v:%d", srv.GetConfig().ControlPlaneIP, srv.GetConfig().Port)
 	return BootResponse{
-		Kernel: "https://blobstore.fi-ts.io/metal/images/pxeboot-kernel",
+		Kernel: kernel,
 		InitRamDisk: []string{
-			"https://blobstore.fi-ts.io/metal/images/pxeboot-initrd.img",
+			ramdisk,
 		},
 		CommandLine: cmdLine,
 	}
