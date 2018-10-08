@@ -12,23 +12,23 @@ import (
 )
 
 type (
-	Params  map[string]string
-	Request struct {
-		Protocol string
-		Address  string
-		Port     int
-		Path     string
-		Params   *Params
+	QueryParams map[string]string
+	Request     struct {
+		Protocol    string
+		Address     string
+		Port        int
+		Path        string
+		QueryParams *QueryParams
 	}
 )
 
-func NewRequest(protocol string, address string, port int, path string, params *Params) *Request {
+func NewRequest(protocol string, address string, port int, path string, queryParams *QueryParams) *Request {
 	return &Request{
-		Protocol: protocol,
-		Address:  address,
-		Port:     port,
-		Path:     path,
-		Params:   params,
+		Protocol:    protocol,
+		Address:     address,
+		Port:        port,
+		Path:        path,
+		QueryParams: queryParams,
 	}
 }
 
@@ -42,8 +42,8 @@ func (r *Request) Get() *resty.Response {
 
 	req := resty.R().
 		SetHeader("Accept", "application/json")
-	if r.Params != nil {
-		req.SetQueryParams(*r.Params)
+	if r.QueryParams != nil {
+		req.SetQueryParams(*r.QueryParams)
 	}
 
 	resp, err := req.Get(uri)
@@ -88,8 +88,8 @@ func (r *Request) post(body interface{}) (*resty.Response, error) {
 		req := resty.R().
 			SetHeader("Content-Type", "application/json").
 			SetBody(bodyJson)
-		if r.Params != nil {
-			req.SetQueryParams(*r.Params)
+		if r.QueryParams != nil {
+			req.SetQueryParams(*r.QueryParams)
 		}
 
 		if resp, err := req.Post(uri); err != nil {
@@ -125,14 +125,26 @@ func Respond(w http.ResponseWriter, sc int, body interface{}) {
 	}
 }
 
-func CreateQueryParams(kv ...string) *Params {
-	p := make(Params)
+func CreateQueryParams(kv ...string) *QueryParams {
+	p := make(QueryParams)
 	for i := range kv {
 		if i%2 == 0 {
 			p[kv[i]] = kv[i+1]
 		}
 	}
 	return &p
+}
+
+func Marshal(body interface{}) string {
+	if bodyJson, err := json.Marshal(body); err != nil {
+		logging.Decorate(log.WithFields(log.Fields{
+			"body":  body,
+			"error": err,
+		})).Error("Unable to serialize request to json")
+		return ""
+	} else {
+		return string(bodyJson)
+	}
 }
 
 func Unmarshal(resp *resty.Response, v interface{}) {

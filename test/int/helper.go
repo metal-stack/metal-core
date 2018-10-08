@@ -14,6 +14,12 @@ import (
 	"time"
 )
 
+type endpoint struct {
+	path    string
+	handler func(http.ResponseWriter, *http.Request)
+	methods []string
+}
+
 var (
 	apiServer *http.Server
 	srv       core.Service
@@ -38,13 +44,18 @@ func runMetalCoreServer() {
 	go func() {
 		srv.RunServer()
 	}()
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 }
 
-func runMetalAPIMockServer(router *mux.Router) {
+func mockMetalAPIServer(endpoints ...endpoint) {
 	if srv == nil {
 		runMetalCoreServer()
 	}
+	router := mux.NewRouter()
+	for _, e := range endpoints {
+		router.HandleFunc(e.path, e.handler).Methods(e.methods...)
+	}
+
 	apiServer = &http.Server{
 		Addr:    fmt.Sprintf("localhost:%d", srv.GetConfig().APIPort),
 		Handler: router,

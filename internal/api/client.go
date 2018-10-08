@@ -1,6 +1,7 @@
 package api
 
 import (
+	"gopkg.in/resty.v1"
 	"net/http"
 
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
@@ -54,8 +55,8 @@ func (c client) Ready(deviceId string) int {
 	return sc
 }
 
-func (c client) getExpect(path string, params *rest.Params, v interface{}) int {
-	if resp := c.newRequest(path, params).Get(); resp != nil {
+func (c client) getExpect(path string, queryParams *rest.QueryParams, v interface{}) int {
+	if resp := c.newRequest(path, queryParams).Get(); resp != nil {
 		rest.Unmarshal(resp, v)
 		return resp.StatusCode()
 	} else {
@@ -63,8 +64,8 @@ func (c client) getExpect(path string, params *rest.Params, v interface{}) int {
 	}
 }
 
-func (c client) postExpect(path string, params *rest.Params, body interface{}, v interface{}) int {
-	if resp := c.newRequest(path, params).Post(body); resp != nil {
+func (c client) postExpect(path string, queryParams *rest.QueryParams, body interface{}, v interface{}) int {
+	if resp := c._post(path, queryParams, body); resp != nil {
 		rest.Unmarshal(resp, v)
 		return resp.StatusCode()
 	} else {
@@ -72,14 +73,22 @@ func (c client) postExpect(path string, params *rest.Params, body interface{}, v
 	}
 }
 
-func (c client) post(path string, params *rest.Params, body interface{}) int {
-	if resp := c.newRequest(path, params).Post(body); resp != nil {
+func (c client) post(path string, queryParams *rest.QueryParams, body interface{}) int {
+	if resp := c._post(path, queryParams, body); resp != nil {
 		return resp.StatusCode()
 	} else {
 		return http.StatusInternalServerError
 	}
 }
 
-func (c client) newRequest(path string, params *rest.Params) *rest.Request {
-	return rest.NewRequest(c.Config.APIProtocol, c.Config.APIAddress, c.Config.APIPort, path, params)
+func (c client) _post(path string, queryParams *rest.QueryParams, body interface{}) *resty.Response {
+	if bodyJson := rest.Marshal(body); len(bodyJson) == 0 {
+		return nil
+	} else {
+		return c.newRequest(path, queryParams).Post(bodyJson)
+	}
+}
+
+func (c client) newRequest(path string, queryParams *rest.QueryParams) *rest.Request {
+	return rest.NewRequest(c.Config.APIProtocol, c.Config.APIAddress, c.Config.APIPort, path, queryParams)
 }

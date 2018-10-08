@@ -28,40 +28,33 @@ func TestWorkflow(t *testing.T) {
 	if out, err := sh.Output("docker", "logs", "metal-core-test"); err != nil {
 		assert.Failf(t, "Failed to fetch docker logs from metal-core-test container", "err=%v", err)
 	} else {
-		index := strings.Index(out, "http://localhost:8090/device/register")
-		assert.NotEqual(t, -1, index, "Metal-APIs register endpoint not called by metal-core-test container")
-		if index == -1 {
-			return
-		}
-		out = out[index:]
+		expected := "http://localhost:18081/device/register"
+		assert.Contains(t, out, expected, "Metal-APIs register endpoint not called by metal-core-test container")
+		out = forward(out, expected)
 
-		index = strings.Index(out, "/device/install/1234-1234-1234")
-		assert.NotEqual(t, -1, index, "Either Metal-APIs register endpoint threw an error or Metal-Cores install endpoint not called by metal-hammer-test container")
-		if index == -1 {
-			return
-		}
-		out = out[index:]
+		expected = "/device/install/1234-1234-1234"
+		assert.Contains(t, out, expected, "Either Metal-APIs register endpoint threw an error or Metal-Cores install endpoint not called by metal-hammer-test container")
+		out = forward(out, expected)
 
-		index = strings.Index(out, "http://localhost:8090/image/2")
-		assert.NotEqual(t, -1, index, "Either Metal-Cores install endpoint threw an error or Metal-APIs install endpoint not called by metal-core-test container")
-		if index == -1 {
-			return
-		}
-		out = out[index:]
+		expected = "http://localhost:18081/image/2"
+		assert.Contains(t, out, expected, "Either Metal-Cores install endpoint threw an error or Metal-APIs install endpoint not called by metal-core-test container")
+		out = forward(out, expected)
 
-		index = strings.Index(out, "https://registry.maas/alpine/alpine:3.8")
-		assert.NotEqual(t, -1, index, "Either Metal-APIs install endpoint threw an error or did not received expected image URL from metal-api-test container")
-		if index == -1 {
-			return
-		}
-		out = out[index:]
+		expected = "https://registry.maas/alpine/alpine:3.8"
+		assert.Contains(t, out, expected, "Either Metal-APIs install endpoint threw an error or did not received expected image URL from metal-api-test container")
+		out = forward(out, expected)
 
-		index = strings.Index(out, "\"body\":\"https://blobstore.fi-ts.io/metal/images/os/ubuntu/18.04/img.tar.gz\"")
-		assert.NotEqual(t, -1, index, "Did not sent expected response to metal-hammer-test container")
-		if index == -1 {
-			return
-		}
+		expected = "\"body\":\"https://blobstore.fi-ts.io/metal/images/os/ubuntu/18.04/img.tar.gz\""
+		assert.Contains(t, out, expected, "Did not sent expected response to metal-hammer-test container")
 	}
+}
+
+func forward(out string, s string) string {
+	index := strings.Index(out, s)
+	if index == -1 {
+		return ""
+	}
+	return out[index:]
 }
 
 func tearDown() {

@@ -59,40 +59,31 @@ type (
 		Hostname    string                 `json:"hostname" description:"the hostname of the device" rethinkdb:"hostname"`
 		SSHPubKey   string                 `json:"ssh_pub_key" description:"the public ssh key to access the device with" rethinkdb:"sshPubKey"`
 	}
-
 	Nic struct {
 		MacAddress string   `json:"mac"`
 		Name       string   `json:"name"`
 		Vendor     string   `json:"vendor"`
 		Features   []string `json:"features"`
 	}
-
 	BlockDevice struct {
 		Name string `json:"name"`
 		Size uint64 `json:"size"`
 	}
-
-	RegisterDeviceRequest struct {
-		UUID     string        `json:"uuid" description:"the uuid of the device to register"`
-		Memory   int64         `json:"memory" description:"the memory in bytes of the device to register"`
-		CPUCores uint32        `json:"cpucores" description:"the cpu core of the device to register"`
-		Nics     []Nic         `json:"nics"`
-		Disks    []BlockDevice `json:"disks"`
-	}
-
 	MetalApiDeviceHardware struct {
 		Memory   int64         `json:"memory" description:"the total memory of the device" rethinkdb:"memory"`
 		CPUCores uint32        `json:"cpu_cores" description:"the total memory of the device" rethinkdb:"cpu_cores"`
 		Nics     []Nic         `json:"nics" description:"the list of network interfaces of this device" rethinkdb:"network_interfaces"`
 		Disks    []BlockDevice `json:"disks" description:"the list of block devices of this device" rethinkdb:"block_devices"`
 	}
-
 	MetalApiRegisterDeviceRequest struct {
 		UUID       string                 `json:"uuid" description:"the product uuid of the device to register"`
 		FacilityID string                 `json:"facilityid" description:"the facility id to register this device with"`
 		Hardware   MetalApiDeviceHardware `json:"hardware" description:"the hardware of this device"`
 	}
-
+	RegisterDeviceRequest struct {
+		MetalApiDeviceHardware
+		UUID string `json:"uuid" description:"the uuid of the device to register"`
+	}
 	SwitchPort struct {
 	}
 )

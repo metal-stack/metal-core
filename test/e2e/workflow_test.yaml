@@ -11,7 +11,7 @@ services:
       METAL_CORE_CONTROL_PLANE_IP: localhost
       METAL_CORE_FACILITY_ID: FRA
       METAL_CORE_LOG_LEVEL: DEBUG
-      METAL_CORE_METAL_API_PORT: 8090
+      METAL_CORE_METAL_API_PORT: 18081
 
   metal-api:
     image: registry.fi-ts.io/metal/metal-api
@@ -21,7 +21,7 @@ services:
     environment:
       METAL_API_WITH_MOCK_DATA: "true"
       METAL_API_BIND_ADDR: localhost
-    command: ["/metal-api", "--port", "8090"]
+    command: ["/metal-api", "--port", "18081"]
 
   metal-hammer:
     image: registry.fi-ts.io/metal/metal-hammer
