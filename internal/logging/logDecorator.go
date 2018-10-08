@@ -20,7 +20,7 @@ func init() {
 
 func Decorate(logger *log.Entry) *log.Entry {
 	st := ""
-	for i := 1; i <= 5; i++ {
+	for i := 1; i <= 4; i++ {
 		if pc, file, line, ok := runtime.Caller(i); ok {
 			funcName := runtime.FuncForPC(pc).Name()
 			file, funcName = sanitize(file, funcName)
