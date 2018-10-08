@@ -22,7 +22,7 @@ func TestWorkflow(t *testing.T) {
 	}()
 
 	// WHEN
-	time.Sleep(2500 * time.Millisecond)
+	time.Sleep(5000 * time.Millisecond)
 
 	// THEN
 	if out, err := sh.Output("docker", "logs", "metal-core-test"); err != nil {
@@ -58,5 +58,5 @@ func forward(out string, s string) string {
 }
 
 func tearDown() {
-	sh.RunV("docker-compose", "-f", "workflow_test.yaml", "down", "--remove-orphans")
+	sh.RunV("docker-compose", "-f", "workflow_test.yaml", "kill")
 }

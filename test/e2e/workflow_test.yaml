@@ -1,6 +1,11 @@
 version: '2'
 
 services:
+  rethinkdb:
+    image: rethinkdb
+    container_name: rethinkdb-test
+    network_mode: host
+
   metal-core:
     build:
       context: .
@@ -21,12 +26,19 @@ services:
     environment:
       METAL_API_WITH_MOCK_DATA: "true"
       METAL_API_BIND_ADDR: localhost
-    command: ["/metal-api", "--port", "18081"]
+      METAL_API_DB_ADDR: localhost:28015
+    command: >
+      /bin/sh -c "
+        sleep 1;
+        /metal-api --port 18081;
+      "
 
   metal-hammer:
     image: registry.fi-ts.io/metal/metal-hammer
     container_name: metal-hammer-test
     network_mode: host
-    depends_on:
-      - metal-core
-      - metal-api
+    command: >
+      /bin/sh -c "
+        sleep 3;
+        /bin/metal-hammer;
+      "

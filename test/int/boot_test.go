@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-var fakeMac = "00:11:22:33:44:55:66:77"
+var fakeMac = "00:11:22:33:44:55"
 
 func TestPXEBoot(t *testing.T) {
 	// GIVEN
