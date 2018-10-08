@@ -11,7 +11,6 @@ type BUILD mg.Namespace
 
 // Same as build:bin
 func Build() error {
-	Fmt()
 	return sh.RunV("go", "build", "-o", "bin/metal-core")
 }
 

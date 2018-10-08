@@ -1,42 +1,32 @@
 package int
 
 import (
-	"bytes"
 	"fmt"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
 	"github.com/gorilla/mux"
-	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/resty.v1"
 	"net/http"
 	"strings"
 	"testing"
-	"time"
 )
 
 var devId = "fake-device-id"
 
 func TestLoggingMiddleware(t *testing.T) {
 	// GIVEN
-	var out bytes.Buffer
-	log.SetOutput(&out)
-
-	go func() {
-		runMetalCoreServer(t, 4244)
-	}()
-	time.Sleep(100 * time.Millisecond)
-
-	go func() {
-		mockRegisterDeviceEndpoint()
-	}()
-	time.Sleep(100 * time.Millisecond)
+	runMetalCoreServer()
+	mockRegisterDeviceEndpoint()
+	defer shutdown()
 
 	// WHEN
 	requestPostRegisterDevice()
 
 	// THEN
-	assert.NotContains(t, strings.TrimSpace(out.String()), "level=error")
+	assert.Contains(t, strings.TrimSpace(logOutput.String()), "Register device at Metal API")
+	assert.Contains(t, strings.TrimSpace(logOutput.String()), "Device registered")
+	assert.NotContains(t, strings.TrimSpace(logOutput.String()), "level=error")
 }
 
 func requestPostRegisterDevice() (*resty.Response, error) {
@@ -46,7 +36,7 @@ func requestPostRegisterDevice() (*resty.Response, error) {
 		Disks: []domain.BlockDevice{},
 	}
 	return resty.R().SetBody(rdr).
-		Post(fmt.Sprintf("http://localhost:4244/device/register/%v", devId))
+		Post(fmt.Sprintf("http://localhost:%d/device/register/%v", srv.GetConfig().Port, devId))
 }
 
 func mockRegisterDeviceEndpoint() {

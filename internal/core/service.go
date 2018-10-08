@@ -85,7 +85,7 @@ func (s service) RunServer() {
 		"port":    port,
 	}).Info("Starting API Server")
 
-	if err := server.ListenAndServe(); err != nil {
+	if err := server.ListenAndServe(); err != http.ErrServerClosed {
 		logging.Decorate(log.WithFields(log.Fields{})).
 			Fatal(err)
 	}

@@ -7,37 +7,25 @@ import (
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
 	"github.com/gorilla/mux"
-	"github.com/kelseyhightower/envconfig"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/resty.v1"
-	"log"
 	"net/http"
-	"os"
 	"strings"
 	"testing"
-	"time"
 )
-
-var srv core.Service
 
 func TestPXEBoot(t *testing.T) {
 	// GIVEN
-	go func() {
-		runMetalCoreServer(t, 4242)
-	}()
-	time.Sleep(100 * time.Millisecond)
-
-	go func() {
-		mockFindDevicesAPIEndpoint()
-	}()
-	time.Sleep(100 * time.Millisecond)
+	runMetalCoreServer()
+	mockFindDevicesAPIEndpoint()
+	defer shutdown()
 
 	br := core.BootResponse{
 		Kernel: "https://blobstore.fi-ts.io/metal/images/pxeboot-kernel",
 		InitRamDisk: []string{
 			"https://blobstore.fi-ts.io/metal/images/pxeboot-initrd.img",
 		},
-		CommandLine: "console=tty0 console=ttyS0 METAL_CORE_URL=http://localhost:4242",
+		CommandLine: fmt.Sprintf("console=tty0 console=ttyS0 METAL_CORE_URL=http://localhost:%d", srv.GetConfig().Port),
 	}
 	var expected string
 	if m, err := json.Marshal(br); err != nil {
@@ -77,29 +65,5 @@ func findDevicesMockEndpoint(w http.ResponseWriter, r *http.Request) {
 }
 
 func fakePXEBootRequest() (*resty.Response, error) {
-	return resty.R().Get("http://localhost:4242/v1/boot/fake-mac")
-}
-
-func runMetalCoreServer(t *testing.T, evenPort int) {
-	os.Setenv("METAL_CORE_CONTROL_PLANE_IP", "localhost")
-	os.Setenv("METAL_CORE_FACILITY_ID", "FRA")
-	os.Setenv("METAL_CORE_PORT", fmt.Sprintf("%d", evenPort))
-	os.Setenv("METAL_CORE_METAL_API_PORT", fmt.Sprintf("%d", evenPort+1))
-	config := domain.Config{}
-	if err := envconfig.Process("METAL_CORE", &config); err != nil {
-		assert.Fail(t, "Cannot fetch configuration")
-	}
-	srv = core.NewService(&config)
-	srv.RunServer()
-}
-
-func runMetalAPIMockServer(router *mux.Router) {
-	server := &http.Server{
-		Addr:    fmt.Sprintf("localhost:%d", srv.GetConfig().APIPort),
-		Handler: router,
-	}
-
-	if err := server.ListenAndServe(); err != nil {
-		log.Fatal(err)
-	}
+	return resty.R().Get(fmt.Sprintf("http://localhost:%d/v1/boot/fake-mac", srv.GetConfig().Port))
 }

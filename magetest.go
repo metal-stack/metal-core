@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
+	"os/exec"
 	"strings"
 )
 
@@ -62,6 +63,6 @@ func runTests(filter func(dir string) bool) error {
 }
 
 func containsGoTests(dir string) bool {
-	out, err := sh.Output("find", dir, "-maxdepth", "1", "-type", "f", "-name", "*_test.go")
+	out, err := exec.Command("find", dir, "-maxdepth", "1", "-type", "f", "-name", "*_test.go").CombinedOutput()
 	return err == nil && len(out) > 0
 }
