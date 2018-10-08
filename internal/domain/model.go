@@ -17,7 +17,7 @@ type (
 		APIProtocol       string `required:"false" default:"http" desc:"set metal api protocol" envconfig:"metal_api_protocol"`
 		APIAddress        string `required:"false" default:"localhost" desc:"set metal api address" envconfig:"metal_api_address"`
 		APIPort           int    `required:"false" default:"8080" desc:"set metal api port" envconfig:"metal_api_port"`
-		HammerImagePrefix string `required:"false" default:"pxeboot" desc:"set hammer image prefix for kernel, initrd and cmdline download" envconfig:"hammer_image_prefix"`
+		HammerImagePrefix string `required:"false" default:"pxeboot" desc:"set hammer image prefix for kernel, initrd and cmdline download" split_words:"true"`
 	}
 	Facility struct {
 		ID          string    `json:"id" description:"a unique ID" unique:"true" modelDescription:"A Facility describes the location where a device is placed."  rethinkdb:"id,omitempty"`

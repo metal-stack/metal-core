@@ -140,8 +140,7 @@ func CreateQueryParams(kv ...string) *QueryParams {
 func Unmarshal(resp *resty.Response, v interface{}) {
 	body := resp.Body()
 	if err := json.Unmarshal(body, v); err != nil {
-		logging.Decorate(log.WithFields(log.Fields{})).
-			Error(string(body))
+		log.Debug(string(body))
 	} else {
 		log.WithFields(log.Fields{
 			"statusCode": resp.StatusCode(),
