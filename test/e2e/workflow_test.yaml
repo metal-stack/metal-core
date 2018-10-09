@@ -4,7 +4,7 @@ services:
   rethinkdb:
     build:
       context: rethinkdb
-    image: rethinkdb-test
+    image: rethinkdb:test
     container_name: rethinkdb-test
     network_mode: host
 

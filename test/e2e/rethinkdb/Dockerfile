@@ -7,11 +7,17 @@ RUN apt update -qq \
  && pip install \
     rethinkdb
 
-COPY testdata/* /
-COPY importTestData.sh /data
+WORKDIR /data
 
-RUN ./importTestData.sh \
- && cp -r /data/rethinkdb_data /
+COPY testdata/* ./
+
+RUN /bin/bash -c "rethinkdb --bind all &" \
+ && sleep 7 \
+ && rethinkdb import -f facilities.json --table metalapi.facility \
+ && rethinkdb import -f sizes.json --table metalapi.size \
+ && rethinkdb import -f images.json --table metalapi.image \
+ && rethinkdb import -f testdevices.json --table metalapi.device \
+ && cp -r rethinkdb_data /
 
 FROM rethinkdb
 
