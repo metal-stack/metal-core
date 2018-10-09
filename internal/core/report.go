@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/ipmi"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/logging"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
 	"github.com/gorilla/mux"
-	"github.com/jackpal/gateway"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -49,14 +49,9 @@ func reportEndpoint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	gateway, err := gateway.DiscoverGateway()
-	if err != nil {
-		log.Error("Unable to determine gateway for reaching out to ipmi client: ", err)
-		rest.Respond(w, http.StatusInternalServerError, nil)
-		return
-	}
 	connection := ipmi.IpmiConnection{
-		Hostname:  gateway.String(),
+		// Requires gateway of the control plane for running in Metal Lab... this is just a quick workaround for the poc
+		Hostname:  srv.GetConfig().ControlPlaneIP[:strings.LastIndex(srv.GetConfig().ControlPlaneIP, ".")] + ".1",
 		Interface: "lanplus",
 		Port:      6230,
 		Username:  "vagrant",
