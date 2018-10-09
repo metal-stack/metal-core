@@ -30,6 +30,8 @@ func reportEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 	devID := mux.Vars(r)["deviceId"]
 
+	log.Infof("Body: %v", string(reportJSON))
+
 	var report *Report
 	err = json.Unmarshal(reportJSON, report)
 	if err != nil {
@@ -46,8 +48,6 @@ func reportEndpoint(w http.ResponseWriter, r *http.Request) {
 		rest.Respond(w, http.StatusNotAcceptable, nil)
 		return
 	}
-
-	// TODO implement Switching of boot order to Harddisk
 
 	gateway, err := gateway.DiscoverGateway()
 	if err != nil {
