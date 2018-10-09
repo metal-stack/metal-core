@@ -29,11 +29,7 @@ services:
       METAL_API_WITH_MOCK_DATA: "true"
       METAL_API_BIND_ADDR: localhost
       METAL_API_DB_ADDR: localhost:28015
-    command: >
-      /bin/sh -c "
-        sleep 1;
-        /metal-api --port 18081;
-      "
+    command: ["/metal-api", "--port", "18081"]
 
   metal-hammer:
     image: registry.fi-ts.io/metal/metal-hammer
@@ -41,6 +37,6 @@ services:
     network_mode: host
     command: >
       /bin/sh -c "
-        sleep 3;
-        /bin/metal-hammer;
+        sleep 3
+        /bin/metal-hammer
       "

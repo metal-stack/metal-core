@@ -1,35 +1,24 @@
 package e2e
 
 import (
+	"fmt"
 	"github.com/magefile/mage/sh"
 	"github.com/stretchr/testify/assert"
 	"os"
+	"os/exec"
 	"strings"
 	"testing"
 	"time"
 )
 
 func TestWorkflow(t *testing.T) {
-	tearDown()
-	defer kill()
-
-	if out, err := sh.Output("docker", "images", "-q", "rethinkdb-test"); err==nil && len(out) == 0 {
-		buildImages(t)
-	} else if out, err := sh.Output("docker", "images", "-q", "registry.fi-ts.io/metal/metal-core"); err==nil && len(out) == 0 {
-		buildImages(t)
-	}
+	defer tearDown()
 
 	// GIVEN
-	// Create end-to-end test environment, i.e. spawn metal-core-test, metal-api-test and metal-hammer-test containers
-	go func() {
-		if _, err := sh.Output("docker-compose", "-f", "workflow_test.yaml", "up"); err != nil {
-			assert.Fail(t, "Failed to spin up end-to-end test environment")
-			os.Exit(1)
-		}
-	}()
+	spawnTestEnvironment(t)
 
 	// WHEN
-	time.Sleep(5000 * time.Millisecond)
+	time.Sleep(3 * time.Second)
 
 	// THEN
 	if out, err := sh.Output("docker", "logs", "metal-core-test"); err != nil {
@@ -49,11 +38,26 @@ func TestWorkflow(t *testing.T) {
 	}
 }
 
-func buildImages(t *testing.T) {
-	if _, err := sh.Output("docker-compose", "-f", "workflow_test.yaml", "build"); err != nil {
-		assert.Fail(t, "Failed to build images")
+func spawnTestEnvironment(t *testing.T) {
+	if _, err := sh.Output("docker-compose", "-f", "workflow_test.yaml", "up", "--force-recreate", "--remove-orphans", "-d"); err != nil {
+		assert.Fail(t, "Failed to spin up test environment")
 		os.Exit(1)
 	}
+	waitFor("rethinkdb-test", t)
+	waitFor("metal-hammer-test", t)
+	waitFor("metal-api-test", t)
+	waitFor("metal-core-test", t)
+}
+
+func waitFor(container string, t *testing.T) {
+	for i:=0; i<5; i++  {
+		if out, err := exec.Command("docker", "ps", "-a", "-q", "-f", fmt.Sprintf("name=%v", container)).CombinedOutput(); err==nil && len(out) > 0 {
+			return
+		} else {
+			time.Sleep(100 * time.Millisecond)
+		}
+	}
+	assert.Failf(t, "Failed to spawn container %v", container)
 }
 
 func forward(out string, s string) string {
@@ -64,10 +68,6 @@ func forward(out string, s string) string {
 	return out[index:]
 }
 
-func kill() {
-	sh.RunV("docker-compose", "-f", "workflow_test.yaml", "kill")
-}
-
 func tearDown() {
-	sh.RunV("docker-compose", "-f", "workflow_test.yaml", "down", "--remove-orphans")
+	sh.RunV("docker-compose", "-f", "workflow_test.yaml", "kill")
 }
