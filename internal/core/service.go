@@ -3,10 +3,10 @@ package core
 import (
 	"bytes"
 	"fmt"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/logging"
 	"io/ioutil"
 	"net/http"
-	"time"
+
+	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/logging"
 
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/api"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
@@ -36,10 +36,7 @@ var (
 
 func NewService(cfg *domain.Config) Service {
 	srv = service{
-		server: &http.Server{
-			WriteTimeout: 15 * time.Second,
-			ReadTimeout:  15 * time.Second,
-		},
+		server: &http.Server{},
 
 		apiClient:       api.NewClient(cfg),
 		netSwitchClient: netswitch.NewClient(cfg),
