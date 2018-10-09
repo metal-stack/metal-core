@@ -32,8 +32,8 @@ func reportEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	log.Infof("Body: %v", string(reportJSON))
 
-	var report *Report
-	err = json.Unmarshal(reportJSON, report)
+	var report Report
+	err = json.Unmarshal(reportJSON, &report)
 	if err != nil {
 		rest.Respond(w, http.StatusInternalServerError, nil)
 		return
