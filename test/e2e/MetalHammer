@@ -1,0 +1,22 @@
+FROM golang:1.11-stretch as builder
+
+WORKDIR /build
+ENV CGO_ENABLED=0 \
+    GO111MODULE=on \
+    GOOS=linux
+
+# Install dependencies and Mage
+COPY ./ ./
+RUN go mod download \
+ && go build -o metal-hammer
+
+FROM alpine:3.8
+LABEL maintainer FI-TS Devops <devops@f-i-ts.de>
+
+RUN apk update \
+ && apk add \
+    ca-certificates
+
+COPY --from=builder /build/metal-hammer /
+
+CMD ["/metal-hammer"]

@@ -20,20 +20,27 @@ func (BUILD) Bin() error {
 }
 
 // (Re)build metal-core image
-func (b BUILD) Image() error {
-	if err := b.Bin(); err != nil {
-		return err
-	}
-	return sh.RunV("docker-compose", "build")
+func (b BUILD) Core() error {
+	return sh.RunV("docker-compose", "build", "metal-core")
+}
+
+// (Re)build metal-hammer image
+func (b BUILD) Hammer() error {
+	return sh.RunV("docker-compose", "build", "metal-hammer")
+}
+
+// (Re)build metal-api image
+func (b BUILD) Api() error {
+	return sh.RunV("docker-compose", "build", "metal-api")
 }
 
 // (Re)build all metal images
-func (b BUILD) Images() error {
-	if err := sh.RunV("docker", "build", "-t", "registry.fi-ts.io/metal/metal-hammer", "../metal-hammer"); err != nil {
+func (b BUILD) All() error {
+	if err := b.Core(); err != nil {
 		return err
 	}
-	if err := sh.RunV("docker-compose", "-f", "../maas-service/docker-compose.yml", "build"); err != nil {
+	if err := b.Hammer(); err != nil {
 		return err
 	}
-	return b.Image()
+	return b.Api()
 }

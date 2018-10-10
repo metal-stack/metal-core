@@ -20,7 +20,9 @@ FROM alpine:3.8
 LABEL maintainer FI-TS Devops <devops@f-i-ts.de>
 
 RUN apk update \
- && apk add ca-certificates ipmitool
+ && apk add \
+    ca-certificates \
+    ipmitool
 
 COPY --from=builder /build/bin/metal-core /
 

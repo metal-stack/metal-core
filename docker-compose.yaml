@@ -34,6 +34,8 @@ services:
       API_URL: http://localhost:8090/apidocs.json
 
   metal-api:
+    build:
+      context: ../maas-service
     image: registry.fi-ts.io/metal/metal-api
     container_name: metal-api
     tty: true
@@ -49,11 +51,14 @@ services:
       "
 
   metal-hammer:
+    build:
+      context: ../metal-hammer
+      dockerfile: ../metal-core/test/e2e/MetalHammer
     image: registry.fi-ts.io/metal/metal-hammer
     container_name: metal-hammer
     network_mode: host
     command: >
       /bin/sh -c "
         sleep 6;
-        /bin/metal-hammer;
+        /metal-hammer;
       "
