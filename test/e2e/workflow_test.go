@@ -50,11 +50,11 @@ func spawnTestEnvironment(t *testing.T) {
 }
 
 func waitFor(container string, t *testing.T) {
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 20; i++ {
 		if out, err := exec.Command("docker", "ps", "-a", "-q", "-f", fmt.Sprintf("name=%v", container)).CombinedOutput(); err == nil && len(out) > 0 {
 			return
 		} else {
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 		}
 	}
 	assert.Failf(t, "Failed to spawn container %v", container)
