@@ -80,7 +80,7 @@ func (s service) RunServer() {
 	log.WithFields(log.Fields{
 		"address": addr,
 		"port":    port,
-	}).Info("Starting API Server")
+	}).Info("Starting metal-core")
 
 	if err := server.ListenAndServe(); err != http.ErrServerClosed {
 		logging.Decorate(log.WithFields(log.Fields{})).
