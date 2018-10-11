@@ -1,6 +1,8 @@
 module git.f-i-ts.de/cloud-native/maas/metal-core
 
 require (
+	github.com/google/gopacket v0.0.0-20151010222305-d67ddb98d5a1
+	github.com/google/tcpproxy v0.0.0-20180808230851-dfa16c61dad2
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2
 	github.com/kelseyhightower/envconfig v1.3.0

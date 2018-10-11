@@ -2,11 +2,14 @@ package e2e
 
 import (
 	"fmt"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/pcap"
+	"github.com/google/tcpproxy"
 	"github.com/magefile/mage/sh"
 	"github.com/magiconair/properties"
 	"github.com/stretchr/testify/assert"
-	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -21,7 +24,10 @@ type Env struct {
 	RethinkdbContainerName   string `properties:"RETHINKDB_CONTAINER_NAME"`
 }
 
-var env Env
+var (
+	env   Env
+	proxy tcpproxy.Proxy
+)
 
 func TestWorkflow(t *testing.T) {
 	defer tearDown()
@@ -34,7 +40,7 @@ func TestWorkflow(t *testing.T) {
 
 	// THEN
 	if out, err := sh.Output("docker", "logs", "metal-core-test"); err != nil {
-		assert.Failf(t, "Failed to fetch docker logs", "container=%v, err=%v", env.MetalHammerContainerName, err)
+		panic(err)
 	} else {
 		expected := "http://localhost:18081/device/register"
 		assert.Contains(t, out, expected, fmt.Sprintf("Metal-APIs register endpoint not called by %v container", env.MetalCoreContainerName))
@@ -52,11 +58,63 @@ func TestWorkflow(t *testing.T) {
 
 func spawnTestEnvironment(t *testing.T) {
 	readEnvFile(t)
+	//startTCPProxy(t)
+	go sniffTCPPackets()
 	removeMetalHammerContainer()
 	if _, err := sh.Output("docker-compose", "-f", "workflow_test.yaml", "up", "--force-recreate", "--remove-orphans", "-d"); err != nil {
-		assert.Fail(t, "Failed to spin up test environment")
-		fmt.Println(err)
-		os.Exit(1)
+		panic(err)
+	}
+}
+
+func sniffTCPPackets() {
+	if handle, err := pcap.OpenLive("lo", 1600, true, pcap.BlockForever); err != nil {
+		panic(err)
+	} else if out, err := exec.Command("tcpdump", "-i", "lo", "-dd", fmt.Sprintf("ip and tcp and port %d", env.MetalAPIPort)).CombinedOutput(); err != nil {
+		panic(err)
+	} else {
+		bpfInstructions := []pcap.BPFInstruction{}
+		for _, insn := range strings.Split(string(out), "\n") {
+			if len(insn) > 0 {
+				parts := strings.Split(insn[2:len(insn)-3], ", ")
+				bpfInstructions = append(bpfInstructions, pcap.BPFInstruction{
+					Code: uint16(parseHex(parts[0], 16)),
+					Jt:   uint8(parseInt(parts[1])),
+					Jf:   uint8(parseInt(parts[2])),
+					K:    uint32(parseHex(parts[3], 32)),
+				})
+			}
+		}
+
+		if err := handle.SetBPFInstructionFilter(bpfInstructions); err != nil {
+			panic(err)
+		}
+
+		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
+		i := 1
+		for packet := range packetSource.Packets() {
+			payload := string(packet.TransportLayer().LayerPayload())
+			if len(payload) > 0 {
+				fmt.Printf("%d:\n", i)
+				i++
+				fmt.Println(payload)
+			}
+		}
+	}
+}
+
+func parseInt(s string) int {
+	if i, err := strconv.Atoi(s); err != nil {
+		panic(err)
+	} else {
+		return i
+	}
+}
+
+func parseHex(s string, bitSize int) uint64 {
+	if i, err := strconv.ParseUint(s[2:], 16, bitSize); err != nil {
+		panic(err)
+	} else {
+		return i
 	}
 }
 
@@ -64,18 +122,15 @@ func runMetalHammer(t *testing.T) {
 	time.Sleep(3 * time.Second)
 	removeMetalHammerContainer()
 	if _, err := sh.Output("docker-compose", "-f", "workflow_test.yaml", "run", "-d", "--name", env.MetalHammerContainerName, "--entrypoint", "/metal-hammer", "metal-hammer"); err != nil {
-		assert.Fail(t, "Failed to run metal-hammer container")
-		fmt.Println(err)
-		os.Exit(1)
+		panic(err)
 	}
+	time.Sleep(500 * time.Millisecond)
 }
 
 func readEnvFile(t *testing.T) {
 	p := properties.MustLoadFile(".env", properties.UTF8)
 	if err := p.Decode(&env); err != nil {
-		assert.Fail(t, err.Error())
-		fmt.Println(err)
-		os.Exit(1)
+		panic(err)
 	}
 }
 
@@ -93,4 +148,5 @@ func forward(out string, s string) string {
 
 func tearDown() {
 	sh.RunV("docker-compose", "-f", "workflow_test.yaml", "down")
+	proxy.Close()
 }
