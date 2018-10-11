@@ -26,4 +26,4 @@ RUN apk update \
 
 COPY --from=builder /build/bin/metal-core /
 
-CMD ["/metal-core"]
+ENTRYPOINT ["/metal-core"]

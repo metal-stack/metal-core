@@ -5,47 +5,38 @@ services:
     build:
       context: rethinkdb
     image: rethinkdb:test
-    container_name: rethinkdb-test
+    container_name: ${RETHINKDB_CONTAINER_NAME}
     network_mode: host
 
   metal-core:
     build:
       context: ../..
     image: registry.fi-ts.io/metal/metal-core
-    container_name: metal-core-test
+    container_name: ${METAL_CORE_CONTAINER_NAME}
     network_mode: host
     environment:
       METAL_CORE_CONTROL_PLANE_IP: localhost
       METAL_CORE_FACILITY_ID: FRA
       METAL_CORE_LOG_LEVEL: DEBUG
-      METAL_CORE_METAL_API_PORT: 18081
+      METAL_CORE_METAL_API_PORT: ${METAL_API_PORT}
 
   metal-api:
     build:
       context: ../../../maas-service
     image: registry.fi-ts.io/metal/metal-api
-    container_name: metal-api-test
+    container_name: ${METAL_API_CONTAINER_NAME}
     tty: true
     network_mode: host
     environment:
       METAL_API_WITH_MOCK_DATA: "true"
       METAL_API_BIND_ADDR: localhost
-      METAL_API_DB_ADDR: localhost:28015
-    command: >
-      /bin/sh -c "
-        sleep 1
-        /metal-api --port 18081
-      "
+      METAL_API_DB_ADDR: localhost:${RETHINKDB_PORT}
+    command: ["/metal-api", "--port", "${METAL_API_PORT}"]
 
   metal-hammer:
     build:
       context: ../../../metal-hammer
       dockerfile: ../metal-core/test/e2e/MetalHammer
     image: registry.fi-ts.io/metal/metal-hammer
-    container_name: metal-hammer-test
+    container_name: ${METAL_HAMMER_CONTAINER_NAME}
     network_mode: host
-    command: >
-      /bin/sh -c "
-        sleep 3
-        /metal-hammer
-      "
