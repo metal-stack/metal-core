@@ -57,7 +57,7 @@ func mockMetalAPIServer(endpoints ...endpoint) {
 	}
 
 	apiServer = &http.Server{
-		Addr:    fmt.Sprintf("localhost:%d", srv.GetConfig().APIPort),
+		Addr:    fmt.Sprintf("%v:%d", srv.GetConfig().APIAddress, srv.GetConfig().APIPort),
 		Handler: router,
 	}
 	go func() {

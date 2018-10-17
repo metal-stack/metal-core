@@ -5,12 +5,17 @@ package main
 import (
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
+	"os"
+	"os/exec"
 )
 
 type BUILD mg.Namespace
 
 // Same as build:bin
 func Build() error {
+	os.Setenv("GO111MODULE", "on")
+	os.Setenv("CGO_ENABLE", "0")
+	os.Setenv("GOOS", "linux")
 	return sh.RunV("go", "build", "-o", "bin/metal-core")
 }
 
@@ -19,8 +24,24 @@ func (BUILD) Bin() error {
 	return Build()
 }
 
+// (Re)build model
+func (BUILD) Model() error {
+	if _, err := os.Stat("/bin/swagger"); os.IsNotExist(err) {
+		if err := exec.Command("curl", "-fLSs",
+			"https://github.com/go-swagger/go-swagger/releases/download/v0.17.0/swagger_linux_amd64", "-o", "bin/swagger").Run(); err != nil {
+			return err
+		} else if err := exec.Command("chmod", "+x", "bin/swagger").Run(); err != nil {
+			return err
+		}
+	}
+	return sh.RunV("bin/swagger", "generate", "client", "-f", "internal/domain/metal-api.json")
+}
+
 // (Re)build metal-core image
 func (b BUILD) Core() error {
+	if err := b.Bin(); err != nil {
+		return err
+	}
 	return sh.RunV("docker-compose", "build", "metal-core")
 }
 

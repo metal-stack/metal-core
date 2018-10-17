@@ -22,9 +22,9 @@ func bootEndpoint(w http.ResponseWriter, r *http.Request) {
 	log.WithField("mac", mac).
 		Info("Request metal API for a device with given mac")
 
-	sc, devs := srv.GetMetalAPIClient().FindDevices(mac)
+	sc, dev := srv.GetMetalAPIClient().FindDevice(mac)
 
-	if sc == http.StatusOK && len(devs) == 0 {
+	if sc == http.StatusOK && dev == nil {
 		log.WithField("statusCode", sc).
 			Info("Device(s) not found")
 		rest.Respond(w, http.StatusOK, createBootDiscoveryImageResponse())

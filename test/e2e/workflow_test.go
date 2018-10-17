@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/models"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcap"
 	"github.com/google/tcpproxy"
@@ -54,14 +55,14 @@ func TestWorkflow(t *testing.T) {
 
 	assert.Contains(t, coreTraffic[0], "POST /device/register", fmt.Sprintf("Metal-Cores register endpoint not called by %v container", env.MetalHammerContainerName))
 	devId := coreTraffic[0][22:strings.Index(coreTraffic[0], " HTTP")]
-	rdr := &domain.RegisterDeviceRequest{}
+	rdr := &domain.MetalHammerRegisterDeviceRequest{}
 	if err := json.Unmarshal([]byte(extractPayload(coreTraffic[0])), rdr); err != nil {
 		panic(err)
 	}
 	assert.Equal(t, devId, rdr.UUID)
 
 	assert.Contains(t, coreTraffic[1], "200 OK", fmt.Sprintf("Metal-APIs register endpoint not called by %v container", env.MetalCoreContainerName))
-	dev := &domain.Device{}
+	dev := &models.MetalDevice{}
 	if err := json.Unmarshal([]byte(extractPayload(coreTraffic[1])), dev); err != nil {
 		panic(err)
 	}
@@ -73,20 +74,21 @@ func TestWorkflow(t *testing.T) {
 	assert.Equal(t, 3, len(apiTraffic))
 
 	assert.Contains(t, apiTraffic[0], "POST /device/register", fmt.Sprintf("Metal-APIs register endpoint not called by %v container", env.MetalCoreContainerName))
-	mardr := &domain.MetalApiRegisterDeviceRequest{}
+	mardr := &domain.MetalHammerRegisterDeviceRequest{}
 	if err := json.Unmarshal([]byte(extractPayload(apiTraffic[0])), mardr); err != nil {
 		panic(err)
 	}
 	assert.Equal(t, devId, mardr.UUID)
 
 	assert.Contains(t, apiTraffic[1], "200 OK", fmt.Sprintf("Metal-APIs register endpoint not called by %v container", env.MetalCoreContainerName))
-	dev = &domain.Device{}
+	dev = &models.MetalDevice{}
 	if err := json.Unmarshal([]byte(extractPayload(apiTraffic[1])), dev); err != nil {
 		panic(err)
 	}
 	assert.Equal(t, devId, dev.ID)
 
-	assert.Contains(t, apiTraffic[2], fmt.Sprintf("GET /device/%v/wait", devId), fmt.Sprintf("Either Metal-Cores install endpoint threw an error or Metal-APIs wait endpoint not called by %v container", env.MetalCoreContainerName))
+	assert.Contains(t, apiTraffic[2], fmt.Sprintf("GET /device/%v/wait", devId),
+		fmt.Sprintf("Either Metal-Cores install endpoint threw an error or Metal-APIs wait endpoint not called by %v container", env.MetalCoreContainerName))
 }
 
 func extractPayload(s string) string {
@@ -122,7 +124,8 @@ func runMetalHammer() {
 	time.Sleep(3 * time.Second)
 	waitForMetalApiContainer()
 	sniffTcpPackets()
-	if _, err := sh.Output("docker-compose", "-f", "workflow_test.yaml", "run", "-d", "--name", env.MetalHammerContainerName, "--entrypoint", "/metal-hammer", "metal-hammer"); err != nil {
+	if _, err := sh.Output("docker-compose", "-f", "workflow_test.yaml", "run",
+		"-d", "--name", env.MetalHammerContainerName, "--entrypoint", "/metal-hammer", "metal-hammer"); err != nil {
 		panic(err)
 	}
 }
@@ -135,7 +138,7 @@ func sniffTcpPackets() {
 }
 
 func createHandle(port int) *pcap.Handle {
-	if handle, err := pcap.OpenLive("lo", 1600, false, pcap.BlockForever); err != nil {
+	if handle, err := pcap.OpenLive("lo", 65536, true, pcap.BlockForever); err != nil {
 		panic(err)
 	} else if err := handle.SetBPFFilter(fmt.Sprintf("tcp and port %d", port)); err != nil {
 		panic(err)

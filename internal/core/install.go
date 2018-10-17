@@ -25,7 +25,7 @@ func installEndpoint(w http.ResponseWriter, r *http.Request) {
 	if sc == http.StatusOK && dev != nil && dev.Image != nil {
 		logger.WithFields(log.Fields{
 			"imageID":  dev.Image.ID,
-			"imageURL": dev.Image.Url,
+			"imageURL": dev.Image.URL,
 		}).Info("Got image to install")
 		rest.Respond(w, http.StatusOK, dev)
 	} else {

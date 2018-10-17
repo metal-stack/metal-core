@@ -2,9 +2,9 @@ package int
 
 import (
 	"fmt"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/models"
 	"net/http"
 
-	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
 	"gopkg.in/resty.v1"
 )
@@ -45,9 +45,9 @@ var fakeMac = "00:11:22:33:44:55"
 
 func findDevicesAPIEndpointMock(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Get("mac") == fakeMac {
-		rest.Respond(w, http.StatusOK, []domain.Device{})
+		rest.Respond(w, http.StatusOK, []models.MetalDevice{})
 	} else {
-		rest.Respond(w, http.StatusAlreadyReported, []domain.Device{
+		rest.Respond(w, http.StatusAlreadyReported, []models.MetalDevice{
 			{}, // Simulate at least one existing device
 		})
 	}

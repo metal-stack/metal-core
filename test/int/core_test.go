@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/models"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/resty.v1"
 	"net/http"
@@ -27,23 +28,24 @@ func TestLoggingMiddleware(t *testing.T) {
 	registerDevice()
 
 	// THEN
-	assert.Contains(t, strings.TrimSpace(logOutput.String()), "Register device at Metal API")
-	assert.Contains(t, strings.TrimSpace(logOutput.String()), "Device registered")
-	assert.NotContains(t, strings.TrimSpace(logOutput.String()), "level=error")
+	result := strings.TrimSpace(logOutput.String())
+	assert.Contains(t, result, "Register device at Metal API")
+	assert.Contains(t, result, "Device registered")
+	assert.NotContains(t, result, "level=error")
 }
 
 func registerDevice() (*resty.Response, error) {
-	rdr := &domain.RegisterDeviceRequest{
+	rdr := &domain.MetalHammerRegisterDeviceRequest{
 		UUID: devId,
 	}
-	rdr.Nics = []domain.Nic{}
-	rdr.Disks = []domain.BlockDevice{}
+	rdr.Nics = []*models.MetalNic{}
+	rdr.Disks = []*models.MetalBlockDevice{}
 	return resty.R().SetBody(rdr).
 		Post(fmt.Sprintf("http://localhost:%d/device/register/%v", srv.GetConfig().Port, devId))
 }
 
 func registerDeviceAPIEndpointMock(w http.ResponseWriter, r *http.Request) {
-	dev := domain.Device{
+	dev := models.MetalDevice{
 		ID: devId,
 	}
 	rest.Respond(w, http.StatusOK, dev)
