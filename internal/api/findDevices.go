@@ -8,14 +8,19 @@ import (
 	"net/http"
 )
 
-func (c client) FindDevice(mac string) (int, *models.MetalDevice) {
-	params := device.NewFindDeviceParams()
-	params.ID = mac
-	if ok, err := c.DeviceClient.FindDevice(params); err != nil {
+func (c client) FindDevices(mac string) (int, *models.MetalDevice) {
+	params := device.NewListDevicesParams()
+	if ok, err := c.DeviceClient.ListDevices(params); err == nil {
+		for _, dev := range ok.Payload {
+			for _, nic := range dev.Hardware.Nics {
+				if *nic.Mac == mac {
+					return http.StatusOK, dev
+				}
+			}
+		}
+	} else {
 		logging.Decorate(log.WithField("mac", mac)).
 			Error("Device not found")
 		return http.StatusNotFound, nil
-	} else {
-		return http.StatusOK, ok.Payload
 	}
 }

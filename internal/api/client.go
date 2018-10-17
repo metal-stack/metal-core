@@ -13,7 +13,7 @@ type (
 	Client interface {
 		Device() *device.Client
 		GetConfig() *domain.Config
-		FindDevice(mac string) (int, *models.MetalDevice)
+		FindDevices(mac string) (int, *models.MetalDevice)
 		RegisterDevice(deviceId string, hw []byte) (int, *models.MetalDevice)
 		InstallImage(deviceId string) (int, *models.MetalDevice)
 	}
