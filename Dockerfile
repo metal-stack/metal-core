@@ -11,7 +11,7 @@ RUN go mod download \
  && go get github.com/magefile/mage
 
 # Copy source code
-COPY ./ ./
+COPY . .
 
 # Test and build metal-core
 RUN mage build:model test:unit test:int build:bin

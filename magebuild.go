@@ -17,7 +17,7 @@ type BUILD mg.Namespace
 // Same as build:bin
 func Build() error {
 	os.Setenv("GO111MODULE", "on")
-	os.Setenv("CGO_ENABLE", "0")
+	os.Setenv("CGO_ENABLED", "0")
 	os.Setenv("GOOS", "linux")
 	gitVersion, _ := sh.Output("git", "describe", "--long", "--all")
 	gitsha, _ := sh.Output("git", "rev-parse", "--short=8", "HEAD")
