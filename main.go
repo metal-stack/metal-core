@@ -31,7 +31,7 @@ func init() {
 	lvls["FATAL"] = log.FatalLevel
 	lvls["PANIC"] = log.PanicLevel
 
-	if err := envconfig.Process("metal_core", &cfg); err != nil {
+	if err := envconfig.Process("METAL_CORE", &cfg); err != nil {
 		log.Error("Configuration error", "error", err)
 		os.Exit(1)
 	}

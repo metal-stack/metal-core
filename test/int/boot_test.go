@@ -41,7 +41,7 @@ func TestPXEBoot(t *testing.T) {
 	bootResponse := &core.BootResponse{}
 	if err != nil {
 		assert.Failf(t, "Invalid boot response: %v", err.Error())
-	} else if err := json.Unmarshal(resp.Body(), bootResponse); err!=nil{
+	} else if err := json.Unmarshal(resp.Body(), bootResponse); err != nil {
 		assert.Failf(t, "Invalid boot response: %v", string(resp.Body()))
 	} else {
 		assert.Equal(t, expected.Kernel, bootResponse.Kernel)

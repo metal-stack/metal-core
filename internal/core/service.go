@@ -3,6 +3,7 @@ package core
 import (
 	"bytes"
 	"fmt"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/mq"
 	"io/ioutil"
 	"net/http"
 
@@ -18,6 +19,7 @@ import (
 type (
 	Service interface {
 		GetConfig() *domain.Config
+		GetMQClient() mq.Client
 		GetMetalAPIClient() api.Client
 		GetNetSwitchClient() netswitch.Client
 		GetServer() *http.Server
@@ -25,6 +27,7 @@ type (
 	}
 	service struct {
 		server          *http.Server
+		mqClient        mq.Client
 		apiClient       api.Client
 		netSwitchClient netswitch.Client
 	}
@@ -35,6 +38,7 @@ var srv Service
 func NewService(cfg *domain.Config) Service {
 	srv = service{
 		server:          &http.Server{},
+		mqClient:        mq.NewClient(cfg),
 		apiClient:       api.NewClient(cfg),
 		netSwitchClient: netswitch.NewClient(cfg),
 	}
@@ -43,6 +47,10 @@ func NewService(cfg *domain.Config) Service {
 
 func (s service) GetConfig() *domain.Config {
 	return s.GetMetalAPIClient().GetConfig()
+}
+
+func (s service) GetMQClient() mq.Client {
+	return s.mqClient
 }
 
 func (s service) GetMetalAPIClient() api.Client {
@@ -79,8 +87,8 @@ func (s service) RunServer() {
 	}).Info("Starting metal-core")
 
 	if err := server.ListenAndServe(); err != http.ErrServerClosed {
-		logging.Decorate(log.WithFields(log.Fields{})).
-			Fatal(err)
+		logging.Decorate(log.WithField("error", err)).
+			Fatal("Cannot start Metal-Core server")
 	}
 }
 

@@ -1,11 +1,13 @@
 module git.f-i-ts.de/cloud-native/maas/metal-core
 
 require (
+	github.com/bitly/go-nsq v0.0.0-20180925103200-be2eb3566795
 	github.com/go-openapi/errors v0.17.0
 	github.com/go-openapi/runtime v0.0.0-20180920151709-4f900dc2ade9
 	github.com/go-openapi/strfmt v0.17.0
 	github.com/go-openapi/swag v0.17.0
 	github.com/go-openapi/validate v0.17.0
+	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
 	github.com/google/gopacket v0.0.0-20151010222305-d67ddb98d5a1
 	github.com/google/tcpproxy v0.0.0-20180808230851-dfa16c61dad2
 	github.com/gorilla/context v1.1.1 // indirect

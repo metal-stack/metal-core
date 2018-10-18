@@ -17,6 +17,10 @@ type (
 		APIAddress        string `required:"false" default:"localhost" desc:"set metal api address" envconfig:"metal_api_address"`
 		APIPort           int    `required:"false" default:"8080" desc:"set metal api port" envconfig:"metal_api_port"`
 		HammerImagePrefix string `required:"false" default:"pxeboot" desc:"set hammer image prefix for kernel, initrd and cmdline download" split_words:"true"`
+		MQAddress         string `required:"false" default:"localhost" desc:"set the MQ server address" envconfig:"mq_address"`
+		MQPort            int    `required:"false" default:"4161" desc:"set the MQ server port" envconfig:"mq_port"`
+		MQCert            string `required:"false" default:"" desc:"set the MQ server certificate file" envconfig:"mq_cert"`
+		MQKey             string `required:"false" default:"" desc:"set the MQ server certificate key file" envconfig:"mq_key"`
 	}
 	MetalHammerRegisterDeviceRequest struct {
 		models.MetalDeviceHardware
