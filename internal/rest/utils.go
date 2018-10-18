@@ -2,14 +2,17 @@ package rest
 
 import (
 	"encoding/json"
-	"fmt"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/logging"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 )
 
+type Error struct {
+	Message string
+}
+
 func RespondError(w http.ResponseWriter, code int, errMsg string) {
-	Respond(w, code, fmt.Sprintf("Error: %v", errMsg))
+	Respond(w, code, Error{Message: errMsg})
 }
 
 func Respond(w http.ResponseWriter, sc int, body interface{}) {

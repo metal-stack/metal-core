@@ -32,6 +32,6 @@ func installEndpoint(w http.ResponseWriter, r *http.Request) {
 		errMsg := "No installation image found"
 		logging.Decorate(logger).
 			Error(errMsg)
-		rest.Respond(w, sc, errMsg)
+		rest.RespondError(w, sc, errMsg)
 	}
 }
