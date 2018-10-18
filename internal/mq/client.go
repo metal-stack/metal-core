@@ -11,7 +11,7 @@ import (
 
 type (
 	Client interface {
-		Subscribe(topic string, channel string)
+		Subscribe(topic string, channel string, callback func(message string))
 	}
 	client struct {
 		Config *domain.Config
@@ -24,21 +24,25 @@ func NewClient(cfg *domain.Config) Client {
 	}
 }
 
-func (c client) Subscribe(topic string, channel string) {
+func (c client) Subscribe(topic string, channel string, callback func(message string)) {
 	q, _ := nsq.NewConsumer(topic, channel, c.createConfig())
 	q.AddHandler(nsq.HandlerFunc(func(msg *nsq.Message) error {
 		log.WithFields(log.Fields{
 			"topic":   topic,
 			"channel": channel,
+			"timestamp": msg.Timestamp,
+			"attempts": msg.Attempts,
+			"nsqdAddress": msg.NSQDAddress,
 			"message": string(msg.Body),
 		}).Info("Got message")
+		callback(string(msg.Body))
 		return nil
 	}))
 	mqServer := fmt.Sprintf("%v:%d", c.Config.MQAddress, c.Config.MQPort)
 	if err := q.ConnectToNSQLookupd(mqServer); err != nil {
 		logging.Decorate(log.WithFields(log.Fields{
-			"mq-server": mqServer,
-			"error":     err,
+			"nsqlookupd": mqServer,
+			"error":      err,
 		})).Fatal("Cannot connect to MQ server")
 	}
 }

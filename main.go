@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/core"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	"github.com/kelseyhightower/envconfig"
@@ -12,10 +13,13 @@ import (
 var (
 	lvls map[string]log.Level
 	cfg  domain.Config
-	srv  core.Service
 )
 
 func main() {
+	srv := core.NewService(&cfg)
+	srv.GetMQClient().Subscribe("power-off", "power-off-performer", func(message string) {
+		fmt.Println(message)
+	})
 	srv.RunServer()
 }
 
@@ -32,13 +36,11 @@ func init() {
 	lvls["PANIC"] = log.PanicLevel
 
 	if err := envconfig.Process("METAL_CORE", &cfg); err != nil {
-		log.Error("Configuration error", "error", err)
+		log.Fatal("Bad configuration", "error", err)
 		os.Exit(1)
 	}
 	log.SetLevel(fetchLogLevel(cfg.LogLevel))
 	cfg.Log()
-
-	srv = core.NewService(&cfg)
 }
 
 func fetchLogLevel(lvl string) log.Level {

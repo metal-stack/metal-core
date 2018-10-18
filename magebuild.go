@@ -7,7 +7,10 @@ import (
 	"github.com/magefile/mage/sh"
 	"os"
 	"os/exec"
+	"fmt"
 )
+
+const version = "devel"
 
 type BUILD mg.Namespace
 
@@ -16,7 +19,11 @@ func Build() error {
 	os.Setenv("GO111MODULE", "on")
 	os.Setenv("CGO_ENABLE", "0")
 	os.Setenv("GOOS", "linux")
-	return sh.RunV("go", "build", "-o", "bin/metal-core")
+	gitVersion, _ := sh.Output("git", "describe", "--long", "--all")
+	gitsha, _ := sh.Output("git", "rev-parse", "--short=8", "HEAD")
+	buildDate, _ := sh.Output("date", "-Iseconds")
+	ldflags := fmt.Sprintf("-X 'main.version=%v' -X 'main.revision=%v' -X 'main.gitsha1=%v' -X 'main.builddate=%v'", version, gitVersion, gitsha, buildDate)
+	return sh.RunV("go", "build", "-tags", "netgo", "-ldflags", ldflags, "-o", "bin/metal-core")
 }
 
 // (Re)build metal-core binary in the bin subdirectory
