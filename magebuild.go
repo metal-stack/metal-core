@@ -35,7 +35,7 @@ func (BUILD) Model() error {
 			return err
 		}
 	}
-	return sh.RunV("bin/swagger", "generate", "client", "-f", "internal/domain/metal-api.json")
+	return sh.RunV("bin/swagger", "generate", "client", "-f", "internal/domain/metal-api.json", "--skip-validation")
 }
 
 // (Re)build metal-core image
