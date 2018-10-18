@@ -26,9 +26,10 @@ func (BUILD) Bin() error {
 
 // (Re)build model
 func (BUILD) Model() error {
-	if _, err := os.Stat("/bin/swagger"); os.IsNotExist(err) {
-		if err := exec.Command("curl", "-fLSs",
-			"https://github.com/go-swagger/go-swagger/releases/download/v0.17.0/swagger_linux_amd64", "-o", "bin/swagger").Run(); err != nil {
+	if _, err := os.Stat("bin/swagger"); os.IsNotExist(err) {
+		exec.Command("mkdir", "bin").Run()
+		if err := exec.Command("wget", "-O", "bin/swagger",
+			"https://github.com/go-swagger/go-swagger/releases/download/v0.17.0/swagger_linux_amd64").Run(); err != nil {
 			return err
 		} else if err := exec.Command("chmod", "+x", "bin/swagger").Run(); err != nil {
 			return err
