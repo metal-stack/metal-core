@@ -20,7 +20,8 @@ services:
     network_mode: host
     environment:
       METAL_CORE_CONTROL_PLANE_IP: localhost
-      METAL_CORE_FACILITY_ID: FRA
+      METAL_CORE_SITE_ID: FRA
+      METAL_CORE_RACK_ID: Vagrant Rack 1
       METAL_CORE_LOG_LEVEL: DEBUG
       METAL_CORE_METAL_API_PORT: 8090
       METAL_CORE_HAMMER_IMAGE_PREFIX: metal-hammer

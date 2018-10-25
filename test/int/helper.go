@@ -31,7 +31,8 @@ func runMetalCoreServer() {
 	log.SetOutput(&logOutput)
 
 	os.Setenv("METAL_CORE_CONTROL_PLANE_IP", "localhost")
-	os.Setenv("METAL_CORE_FACILITY_ID", "FRA")
+	os.Setenv("METAL_CORE_SITE_ID", "FRA")
+	os.Setenv("METAL_CORE_RACK_ID", "Vagrant Rack 1")
 	os.Setenv("METAL_CORE_PORT", "10000")
 	os.Setenv("METAL_CORE_METAL_API_PORT", "10001")
 	config := domain.Config{}

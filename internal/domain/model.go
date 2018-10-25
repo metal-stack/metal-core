@@ -10,7 +10,8 @@ type (
 		// Valid log levels are: DEBUG, INFO, WARN, ERROR, FATAL and PANIC
 		LogLevel          string `required:"false" default:"INFO" desc:"set log level" split_words:"true"`
 		ControlPlaneIP    string `required:"true" desc:"set the control plane IP" split_words:"true"`
-		FacilityID        string `required:"true" desc:"set the facility ID" split_words:"true"`
+		SiteID            string `required:"true" desc:"set the site ID" split_words:"true"`
+		RackID            string `required:"true" desc:"set the rack ID" split_words:"true"`
 		Address           string `required:"false" default:"localhost" desc:"set server address"`
 		Port              int    `required:"false" default:"4242" desc:"set server port"`
 		APIProtocol       string `required:"false" default:"http" desc:"set metal api protocol" envconfig:"metal_api_protocol"`

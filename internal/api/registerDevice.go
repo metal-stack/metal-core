@@ -22,8 +22,9 @@ func (c client) RegisterDevice(deviceId string, hw []byte) (int, *models.MetalDe
 	}
 	params := device.NewRegisterDeviceParams()
 	params.Body = &models.ServiceRegisterRequest{
-		UUID:       &deviceId,
-		Facilityid: &c.GetConfig().FacilityID,
+		UUID:   &deviceId,
+		Siteid: &c.GetConfig().SiteID,
+		Rackid: &c.GetConfig().RackID,
 		Hardware: &models.MetalDeviceHardware{
 			Memory:   rdr.Memory,
 			CPUCores: rdr.CPUCores,
