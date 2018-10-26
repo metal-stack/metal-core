@@ -1,6 +1,5 @@
 .dockerignore
 .gitignore
-bin
 e2e
 docker-compose.yaml
 Dockerfile

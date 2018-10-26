@@ -1,25 +1,33 @@
 package main
 
 import (
-	"fmt"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/core"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
-	"github.com/kelseyhightower/envconfig"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"strings"
+
+	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/core"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
+	"git.f-i-ts.de/cloud-native/metallib/bus"
+	"git.f-i-ts.de/cloud-native/metallib/zapup"
+	"github.com/kelseyhightower/envconfig"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
-	lvls map[string]log.Level
-	cfg  domain.Config
+	lvls     map[string]log.Level
+	cfg      domain.Config
+	zlog     = zapup.MustRootLogger()
+	sugarlog = zlog.Sugar()
 )
 
 func main() {
 	srv := core.NewService(&cfg)
-	srv.GetMQClient().Subscribe("power-off", "power-off-performer", func(message string) {
-		fmt.Println(message)
-	})
+	bus.NewConsumer(zlog, cfg.MQAddress).
+		MustRegister("device", "rack1").
+		Consume(domain.DeviceEvent{}, func(message interface{}) error {
+			evt := message.(*domain.DeviceEvent)
+			sugarlog.Info("got message", "event", *evt)
+			return nil
+		}, 5)
 	srv.RunServer()
 }
 

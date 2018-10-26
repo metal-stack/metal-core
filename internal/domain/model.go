@@ -23,10 +23,26 @@ type (
 		MQCert            string `required:"false" default:"" desc:"set the MQ server certificate file" envconfig:"mq_cert"`
 		MQKey             string `required:"false" default:"" desc:"set the MQ server certificate key file" envconfig:"mq_key"`
 	}
+
+	EventType string
+
 	MetalHammerRegisterDeviceRequest struct {
 		models.MetalDeviceHardware
 		UUID string `json:"uuid" description:"the uuid of the device to register"`
 	}
+
+	DeviceEvent struct {
+		Type EventType           `json:"type,omitempty"`
+		Old  *models.MetalDevice `json:"old,omitempty"`
+		New  *models.MetalDevice `json:"new,omitempty"`
+	}
+)
+
+// Some EventType enums.
+const (
+	CREATE EventType = "create"
+	UPDATE EventType = "update"
+	DELETE EventType = "delete"
 )
 
 func (c Config) Log() {
