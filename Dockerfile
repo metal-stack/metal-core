@@ -3,7 +3,8 @@ FROM golang:1.11-stretch as builder
 WORKDIR /build
 ENV CGO_ENABLED=0 \
     GO111MODULE=on \
-    GOOS=linux
+    GOOS=linux \
+    GOPROXY=https://gomods.fi-ts.io
 
 # Install dependencies and Mage
 COPY go.mod ./
