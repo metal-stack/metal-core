@@ -36,12 +36,13 @@ func (BUILD) Model() error {
 	if _, err := os.Stat("bin/swagger"); os.IsNotExist(err) {
 		os.Mkdir("bin", 0755)
 		if err := exec.Command("wget", "-O", "bin/swagger",
-			"https://github.com/go-swagger/go-swagger/releases/download/0.16.0/swagger_linux_amd64").Run(); err != nil {
+			"https://github.com/go-swagger/go-swagger/releases/download/v0.17.2/swagger_linux_amd64").Run(); err != nil {
 			return err
 		} else if err := os.Chmod("bin/swagger", 0755); err != nil {
 			return err
 		}
 	}
+	os.Setenv("GO111MODULE", "off")
 	return sh.RunV("bin/swagger", "generate", "client", "-f", "internal/domain/metal-api.json", "--skip-validation")
 }
 
