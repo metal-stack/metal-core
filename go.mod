@@ -2,6 +2,7 @@ module git.f-i-ts.de/cloud-native/maas/metal-core
 
 require (
 	git.f-i-ts.de/cloud-native/metallib v0.0.0-20181026124130-dac2b6e8a196
+	git.f-i-ts.de/cloud-native/metallib/version v0.0.0-20181029133253-78cdbc943347
 	github.com/bitly/go-nsq v0.0.0-20180925103200-be2eb3566795
 	github.com/go-openapi/errors v0.17.0
 	github.com/go-openapi/runtime v0.0.0-20180920151709-4f900dc2ade9

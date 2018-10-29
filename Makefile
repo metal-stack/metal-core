@@ -18,11 +18,11 @@ all: bin/$(BINARY);
 
 bin/$(BINARY): $(GOSRC)
 	go build -tags netgo -ldflags \
-		"-X 'main.version=$(VERSION)' \
-		 -X 'main.revision=$(GITVERSION)' \
-		 -X 'main.gitsha1=$(SHA)' \
-		 -X 'main.builddate=$(BUILDDATE)'" \
-		-o bin/$(BINARY)
+        "-X 'git.f-i-ts.de/cloud-native/metallib/version.Version=$(VERSION)' \
+         -X 'git.f-i-ts.de/cloud-native/metallib/version.Revision=$(GITVERSION)' \
+         -X 'git.f-i-ts.de/cloud-native/metallib/version.Gitsha1=$(SHA)' \
+         -X 'git.f-i-ts.de/cloud-native/metallib/version.Builddate=$(BUILDDATE)'" \
+    -o bin/$(BINARY)
 
 clean:
 	rm -rf bin/$(BINARY)

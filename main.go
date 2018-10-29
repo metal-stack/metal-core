@@ -7,6 +7,7 @@ import (
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/core"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	"git.f-i-ts.de/cloud-native/metallib/bus"
+	"git.f-i-ts.de/cloud-native/metallib/version"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/kelseyhightower/envconfig"
 	log "github.com/sirupsen/logrus"
@@ -42,6 +43,8 @@ func init() {
 	lvls["ERROR"] = log.ErrorLevel
 	lvls["FATAL"] = log.FatalLevel
 	lvls["PANIC"] = log.PanicLevel
+
+	log.Info("metal-core", "version", version.V)
 
 	if err := envconfig.Process("METAL_CORE", &cfg); err != nil {
 		log.Fatal("Bad configuration", "error", err)

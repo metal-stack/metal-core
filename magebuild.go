@@ -3,11 +3,12 @@
 package main
 
 import (
-	"github.com/magefile/mage/mg"
-	"github.com/magefile/mage/sh"
+	"fmt"
 	"os"
 	"os/exec"
-	"fmt"
+
+	"github.com/magefile/mage/mg"
+	"github.com/magefile/mage/sh"
 )
 
 const version = "devel"
@@ -22,7 +23,7 @@ func Build() error {
 	gitVersion, _ := sh.Output("git", "describe", "--long", "--all")
 	gitsha, _ := sh.Output("git", "rev-parse", "--short=8", "HEAD")
 	buildDate, _ := sh.Output("date", "-Iseconds")
-	ldflags := fmt.Sprintf("-X 'main.version=%v' -X 'main.revision=%v' -X 'main.gitsha1=%v' -X 'main.builddate=%v'", version, gitVersion, gitsha, buildDate)
+	ldflags := fmt.Sprintf("-X 'git.f-i-ts.de/cloud-native/metallib/version.Version=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Revision=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Gitsha1=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Builddate=%v'", version, gitVersion, gitsha, buildDate)
 	return sh.RunV("go", "build", "-tags", "netgo", "-ldflags", ldflags, "-o", "bin/metal-core")
 }
 
