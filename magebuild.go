@@ -43,7 +43,6 @@ func (BUILD) Model() error {
 			return err
 		}
 	}
-	os.Setenv("GO111MODULE", "off")
 	return sh.RunV("bin/swagger", "generate", "client", "-f", "internal/domain/metal-api.json", "--skip-validation")
 }
 
