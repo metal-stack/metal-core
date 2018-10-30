@@ -1,9 +1,7 @@
 module git.f-i-ts.de/cloud-native/maas/metal-core
 
 require (
-	git.f-i-ts.de/cloud-native/metallib/version v0.0.0-20181029133253-78cdbc943347
-	git.f-i-ts.de/cloud-native/metallib/zapup v0.0.0-20181030113823-4d1a5fdd55c4
-	github.com/bitly/go-nsq v0.0.0-20180925103200-be2eb3566795
+	git.f-i-ts.de/cloud-native/metallib v0.0.0-20181029133253-24f31a717a09
 	github.com/emicklei/go-restful v2.8.0+incompatible
 	github.com/emicklei/go-restful-openapi v1.0.0
 	github.com/go-openapi/errors v0.17.0
@@ -12,13 +10,16 @@ require (
 	github.com/go-openapi/strfmt v0.17.0
 	github.com/go-openapi/swag v0.17.0
 	github.com/go-openapi/validate v0.17.0
+	github.com/google/go-cmp v0.2.0 // indirect
 	github.com/google/gopacket v0.0.0-20151010222305-d67ddb98d5a1
 	github.com/google/tcpproxy v0.0.0-20180808230851-dfa16c61dad2
-	github.com/gorilla/context v1.1.1 // indirect
+	github.com/json-iterator/go v1.1.5 // indirect
 	github.com/kelseyhightower/envconfig v1.3.0
 	github.com/magefile/mage v1.6.2
 	github.com/magiconair/properties v0.0.0-20180515204000-c2353362d570
-	github.com/nsqio/go-nsq v1.0.7
+	github.com/mdlayher/raw v0.0.0-20181016155347-fa5ef3332ca9 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/sirupsen/logrus v1.1.0
 	github.com/stretchr/testify v1.2.2
 	github.com/vmware/goipmi v0.0.0-20151205002058-ee598d2a3447
@@ -26,6 +27,4 @@ require (
 	gopkg.in/resty.v1 v1.9.1
 )
 
-// replace git.f-i-ts.de/cloud-native/metallib/version => ../../metallib/version
-
-// replace git.f-i-ts.de/cloud-native/metallib/zapup => ../../metallib/zapup
+// replace git.f-i-ts.de/cloud-native/metallib => ../../metallib
