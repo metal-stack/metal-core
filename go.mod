@@ -3,7 +3,7 @@ module git.f-i-ts.de/cloud-native/maas/metal-core
 require (
 	git.f-i-ts.de/cloud-native/metallib v0.0.0-20181026124130-dac2b6e8a196
 	git.f-i-ts.de/cloud-native/metallib/version v0.0.0-20181029133253-78cdbc943347
-	git.f-i-ts.de/cloud-native/metallib/zapup v0.0.0-20181026124130-dac2b6e8a196
+	git.f-i-ts.de/cloud-native/metallib/zapup v0.0.0-20181030113823-4d1a5fdd55c4
 	github.com/bitly/go-nsq v0.0.0-20180925103200-be2eb3566795
 	github.com/emicklei/go-restful v2.8.0+incompatible
 	github.com/emicklei/go-restful-openapi v1.0.0
