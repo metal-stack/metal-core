@@ -27,8 +27,8 @@ require (
 	gopkg.in/resty.v1 v1.9.1
 )
 
-replace git.f-i-ts.de/cloud-native/metallib/version => ../../metallib/version
+// replace git.f-i-ts.de/cloud-native/metallib/version => ../../metallib/version
 
-replace git.f-i-ts.de/cloud-native/metallib/zapup => ../../metallib/zapup
+// replace git.f-i-ts.de/cloud-native/metallib/zapup => ../../metallib/zapup
 
-replace git.f-i-ts.de/cloud-native/metallib => ../../metallib
+// replace git.f-i-ts.de/cloud-native/metallib => ../../metallib

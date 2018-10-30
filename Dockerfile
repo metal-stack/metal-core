@@ -5,8 +5,6 @@ ENV CGO_ENABLED=0 \
     GOOS=linux \
     GOPROXY=https://gomods.fi-ts.io
 
-COPY metallib /metallib
-
 WORKDIR /build/metal-core
 
 # Install dependencies and Mage
