@@ -1,7 +1,7 @@
 module git.f-i-ts.de/cloud-native/maas/metal-core
 
 require (
-	git.f-i-ts.de/cloud-native/metallib v0.0.0-20181029133253-24f31a717a09
+	git.f-i-ts.de/cloud-native/metallib v0.0.0-20181029133253-7c2730708c40
 	github.com/emicklei/go-restful v2.8.0+incompatible
 	github.com/emicklei/go-restful-openapi v1.0.0
 	github.com/go-openapi/errors v0.17.0
