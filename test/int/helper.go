@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/core"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
-	"github.com/gorilla/mux"
+	"github.com/emicklei/go-restful"
 	"github.com/kelseyhightower/envconfig"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -16,8 +16,8 @@ import (
 
 type endpoint struct {
 	path    string
-	handler func(http.ResponseWriter, *http.Request)
-	methods []string
+	handler func(request *restful.Request, response *restful.Response)
+	method  string
 }
 
 var (
@@ -27,6 +27,9 @@ var (
 )
 
 func runMetalCoreServer() {
+	if srv != nil {
+		return
+	}
 	logOutput.Reset()
 	log.SetOutput(&logOutput)
 
@@ -49,17 +52,18 @@ func runMetalCoreServer() {
 }
 
 func mockMetalAPIServer(endpoints ...endpoint) {
-	if srv == nil {
-		runMetalCoreServer()
-	}
-	router := mux.NewRouter()
+	handler := restful.NewContainer()
+	ws := new(restful.WebService)
+	ws.Consumes(restful.MIME_JSON).
+		Produces(restful.MIME_JSON)
 	for _, e := range endpoints {
-		router.HandleFunc(e.path, e.handler).Methods(e.methods...)
+		ws.Route(ws.Method(e.method).Path(e.path).To(e.handler))
 	}
+	handler.Add(ws)
 
 	apiServer = &http.Server{
 		Addr:    fmt.Sprintf("%v:%d", srv.GetConfig().APIAddress, srv.GetConfig().APIPort),
-		Handler: router,
+		Handler: handler,
 	}
 	go func() {
 		if err := apiServer.ListenAndServe(); err != http.ErrServerClosed {
@@ -70,13 +74,8 @@ func mockMetalAPIServer(endpoints ...endpoint) {
 }
 
 func shutdown() {
-	_shutdown(srv.GetServer())
-	_shutdown(apiServer)
-}
-
-func _shutdown(server *http.Server) {
-	if server != nil {
-		if err := server.Shutdown(context.Background()); err != nil {
+	if apiServer != nil {
+		if err := apiServer.Shutdown(context.Background()); err != nil {
 			fmt.Println(err)
 			os.Exit(-1)
 		}

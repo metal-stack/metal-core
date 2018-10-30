@@ -1,32 +1,36 @@
 package rest
 
 import (
-	"encoding/json"
+	"errors"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/logging"
+	"github.com/emicklei/go-restful"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 )
 
-type Error struct {
-	Message string
+func RespondError(response *restful.Response, statusCode int, errMsg string) {
+	if err := response.WriteError(statusCode, errors.New(errMsg)); err == nil {
+		response.Flush()
+		log.WithFields(log.Fields{
+			"statusCode": statusCode,
+			"error":      errMsg,
+		}).Error("Sent error response")
+	} else {
+		logging.Decorate(log.WithFields(log.Fields{})).
+			Error(err)
+	}
 }
 
-func RespondError(w http.ResponseWriter, code int, errMsg string) {
-	Respond(w, code, Error{Message: errMsg})
-}
-
-func Respond(w http.ResponseWriter, sc int, body interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(sc)
+func Respond(response *restful.Response, statusCode int, body interface{}) {
 	if body == nil {
-		log.WithField("statusCode", sc).
+		log.WithField("statusCode", statusCode).
 			Info("Sent response")
-	} else if err := json.NewEncoder(w).Encode(body); err != nil {
+	} else if err := response.WriteEntity(body); err != nil {
 		logging.Decorate(log.WithFields(log.Fields{})).
 			Error(err)
 	} else {
+		response.Flush()
 		log.WithFields(log.Fields{
-			"statusCode": sc,
+			"statusCode": statusCode,
 			"body":       body,
 		}).Info("Sent response")
 	}

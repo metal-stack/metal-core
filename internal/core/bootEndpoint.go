@@ -2,10 +2,10 @@ package core
 
 import (
 	"fmt"
+	"github.com/emicklei/go-restful"
 	"net/http"
 
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
-	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/resty.v1"
 )
@@ -16,8 +16,8 @@ type BootResponse struct {
 	CommandLine string   `json:"cmdline"`
 }
 
-func bootEndpoint(w http.ResponseWriter, r *http.Request) {
-	mac := mux.Vars(r)["mac"]
+func bootEndpoint(request *restful.Request, response *restful.Response) {
+	mac := request.PathParameter("mac")
 
 	log.WithField("mac", mac).
 		Info("Request metal API for a device with given mac")
@@ -27,13 +27,13 @@ func bootEndpoint(w http.ResponseWriter, r *http.Request) {
 	if sc == http.StatusOK && len(devs) == 0 {
 		log.WithField("statusCode", sc).
 			Info("Device(s) not found")
-		rest.Respond(w, http.StatusOK, createBootDiscoveryImageResponse())
-	} else {
+		rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse())
+	} else { //TODO Check return code and adjust response accordingly
 		log.WithFields(log.Fields{
 			"statusCode": sc,
 			"mac":        mac,
 		}).Error("There should not exist a device with given mac")
-		rest.Respond(w, http.StatusAccepted, createBootTinyCoreLinuxResponse())
+		rest.Respond(response, http.StatusAccepted, createBootTinyCoreLinuxResponse())
 	}
 }
 

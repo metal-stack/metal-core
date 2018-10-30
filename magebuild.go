@@ -43,6 +43,8 @@ func (BUILD) Model() error {
 			return err
 		}
 	}
+	defer os.Setenv("GO111MODULE", "on")
+	os.Setenv("GO111MODULE", "off")
 	return sh.RunV("bin/swagger", "generate", "client", "-f", "internal/domain/metal-api.json", "--skip-validation")
 }
 
@@ -51,12 +53,18 @@ func (b BUILD) Core() error {
 	if err := b.Bin(); err != nil {
 		return err
 	}
+	defer os.RemoveAll("metallib")
+	if err := exec.Command("cp", "-r", "../../metallib", ".").Run(); err != nil {
+		return err
+	}
 	return sh.RunV("docker-compose", "build", "metal-core")
 }
 
 // (Re)build metal-hammer image
 func (b BUILD) Hammer() error {
-	return sh.RunV("docker-compose", "build", "metal-hammer")
+	defer exec.Command("cd", "-").Run()
+	os.Chdir("../metal-hammer")
+	return sh.RunV("docker-make", "--no-push", "--Lint")
 }
 
 // (Re)build metal-api image

@@ -14,7 +14,7 @@ type (
 		Device() *device.Client
 		GetConfig() *domain.Config
 		FindDevices(mac string) (int, []*models.MetalDevice)
-		RegisterDevice(deviceId string, hw []byte) (int, *models.MetalDevice)
+		RegisterDevice(deviceId string, request *domain.MetalHammerRegisterDeviceRequest) (int, *models.MetalDevice)
 		InstallImage(deviceId string) (int, *models.MetalDevice)
 	}
 	client struct {

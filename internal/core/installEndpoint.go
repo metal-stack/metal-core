@@ -3,13 +3,13 @@ package core
 import (
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/logging"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
-	"github.com/gorilla/mux"
+	"github.com/emicklei/go-restful"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 )
 
-func installEndpoint(w http.ResponseWriter, r *http.Request) {
-	devId := mux.Vars(r)["deviceId"]
+func installEndpoint(request *restful.Request, response *restful.Response) {
+	devId := request.PathParameter("id")
 
 	log.WithField("deviceID", devId).
 		Info("Request metal API for an image to install")
@@ -27,11 +27,11 @@ func installEndpoint(w http.ResponseWriter, r *http.Request) {
 			"imageID":  dev.Image.ID,
 			"imageURL": dev.Image.URL,
 		}).Info("Got image to install")
-		rest.Respond(w, http.StatusOK, dev)
+		rest.Respond(response, http.StatusOK, dev)
 	} else {
 		errMsg := "No installation image found"
 		logging.Decorate(logger).
 			Error(errMsg)
-		rest.RespondError(w, sc, errMsg)
+		rest.RespondError(response, http.StatusNotFound, errMsg)
 	}
 }

@@ -49,8 +49,8 @@ func (TEST) E2e() error {
 func runTests(filter func(dir string) bool) error {
 	cnt := 0
 	for _, pkg := range fetchGoPackages() {
-		if containsGoTests(pkg) && filter(pkg) {
-			if err := sh.RunV("go", "test", "-count", "1", pkg); err != nil {
+		if !strings.HasPrefix(pkg, "./metallib") && filter(pkg) && containsGoTests(pkg) {
+			if err := sh.RunV("go", "test", "-count", "1", "-v", pkg); err != nil {
 				cnt++
 			}
 		}

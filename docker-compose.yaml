@@ -37,6 +37,7 @@ services:
   metal-api:
     build:
       context: ../maas-service
+      dockerfile: Dockerfile.dev
     image: registry.fi-ts.io/metal/metal-api
     container_name: metal-api
     tty: true

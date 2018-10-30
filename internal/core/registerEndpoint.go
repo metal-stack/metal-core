@@ -1,32 +1,32 @@
 package core
 
 import (
+	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/logging"
-	"io/ioutil"
+	"github.com/emicklei/go-restful"
 	"net/http"
 
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
-	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 )
 
-func registerEndpoint(w http.ResponseWriter, r *http.Request) {
-	if hw, err := ioutil.ReadAll(r.Body); err != nil {
+func registerEndpoint(request *restful.Request, response *restful.Response) {
+	req := &domain.MetalHammerRegisterDeviceRequest{}
+	if err := request.ReadEntity(req); err != nil {
 		errMsg := "Unable to read body"
 		logging.Decorate(log.WithFields(log.Fields{
 			"err": err,
 		})).Error(errMsg)
 
-		rest.RespondError(w, http.StatusBadRequest, errMsg)
+		rest.RespondError(response, http.StatusBadRequest, errMsg)
 	} else {
-		devId := mux.Vars(r)["deviceId"]
+		devId := request.PathParameter("id")
 
 		log.WithFields(log.Fields{
 			"deviceID": devId,
-			"hardware": string(hw),
 		}).Info("Register device at Metal API")
 
-		sc, dev := srv.GetMetalAPIClient().RegisterDevice(devId, hw)
+		sc, dev := srv.GetMetalAPIClient().RegisterDevice(devId, req)
 
 		logger := log.WithFields(log.Fields{
 			"deviceID":   devId,
@@ -38,10 +38,10 @@ func registerEndpoint(w http.ResponseWriter, r *http.Request) {
 			errMsg := "Failed to register device"
 			logging.Decorate(logger).
 				Error(errMsg)
-			rest.RespondError(w, sc, errMsg)
+			rest.RespondError(response, http.StatusInternalServerError, errMsg)
 		} else {
 			logger.Info("Device registered")
-			rest.Respond(w, sc, dev)
+			rest.Respond(response, http.StatusOK, dev)
 		}
 	}
 }

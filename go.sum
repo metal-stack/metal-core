@@ -14,6 +14,10 @@ github.com/bitly/go-nsq v0.0.0-20180925103200-be2eb3566795 h1:yYDC03WRgWQhwUYAso
 github.com/bitly/go-nsq v0.0.0-20180925103200-be2eb3566795/go.mod h1:uRcXTyAr/ggVrYpmvkE4jkJNSWov99Gg4fwhhypc/P8=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/emicklei/go-restful v2.8.0+incompatible h1:wN8GCRDPGHguIynsnBartv5GUgGUg1LAU7+xnSn1j7Q=
+github.com/emicklei/go-restful v2.8.0+incompatible/go.mod h1:otzb+WCGbkyDHkqmQmT5YD2WR4BBwUdeQoFo8l/7tVs=
+github.com/emicklei/go-restful-openapi v1.0.0 h1:ZFk3RuCl8ZmG1yUAF/mSbXRi5cuyA/k5+EpHayuuTXM=
+github.com/emicklei/go-restful-openapi v1.0.0/go.mod h1:Q+bHVYfUWv1fvC4FNTsz2AVvFSsXAC7RCiWjF1Sva1A=
 github.com/globalsign/mgo v0.0.0-20180905125535-1ca0a4f7cbcb h1:D4uzjWwKYQ5XnAvUbuvHW93esHg7F8N/OYeBBcJoTr0=
 github.com/globalsign/mgo v0.0.0-20180905125535-1ca0a4f7cbcb/go.mod h1:xkRDCp4j0OGD1HRkm4kmhM+pmpv3AKq5SU7GMg4oO/Q=
 github.com/go-openapi/analysis v0.0.0-20180825180245-b006789cd277/go.mod h1:k70tL6pCuVxPJOHXQ+wIac1FUrvNkHolPie/cLEU6hI=

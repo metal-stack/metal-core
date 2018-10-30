@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/core"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/models"
+	"github.com/emicklei/go-restful"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"strings"
 	"testing"
 
-	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
 	"gopkg.in/resty.v1"
 )
 
@@ -22,7 +23,7 @@ func TestPXEBoot(t *testing.T) {
 	mockMetalAPIServer(endpoint{
 		path:    "/device/find",
 		handler: findDevicesAPIEndpointMock,
-		methods: []string{http.MethodGet},
+		method:  http.MethodGet,
 	})
 	defer shutdown()
 
@@ -52,11 +53,11 @@ func TestPXEBoot(t *testing.T) {
 	}
 }
 
-func findDevicesAPIEndpointMock(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Query().Get("mac") == fakeMac {
-		rest.Respond(w, http.StatusOK, []models.MetalDevice{})
+func findDevicesAPIEndpointMock(request *restful.Request, response *restful.Response) {
+	if request.QueryParameter("mac") == fakeMac {
+		rest.Respond(response, http.StatusOK, []models.MetalDevice{})
 	} else {
-		rest.Respond(w, http.StatusAlreadyReported, []models.MetalDevice{
+		rest.Respond(response, http.StatusAlreadyReported, []models.MetalDevice{
 			{}, // Simulate at least one existing device
 		})
 	}

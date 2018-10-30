@@ -3,7 +3,6 @@
 package main
 
 import (
-	"github.com/magefile/mage/sh"
 	"os/exec"
 	"strings"
 )
@@ -12,7 +11,7 @@ import (
 func Fmt() {
 	for _, pkg := range fetchGoPackages() {
 		if containsGoSources(pkg) {
-			sh.RunV("go", "fmt", pkg)
+			exec.Command("go", "fmt", pkg).Run()
 		}
 	}
 }

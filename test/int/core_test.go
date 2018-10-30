@@ -5,6 +5,7 @@ import (
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/models"
+	"github.com/emicklei/go-restful"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/resty.v1"
 	"net/http"
@@ -20,7 +21,7 @@ func TestLoggingMiddleware(t *testing.T) {
 	mockMetalAPIServer(endpoint{
 		path:    "/device/register",
 		handler: registerDeviceAPIEndpointMock,
-		methods: []string{http.MethodPost},
+		method:  http.MethodPost,
 	})
 	defer shutdown()
 
@@ -44,9 +45,9 @@ func registerDevice() (*resty.Response, error) {
 		Post(fmt.Sprintf("http://localhost:%d/device/register/%v", srv.GetConfig().Port, devId))
 }
 
-func registerDeviceAPIEndpointMock(w http.ResponseWriter, r *http.Request) {
+func registerDeviceAPIEndpointMock(request *restful.Request, response *restful.Response) {
 	dev := models.MetalDevice{
 		ID: devId,
 	}
-	rest.Respond(w, http.StatusOK, dev)
+	rest.Respond(response, http.StatusOK, dev)
 }

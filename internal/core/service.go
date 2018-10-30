@@ -1,17 +1,15 @@
 package core
 
 import (
-	"bytes"
 	"fmt"
-	"io/ioutil"
+	"github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful-openapi"
+	"github.com/go-openapi/spec"
 	"net/http"
-
-	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/logging"
 
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/api"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/netswitch"
-	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -58,61 +56,58 @@ func (s service) GetServer() *http.Server {
 }
 
 func (s service) RunServer() {
-	addr := s.GetConfig().Address
-	port := s.GetConfig().Port
+	restful.DefaultContainer.Add(NewBootService())
+	restful.DefaultContainer.Add(NewDeviceService())
 
-	router := mux.NewRouter()
-	router.HandleFunc("/v1/boot/{mac}", bootEndpoint).Methods(http.MethodGet).Name("boot")
-	router.HandleFunc("/device/register/{deviceId}", registerEndpoint).Methods(http.MethodPost).Name("register")
-	router.HandleFunc("/device/install/{deviceId}", installEndpoint).Methods(http.MethodGet).Name("install")
-	router.HandleFunc("/device/report/{deviceId}", reportEndpoint).Methods(http.MethodPost).Name("report")
+	config := restfulspec.Config{
+		WebServices:                   restful.RegisteredWebServices(),
+		APIPath:                       "/apidocs.yaml",
+		PostBuildSwaggerObjectHandler: enrichSwaggerObject,
+	}
+	restful.DefaultContainer.Add(restfulspec.NewOpenAPIService(config))
 
-	router.Use(loggingMiddleware)
+	// enable CORS for the UI to work
+	cors := restful.CrossOriginResourceSharing{
+		AllowedHeaders: []string{"Content-Type", "Accept"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
+		CookiesAllowed: false,
+		Container:      restful.DefaultContainer,
+	}
+	restful.DefaultContainer.Filter(cors.Filter)
 
-	server := s.GetServer()
-	server.Addr = fmt.Sprintf("%v:%d", addr, port)
-	server.Handler = router
+	addr := fmt.Sprintf("%v:%d", s.GetConfig().Address, s.GetConfig().Port)
 
 	log.WithFields(log.Fields{
 		"address": addr,
-		"port":    port,
 	}).Info("Starting metal-core")
 
-	if err := server.ListenAndServe(); err != http.ErrServerClosed {
-		logging.Decorate(log.WithField("error", err)).
-			Fatal("Cannot start Metal-Core server")
-	}
+	http.ListenAndServe(addr, nil)
 }
 
-func loggingMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
-		body, _ := ioutil.ReadAll(r.Body)
-		headers := "{"
-		for k, v := range r.Header {
-			if len(v) == 1 {
-				headers += fmt.Sprintf("%v=%v, ", k, v[0])
-			} else if len(v) > 1 {
-				headers += fmt.Sprintf("%v=%v, ", k, v)
-			}
-		}
-		if len(headers) > 1 {
-			headers = headers[:len(headers)-1]
-		}
-		headers += "}"
-		log.WithFields(log.Fields{
-			"remoteAddress": r.RemoteAddr,
-			"method":        r.Method,
-			"protocol":      r.Proto,
-			"host":          r.Host,
-			"URI":           r.RequestURI,
-			"contentLength": r.ContentLength,
-			"body":          string(body),
-			"headers":       headers,
-		}).Debug("Got request")
-
-		r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-
-		next.ServeHTTP(w, r)
-	})
+func enrichSwaggerObject(swo *spec.Swagger) {
+	swo.Info = &spec.Info{
+		InfoProps: spec.InfoProps{
+			Title:       "metal-core",
+			Description: "Resource for managing PXE clients",
+			Contact: &spec.ContactInfo{
+				Name:  "Devops Team",
+				Email: "devops@f-i-ts.de",
+				URL:   "http://www.f-i-ts.de",
+			},
+			License: &spec.License{
+				Name: "MIT",
+				URL:  "http://mit.org",
+			},
+			Version: "1.0.0",
+		},
+	}
+	swo.Tags = []spec.Tag{
+		spec.Tag{TagProps: spec.TagProps{
+			Name:        "boot",
+			Description: "Booting PXE clients"}},
+		spec.Tag{TagProps: spec.TagProps{
+			Name:        "device",
+			Description: "Managing PXE boot clients"},
+		},
+	}
 }

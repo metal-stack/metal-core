@@ -1,10 +1,13 @@
 FROM golang:1.11-stretch as builder
 
-WORKDIR /build
 ENV CGO_ENABLED=0 \
     GO111MODULE=on \
     GOOS=linux \
     GOPROXY=https://gomods.fi-ts.io
+
+COPY metallib /metallib
+
+WORKDIR /build/metal-core
 
 # Install dependencies and Mage
 COPY go.mod ./
@@ -25,6 +28,6 @@ RUN apk update \
     ca-certificates \
     ipmitool
 
-COPY --from=builder /build/bin/metal-core /
+COPY --from=builder /build/metal-core/bin/metal-core /
 
 ENTRYPOINT ["/metal-core"]

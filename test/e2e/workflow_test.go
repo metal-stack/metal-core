@@ -44,7 +44,7 @@ func TestWorkflow(t *testing.T) {
 	defer tearDown()
 
 	// GIVEN
-	spawnTestEnvironment()
+	spawnMetalCoreRethinkdbAndMetalAPI()
 
 	// WHEN
 	runMetalHammer()
@@ -111,7 +111,7 @@ func runAsRoot() {
 	}
 }
 
-func spawnTestEnvironment() {
+func spawnMetalCoreRethinkdbAndMetalAPI() {
 	readEnvFile()
 	removeMetalHammerContainer()
 	if _, err := sh.Output("docker-compose", "-f", "workflow_test.yaml", "up", "--force-recreate", "--remove-orphans", "-d"); err != nil {
@@ -158,7 +158,7 @@ func traceTcpPackets(handle *pcap.Handle, traffic *[]string) {
 }
 
 func waitForMetalApiContainer() {
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 4; i++ {
 		time.Sleep(time.Second)
 		if out, err := sh.Output("docker", "logs", env.MetalAPIContainerName); err != nil {
 			panic(err)
