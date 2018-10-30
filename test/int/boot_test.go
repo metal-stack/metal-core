@@ -29,7 +29,7 @@ func TestPXEBoot(t *testing.T) {
 	expected := core.BootResponse{
 		Kernel: "https://blobstore.fi-ts.io/metal/images/pxeboot-kernel",
 		InitRamDisk: []string{
-			"https://blobstore.fi-ts.io/metal/images/pxeboot-initrd.img.gz",
+			"https://blobstore.fi-ts.io/metal/images/pxeboot-initrd.img.lz4",
 		},
 		CommandLine: fmt.Sprintf("METAL_CORE_URL=http://localhost:%d", srv.GetConfig().Port),
 	}
