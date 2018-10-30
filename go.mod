@@ -26,5 +26,3 @@ require (
 	golang.org/x/net v0.0.0-20181005035420-146acd28ed58
 	gopkg.in/resty.v1 v1.9.1
 )
-
-// replace git.f-i-ts.de/cloud-native/metallib => ../../metallib

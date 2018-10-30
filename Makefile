@@ -34,7 +34,7 @@ vendor:
 	go mod vendor
 
 restart:
-	docker build -t registry.fi-ts.io/metal/metal-core -f Dockerfile.dev .
+	docker build -t registry.fi-ts.io/metal/metal-core .
 
 generate-client:
 	swagger generate client -f internal/domain/metal-api.json --skip-validation

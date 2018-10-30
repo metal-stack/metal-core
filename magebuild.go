@@ -53,10 +53,6 @@ func (b BUILD) Core() error {
 	if err := b.Bin(); err != nil {
 		return err
 	}
-	defer os.RemoveAll("metallib")
-	if err := exec.Command("cp", "-r", "../../metallib", ".").Run(); err != nil {
-		return err
-	}
 	return sh.RunV("docker-compose", "build", "metal-core")
 }
 
