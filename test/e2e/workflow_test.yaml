@@ -2,7 +2,7 @@ version: '3.5'
 
 networks:
   metal:
-    name: metal
+    name: ${NETWORK_NAME}
     driver: bridge
     ipam:
       driver: default
