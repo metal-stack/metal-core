@@ -58,7 +58,8 @@ func (b BUILD) Core() error {
 
 // (Re)build metal-hammer image
 func (b BUILD) Hammer() error {
-	defer exec.Command("cd", "-").Run()
+//	return sh.RunV("docker-compose", "build", "metal-hammer")
+	defer os.Chdir("../metal-core")
 	os.Chdir("../metal-hammer")
 	return sh.RunV("docker-make", "--no-push", "--Lint")
 }
