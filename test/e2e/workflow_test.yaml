@@ -67,7 +67,7 @@ services:
 
   metal-api:
     build:
-      context: ../../../maas-service
+      context: ../../../metal-api
     image: registry.fi-ts.io/metal/metal-api
     container_name: ${METAL_API_CONTAINER_NAME}
     tty: true
