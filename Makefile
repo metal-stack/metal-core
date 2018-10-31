@@ -12,7 +12,7 @@ export GOPROXY := https://gomods.fi-ts.io
 export GO111MODULE := on
 export CGO_ENABLED := 0
 
-.PHONY: all clean up restart vendor generate-client
+.PHONY: all clean up localbuild restart vendor generate-client
 
 all: bin/$(BINARY);
 
@@ -33,8 +33,11 @@ up:
 vendor:
 	go mod vendor
 
+localbuild:
+	docker build -t registry.fi-ts.io/metal/metal-core -f Dockerfile.dev .
+
 restart:
-	docker build -t registry.fi-ts.io/metal/metal-core .
+	docker-compose restart metal-core
 
 generate-client:
 	swagger generate client -f internal/domain/metal-api.json --skip-validation

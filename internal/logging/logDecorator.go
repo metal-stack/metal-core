@@ -43,7 +43,9 @@ func sanitize(file, funcName string) (string, string) {
 		if index != -1 {
 			file = file[index:]
 		}
-		file = file[len(workDir):]
+		if strings.HasPrefix(file, workDir) {
+			file = file[len(workDir):]
+		}
 		return file, funcName[strings.LastIndex(funcName, ".")+1:]
 	} else {
 		return file, funcName
