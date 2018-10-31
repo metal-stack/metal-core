@@ -9,6 +9,7 @@ import (
 
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
+	"io/ioutil"
 )
 
 const version = "devel"
@@ -25,6 +26,18 @@ func Build() error {
 	buildDate, _ := sh.Output("date", "-Iseconds")
 	ldflags := fmt.Sprintf("-X 'git.f-i-ts.de/cloud-native/metallib/version.Version=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Revision=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Gitsha1=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Builddate=%v'", version, gitVersion, gitsha, buildDate)
 	return sh.RunV("go", "build", "-tags", "netgo", "-ldflags", ldflags, "-o", "bin/metal-core")
+}
+
+// (Re)build metal-core specification
+func (b BUILD) Spec() error {
+	if out, err := exec.Command("docker", "inspect", "-f", "{{ .NetworkSettings.Networks.metal.Gateway }}", "metal-core").CombinedOutput();err!=nil{
+		fmt.Println("Run 'docker-compose up' first")
+		return err
+	} else if out, err := exec.Command("curl", "-s", fmt.Sprintf("http://%v:4242/apidocs.json", string(out[:len(out)-1]))).CombinedOutput();err!=nil{
+		return err
+	} else {
+		return ioutil.WriteFile("spec/metal-core.json", out, 0644)
+	}
 }
 
 // (Re)build metal-core binary in the bin subdirectory
@@ -58,7 +71,7 @@ func (b BUILD) Core() error {
 
 // (Re)build metal-hammer image
 func (b BUILD) Hammer() error {
-//	return sh.RunV("docker-compose", "build", "metal-hammer")
+	//	return sh.RunV("docker-compose", "build", "metal-hammer")
 	defer os.Chdir("../metal-core")
 	os.Chdir("../metal-hammer")
 	return sh.RunV("docker-make", "--no-push", "--Lint")

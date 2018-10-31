@@ -20,7 +20,8 @@ func NewBootService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(BootResponse{}).
 		Returns(http.StatusOK, "OK", BootResponse{}).
-		Returns(http.StatusAccepted, "Accepted", BootResponse{}))
+		Returns(http.StatusAccepted, "Accepted", BootResponse{}).
+		Returns(http.StatusBadRequest, "Bad request", BootResponse{}))
 
 	return ws
 }

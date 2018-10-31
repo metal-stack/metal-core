@@ -24,16 +24,24 @@ func bootEndpoint(request *restful.Request, response *restful.Response) {
 
 	sc, devs := srv.GetMetalAPIClient().FindDevices(mac)
 
-	if sc == http.StatusOK && len(devs) == 0 {
-		log.WithField("statusCode", sc).
-			Info("Device(s) not found")
-		rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse())
-	} else { //TODO Check return code and adjust response accordingly
+	if sc == http.StatusOK {
+		if len(devs) == 0 {
+			log.WithField("statusCode", sc).
+				Info("Device(s) not found")
+			rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse())
+		} else {
+			log.WithFields(log.Fields{
+				"apiStatusCode": sc,
+				"mac":           mac,
+			}).Error("There should not exist a device with given mac")
+			rest.Respond(response, http.StatusAccepted, createBootTinyCoreLinuxResponse())
+		}
+	} else {
 		log.WithFields(log.Fields{
-			"statusCode": sc,
-			"mac":        mac,
-		}).Error("There should not exist a device with given mac")
-		rest.Respond(response, http.StatusAccepted, createBootTinyCoreLinuxResponse())
+			"apiStatusCode": sc,
+			"mac":           mac,
+		}).Error("Failed to request Metal-API")
+		rest.Respond(response, http.StatusBadRequest, createBootTinyCoreLinuxResponse())
 	}
 }
 

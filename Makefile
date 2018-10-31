@@ -11,6 +11,7 @@ GOSRC = main.go $(shell find internal/ -type f -name '*.go')
 export GOPROXY := https://gomods.fi-ts.io
 export GO111MODULE := on
 export CGO_ENABLED := 0
+export GATEWAY := `docker inspect -f "{{ .NetworkSettings.Networks.metal.Gateway }}" metal-core`
 
 .PHONY: all clean up vendor localbuild restart spec generate-client
 
@@ -40,7 +41,7 @@ restart:
 	docker-compose restart metal-core
 
 spec:
-	curl http://localhost:4242/apidocs.json > spec/metal-core.json
+	curl -s http://$(GATEWAY):4242/apidocs.json > spec/metal-core.json
 
 generate-client:
 	swagger generate client -f internal/domain/metal-api.json --skip-validation
