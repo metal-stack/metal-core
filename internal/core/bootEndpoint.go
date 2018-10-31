@@ -38,8 +38,8 @@ func bootEndpoint(request *restful.Request, response *restful.Response) {
 		}
 	} else {
 		log.WithFields(log.Fields{
-			"apiStatusCode": sc,
-			"mac":           mac,
+			"statusCode": sc,
+			"mac":        mac,
 		}).Error("Failed to request Metal-API")
 		rest.Respond(response, http.StatusBadRequest, createBootTinyCoreLinuxResponse())
 	}

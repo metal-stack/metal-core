@@ -8,7 +8,7 @@ import (
 type (
 	Config struct {
 		// Valid log levels are: DEBUG, INFO, WARN, ERROR, FATAL and PANIC
-		IP                string `required:"true" desc:"set the control plane IP"`
+		IP                string `required:"true" desc:"set the metal core IP"`
 		SiteID            string `required:"true" desc:"set the site ID" split_words:"true"`
 		RackID            string `required:"true" desc:"set the rack ID" split_words:"true"`
 		BindAddress       string `required:"false" default:"0.0.0.0" desc:"set server bind address" split_words:"true"`
