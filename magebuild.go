@@ -30,7 +30,13 @@ func Build() error {
 
 // (Re)build metal-core specification
 func (b BUILD) Spec() error {
-	exec.Command("docker-compose", "down").Run()
+	f := true
+	if err := exec.Command("docker", "inspect", "metal-core").Run(); err != nil {
+		f = false
+	}
+	if f {
+		exec.Command("docker-compose", "down").Run()
+	}
 	if err := b.Core(); err != nil {
 		return err
 	} else if err := exec.Command("docker-compose", "up", "-d").Run(); err != nil {
@@ -40,6 +46,9 @@ func (b BUILD) Spec() error {
 	} else if out, err := exec.Command("curl", "-s", fmt.Sprintf("http://%v:4242/apidocs.json", string(out[:len(out)-1]))).CombinedOutput(); err != nil {
 		return err
 	} else {
+		if !f {
+			exec.Command("docker-compose", "down").Run()
+		}
 		return ioutil.WriteFile("spec/metal-core.json", out, 0644)
 	}
 }

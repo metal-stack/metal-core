@@ -250,10 +250,10 @@
   },
   "domain.MetalHammerRegisterDeviceRequest": {
    "required": [
-    "memory",
-    "nics",
     "cpu_cores",
     "disks",
+    "memory",
+    "nics",
     "uuid"
    ],
    "properties": {
