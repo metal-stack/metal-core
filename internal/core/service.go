@@ -61,7 +61,7 @@ func (s service) RunServer() {
 
 	config := restfulspec.Config{
 		WebServices:                   restful.RegisteredWebServices(),
-		APIPath:                       "/apidocs.yaml",
+		APIPath:                       "/apidocs.json",
 		PostBuildSwaggerObjectHandler: enrichSwaggerObject,
 	}
 	restful.DefaultContainer.Add(restfulspec.NewOpenAPIService(config))
