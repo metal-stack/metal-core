@@ -235,7 +235,6 @@
   },
   "core.Report": {
    "required": [
-    "success",
     "message"
    ],
    "properties": {
