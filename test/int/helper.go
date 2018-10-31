@@ -33,7 +33,7 @@ func runMetalCoreServer() {
 	logOutput.Reset()
 	log.SetOutput(&logOutput)
 
-	os.Setenv("METAL_CORE_CONTROL_PLANE_IP", "localhost")
+	os.Setenv("METAL_CORE_IP", "127.0.0.1")
 	os.Setenv("METAL_CORE_SITE_ID", "FRA")
 	os.Setenv("METAL_CORE_RACK_ID", "Vagrant Rack 1")
 	os.Setenv("METAL_CORE_PORT", "10000")
@@ -62,7 +62,7 @@ func mockMetalAPIServer(endpoints ...endpoint) {
 	handler.Add(ws)
 
 	apiServer = &http.Server{
-		Addr:    fmt.Sprintf("%v:%d", srv.GetConfig().APIAddress, srv.GetConfig().APIPort),
+		Addr:    fmt.Sprintf("%v:%d", srv.GetConfig().ApiIP, srv.GetConfig().ApiPort),
 		Handler: handler,
 	}
 	go func() {

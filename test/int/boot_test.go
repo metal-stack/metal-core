@@ -32,7 +32,7 @@ func TestPXEBoot(t *testing.T) {
 		InitRamDisk: []string{
 			"https://blobstore.fi-ts.io/metal/images/pxeboot-initrd.img.lz4",
 		},
-		CommandLine: fmt.Sprintf("METAL_CORE_URL=http://localhost:%d", srv.GetConfig().Port),
+		CommandLine: fmt.Sprintf("METAL_CORE_ADDRESS=http://127.0.0.1:%d", srv.GetConfig().Port),
 	}
 
 	// WHEN
@@ -47,7 +47,7 @@ func TestPXEBoot(t *testing.T) {
 	} else {
 		assert.Equal(t, expected.Kernel, bootResponse.Kernel)
 		assert.Equal(t, expected.InitRamDisk, bootResponse.InitRamDisk)
-		bootResponse.CommandLine = bootResponse.CommandLine[strings.Index(bootResponse.CommandLine, "METAL_CORE_URL"):]
+		bootResponse.CommandLine = bootResponse.CommandLine[strings.Index(bootResponse.CommandLine, "METAL_CORE_ADDRESS"):]
 		assert.Equal(t, expected.CommandLine, bootResponse.CommandLine)
 		assert.Equal(t, http.StatusOK, resp.StatusCode())
 	}
@@ -64,5 +64,5 @@ func findDevicesAPIEndpointMock(request *restful.Request, response *restful.Resp
 }
 
 func fakePXEBootRequest() (*resty.Response, error) {
-	return resty.R().Get(fmt.Sprintf("http://localhost:%d/v1/boot/%v", srv.GetConfig().Port, fakeMac))
+	return resty.R().Get(fmt.Sprintf("http://127.0.0.1:%d/v1/boot/%v", srv.GetConfig().Port, fakeMac))
 }

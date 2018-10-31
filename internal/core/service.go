@@ -75,7 +75,7 @@ func (s service) RunServer() {
 	}
 	restful.DefaultContainer.Filter(cors.Filter)
 
-	addr := fmt.Sprintf("%v:%d", s.GetConfig().Address, s.GetConfig().Port)
+	addr := fmt.Sprintf("%v:%d", s.GetConfig().BindAddress, s.GetConfig().Port)
 
 	log.WithFields(log.Fields{
 		"address": addr,

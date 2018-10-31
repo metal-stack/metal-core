@@ -66,7 +66,7 @@ func createBootDiscoveryImageResponse() BootResponse {
 	if len(cmdLine) > 0 {
 		cmdLine += " "
 	}
-	cmdLine += fmt.Sprintf("METAL_CORE_URL=http://%v:%d", srv.GetConfig().ControlPlaneIP, srv.GetConfig().Port)
+	cmdLine += fmt.Sprintf("METAL_CORE_ADDRESS=http://%v:%d", srv.GetConfig().IP, srv.GetConfig().Port)
 	return BootResponse{
 		Kernel: kernel,
 		InitRamDisk: []string{

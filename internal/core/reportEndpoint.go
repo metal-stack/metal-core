@@ -37,7 +37,7 @@ func reportEndpoint(request *restful.Request, response *restful.Response) {
 
 	connection := ipmi.IpmiConnection{
 		// Requires gateway of the control plane for running in Metal Lab... this is just a quick workaround for the poc
-		Hostname:  srv.GetConfig().ControlPlaneIP[:strings.LastIndex(srv.GetConfig().ControlPlaneIP, ".")] + ".1",
+		Hostname:  srv.GetConfig().IP[:strings.LastIndex(srv.GetConfig().IP, ".")] + ".1",
 		Interface: "lanplus",
 		Port:      6230,
 		Username:  "vagrant",

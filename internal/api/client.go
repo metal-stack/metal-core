@@ -24,7 +24,7 @@ type (
 )
 
 func NewClient(cfg *domain.Config) Client {
-	transport := httptransport.New(fmt.Sprintf("%v:%d", cfg.APIAddress, cfg.APIPort), "", nil)
+	transport := httptransport.New(fmt.Sprintf("%v:%d", cfg.ApiIP, cfg.ApiPort), "", nil)
 	return client{
 		DeviceClient: device.New(transport, strfmt.Default),
 		Config:       cfg,

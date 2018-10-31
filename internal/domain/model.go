@@ -8,15 +8,15 @@ import (
 type (
 	Config struct {
 		// Valid log levels are: DEBUG, INFO, WARN, ERROR, FATAL and PANIC
-		LogLevel          string `required:"false" default:"INFO" desc:"set log level" split_words:"true"`
-		ControlPlaneIP    string `required:"true" desc:"set the control plane IP" split_words:"true"`
+		IP                string `required:"true" desc:"set the control plane IP"`
 		SiteID            string `required:"true" desc:"set the site ID" split_words:"true"`
 		RackID            string `required:"true" desc:"set the rack ID" split_words:"true"`
-		Address           string `required:"false" default:"0.0.0.0" desc:"set server address"`
+		BindAddress       string `required:"false" default:"0.0.0.0" desc:"set server bind address" split_words:"true"`
 		Port              int    `required:"false" default:"4242" desc:"set server port"`
-		APIProtocol       string `required:"false" default:"http" desc:"set metal api protocol" envconfig:"metal_api_protocol"`
-		APIAddress        string `required:"false" default:"localhost" desc:"set metal api address" envconfig:"metal_api_address"`
-		APIPort           int    `required:"false" default:"8080" desc:"set metal api port" envconfig:"metal_api_port"`
+		LogLevel          string `required:"false" default:"INFO" desc:"set log level" split_words:"true"`
+		ApiProtocol       string `required:"false" default:"http" desc:"set metal api protocol" envconfig:"metal_api_protocol"`
+		ApiIP             string `required:"false" default:"localhost" desc:"set metal api address" envconfig:"metal_api_ip"`
+		ApiPort           int    `required:"false" default:"8080" desc:"set metal api port" envconfig:"metal_api_port"`
 		HammerImagePrefix string `required:"false" default:"pxeboot" desc:"set hammer image prefix for kernel, initrd and cmdline download" split_words:"true"`
 		MQAddress         string `required:"false" default:"localhost:4161" desc:"set the MQ server address" envconfig:"mq_address"`
 	}
@@ -45,11 +45,12 @@ const (
 func (c Config) Log() {
 	log.WithFields(log.Fields{
 		"LogLevel":          c.LogLevel,
-		"Address":           c.Address,
+		"BindAddress":       c.BindAddress,
+		"IP":                c.IP,
 		"Port":              c.Port,
-		"APIProtocol":       c.APIProtocol,
-		"APIAddress":        c.APIAddress,
-		"APIPort":           c.APIPort,
+		"API-Protocol":      c.ApiProtocol,
+		"API-IP":            c.ApiIP,
+		"API-Port":          c.ApiPort,
 		"HammerImagePrefix": c.HammerImagePrefix,
 	}).Info("Configuration")
 }
