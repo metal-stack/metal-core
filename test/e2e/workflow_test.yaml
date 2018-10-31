@@ -1,9 +1,13 @@
 version: '3.5'
 
 networks:
-  metaltest:
-    name: metaltest
+  metal:
+    name: metal
     driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: ${NETWORK_SUBNET}
 
 volumes:
   nsq-data-volume:
@@ -13,7 +17,7 @@ services:
     image: nsqio/nsq:v1.1.0
     container_name: ${NSQLOOKUPD_CONTAINER_NAME}
     networks:
-      - metaltest
+      - metal
     volumes:
       - nsq-data-volume:/data
     command: /nsqlookupd -log-level error
@@ -25,7 +29,7 @@ services:
     image: nsqio/nsq:v1.1.0
     container_name: ${NSQD_CONTAINER_NAME}
     networks:
-      - metaltest
+      - metal
     command: /nsqd -log-level error --lookupd-tcp-address=nsqlookupd:${NSQLOOKUPD_TCP_PORT}
     depends_on:
       - nsqlookupd
@@ -39,7 +43,7 @@ services:
     image: rethinkdb:test
     container_name: ${RETHINKDB_CONTAINER_NAME}
     networks:
-      - metaltest
+      - metal
 
   metal-core:
     build:
@@ -47,15 +51,16 @@ services:
     image: registry.fi-ts.io/metal/metal-core
     container_name: ${METAL_CORE_CONTAINER_NAME}
     networks:
-      - metaltest
+      - metal
     environment:
       METAL_CORE_ADDRESS: 0.0.0.0
       METAL_CORE_PORT: ${METAL_CORE_PORT}
       METAL_CORE_MQ_ADDRESS: nsqlookupd:${NSQLOOKUPD_HTTP_PORT}
-      METAL_CORE_CONTROL_PLANE_IP: 172.18.0.1
+      METAL_CORE_CONTROL_PLANE_IP: ${METAL_API_IP}
       METAL_CORE_SITE_ID: FRA
       METAL_CORE_RACK_ID: Vagrant Rack 1
       METAL_CORE_LOG_LEVEL: DEBUG
+      METAL_CORE_METAL_API_ADDRESS: metal-api
       METAL_CORE_METAL_API_PORT: ${METAL_API_PORT}
       METAL_CORE_HAMMER_IMAGE_PREFIX: metal-hammer
 
@@ -66,12 +71,13 @@ services:
     container_name: ${METAL_API_CONTAINER_NAME}
     tty: true
     networks:
-      - metaltest
+      metal:
+        ipv4_address: ${METAL_API_IP}
     environment:
       METAL_API_BIND_ADDR: 0.0.0.0
       METAL_API_PORT: ${METAL_API_PORT}
       METAL_API_DB_ADDR: rethinkdb:${RETHINKDB_PORT}
-      METAL_API_NETBOX_ADDR: 172.18.0.1:${NETBOX_PORT}
+      METAL_API_NETBOX_ADDR: ${NETWORK_GATEWAY}:${NETBOX_PORT}
       METAL_API_NSQD_ADDR: nsqlookupd:${NSQLOOKUPD_TCP_PORT}
       METAL_API_NSQD_HTTP_ADDR: nsqlookupd:${NSQLOOKUPD_HTTP_PORT}
       METAL_API_LOG_LEVEL: debug
@@ -83,4 +89,4 @@ services:
     image: registry.fi-ts.io/metal/metal-hammer
     container_name: ${METAL_HAMMER_CONTAINER_NAME}
     networks:
-      - metaltest
+      - metal
