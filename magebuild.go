@@ -18,9 +18,8 @@ type BUILD mg.Namespace
 
 // Same as build:bin
 func Build() error {
-	os.Setenv("GO111MODULE", "on")
-	os.Setenv("CGO_ENABLED", "0")
-	os.Setenv("GOOS", "linux")
+	defer os.Setenv("CGO_ENABLED", "1")
+	prepareEnv()
 	gitVersion, _ := sh.Output("git", "describe", "--long", "--all")
 	gitsha, _ := sh.Output("git", "rev-parse", "--short=8", "HEAD")
 	buildDate, _ := sh.Output("date", "-Iseconds")
@@ -87,12 +86,25 @@ func (b BUILD) Hammer() error {
 	//	return sh.RunV("docker-compose", "build", "metal-hammer")
 	defer os.Chdir("../metal-core")
 	os.Chdir("../metal-hammer")
-	return sh.RunV("docker-make", "--no-push", "--Lint")
+	defer os.Setenv("CGO_ENABLED", "1")
+	prepareEnv()
+	if err := exec.Command("go", "build", "-o", "bin/metal-hammer", ".").Run(); err != nil {
+		return err
+	}
+	return sh.RunV("docker", "build", "-t", "registry.fi-ts.io/metal/metal-hammer", "-f", "Dockerfile.dev", ".")
 }
 
 // (Re)build metal-api image
 func (b BUILD) Api() error {
-	return sh.RunV("docker-compose", "build", "metal-api")
+	//	return sh.RunV("docker-compose", "build", "metal-api")
+	defer os.Chdir("../../../metal-core")
+	os.Chdir("../metal-api/cmd/metal-api")
+	defer os.Setenv("CGO_ENABLED", "1")
+	prepareEnv()
+	if err := exec.Command("go", "build", "-o", "../../bin/metal-api", ".").Run(); err != nil {
+		return err
+	}
+	return sh.RunV("docker", "build", "-t", "registry.fi-ts.io/metal/metal-api", "-f", "../../Dockerfile.dev", "../..")
 }
 
 // (Re)build all metal images
@@ -104,4 +116,10 @@ func (b BUILD) All() error {
 		return err
 	}
 	return b.Api()
+}
+
+func prepareEnv() {
+	os.Setenv("GO111MODULE", "on")
+	os.Setenv("CGO_ENABLED", "0")
+	os.Setenv("GOOS", "linux")
 }

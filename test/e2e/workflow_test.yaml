@@ -11,6 +11,16 @@ networks:
 
 volumes:
   nsq-data-volume:
+  rethinkdb:
+  netbox-static-files:
+  netbox-nginx-config:
+  netbox-media-files:
+  netbox-report-files:
+  netbox-postgres-data:
+  netbox-redis-data:
+  netbox-init-config-startup-scripts:
+  netbox-init-config-initializers:
+  netbox-init-config-configuration:
 
 services:
   nsqlookupd:
@@ -44,6 +54,8 @@ services:
     container_name: ${RETHINKDB_CONTAINER_NAME}
     networks:
       - metal
+    volumes:
+      - rethinkdb:/data
 
   metal-core:
     build:
@@ -77,9 +89,9 @@ services:
       METAL_API_BIND_ADDR: 0.0.0.0
       METAL_API_PORT: ${METAL_API_PORT}
       METAL_API_DB_ADDR: rethinkdb:${RETHINKDB_PORT}
-      METAL_API_NETBOX_ADDR: ${NETWORK_GATEWAY}:${NETBOX_PORT}
-      METAL_API_NSQD_ADDR: nsqlookupd:${NSQLOOKUPD_TCP_PORT}
-      METAL_API_NSQD_HTTP_ADDR: nsqlookupd:${NSQLOOKUPD_HTTP_PORT}
+      METAL_API_NETBOX_ADDR: netbox-api-proxy:${NETBOX_INTERNAL_PORT}
+      METAL_API_NSQD_ADDR: nsqd:${NSQD_TCP_PORT}
+      METAL_API_NSQD_HTTP_ADDR: nsqd:${NSQD_HTTP_PORT}
       METAL_API_LOG_LEVEL: debug
 
   metal-hammer:
@@ -90,3 +102,98 @@ services:
     container_name: ${METAL_HAMMER_CONTAINER_NAME}
     networks:
       - metal
+    entrypoint: /metal-hammer
+
+  netbox:
+    image: ninech/netbox
+    container_name: ${NETBOX_CONTAINER_NAME}
+    networks:
+      - metal
+    ports:
+      - "${NETBOX_PORT}:${NETBOX_API_PROXY_PORT}"
+    depends_on:
+      - netbox-init-config
+      - netbox-postgres
+    environment:
+      DB_NAME: netbox
+      DB_USER: netbox
+      DB_PASSWORD: metal
+      DB_HOST: netbox-postgres
+      EMAIL_SERVER: localhost
+      EMAIL_PORT: 25
+      EMAIL_USERNAME: netbox
+      EMAIL_PASSWORD:
+      EMAIL_TIMEOUT: 5
+      EMAIL_FROM: netbox@metal.com
+      MEDIA_ROOT: /opt/netbox/netbox/media
+      NAPALM_USERNAME:
+      NAPALM_PASSWORD:
+      NAPALM_TIMEOUT: 10
+      MAX_PAGE_SIZE: 0
+      REDIS_HOST: netbox-redis
+      REDIS_PASSWORD: metal
+      SECRET_KEY: metal!!dci#P9ghmRfdu1Ysxm0AiPeDCQhKE+N_rClfWNj
+      SUPERUSER_NAME: admin
+      SUPERUSER_EMAIL: admin@example.com
+      SUPERUSER_PASSWORD: admin
+      SUPERUSER_API_TOKEN: 0123456789abcdef0123456789abcdef01234567
+      WEBHOOKS_ENABLED: "false"
+    volumes:
+      - netbox-init-config-startup-scripts:/opt/netbox/startup_scripts
+      - netbox-init-config-initializers:/opt/netbox/initializers/
+      - netbox-init-config-configuration:/etc/netbox/config
+      - netbox-nginx-config:/etc/netbox-nginx/
+      - netbox-static-files:/opt/netbox/netbox/static
+      - netbox-media-files:/opt/netbox/netbox/media
+      - netbox-report-files:/etc/netbox/reports:ro
+
+  netbox-postgres:
+    image: postgres:11-alpine
+    container_name: ${NETBOX_POSTGRES_CONTAINER_NAME}
+    networks:
+      - metal
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: netbox
+      POSTGRES_PASSWORD: metal
+      POSTGRES_DB: netbox
+    volumes:
+      - netbox-postgres-data:/var/lib/postgresql/data
+
+  netbox-nginx:
+    image: nginx:1.15-alpine
+    container_name: ${NETBOX_NGINX_CONTAINER_NAME}
+    command: nginx -c /etc/netbox-nginx/nginx.conf
+    networks:
+      - metal
+    depends_on:
+      - netbox
+    ports:
+      - "${NETBOX_NGINX_PORT}:${METAL_API_PORT}"
+    volumes:
+      - netbox-static-files:/opt/netbox/netbox/static:ro
+      - netbox-nginx-config:/etc/netbox-nginx/:ro
+
+  netbox-api-proxy:
+    image: registry.fi-ts.io/metal/netbox-api-proxy:latest
+    container_name: ${NETBOX_API_PROXY_CONTAINER_NAME}
+    networks:
+      - metal
+    depends_on:
+      - netbox
+    ports:
+      - "${NETBOX_API_PROXY_PORT}:${NETBOX_INTERNAL_PORT}"
+    environment:
+      NETBOX_API_PROXY_HOST: http://netbox:${NETBOX_API_PROXY_PORT}/
+      NETBOX_API_PROXY_TOKEN: 0123456789abcdef0123456789abcdef01234567
+      NETBOX_API_PROXY_BIND_ADDRESS: 0.0.0.0
+      NETBOX_API_PROXY_LOG_LEVEL: DEBUG
+
+  netbox-init-config:
+    image: registry.fi-ts.io/metal/netbox-init-config:latest
+    container_name: ${NETBOX_INIT_CONFIG_CONTAINER_NAME}
+    volumes:
+      - netbox-init-config-startup-scripts:/opt/netbox/startup_scripts/
+      - netbox-init-config-initializers:/opt/netbox/initializers/
+      - netbox-init-config-configuration:/opt/netbox/config
