@@ -13,6 +13,7 @@ type (
 		BindAddress       string `required:"false" default:"0.0.0.0" desc:"set server bind address" split_words:"true"`
 		Port              int    `required:"false" default:"4242" desc:"set server port"`
 		LogLevel          string `required:"false" default:"info" desc:"set log level" split_words:"true"`
+		ConsoleLogging    bool   `required:"false" default:"true" desc:"enable/disable console logging" split_words:"true"`
 		ApiProtocol       string `required:"false" default:"http" desc:"set metal api protocol" envconfig:"metal_api_protocol"`
 		ApiIP             string `required:"false" default:"localhost" desc:"set metal api address" envconfig:"metal_api_ip"`
 		ApiPort           int    `required:"false" default:"8080" desc:"set metal api port" envconfig:"metal_api_port"`

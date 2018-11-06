@@ -3,8 +3,8 @@ package core
 import (
 	"fmt"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/ipmi"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/log"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/models"
+	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
 	"github.com/go-openapi/spec"
@@ -70,12 +70,12 @@ func (s service) IPMI() *ipmi.IpmiConnection {
 
 func (s service) FreeDevice(device *models.MetalDevice) {
 	if err := ipmi.SetBootDevPxe(srv.IPMI()); err != nil {
-		log.Get().Error("Unable to set boot order of device to HD",
+		zapup.MustRootLogger().Error("Unable to set boot order of device to HD",
 			zap.Any("device", device),
 			zap.Error(err),
 		)
 	} else {
-		log.Get().Info("Freed device",
+		zapup.MustRootLogger().Info("Freed device",
 			zap.Any("device", device),
 		)
 	}
@@ -103,7 +103,7 @@ func (s service) RunServer() {
 
 	addr := fmt.Sprintf("%v:%d", s.Config().BindAddress, s.Config().Port)
 
-	log.Get().Info("Starting metal-core",
+	zapup.MustRootLogger().Info("Starting metal-core",
 		zap.String("address", addr),
 	)
 

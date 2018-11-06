@@ -2,7 +2,7 @@ package core
 
 import (
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/log"
+	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
 	"go.uber.org/zap"
 	"net/http"
@@ -14,14 +14,14 @@ func registerEndpoint(request *restful.Request, response *restful.Response) {
 	req := &domain.MetalHammerRegisterDeviceRequest{}
 	if err := request.ReadEntity(req); err != nil {
 		errMsg := "Unable to read body"
-		log.Get().Error("Cannot read request",
+		zapup.MustRootLogger().Error("Cannot read request",
 			zap.Error(err),
 		)
 		rest.RespondError(response, http.StatusBadRequest, errMsg)
 	} else {
 		devId := request.PathParameter("id")
 
-		log.Get().Info("Register device at Metal-API",
+		zapup.MustRootLogger().Info("Register device at Metal-API",
 			zap.String("deviceID", devId),
 		)
 
@@ -29,7 +29,7 @@ func registerEndpoint(request *restful.Request, response *restful.Response) {
 
 		if sc != http.StatusOK {
 			errMsg := "Failed to register device"
-			log.Get().Error(errMsg,
+			zapup.MustRootLogger().Error(errMsg,
 				zap.Int("statusCode", sc),
 				zap.String("deviceID", devId),
 				zap.Any("device", dev),
@@ -37,7 +37,7 @@ func registerEndpoint(request *restful.Request, response *restful.Response) {
 			)
 			rest.RespondError(response, http.StatusInternalServerError, errMsg)
 		} else {
-			log.Get().Info("Device registered",
+			zapup.MustRootLogger().Info("Device registered",
 				zap.Int("statusCode", sc),
 				zap.Any("device", dev),
 			)

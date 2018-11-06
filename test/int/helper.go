@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/core"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/log"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
 	"github.com/kelseyhightower/envconfig"
@@ -78,7 +77,7 @@ func mockMetalAPIServer(endpoints ...endpoint) {
 	}
 	go func() {
 		if err := apiServer.ListenAndServe(); err != http.ErrServerClosed {
-			log.Get().Fatal(err.Error())
+			zapup.MustRootLogger().Fatal(err.Error())
 		}
 	}()
 	time.Sleep(100 * time.Millisecond)

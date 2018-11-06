@@ -3,7 +3,7 @@ package core
 import (
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/ipmi"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/log"
+	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
 	"go.uber.org/zap"
 	"net/http"
@@ -24,7 +24,7 @@ func reportEndpoint(request *restful.Request, response *restful.Response) {
 
 	devId := request.PathParameter("id")
 
-	log.Get().Info("Got report for device",
+	zapup.MustRootLogger().Info("Got report for device",
 		zap.String("deviceID", devId),
 		zap.Any("report", report),
 	)
@@ -35,7 +35,7 @@ func reportEndpoint(request *restful.Request, response *restful.Response) {
 	}
 
 	if err := ipmi.SetBootDevHd(srv.IPMI()); err != nil {
-		log.Get().Error("Unable to set boot order of device to HD",
+		zapup.MustRootLogger().Error("Unable to set boot order of device to HD",
 			zap.String("deviceID", devId),
 			zap.Error(err),
 		)

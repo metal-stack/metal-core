@@ -3,7 +3,6 @@ package main
 import (
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/core"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/log"
 	"git.f-i-ts.de/cloud-native/metallib/bus"
 	"git.f-i-ts.de/cloud-native/metallib/version"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
@@ -19,8 +18,6 @@ func main() {
 }
 
 func init() {
-	log.InitConsoleEncoder()
-
 	cfg := &domain.Config{}
 	if err := envconfig.Process("METAL_CORE", cfg); err != nil {
 		zapup.MustRootLogger().Fatal("Bad configuration",
@@ -28,13 +25,19 @@ func init() {
 		)
 		os.Exit(1)
 	}
+
+	os.Setenv(zapup.KeyFieldApp, "Metal-Core")
+	if cfg.ConsoleLogging {
+		os.Setenv(zapup.KeyLogEncoding, "console")
+	}
+
 	initService(cfg)
 	initConsumer(cfg)
 
-	log.Get().Info("Metal-Core Version",
+	zapup.MustRootLogger().Info("Metal-Core Version",
 		zap.Any("version", version.V),
 	)
-	log.Get().Info("Configuration",
+	zapup.MustRootLogger().Info("Configuration",
 		zap.String("LogLevel", cfg.LogLevel),
 		zap.String("BindAddress", cfg.BindAddress),
 		zap.String("IP", cfg.IP),
@@ -51,11 +54,11 @@ func initService(cfg *domain.Config) {
 }
 
 func initConsumer(cfg *domain.Config) {
-	bus.NewConsumer(log.Get(), cfg.MQAddress).
+	bus.NewConsumer(zapup.MustRootLogger(), cfg.MQAddress).
 		MustRegister("device", "rack1").
 		Consume(domain.DeviceEvent{}, func(message interface{}) error {
 			evt := message.(*domain.DeviceEvent)
-			log.Get().Info("Got message",
+			zapup.MustRootLogger().Info("Got message",
 				zap.Any("event", evt),
 			)
 			if evt.Type == domain.DELETE {
