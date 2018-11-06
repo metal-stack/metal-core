@@ -1,7 +1,7 @@
 package ipmi
 
 import (
-	"git.f-i-ts.de/cloud-native/metallib/zapup"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/log"
 	goipmi "github.com/vmware/goipmi"
 	"go.uber.org/zap"
 )
@@ -57,7 +57,7 @@ func PowerOn(connection *IpmiConnection) error {
 	if err != nil {
 		return err
 	}
-	zapup.MustRootLogger().Info("Powering up",
+	log.Get().Info("Powering up",
 		zap.String("hostname", connection.Hostname),
 	)
 	err = client.Control(goipmi.ControlPowerUp)
@@ -72,7 +72,7 @@ func PowerOff(connection *IpmiConnection) error {
 	if err != nil {
 		return err
 	}
-	zapup.MustRootLogger().Info("Powering off",
+	log.Get().Info("Powering off",
 		zap.String("hostname", connection.Hostname),
 	)
 	err = client.Control(goipmi.ControlPowerDown)
@@ -87,7 +87,7 @@ func SetBootDevPxe(connection *IpmiConnection) error {
 	if err != nil {
 		return err
 	}
-	zapup.MustRootLogger().Info("Setting boot device to PXE boot",
+	log.Get().Info("Setting boot device to PXE boot",
 		zap.String("hostname", connection.Hostname),
 	)
 	err = client.SetBootDevice(goipmi.BootDevicePxe)
@@ -102,7 +102,7 @@ func SetBootDevHd(connection *IpmiConnection) error {
 	if err != nil {
 		return err
 	}
-	zapup.MustRootLogger().Info("Setting boot device to HD boot",
+	log.Get().Info("Setting boot device to HD boot",
 		zap.String("hostname", connection.Hostname),
 	)
 	err = client.SetBootDevice(goipmi.BootDeviceDisk)

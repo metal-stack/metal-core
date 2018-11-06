@@ -2,9 +2,6 @@ package domain
 
 import (
 	"git.f-i-ts.de/cloud-native/maas/metal-core/models"
-	"git.f-i-ts.de/cloud-native/metallib/zapup"
-	log "github.com/sirupsen/logrus"
-	"go.uber.org/zap"
 )
 
 type (
@@ -43,19 +40,3 @@ const (
 	UPDATE EventType = "update"
 	DELETE EventType = "delete"
 )
-
-func (c Config) Log() {
-	zapup.MustRootLogger().Info("Configuration",
-		zap.String("LogLevel", c.LogLevel),
-	)
-	log.WithFields(log.Fields{
-		"LogLevel":          c.LogLevel,
-		"BindAddress":       c.BindAddress,
-		"IP":                c.IP,
-		"Port":              c.Port,
-		"API-Protocol":      c.ApiProtocol,
-		"API-IP":            c.ApiIP,
-		"API-Port":          c.ApiPort,
-		"HammerImagePrefix": c.HammerImagePrefix,
-	}).Info("Configuration")
-}

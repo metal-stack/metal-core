@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/core"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/log"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
 	"github.com/kelseyhightower/envconfig"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -30,21 +30,21 @@ var (
 )
 
 func runMetalCoreServer() {
-	os.Setenv(zapup.KeyOutput, logFilename)
 	if srv != nil {
 		return
 	}
+	os.Setenv(zapup.KeyOutput, logFilename)
 	os.Setenv("METAL_CORE_IP", "127.0.0.1")
 	os.Setenv("METAL_CORE_SITE_ID", "FRA")
 	os.Setenv("METAL_CORE_RACK_ID", "Vagrant Rack 1")
 	os.Setenv("METAL_CORE_PORT", "10000")
 	os.Setenv("METAL_CORE_METAL_API_PORT", "10001")
-	config := domain.Config{}
-	if err := envconfig.Process("METAL_CORE", &config); err != nil {
+	cfg := &domain.Config{}
+	if err := envconfig.Process("METAL_CORE", cfg); err != nil {
 		fmt.Println("Cannot fetch configuration")
 		os.Exit(-1)
 	}
-	srv = core.NewService(&config)
+	srv = core.NewService(cfg)
 
 	go func() {
 		srv.RunServer()
@@ -78,7 +78,7 @@ func mockMetalAPIServer(endpoints ...endpoint) {
 	}
 	go func() {
 		if err := apiServer.ListenAndServe(); err != http.ErrServerClosed {
-			log.Fatal(err)
+			log.Get().Fatal(err.Error())
 		}
 	}()
 	time.Sleep(100 * time.Millisecond)

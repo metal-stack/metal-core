@@ -2,7 +2,7 @@ package core
 
 import (
 	"fmt"
-	"git.f-i-ts.de/cloud-native/metallib/zapup"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/log"
 	"github.com/emicklei/go-restful"
 	"go.uber.org/zap"
 	"net/http"
@@ -21,7 +21,7 @@ type BootResponse struct {
 func bootEndpoint(request *restful.Request, response *restful.Response) {
 	mac := request.PathParameter("mac")
 
-	zapup.MustRootLogger().Info("Request Metal-API for a device",
+	log.Get().Info("Request Metal-API for a device",
 		zap.String("MAC", mac),
 	)
 
@@ -29,20 +29,20 @@ func bootEndpoint(request *restful.Request, response *restful.Response) {
 
 	if sc == http.StatusOK {
 		if len(devs) == 0 {
-			zapup.MustRootLogger().Info("Device(s) not found",
+			log.Get().Info("Device(s) not found",
 				zap.Int("statusCode", sc),
 				zap.String("MAC", mac),
 			)
 			rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse())
 		} else {
-			zapup.MustRootLogger().Error("There should not exist a device",
+			log.Get().Error("There should not exist a device",
 				zap.Int("statusCode", sc),
 				zap.String("MAC", mac),
 			)
 			rest.Respond(response, http.StatusAccepted, createBootTinyCoreLinuxResponse())
 		}
 	} else {
-		zapup.MustRootLogger().Error("Failed to request Metal-API for a device",
+		log.Get().Error("Failed to request Metal-API for a device",
 			zap.Int("apiStatusCode", sc),
 			zap.String("MAC", mac),
 		)
@@ -60,7 +60,7 @@ func createBootDiscoveryImageResponse() BootResponse {
 	cmdlineSource := fmt.Sprintf("%s/%s-cmdline", blobstore, prefix)
 
 	if resp, err := resty.R().Get(cmdlineSource); err != nil {
-		zapup.MustRootLogger().Error("Could not retrieve cmdline source",
+		log.Get().Error("Could not retrieve cmdline source",
 			zap.String("cmdlineSource", cmdlineSource),
 			zap.Error(err),
 		)

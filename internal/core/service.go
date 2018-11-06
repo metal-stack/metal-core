@@ -3,8 +3,8 @@ package core
 import (
 	"fmt"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/ipmi"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/log"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/models"
-	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
 	"github.com/go-openapi/spec"
@@ -14,34 +14,32 @@ import (
 
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/api"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/netswitch"
 )
 
 type (
 	Service interface {
 		Config() *domain.Config
 		API() api.Client
-		Switch() netswitch.Client
 		IPMI() *ipmi.IpmiConnection
 		Server() *http.Server
 		FreeDevice(device *models.MetalDevice)
 		RunServer()
 	}
 	service struct {
-		server       *http.Server
-		apiClient    api.Client
-		switchClient netswitch.Client
-		ipmiConn     *ipmi.IpmiConnection
+		server    *http.Server
+		apiClient api.Client
+		ipmiConn  *ipmi.IpmiConnection
 	}
 )
 
-var srv Service
+var (
+	srv Service
+)
 
 func NewService(cfg *domain.Config) Service {
 	srv = service{
-		server:       &http.Server{},
-		apiClient:    api.NewClient(cfg),
-		switchClient: netswitch.NewClient(cfg),
+		server:    &http.Server{},
+		apiClient: api.NewClient(cfg),
 		ipmiConn: &ipmi.IpmiConnection{
 			// Requires gateway of the control plane for running in Metal Lab... this is just a quick workaround for the poc
 			Hostname:  cfg.IP[:strings.LastIndex(cfg.IP, ".")] + ".1",
@@ -62,10 +60,6 @@ func (s service) API() api.Client {
 	return s.apiClient
 }
 
-func (s service) Switch() netswitch.Client {
-	return s.switchClient
-}
-
 func (s service) Server() *http.Server {
 	return s.server
 }
@@ -76,12 +70,12 @@ func (s service) IPMI() *ipmi.IpmiConnection {
 
 func (s service) FreeDevice(device *models.MetalDevice) {
 	if err := ipmi.SetBootDevPxe(srv.IPMI()); err != nil {
-		zapup.MustRootLogger().Error("Unable to set boot order of device to HD",
+		log.Get().Error("Unable to set boot order of device to HD",
 			zap.Any("device", device),
 			zap.Error(err),
 		)
 	} else {
-		zapup.MustRootLogger().Info("Freed device",
+		log.Get().Info("Freed device",
 			zap.Any("device", device),
 		)
 	}
@@ -109,7 +103,7 @@ func (s service) RunServer() {
 
 	addr := fmt.Sprintf("%v:%d", s.Config().BindAddress, s.Config().Port)
 
-	zapup.MustRootLogger().Info("Starting metal-core",
+	log.Get().Info("Starting metal-core",
 		zap.String("address", addr),
 	)
 

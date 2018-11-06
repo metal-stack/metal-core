@@ -2,8 +2,8 @@ package api
 
 import (
 	"git.f-i-ts.de/cloud-native/maas/metal-core/client/device"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/log"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/models"
-	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"go.uber.org/zap"
 	"net/http"
 
@@ -24,7 +24,7 @@ func (c client) RegisterDevice(deviceId string, request *domain.MetalHammerRegis
 		},
 	}
 	if ok, created, err := c.Device().RegisterDevice(params); err != nil {
-		zapup.MustRootLogger().Error("Failed to register device at Metal-API",
+		log.Get().Error("Failed to register device at Metal-API",
 			zap.Error(err),
 		)
 		return http.StatusInternalServerError, nil

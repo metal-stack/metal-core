@@ -2,7 +2,7 @@ package rest
 
 import (
 	"errors"
-	"git.f-i-ts.de/cloud-native/metallib/zapup"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/log"
 	"github.com/emicklei/go-restful"
 	"go.uber.org/zap"
 )
@@ -10,29 +10,29 @@ import (
 func RespondError(response *restful.Response, statusCode int, errMsg string) {
 	if err := response.WriteError(statusCode, errors.New(errMsg)); err == nil {
 		response.Flush()
-		zapup.MustRootLogger().Error("Sent error response",
+		log.Get().Error("Sent error response",
 			zap.Int("statusCode", statusCode),
 			zap.String("error", errMsg),
 			zap.Error(err),
 		)
 	} else {
-		zapup.MustRootLogger().Error(err.Error())
+		log.Get().Error(err.Error())
 	}
 }
 
 func Respond(response *restful.Response, statusCode int, body interface{}) {
 	if body == nil {
-		zapup.MustRootLogger().Info("Sent empty response",
+		log.Get().Info("Sent empty response",
 			zap.Int("statusCode", statusCode),
 		)
 	} else if err := response.WriteEntity(body); err != nil {
-		zapup.MustRootLogger().Error("Cannot write body",
+		log.Get().Error("Cannot write body",
 			zap.Any("body", body),
 			zap.Error(err),
 		)
 	} else {
 		response.Flush()
-		zapup.MustRootLogger().Info("Sent response",
+		log.Get().Info("Sent response",
 			zap.Int("statusCode", statusCode),
 			zap.Any("body", body),
 		)
