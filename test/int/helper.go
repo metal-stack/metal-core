@@ -73,7 +73,7 @@ func mockMetalAPIServer(endpoints ...endpoint) {
 	handler.Add(ws)
 
 	apiServer = &http.Server{
-		Addr:    fmt.Sprintf("%v:%d", srv.GetConfig().ApiIP, srv.GetConfig().ApiPort),
+		Addr:    fmt.Sprintf("%v:%d", srv.Config().ApiIP, srv.Config().ApiPort),
 		Handler: handler,
 	}
 	go func() {

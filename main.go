@@ -13,9 +13,8 @@ import (
 )
 
 var (
-	cfg      domain.Config
-	zlog     = zapup.MustRootLogger()
-	sugarlog = zlog.Sugar()
+	cfg  domain.Config
+	zlog = zapup.MustRootLogger()
 )
 
 func main() {
@@ -24,7 +23,12 @@ func main() {
 		MustRegister("device", "rack1").
 		Consume(domain.DeviceEvent{}, func(message interface{}) error {
 			evt := message.(*domain.DeviceEvent)
-			sugarlog.Info("got message", "event", *evt)
+			zapup.MustRootLogger().Info("Got message",
+				zap.Any("event", evt),
+			)
+			if evt.Type == domain.DELETE {
+				srv.FreeDevice(evt.Old)
+			}
 			return nil
 		}, 5)
 	srv.RunServer()

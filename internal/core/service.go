@@ -2,12 +2,15 @@ package core
 
 import (
 	"fmt"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/ipmi"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/models"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
 	"github.com/go-openapi/spec"
 	"go.uber.org/zap"
 	"net/http"
+	"strings"
 
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/api"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
@@ -16,16 +19,19 @@ import (
 
 type (
 	Service interface {
-		GetConfig() *domain.Config
-		GetMetalAPIClient() api.Client
-		GetNetSwitchClient() netswitch.Client
-		GetServer() *http.Server
+		Config() *domain.Config
+		API() api.Client
+		Switch() netswitch.Client
+		IPMI() *ipmi.IpmiConnection
+		Server() *http.Server
+		FreeDevice(device *models.MetalDevice)
 		RunServer()
 	}
 	service struct {
-		server          *http.Server
-		apiClient       api.Client
-		netSwitchClient netswitch.Client
+		server       *http.Server
+		apiClient    api.Client
+		switchClient netswitch.Client
+		ipmiConn     *ipmi.IpmiConnection
 	}
 )
 
@@ -33,27 +39,52 @@ var srv Service
 
 func NewService(cfg *domain.Config) Service {
 	srv = service{
-		server:          &http.Server{},
-		apiClient:       api.NewClient(cfg),
-		netSwitchClient: netswitch.NewClient(cfg),
+		server:       &http.Server{},
+		apiClient:    api.NewClient(cfg),
+		switchClient: netswitch.NewClient(cfg),
+		ipmiConn: &ipmi.IpmiConnection{
+			// Requires gateway of the control plane for running in Metal Lab... this is just a quick workaround for the poc
+			Hostname:  cfg.IP[:strings.LastIndex(cfg.IP, ".")] + ".1",
+			Interface: "lanplus",
+			Port:      6230,
+			Username:  "vagrant",
+			Password:  "vagrant",
+		},
 	}
 	return srv
 }
 
-func (s service) GetConfig() *domain.Config {
-	return s.GetMetalAPIClient().Config()
+func (s service) Config() *domain.Config {
+	return s.API().Config()
 }
 
-func (s service) GetMetalAPIClient() api.Client {
+func (s service) API() api.Client {
 	return s.apiClient
 }
 
-func (s service) GetNetSwitchClient() netswitch.Client {
-	return s.netSwitchClient
+func (s service) Switch() netswitch.Client {
+	return s.switchClient
 }
 
-func (s service) GetServer() *http.Server {
+func (s service) Server() *http.Server {
 	return s.server
+}
+
+func (s service) IPMI() *ipmi.IpmiConnection {
+	return s.ipmiConn
+}
+
+func (s service) FreeDevice(device *models.MetalDevice) {
+	if err := ipmi.SetBootDevPxe(srv.IPMI()); err != nil {
+		zapup.MustRootLogger().Error("Unable to set boot order of device to HD",
+			zap.Any("device", device),
+			zap.Error(err),
+		)
+	} else {
+		zapup.MustRootLogger().Info("Freed device",
+			zap.Any("device", device),
+		)
+	}
 }
 
 func (s service) RunServer() {
@@ -76,7 +107,7 @@ func (s service) RunServer() {
 	}
 	restful.DefaultContainer.Filter(cors.Filter)
 
-	addr := fmt.Sprintf("%v:%d", s.GetConfig().BindAddress, s.GetConfig().Port)
+	addr := fmt.Sprintf("%v:%d", s.Config().BindAddress, s.Config().Port)
 
 	zapup.MustRootLogger().Info("Starting metal-core",
 		zap.String("address", addr),

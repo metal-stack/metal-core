@@ -25,7 +25,7 @@ func bootEndpoint(request *restful.Request, response *restful.Response) {
 		zap.String("MAC", mac),
 	)
 
-	sc, devs := srv.GetMetalAPIClient().FindDevices(mac)
+	sc, devs := srv.API().FindDevices(mac)
 
 	if sc == http.StatusOK {
 		if len(devs) == 0 {
@@ -54,7 +54,7 @@ func createBootDiscoveryImageResponse() BootResponse {
 	cmdLine := "console=tty0"
 
 	blobstore := "https://blobstore.fi-ts.io/metal/images"
-	prefix := srv.GetConfig().HammerImagePrefix
+	prefix := srv.Config().HammerImagePrefix
 	kernel := fmt.Sprintf("%s/%s-kernel", blobstore, prefix)
 	ramdisk := fmt.Sprintf("%s/%s-initrd.img.lz4", blobstore, prefix)
 	cmdlineSource := fmt.Sprintf("%s/%s-cmdline", blobstore, prefix)
@@ -70,8 +70,8 @@ func createBootDiscoveryImageResponse() BootResponse {
 	if len(cmdLine) > 0 {
 		cmdLine += " "
 	}
-	cmdLine += fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d", srv.GetConfig().IP, srv.GetConfig().Port)
-	if strings.ToUpper(srv.GetConfig().LogLevel) == "DEBUG" {
+	cmdLine += fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d", srv.Config().IP, srv.Config().Port)
+	if strings.ToUpper(srv.Config().LogLevel) == "DEBUG" {
 		cmdLine += " DEBUG=1"
 	}
 	return BootResponse{

@@ -15,7 +15,7 @@ func installEndpoint(request *restful.Request, response *restful.Response) {
 		zap.String("deviceID", devId),
 	)
 
-	sc, dev := srv.GetMetalAPIClient().InstallImage(devId)
+	sc, dev := srv.API().InstallImage(devId)
 
 	if sc == http.StatusOK && dev != nil && dev.Image != nil {
 		zapup.MustRootLogger().Info("Got image to install",

@@ -14,15 +14,15 @@ type IpmiConnection struct {
 	Password  string
 }
 
-func openClientConnection(connection IpmiConnection) (*goipmi.Client, error) {
-	goipmiConnection := goipmi.Connection{
+func openClientConnection(connection *IpmiConnection) (*goipmi.Client, error) {
+	goipmiConnection := &goipmi.Connection{
 		Hostname:  connection.Hostname,
 		Port:      connection.Port,
 		Username:  connection.Username,
 		Password:  connection.Password,
 		Interface: connection.Interface,
 	}
-	client, err := goipmi.NewClient(&goipmiConnection)
+	client, err := goipmi.NewClient(goipmiConnection)
 	if err != nil {
 		return client, err
 	}
@@ -42,7 +42,7 @@ func openClientConnection(connection IpmiConnection) (*goipmi.Client, error) {
 // 	} else {
 // 		log.Infof("Reaching out to ipmi client through gateway: %s", gateway.String())
 // 	}
-// 	connection := ipmi.IpmiConnection{
+// 	connection := &ipmi.IpmiConnection{
 // 		Hostname:  gateway.String(),
 // 		Interface: "lanplus",
 // 		Port:      6230,
@@ -52,7 +52,7 @@ func openClientConnection(connection IpmiConnection) (*goipmi.Client, error) {
 // 	ipmi.SetBootDevHd(connection)
 // }
 
-func PowerOn(connection IpmiConnection) error {
+func PowerOn(connection *IpmiConnection) error {
 	client, err := openClientConnection(connection)
 	if err != nil {
 		return err
@@ -67,7 +67,7 @@ func PowerOn(connection IpmiConnection) error {
 	return nil
 }
 
-func PowerOff(connection IpmiConnection) error {
+func PowerOff(connection *IpmiConnection) error {
 	client, err := openClientConnection(connection)
 	if err != nil {
 		return err
@@ -82,7 +82,7 @@ func PowerOff(connection IpmiConnection) error {
 	return nil
 }
 
-func SetBootDevPxe(connection IpmiConnection) error {
+func SetBootDevPxe(connection *IpmiConnection) error {
 	client, err := openClientConnection(connection)
 	if err != nil {
 		return err
@@ -97,7 +97,7 @@ func SetBootDevPxe(connection IpmiConnection) error {
 	return nil
 }
 
-func SetBootDevHd(connection IpmiConnection) error {
+func SetBootDevHd(connection *IpmiConnection) error {
 	client, err := openClientConnection(connection)
 	if err != nil {
 		return err

@@ -25,7 +25,7 @@ func registerEndpoint(request *restful.Request, response *restful.Response) {
 			zap.String("deviceID", devId),
 		)
 
-		sc, dev := srv.GetMetalAPIClient().RegisterDevice(devId, req)
+		sc, dev := srv.API().RegisterDevice(devId, req)
 
 		if sc != http.StatusOK {
 			errMsg := "Failed to register device"

@@ -41,7 +41,7 @@ func registerDevice() (*resty.Response, error) {
 	rdr.Nics = []*models.MetalNic{}
 	rdr.Disks = []*models.MetalBlockDevice{}
 	return resty.R().SetBody(rdr).
-		Post(fmt.Sprintf("http://localhost:%d/device/register/%v", srv.GetConfig().Port, devId))
+		Post(fmt.Sprintf("http://localhost:%d/device/register/%v", srv.Config().Port, devId))
 }
 
 func registerDeviceAPIEndpointMock(request *restful.Request, response *restful.Response) {
