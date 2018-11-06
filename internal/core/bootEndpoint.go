@@ -71,6 +71,9 @@ func createBootDiscoveryImageResponse() BootResponse {
 		cmdLine += " "
 	}
 	cmdLine += fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d", srv.GetConfig().IP, srv.GetConfig().Port)
+	if strings.ToUpper(srv.GetConfig().LogLevel) == "DEBUG" {
+		cmdLine += " DEBUG=1"
+	}
 	return BootResponse{
 		Kernel: kernel,
 		InitRamDisk: []string{
