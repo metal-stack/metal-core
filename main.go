@@ -19,6 +19,8 @@ func main() {
 }
 
 func init() {
+	log.InitConsoleEncoder()
+
 	cfg := &domain.Config{}
 	if err := envconfig.Process("METAL_CORE", cfg); err != nil {
 		zapup.MustRootLogger().Fatal("Bad configuration",
@@ -27,7 +29,6 @@ func init() {
 		os.Exit(1)
 	}
 	initService(cfg)
-	log.InitConsoleEncoder(cfg)
 	initConsumer(cfg)
 
 	log.Get().Info("Metal-Core Version",
