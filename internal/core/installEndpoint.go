@@ -1,11 +1,12 @@
 package core
 
 import (
+	"net/http"
+
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful"
 	"go.uber.org/zap"
-	"net/http"
 )
 
 func installEndpoint(request *restful.Request, response *restful.Response) {
@@ -15,14 +16,14 @@ func installEndpoint(request *restful.Request, response *restful.Response) {
 		zap.String("deviceID", devId),
 	)
 
-	sc, dev := srv.API().InstallImage(devId)
+	sc, devWithToken := srv.API().InstallImage(devId)
 
-	if sc == http.StatusOK && dev != nil && dev.Image != nil {
+	if sc == http.StatusOK && devWithToken != nil && devWithToken.Device != nil {
 		zapup.MustRootLogger().Info("Got image to install",
 			zap.Int("statusCode", sc),
-			zap.Any("device", dev),
+			zap.Any("deviceWithToken", devWithToken),
 		)
-		rest.Respond(response, http.StatusOK, dev)
+		rest.Respond(response, http.StatusOK, devWithToken)
 	} else {
 		errMsg := "No installation image found"
 		zapup.MustRootLogger().Error(errMsg,
