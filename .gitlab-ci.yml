@@ -1,11 +1,18 @@
 image: registry.cloud.fits/fits/builder:7-dev
 
 stages:
-  - push
+- push
 
-push:
+latest:
   stage: push
-  script: 
-    - docker-make --exclude-linting-rules rule3 --summary
+  script:
+    - docker-make --exclude-linting-rules rule3 --summary --build-arg TAG=latest
   only:
     - master
+
+stable:
+  stage: push
+  script:
+    - docker-make --exclude-linting-rules rule3 --summary --build-arg TAG=stable
+  only:
+    - stable
