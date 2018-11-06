@@ -12,29 +12,29 @@ import (
 type (
 	Client interface {
 		Device() *device.Client
-		GetConfig() *domain.Config
+		Config() *domain.Config
 		FindDevices(mac string) (int, []*models.MetalDevice)
 		RegisterDevice(deviceId string, request *domain.MetalHammerRegisterDeviceRequest) (int, *models.MetalDevice)
 		InstallImage(deviceId string) (int, *models.MetalDevice)
 	}
 	client struct {
-		DeviceClient *device.Client
-		Config       *domain.Config
+		device *device.Client
+		config *domain.Config
 	}
 )
 
 func NewClient(cfg *domain.Config) Client {
 	transport := httptransport.New(fmt.Sprintf("%v:%d", cfg.ApiIP, cfg.ApiPort), "", nil)
 	return client{
-		DeviceClient: device.New(transport, strfmt.Default),
-		Config:       cfg,
+		device: device.New(transport, strfmt.Default),
+		config: cfg,
 	}
 }
 
 func (c client) Device() *device.Client {
-	return c.Device()
+	return c.device
 }
 
-func (c client) GetConfig() *domain.Config {
-	return c.Config
+func (c client) Config() *domain.Config {
+	return c.config
 }

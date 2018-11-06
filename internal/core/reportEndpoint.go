@@ -1,13 +1,14 @@
 package core
 
 import (
+	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
+	"go.uber.org/zap"
 	"net/http"
 	"strings"
 
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/ipmi"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
-	log "github.com/sirupsen/logrus"
 )
 
 // Report is send back to metal-core after installation finished
@@ -25,10 +26,10 @@ func reportEndpoint(request *restful.Request, response *restful.Response) {
 
 	devId := request.PathParameter("id")
 
-	log.WithFields(log.Fields{
-		"deviceID": devId,
-		"report":   report,
-	}).Info("got report for device")
+	zapup.MustRootLogger().Info("Got report for device",
+		zap.String("deviceID", devId),
+		zap.Any("report", report),
+	)
 
 	if !report.Success {
 		rest.Respond(response, http.StatusNotAcceptable, nil)
@@ -44,7 +45,9 @@ func reportEndpoint(request *restful.Request, response *restful.Response) {
 		Password:  "vagrant",
 	}
 	if err := ipmi.SetBootDevHd(connection); err != nil {
-		log.Error("Unable to set boot order to hard disk of ipmi client: ", err)
+		zapup.MustRootLogger().Error("Unable to set boot order of IPMI client to HD",
+			zap.Error(err),
+		)
 		rest.Respond(response, http.StatusInternalServerError, nil)
 		return
 	}

@@ -2,11 +2,13 @@ package core
 
 import (
 	"fmt"
+	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
+	"go.uber.org/zap"
 	"net/http"
+	"strings"
 
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/resty.v1"
 )
 
@@ -19,28 +21,31 @@ type BootResponse struct {
 func bootEndpoint(request *restful.Request, response *restful.Response) {
 	mac := request.PathParameter("mac")
 
-	log.WithField("mac", mac).
-		Info("Request metal API for a device with given mac")
+	zapup.MustRootLogger().Info("Request Metal-API for a device",
+		zap.String("MAC", mac),
+	)
 
 	sc, devs := srv.GetMetalAPIClient().FindDevices(mac)
 
 	if sc == http.StatusOK {
 		if len(devs) == 0 {
-			log.WithField("statusCode", sc).
-				Info("Device(s) not found")
+			zapup.MustRootLogger().Info("Device(s) not found",
+				zap.Int("statusCode", sc),
+				zap.String("MAC", mac),
+			)
 			rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse())
 		} else {
-			log.WithFields(log.Fields{
-				"apiStatusCode": sc,
-				"mac":           mac,
-			}).Error("There should not exist a device with given mac")
+			zapup.MustRootLogger().Error("There should not exist a device",
+				zap.Int("statusCode", sc),
+				zap.String("MAC", mac),
+			)
 			rest.Respond(response, http.StatusAccepted, createBootTinyCoreLinuxResponse())
 		}
 	} else {
-		log.WithFields(log.Fields{
-			"statusCode": sc,
-			"mac":        mac,
-		}).Error("Failed to request Metal-API")
+		zapup.MustRootLogger().Error("Failed to request Metal-API for a device",
+			zap.Int("apiStatusCode", sc),
+			zap.String("MAC", mac),
+		)
 		rest.Respond(response, http.StatusBadRequest, createBootTinyCoreLinuxResponse())
 	}
 }
@@ -55,11 +60,10 @@ func createBootDiscoveryImageResponse() BootResponse {
 	cmdlineSource := fmt.Sprintf("%s/%s-cmdline", blobstore, prefix)
 
 	if resp, err := resty.R().Get(cmdlineSource); err != nil {
-		log.WithFields(log.Fields{
-			"err":           err,
-			"cmdlineSource": cmdlineSource,
-		}).
-			Error("could not retrieve cmdline source")
+		zapup.MustRootLogger().Error("Could not retrieve cmdline source",
+			zap.String("cmdlineSource", cmdlineSource),
+			zap.Error(err),
+		)
 	} else {
 		cmdLine = string(resp.Body())
 	}

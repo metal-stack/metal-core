@@ -2,15 +2,16 @@ package core
 
 import (
 	"fmt"
+	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
 	"github.com/go-openapi/spec"
+	"go.uber.org/zap"
 	"net/http"
 
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/api"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/netswitch"
-	log "github.com/sirupsen/logrus"
 )
 
 type (
@@ -40,7 +41,7 @@ func NewService(cfg *domain.Config) Service {
 }
 
 func (s service) GetConfig() *domain.Config {
-	return s.GetMetalAPIClient().GetConfig()
+	return s.GetMetalAPIClient().Config()
 }
 
 func (s service) GetMetalAPIClient() api.Client {
@@ -77,9 +78,9 @@ func (s service) RunServer() {
 
 	addr := fmt.Sprintf("%v:%d", s.GetConfig().BindAddress, s.GetConfig().Port)
 
-	log.WithFields(log.Fields{
-		"address": addr,
-	}).Info("Starting metal-core")
+	zapup.MustRootLogger().Info("Starting metal-core",
+		zap.String("address", addr),
+	)
 
 	http.ListenAndServe(addr, nil)
 }

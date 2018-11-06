@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/resty.v1"
 	"net/http"
-	"strings"
 	"testing"
 )
 
@@ -29,10 +28,10 @@ func TestLoggingMiddleware(t *testing.T) {
 	registerDevice()
 
 	// THEN
-	result := strings.TrimSpace(logOutput.String())
-	assert.Contains(t, result, "Register device at Metal API")
-	assert.Contains(t, result, "Device registered")
-	assert.NotContains(t, result, "level=error")
+	logs := getLogs()
+	assert.Contains(t, logs, "Register device at Metal-API")
+	assert.Contains(t, logs, "Device registered")
+	assert.NotContains(t, logs, "level=error")
 }
 
 func registerDevice() (*resty.Response, error) {

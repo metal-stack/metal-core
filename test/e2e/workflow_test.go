@@ -140,7 +140,7 @@ func spawnMetalCoreRethinkdbAndMetalAPI() {
 
 func runMetalHammer() {
 	removeMetalHammerContainer()
-	time.Sleep(15 * time.Second)
+	time.Sleep(25 * time.Second)
 	waitForMetalApiContainer()
 	sniffTcpPackets()
 	if _, err := sh.Output("docker-compose", "-f", "workflow_test.yaml", "run",

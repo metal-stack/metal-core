@@ -2,7 +2,9 @@ package domain
 
 import (
 	"git.f-i-ts.de/cloud-native/maas/metal-core/models"
+	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 )
 
 type (
@@ -13,7 +15,7 @@ type (
 		RackID            string `required:"true" desc:"set the rack ID" split_words:"true"`
 		BindAddress       string `required:"false" default:"0.0.0.0" desc:"set server bind address" split_words:"true"`
 		Port              int    `required:"false" default:"4242" desc:"set server port"`
-		LogLevel          string `required:"false" default:"INFO" desc:"set log level" split_words:"true"`
+		LogLevel          string `required:"false" default:"info" desc:"set log level" split_words:"true"`
 		ApiProtocol       string `required:"false" default:"http" desc:"set metal api protocol" envconfig:"metal_api_protocol"`
 		ApiIP             string `required:"false" default:"localhost" desc:"set metal api address" envconfig:"metal_api_ip"`
 		ApiPort           int    `required:"false" default:"8080" desc:"set metal api port" envconfig:"metal_api_port"`
@@ -43,6 +45,9 @@ const (
 )
 
 func (c Config) Log() {
+	zapup.MustRootLogger().Info("Configuration",
+		zap.String("LogLevel", c.LogLevel),
+	)
 	log.WithFields(log.Fields{
 		"LogLevel":          c.LogLevel,
 		"BindAddress":       c.BindAddress,

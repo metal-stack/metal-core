@@ -20,9 +20,11 @@ require (
 	github.com/mdlayher/raw v0.0.0-20181016155347-fa5ef3332ca9 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
-	github.com/sirupsen/logrus v1.1.0
+	github.com/sirupsen/logrus v1.2.0
 	github.com/stretchr/testify v1.2.2
 	github.com/vmware/goipmi v0.0.0-20151205002058-ee598d2a3447
+	go.uber.org/zap v1.9.1
 	golang.org/x/net v0.0.0-20181005035420-146acd28ed58
+	golang.org/x/sys v0.0.0-20181011152604-fa43e7bc11ba // indirect
 	gopkg.in/resty.v1 v1.9.1
 )

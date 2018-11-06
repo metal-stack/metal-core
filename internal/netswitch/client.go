@@ -6,19 +6,19 @@ import (
 
 type (
 	Client interface {
-		GetConfig() *domain.Config
+		Config() *domain.Config
 	}
 	client struct {
-		Config *domain.Config
+		config *domain.Config
 	}
 )
 
 func NewClient(cfg *domain.Config) Client {
 	return client{
-		Config: cfg,
+		config: cfg,
 	}
 }
 
-func (c client) GetConfig() *domain.Config {
-	return c.Config
+func (c client) Config() *domain.Config {
+	return c.config
 }

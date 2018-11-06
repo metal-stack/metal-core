@@ -1,20 +1,18 @@
 package main
 
 import (
-	"os"
-	"strings"
-
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/core"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	"git.f-i-ts.de/cloud-native/metallib/bus"
 	"git.f-i-ts.de/cloud-native/metallib/version"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/kelseyhightower/envconfig"
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
+	"os"
+	"strings"
 )
 
 var (
-	lvls     map[string]log.Level
 	cfg      domain.Config
 	zlog     = zapup.MustRootLogger()
 	sugarlog = zlog.Sugar()
@@ -33,33 +31,15 @@ func main() {
 }
 
 func init() {
-	log.SetFormatter(&log.JSONFormatter{})
-	log.SetOutput(os.Stdout)
-
-	lvls = make(map[string]log.Level, 6)
-	lvls["DEBUG"] = log.DebugLevel
-	lvls["INFO"] = log.InfoLevel
-	lvls["WARN"] = log.WarnLevel
-	lvls["ERROR"] = log.ErrorLevel
-	lvls["FATAL"] = log.FatalLevel
-	lvls["PANIC"] = log.PanicLevel
-
-	log.Info("metal-core", "version", version.V)
-
+	os.Setenv(zapup.KeyLogLevel, strings.ToLower(cfg.LogLevel))
+	zapup.MustRootLogger().Info("Metal-Core version",
+		zap.Any("version", version.V),
+	)
 	if err := envconfig.Process("METAL_CORE", &cfg); err != nil {
-		log.Fatal("Bad configuration", "error", err)
+		zapup.MustRootLogger().Fatal("Bad configuration",
+			zap.Error(err),
+		)
 		os.Exit(1)
 	}
-	log.SetLevel(fetchLogLevel(cfg.LogLevel))
 	cfg.Log()
-}
-
-func fetchLogLevel(lvl string) log.Level {
-	lvl = strings.ToUpper(lvl)
-	for k, v := range lvls {
-		if k == lvl {
-			return v
-		}
-	}
-	return log.InfoLevel
 }
