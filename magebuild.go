@@ -34,11 +34,11 @@ func (b BUILD) Spec() error {
 		f = false
 	}
 	if f {
-		exec.Command("docker-compose", "down").Run()
+		exec.Command("docker-compose", "down", "metal-core").Run()
 	}
 	if err := b.Core(); err != nil {
 		return err
-	} else if err := exec.Command("docker-compose", "up", "-d").Run(); err != nil {
+	} else if err := exec.Command("docker-compose", "up", "-d", "metal-core").Run(); err != nil {
 		return err
 	} else if out, err := exec.Command("docker", "inspect", "-f", "{{ .NetworkSettings.Networks.metal.Gateway }}", "metal-core").CombinedOutput(); err != nil {
 		return err
@@ -46,7 +46,7 @@ func (b BUILD) Spec() error {
 		return err
 	} else {
 		if !f {
-			exec.Command("docker-compose", "down").Run()
+			exec.Command("docker-compose", "down", "metal-core").Run()
 		}
 		return ioutil.WriteFile("spec/metal-core.json", out, 0644)
 	}
