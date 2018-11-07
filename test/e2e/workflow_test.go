@@ -42,27 +42,13 @@ func TestWorkflow(t *testing.T) {
 	defer tearDown()
 
 	// GIVEN
-	spawnMetalCoreRethinkdbAndMetalAPI()
+	spawnServices()
 	sniffTcpPackets()
 
 	// WHEN
 	start("metal-hammer")
 
 	// THEN
-
-	//fmt.Println("=== Core Traffic ======================================================")
-	//for i, c := range coreTraffic {
-	//	fmt.Printf("---- %d ----------------------------\n", i)
-	//	fmt.Println(c)
-	//}
-	//fmt.Println("=== End Core Traffic ==================================================")
-	//fmt.Println("=== API Traffic =======================================================")
-	//for i, c := range apiTraffic {
-	//	fmt.Printf("---- %d ----------------------------\n", i)
-	//	fmt.Println(c)
-	//}
-	//fmt.Println("=== End API Traffic ====================================================")
-
 	// Verify Meta-Core traffic
 	assert.Equal(t, 4, len(coreTraffic))
 
@@ -130,7 +116,7 @@ func runAsRoot() error {
 	}
 }
 
-func spawnMetalCoreRethinkdbAndMetalAPI() {
+func spawnServices() {
 	readEnvFile()
 	start("nsqlookupd")
 	start("nsqd")
