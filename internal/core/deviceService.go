@@ -48,15 +48,5 @@ func NewDeviceService() *restful.WebService {
 		Returns(http.StatusNotAcceptable, "Not acceptable", nil).
 		Returns(http.StatusInternalServerError, "Accepted", nil))
 
-	ws.Route(ws.POST("/phoneHome").
-		To(phoneHomeEndpoint).
-		Doc("phone back home from the device").
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads(domain.MetalHammerPhoneHomeRequest{}).
-		Returns(http.StatusOK, "OK", nil).
-		Returns(http.StatusNotFound, "Device could not be found by id", nil).
-		Returns(http.StatusBadRequest, "Bad Request", nil).
-		Returns(http.StatusInternalServerError, "Internal Server Error", nil))
-
 	return ws
 }
