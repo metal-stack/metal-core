@@ -6,18 +6,14 @@ ENV CGO_ENABLED=0 \
     GOOS=linux \
     GOPROXY=https://gomods.fi-ts.io
 
-# Install dependencies and Mage
 COPY ./ ./
 RUN go mod download \
  && go build -o metal-hammer
 
-FROM ubuntu:18.04
+FROM alpine:3.8
 LABEL maintainer FI-TS Devops <devops@f-i-ts.de>
 
-RUN apt update \
- && apt install -y \
-    openssh-server \
- && mkdir /bbin \
- && ln -s /usr/sbin/sshd /bbin/sshd
+RUN apk add \
+    openssh
 
 COPY --from=builder /build/metal-hammer /

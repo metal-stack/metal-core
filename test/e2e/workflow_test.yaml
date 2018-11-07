@@ -41,8 +41,6 @@ services:
     networks:
       - metal
     command: /nsqd -log-level error --lookupd-tcp-address=nsqlookupd:${NSQLOOKUPD_TCP_PORT}
-    depends_on:
-      - nsqlookupd
     ports:
       - "${NSQD_TCP_PORT}"
       - "${NSQD_HTTP_PORT}"
@@ -116,9 +114,6 @@ services:
       - metal
     ports:
       - "${NETBOX_PORT}:${NETBOX_API_PROXY_PORT}"
-    depends_on:
-      - netbox-init-config
-      - netbox-postgres
     environment:
       DB_NAME: netbox
       DB_USER: netbox
@@ -172,8 +167,6 @@ services:
     command: nginx -c /etc/netbox-nginx/nginx.conf
     networks:
       - metal
-    depends_on:
-      - netbox
     ports:
       - "${NETBOX_NGINX_PORT}:${METAL_API_PORT}"
     volumes:
@@ -185,8 +178,6 @@ services:
     container_name: ${NETBOX_API_PROXY_CONTAINER_NAME}
     networks:
       - metal
-    depends_on:
-      - netbox
     ports:
       - "${NETBOX_API_PROXY_PORT}:${NETBOX_INTERNAL_PORT}"
     environment:

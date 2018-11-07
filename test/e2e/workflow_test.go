@@ -20,14 +20,8 @@ import (
 )
 
 type Env struct {
-	MetalCorePort               int    `properties:"METAL_CORE_PORT"`
-	MetalAPIPort                int    `properties:"METAL_API_PORT"`
-	RethinkdbPort               int    `properties:"RETHINKDB_PORT"`
-	MetalHammerContainerName    string `properties:"METAL_HAMMER_CONTAINER_NAME"`
-	MetalCoreContainerName      string `properties:"METAL_CORE_CONTAINER_NAME"`
-	MetalAPIContainerName       string `properties:"METAL_API_CONTAINER_NAME"`
-	NetboxAPIProxyContainerName string `properties:"NETBOX_API_PROXY_CONTAINER_NAME"`
-	RethinkdbContainerName      string `properties:"RETHINKDB_CONTAINER_NAME"`
+	MetalCorePort int `properties:"METAL_CORE_PORT"`
+	MetalAPIPort  int `properties:"METAL_API_PORT"`
 }
 
 var (
@@ -39,8 +33,11 @@ var (
 
 func TestWorkflow(t *testing.T) {
 	if os.Getegid() != 0 {
-		runAsRoot()
-		os.Exit(0)
+		if err := runAsRoot(); err != nil {
+			panic(err)
+		} else {
+			os.Exit(0)
+		}
 	}
 	defer tearDown()
 
@@ -68,7 +65,7 @@ func TestWorkflow(t *testing.T) {
 	// Verify Meta-Core traffic
 	assert.Equal(t, 4, len(coreTraffic))
 
-	assert.Contains(t, coreTraffic[0], "POST /device/register", fmt.Sprintf("Metal-Cores register endpoint not called by %v container", env.MetalHammerContainerName))
+	assert.Contains(t, coreTraffic[0], "POST /device/register", "Metal-Cores register endpoint not called by metal-hammer service")
 	devId := coreTraffic[0][22:strings.Index(coreTraffic[0], " HTTP")]
 	rdr := &domain.MetalHammerRegisterDeviceRequest{}
 	if err := json.Unmarshal([]byte(extractPayload(coreTraffic[0])), rdr); err != nil {
@@ -76,26 +73,26 @@ func TestWorkflow(t *testing.T) {
 	}
 	assert.Equal(t, devId, rdr.UUID)
 
-	assert.Contains(t, coreTraffic[1], "200 OK", fmt.Sprintf("Metal-APIs register endpoint not called by %v container", env.MetalCoreContainerName))
+	assert.Contains(t, coreTraffic[1], "200 OK", "Metal-APIs register endpoint not called by meta-core service")
 	dev := &models.MetalDevice{}
 	if err := json.Unmarshal([]byte(extractPayload(coreTraffic[1])), dev); err != nil {
 		panic(err)
 	}
 	assert.Equal(t, devId, dev.ID)
 
-	assert.Contains(t, coreTraffic[3], fmt.Sprintf("GET /device/install/%v", devId), fmt.Sprintf("Either Metal-APIs register endpoint threw an error or Metal-Cores install endpoint not called by %v container", env.MetalHammerContainerName))
+	assert.Contains(t, coreTraffic[3], fmt.Sprintf("GET /device/install/%v", devId), "Either Metal-APIs register endpoint threw an error or Metal-Cores install endpoint not called by metal-hammer service")
 
 	// Verify Metal-API traffic
 	assert.Equal(t, 3, len(apiTraffic))
 
-	assert.Contains(t, apiTraffic[0], "POST /device/register", fmt.Sprintf("Metal-APIs register endpoint not called by %v container", env.MetalCoreContainerName))
+	assert.Contains(t, apiTraffic[0], "POST /device/register", "Metal-APIs register endpoint not called by metal-core service")
 	mardr := &domain.MetalHammerRegisterDeviceRequest{}
 	if err := json.Unmarshal([]byte(extractPayload(apiTraffic[0])), mardr); err != nil {
 		panic(err)
 	}
 	assert.Equal(t, devId, mardr.UUID)
 
-	assert.Contains(t, apiTraffic[1], "200 OK", fmt.Sprintf("Metal-APIs register endpoint not called by %v container", env.MetalCoreContainerName))
+	assert.Contains(t, apiTraffic[1], "200 OK", "Metal-APIs register endpoint not called by meta-core service")
 	dev = &models.MetalDevice{}
 	if err := json.Unmarshal([]byte(extractPayload(apiTraffic[1])), dev); err != nil {
 		panic(err)
@@ -103,7 +100,7 @@ func TestWorkflow(t *testing.T) {
 	assert.Equal(t, devId, dev.ID)
 
 	assert.Contains(t, apiTraffic[2], fmt.Sprintf("GET /device/%v/wait", devId),
-		fmt.Sprintf("Either Metal-Cores install endpoint threw an error or Metal-APIs wait endpoint not called by %v container", env.MetalCoreContainerName))
+		"Either Metal-Cores install endpoint threw an error or Metal-APIs wait endpoint not called by metal-core service")
 }
 
 func extractPayload(s string) string {
@@ -121,31 +118,45 @@ func extractPayload(s string) string {
 	return lines[len(lines)-1]
 }
 
-func runAsRoot() {
-	if mageBinary, err := sh.Output("which", "mage"); err != nil {
+func runAsRoot() error {
+	if mageBinary, err := exec.Command("which", "mage").CombinedOutput(); err != nil {
 		panic(err)
 	} else if wd, err := os.Getwd(); err != nil {
 		panic(err)
 	} else {
-		sh.RunV("sudo", "-E", "PATH=$PATH", "bash", "-c", fmt.Sprintf("cd %v/../.. && %v test:e2e", wd, mageBinary))
+		bin := string(mageBinary[:len(mageBinary)-1])
+		return sh.RunV("sudo", "-E", "PATH=$PATH", "/usr/bin/env", "bash", "-c", fmt.Sprintf("cd %v/../.. && %v test:e2e", wd, bin))
 	}
 }
 
 func spawnMetalCoreRethinkdbAndMetalAPI() {
 	readEnvFile()
-	removeMetalHammerContainer()
-	if _, err := sh.Output("docker-compose", "-f", "workflow_test.yaml", "up", "--force-recreate", "--remove-orphans", "-d"); err != nil {
-		panic(err)
-	}
+	start("nsqlookupd")
+	start("nsqd")
+	start("rethinkdb")
+	waitFor("rethinkdb", "Server ready", 5)
+	start("netbox-init-config")
+	start("netbox-postgres")
+	waitFor("netbox-postgres", "database system is ready to accept connections", 2)
+	start("netbox")
+	waitFor("netbox", "Starting gunicorn", 25)
+	start("netbox-api-proxy")
+	start("netbox-nginx")
+	waitFor("netbox-nginx", "start worker process ", 5)
+	waitFor("netbox-api-proxy", "Serving Flask app", 2)
+	start("metal-api")
+	start("metal-core")
+	waitFor("metal-api", "start metal api", 2)
+	waitFor("metal-core", "Starting metal-core", 2)
 }
 
 func runMetalHammer() {
-	removeMetalHammerContainer()
-	waitForMetalAPIContainer()
-	waitForNetboxAPIProxyContainer()
 	sniffTcpPackets()
-	if _, err := sh.Output("docker-compose", "-f", "workflow_test.yaml", "run",
-		"-d", "--name", env.MetalHammerContainerName, "metal-hammer"); err != nil {
+	start("metal-hammer")
+}
+
+func start(service string) {
+	if err := exec.Command("docker-compose", "-f", "workflow_test.yaml", "up", "--force-recreate", "--remove-orphans", "-d", service).Run(); err != nil {
 		panic(err)
 	}
 }
@@ -187,28 +198,16 @@ func traceTcpPackets(handle *pcap.Handle, traffic *[]string) {
 	}
 }
 
-func waitForMetalAPIContainer() {
-	for i := 0; i < 4; i++ {
+func waitFor(service, expected string, timeout int) {
+	for i := 0; i < timeout; i++ {
 		time.Sleep(time.Second)
-		if out, err := sh.Output("docker", "logs", env.MetalAPIContainerName); err != nil {
+		if out, err := exec.Command("docker-compose", "-f", "workflow_test.yaml", "logs", service).CombinedOutput(); err != nil {
 			panic(err)
-		} else if strings.Contains(out, "Rethinkstore connected") && strings.Contains(out, "start metal api") {
+		} else if strings.Contains(string(out), expected) {
 			return
 		}
 	}
-	panic(errors.New("cannot fetch Metal-API logs"))
-}
-
-func waitForNetboxAPIProxyContainer() {
-	for i := 0; i < 25; i++ {
-		time.Sleep(time.Second)
-		if out, err := sh.Output("docker", "logs", env.NetboxAPIProxyContainerName); err != nil {
-			panic(err)
-		} else if strings.Contains(out, "Serving Flask app") {
-			return
-		}
-	}
-	panic(errors.New("cannot fetch Netbox-API-Proxy logs"))
+	panic(errors.New(fmt.Sprintf("cannot fetch %v logs", service)))
 }
 
 func readEnvFile() {
@@ -218,11 +217,7 @@ func readEnvFile() {
 	}
 }
 
-func removeMetalHammerContainer() {
-	exec.Command("docker", "rm", "-f", env.MetalHammerContainerName).Run()
-}
-
 func tearDown() {
-	//sh.RunV("docker-compose", "-f", "workflow_test.yaml", "down")
+	exec.Command("docker-compose", "-f", "workflow_test.yaml", "down").Run()
 	proxy.Close()
 }
