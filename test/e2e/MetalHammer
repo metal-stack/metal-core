@@ -3,16 +3,21 @@ FROM golang:1.11-stretch as builder
 WORKDIR /build
 ENV CGO_ENABLED=0 \
     GO111MODULE=on \
-    GOOS=linux
+    GOOS=linux \
+    GOPROXY=https://gomods.fi-ts.io
 
 # Install dependencies and Mage
 COPY ./ ./
 RUN go mod download \
  && go build -o metal-hammer
 
-FROM scratch
+FROM ubuntu:18.04
 LABEL maintainer FI-TS Devops <devops@f-i-ts.de>
 
-COPY --from=builder /build/metal-hammer /
+RUN apt update \
+ && apt install -y \
+    openssh-server \
+ && mkdir /bbin \
+ && ln -s /usr/sbin/sshd /bbin/sshd
 
-ENTRYPOINT ["/metal-hammer"]
+COPY --from=builder /build/metal-hammer /

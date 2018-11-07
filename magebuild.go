@@ -83,15 +83,9 @@ func (b BUILD) Core() error {
 
 // (Re)build metal-hammer image
 func (b BUILD) Hammer() error {
-	//	return sh.RunV("docker-compose", "build", "metal-hammer")
-	defer os.Chdir("../metal-core")
-	os.Chdir("../metal-hammer")
-	defer os.Setenv("CGO_ENABLED", "1")
-	prepareEnv()
-	if err := exec.Command("go", "build", "-o", "bin/metal-hammer", ".").Run(); err != nil {
-		return err
-	}
-	return sh.RunV("docker", "build", "-t", "registry.fi-ts.io/metal/metal-hammer", "-f", "Dockerfile.dev", ".")
+	defer os.Chdir("../..")
+	os.Chdir("test/e2e")
+	return sh.RunV("docker-compose", "-f", "workflow_test.yaml", "build", "metal-hammer")
 }
 
 // (Re)build metal-api image

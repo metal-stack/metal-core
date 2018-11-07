@@ -102,7 +102,12 @@ services:
     container_name: ${METAL_HAMMER_CONTAINER_NAME}
     networks:
       - metal
-    entrypoint: /metal-hammer
+    privileged: True
+    volumes:
+      - ./metal-hammer.sh:/metal-hammer.sh
+    environment:
+      METAL_CORE_ADDRESS: ${METAL_CORE_CONTAINER_NAME}:${METAL_CORE_PORT}
+    entrypoint: /metal-hammer.sh
 
   netbox:
     image: ninech/netbox

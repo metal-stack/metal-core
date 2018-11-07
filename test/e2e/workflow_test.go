@@ -20,13 +20,14 @@ import (
 )
 
 type Env struct {
-	MetalCorePort            int    `properties:"METAL_CORE_PORT"`
-	MetalAPIPort             int    `properties:"METAL_API_PORT"`
-	RethinkdbPort            int    `properties:"RETHINKDB_PORT"`
-	MetalHammerContainerName string `properties:"METAL_HAMMER_CONTAINER_NAME"`
-	MetalCoreContainerName   string `properties:"METAL_CORE_CONTAINER_NAME"`
-	MetalAPIContainerName    string `properties:"METAL_API_CONTAINER_NAME"`
-	RethinkdbContainerName   string `properties:"RETHINKDB_CONTAINER_NAME"`
+	MetalCorePort               int    `properties:"METAL_CORE_PORT"`
+	MetalAPIPort                int    `properties:"METAL_API_PORT"`
+	RethinkdbPort               int    `properties:"RETHINKDB_PORT"`
+	MetalHammerContainerName    string `properties:"METAL_HAMMER_CONTAINER_NAME"`
+	MetalCoreContainerName      string `properties:"METAL_CORE_CONTAINER_NAME"`
+	MetalAPIContainerName       string `properties:"METAL_API_CONTAINER_NAME"`
+	NetboxAPIProxyContainerName string `properties:"NETBOX_API_PROXY_CONTAINER_NAME"`
+	RethinkdbContainerName      string `properties:"RETHINKDB_CONTAINER_NAME"`
 }
 
 var (
@@ -140,8 +141,8 @@ func spawnMetalCoreRethinkdbAndMetalAPI() {
 
 func runMetalHammer() {
 	removeMetalHammerContainer()
-	time.Sleep(25 * time.Second)
-	waitForMetalApiContainer()
+	waitForMetalAPIContainer()
+	waitForNetboxAPIProxyContainer()
 	sniffTcpPackets()
 	if _, err := sh.Output("docker-compose", "-f", "workflow_test.yaml", "run",
 		"-d", "--name", env.MetalHammerContainerName, "metal-hammer"); err != nil {
@@ -186,7 +187,7 @@ func traceTcpPackets(handle *pcap.Handle, traffic *[]string) {
 	}
 }
 
-func waitForMetalApiContainer() {
+func waitForMetalAPIContainer() {
 	for i := 0; i < 4; i++ {
 		time.Sleep(time.Second)
 		if out, err := sh.Output("docker", "logs", env.MetalAPIContainerName); err != nil {
@@ -196,6 +197,18 @@ func waitForMetalApiContainer() {
 		}
 	}
 	panic(errors.New("cannot fetch Metal-API logs"))
+}
+
+func waitForNetboxAPIProxyContainer() {
+	for i := 0; i < 25; i++ {
+		time.Sleep(time.Second)
+		if out, err := sh.Output("docker", "logs", env.NetboxAPIProxyContainerName); err != nil {
+			panic(err)
+		} else if strings.Contains(out, "Serving Flask app") {
+			return
+		}
+	}
+	panic(errors.New("cannot fetch Netbox-API-Proxy logs"))
 }
 
 func readEnvFile() {
