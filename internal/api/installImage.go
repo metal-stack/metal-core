@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (c client) InstallImage(deviceId string) (int, *models.MetalDeviceWithToken) {
+func (c client) InstallImage(deviceId string) (int, *models.MetalDeviceWithPhoneHomeToken) {
 	params := device.NewWaitForAllocationParams()
 	params.ID = deviceId
 	if ok, err := c.Device().WaitForAllocation(params); err != nil {

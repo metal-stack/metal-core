@@ -1,11 +1,12 @@
 package core
 
 import (
+	"net/http"
+
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful"
 	"go.uber.org/zap"
-	"net/http"
 
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
 )

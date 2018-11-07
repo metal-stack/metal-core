@@ -28,6 +28,10 @@ type (
 		UUID string `json:"uuid" description:"the uuid of the device to register"`
 	}
 
+	MetalHammerPhoneHomeRequest struct {
+		PhoneHomeToken string `json:"phone_home_token" description:"the jwt that was issued for the device"`
+	}
+
 	DeviceEvent struct {
 		Type EventType           `json:"type,omitempty"`
 		Old  *models.MetalDevice `json:"old,omitempty"`

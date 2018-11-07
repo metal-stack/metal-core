@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/core"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	"git.f-i-ts.de/cloud-native/metallib/bus"
@@ -8,7 +10,6 @@ import (
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/zap"
-	"os"
 )
 
 var srv core.Service
