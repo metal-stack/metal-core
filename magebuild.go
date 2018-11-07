@@ -59,13 +59,17 @@ func (BUILD) Bin() error {
 
 // (Re)build model
 func (BUILD) Model() error {
-	if _, err := os.Stat("bin/swagger"); os.IsNotExist(err) {
-		os.Mkdir("bin", 0755)
-		if err := exec.Command("wget", "-O", "bin/swagger",
-			"https://github.com/go-swagger/go-swagger/releases/download/v0.17.2/swagger_linux_amd64").Run(); err != nil {
-			return err
-		} else if err := os.Chmod("bin/swagger", 0755); err != nil {
-			return err
+	swagger := "swagger"
+	if _, err := exec.Command("which", swagger).CombinedOutput(); err != nil {
+		swagger = "bin/swagger"
+		if _, err := os.Stat(swagger); os.IsNotExist(err) {
+			os.Mkdir("bin", 0755)
+			if err := exec.Command("wget", "-O", swagger,
+				"https://github.com/go-swagger/go-swagger/releases/download/v0.17.2/swagger_linux_amd64").Run(); err != nil {
+				return err
+			} else if err := os.Chmod(swagger, 0755); err != nil {
+				return err
+			}
 		}
 	}
 	defer os.Setenv("GO111MODULE", "on")
@@ -79,13 +83,6 @@ func (b BUILD) Core() error {
 		return err
 	}
 	return sh.RunV("docker-compose", "build", "metal-core")
-}
-
-// (Re)build metal-hammer image
-func (b BUILD) Hammer() error {
-	defer os.Chdir("../..")
-	os.Chdir("test/e2e")
-	return sh.RunV("docker-compose", "-f", "workflow_test.yaml", "build", "metal-hammer")
 }
 
 // (Re)build metal-api image
@@ -104,9 +101,6 @@ func (b BUILD) Api() error {
 // (Re)build all metal images
 func (b BUILD) All() error {
 	if err := b.Core(); err != nil {
-		return err
-	}
-	if err := b.Hammer(); err != nil {
 		return err
 	}
 	return b.Api()
