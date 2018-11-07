@@ -43,9 +43,10 @@ func TestWorkflow(t *testing.T) {
 
 	// GIVEN
 	spawnMetalCoreRethinkdbAndMetalAPI()
+	sniffTcpPackets()
 
 	// WHEN
-	runMetalHammer()
+	start("metal-hammer")
 
 	// THEN
 
@@ -133,32 +134,37 @@ func spawnMetalCoreRethinkdbAndMetalAPI() {
 	readEnvFile()
 	start("nsqlookupd")
 	start("nsqd")
-	start("rethinkdb")
-	waitFor("rethinkdb", "Server ready", 5)
+	startAndWaitFor("rethinkdb", "Server ready", 5)
 	start("netbox-init-config")
-	start("netbox-postgres")
-	waitFor("netbox-postgres", "database system is ready to accept connections", 2)
-	start("netbox")
-	waitFor("netbox", "Starting gunicorn", 25)
-	start("netbox-api-proxy")
-	start("netbox-nginx")
-	waitFor("netbox-nginx", "start worker process ", 5)
-	waitFor("netbox-api-proxy", "Serving Flask app", 2)
-	start("metal-api")
-	start("metal-core")
-	waitFor("metal-api", "start metal api", 2)
-	waitFor("metal-core", "Starting metal-core", 2)
-}
-
-func runMetalHammer() {
-	sniffTcpPackets()
-	start("metal-hammer")
+	startAndWaitFor("netbox-postgres", "database system is ready to accept connections", 2)
+	startAndWaitFor("netbox", "Starting gunicorn", 25)
+	startAndWaitFor("netbox-nginx", "start worker process ", 5)
+	startAndWaitFor("netbox-api-proxy", "Serving Flask app", 2)
+	startAndWaitFor("metal-api", "start metal api", 2)
+	startAndWaitFor("metal-core", "Starting metal-core", 2)
 }
 
 func start(service string) {
-	if err := exec.Command("docker-compose", "-f", "workflow_test.yaml", "up", "--force-recreate", "--remove-orphans", "-d", service).Run(); err != nil {
+	if err := sh.RunV("docker-compose", "-f", "workflow_test.yaml", "up", "--force-recreate", "--remove-orphans", "-d", service); err != nil {
 		panic(err)
 	}
+}
+
+func waitFor(service, expected string, timeout int) {
+	for i := 0; i < timeout; i++ {
+		time.Sleep(time.Second)
+		if out, err := exec.Command("docker-compose", "-f", "workflow_test.yaml", "logs", service).CombinedOutput(); err != nil {
+			panic(err)
+		} else if strings.Contains(string(out), expected) {
+			return
+		}
+	}
+	panic(errors.New(fmt.Sprintf("cannot fetch %v logs", service)))
+}
+
+func startAndWaitFor(service, expected string, timeout int) {
+	start(service)
+	waitFor(service, expected, timeout)
 }
 
 func sniffTcpPackets() {
@@ -196,18 +202,6 @@ func traceTcpPackets(handle *pcap.Handle, traffic *[]string) {
 			*traffic = append(*traffic, payload)
 		}
 	}
-}
-
-func waitFor(service, expected string, timeout int) {
-	for i := 0; i < timeout; i++ {
-		time.Sleep(time.Second)
-		if out, err := exec.Command("docker-compose", "-f", "workflow_test.yaml", "logs", service).CombinedOutput(); err != nil {
-			panic(err)
-		} else if strings.Contains(string(out), expected) {
-			return
-		}
-	}
-	panic(errors.New(fmt.Sprintf("cannot fetch %v logs", service)))
 }
 
 func readEnvFile() {

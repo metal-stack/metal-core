@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// Format all metal-core sources
+// Format source code
 func Fmt() {
 	for _, pkg := range fetchGoPackages() {
 		if containsGoSources(pkg) {

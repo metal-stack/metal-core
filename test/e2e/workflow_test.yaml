@@ -31,9 +31,6 @@ services:
     volumes:
       - nsq-data-volume:/data
     command: /nsqlookupd -log-level error
-    ports:
-      - "${NSQLOOKUPD_TCP_PORT}"
-      - "${NSQLOOKUPD_HTTP_PORT}"
 
   nsqd:
     image: nsqio/nsq:v1.1.0
@@ -41,9 +38,6 @@ services:
     networks:
       - metal
     command: /nsqd -log-level error --lookupd-tcp-address=nsqlookupd:${NSQLOOKUPD_TCP_PORT}
-    ports:
-      - "${NSQD_TCP_PORT}"
-      - "${NSQD_HTTP_PORT}"
 
   rethinkdb:
     build:
@@ -96,7 +90,7 @@ services:
     build:
       context: ../../../metal-hammer
       dockerfile: ../metal-core/test/e2e/MetalHammer
-    image: registry.fi-ts.io/metal/metal-hammer
+    image: registry.fi-ts.io/metal/metal-hammer:test
     container_name: ${METAL_HAMMER_CONTAINER_NAME}
     networks:
       - metal
@@ -112,8 +106,6 @@ services:
     container_name: ${NETBOX_CONTAINER_NAME}
     networks:
       - metal
-    ports:
-      - "${NETBOX_PORT}:${NETBOX_API_PROXY_PORT}"
     environment:
       DB_NAME: netbox
       DB_USER: netbox
@@ -152,8 +144,6 @@ services:
     container_name: ${NETBOX_POSTGRES_CONTAINER_NAME}
     networks:
       - metal
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_USER: netbox
       POSTGRES_PASSWORD: metal
@@ -167,8 +157,6 @@ services:
     command: nginx -c /etc/netbox-nginx/nginx.conf
     networks:
       - metal
-    ports:
-      - "${NETBOX_NGINX_PORT}:${METAL_API_PORT}"
     volumes:
       - netbox-static-files:/opt/netbox/netbox/static:ro
       - netbox-nginx-config:/etc/netbox-nginx/:ro
@@ -178,8 +166,6 @@ services:
     container_name: ${NETBOX_API_PROXY_CONTAINER_NAME}
     networks:
       - metal
-    ports:
-      - "${NETBOX_API_PROXY_PORT}:${NETBOX_INTERNAL_PORT}"
     environment:
       NETBOX_API_PROXY_HOST: http://netbox:${NETBOX_API_PROXY_PORT}/
       NETBOX_API_PROXY_TOKEN: 0123456789abcdef0123456789abcdef01234567
