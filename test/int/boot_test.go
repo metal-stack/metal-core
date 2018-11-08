@@ -32,7 +32,7 @@ func TestPXEBoot(t *testing.T) {
 		InitRamDisk: []string{
 			"https://blobstore.fi-ts.io/metal/images/pxeboot-initrd.img.lz4",
 		},
-		CommandLine: fmt.Sprintf("METAL_CORE_ADDRESS=127.0.0.1:%d", srv.Config().Port),
+		CommandLine: fmt.Sprintf("METAL_CORE_ADDRESS=127.0.0.1:%d METAL_API_URL=http://%v:%d", srv.Config().Port, srv.Config().ApiIP, srv.Config().ApiPort),
 	}
 
 	// WHEN
