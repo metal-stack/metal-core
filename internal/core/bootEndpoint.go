@@ -2,14 +2,14 @@ package core
 
 import (
 	"fmt"
-	"git.f-i-ts.de/cloud-native/metallib/zapup"
-	"github.com/emicklei/go-restful"
-	"go.uber.org/zap"
 	"net/http"
 	"strings"
 
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
-	"gopkg.in/resty.v1"
+	"git.f-i-ts.de/cloud-native/metallib/zapup"
+	restful "github.com/emicklei/go-restful"
+	"go.uber.org/zap"
+	resty "gopkg.in/resty.v1"
 )
 
 type BootResponse struct {
@@ -51,35 +51,37 @@ func bootEndpoint(request *restful.Request, response *restful.Response) {
 }
 
 func createBootDiscoveryImageResponse() BootResponse {
-	cmdLine := "console=tty0"
-
 	blobstore := "https://blobstore.fi-ts.io/metal/images"
-	prefix := srv.Config().HammerImagePrefix
+	cfg := srv.Config()
+	prefix := cfg.HammerImagePrefix
 	kernel := fmt.Sprintf("%s/%s-kernel", blobstore, prefix)
 	ramdisk := fmt.Sprintf("%s/%s-initrd.img.lz4", blobstore, prefix)
 	cmdlineSource := fmt.Sprintf("%s/%s-cmdline", blobstore, prefix)
+	cmdlineOptions := []string{}
 
 	if resp, err := resty.R().Get(cmdlineSource); err != nil {
 		zapup.MustRootLogger().Error("Could not retrieve cmdline source",
 			zap.String("cmdlineSource", cmdlineSource),
 			zap.Error(err),
 		)
+		cmdlineOptions = append(cmdlineOptions, "console=tty0")
 	} else {
-		cmdLine = string(resp.Body())
+		cmdlineOptions = append(cmdlineOptions, string(resp.Body()))
 	}
-	if len(cmdLine) > 0 {
-		cmdLine += " "
-	}
-	cmdLine += fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d", srv.Config().IP, srv.Config().Port)
-	if strings.ToUpper(srv.Config().LogLevel) == "DEBUG" {
-		cmdLine += " DEBUG=1"
+
+	metalCoreAddress := fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d", cfg.IP, cfg.Port)
+	metalAPIURL := fmt.Sprintf("METAL_API_URL=%s://%s:%d", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort)
+	cmdlineOptions = append(cmdlineOptions, metalCoreAddress, metalAPIURL)
+
+	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
+		cmdlineOptions = append(cmdlineOptions, "DEBUG=1")
 	}
 	return BootResponse{
 		Kernel: kernel,
 		InitRamDisk: []string{
 			ramdisk,
 		},
-		CommandLine: cmdLine,
+		CommandLine: strings.Join(cmdlineOptions, " "),
 	}
 }
 

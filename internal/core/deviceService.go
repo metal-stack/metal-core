@@ -1,11 +1,12 @@
 package core
 
 import (
+	"net/http"
+
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/models"
-	"github.com/emicklei/go-restful"
-	"github.com/emicklei/go-restful-openapi"
-	"net/http"
+	restful "github.com/emicklei/go-restful"
+	restfulspec "github.com/emicklei/go-restful-openapi"
 )
 
 func NewDeviceService() *restful.WebService {
@@ -33,7 +34,7 @@ func NewDeviceService() *restful.WebService {
 		Param(ws.PathParameter("id", "identifier of the device").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(models.MetalDevice{}).
-		Returns(http.StatusOK, "OK", models.MetalDevice{}).
+		Returns(http.StatusOK, "OK", models.MetalDeviceWithPhoneHomeToken{}).
 		Returns(http.StatusNotFound, "Not Found", nil))
 
 	ws.Route(ws.POST("/report/{id}").

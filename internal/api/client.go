@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+
 	"git.f-i-ts.de/cloud-native/maas/metal-core/client/device"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/models"
@@ -15,7 +16,7 @@ type (
 		Config() *domain.Config
 		FindDevices(mac string) (int, []*models.MetalDevice)
 		RegisterDevice(deviceId string, request *domain.MetalHammerRegisterDeviceRequest) (int, *models.MetalDevice)
-		InstallImage(deviceId string) (int, *models.MetalDevice)
+		InstallImage(deviceId string) (int, *models.MetalDeviceWithPhoneHomeToken)
 	}
 	client struct {
 		device *device.Client
