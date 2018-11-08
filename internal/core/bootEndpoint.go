@@ -13,9 +13,9 @@ import (
 )
 
 type BootResponse struct {
-	Kernel      string   `json:"kernel"`
+	Kernel      string   `json:"kernel" optional:"true"`
 	InitRamDisk []string `json:"initrd"`
-	CommandLine string   `json:"cmdline"`
+	CommandLine string   `json:"cmdline" optional:"true"`
 }
 
 func bootEndpoint(request *restful.Request, response *restful.Response) {
