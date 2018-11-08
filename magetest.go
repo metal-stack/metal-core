@@ -39,13 +39,6 @@ func (TEST) Int() error {
 	})
 }
 
-// Run all end-to-end tests
-func (TEST) E2e() error {
-	return runTests(func(dir string) bool {
-		return dir == "./test/e2e"
-	})
-}
-
 func runTests(filter func(dir string) bool) error {
 	cnt := 0
 	for _, pkg := range fetchGoPackages() {

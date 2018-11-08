@@ -256,9 +256,7 @@
  "definitions": {
   "core.BootResponse": {
    "required": [
-    "kernel",
-    "initrd",
-    "cmdline"
+    "initrd"
    ],
    "properties": {
     "cmdline": {
@@ -307,7 +305,7 @@
     "cpu_cores",
     "disks",
     "memory",
-    "uuid"
+    "nics"
    ],
    "properties": {
     "cpu_cores": {
@@ -505,25 +503,14 @@
   },
   "models.MetalNic": {
    "required": [
-    "features",
     "mac",
-    "name",
-    "vendor"
+    "name"
    ],
    "properties": {
-    "features": {
-     "type": "array",
-     "items": {
-      "type": "string"
-     }
-    },
     "mac": {
      "type": "string"
     },
     "name": {
-     "type": "string"
-    },
-    "vendor": {
      "type": "string"
     }
    }

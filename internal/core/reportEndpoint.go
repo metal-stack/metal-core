@@ -11,7 +11,7 @@ import (
 
 // Report is send back to metal-core after installation finished
 type Report struct {
-	Success bool   `json:"success" description:"true if installation succeeded" optional:"true"`
+	Success bool   `json:"success,omitempty" description:"true if installation succeeded"`
 	Message string `json:"message" description:"if installation failed, the error message"`
 }
 
