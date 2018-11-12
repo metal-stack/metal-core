@@ -25,7 +25,8 @@ type (
 
 	MetalHammerRegisterDeviceRequest struct {
 		models.MetalDeviceHardware
-		UUID string `json:"uuid,omitempty" description:"the uuid of the device to register"`
+		UUID string            `json:"uuid,omitempty" description:"the uuid of the device to register"`
+		IPMI *models.MetalIPMI `json:"ipmi" description:"the IPMI connection configuration"`
 	}
 
 	DeviceEvent struct {

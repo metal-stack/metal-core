@@ -11,12 +11,12 @@ require (
 	github.com/go-openapi/swag v0.17.0
 	github.com/go-openapi/validate v0.17.0
 	github.com/google/go-cmp v0.2.0 // indirect
-	github.com/google/gopacket v0.0.0-20151010222305-d67ddb98d5a1
-	github.com/google/tcpproxy v0.0.0-20180808230851-dfa16c61dad2
+	github.com/google/gopacket v0.0.0-20151010222305-d67ddb98d5a1 // indirect
+	github.com/google/tcpproxy v0.0.0-20180808230851-dfa16c61dad2 // indirect
 	github.com/json-iterator/go v1.1.5 // indirect
 	github.com/kelseyhightower/envconfig v1.3.0
 	github.com/magefile/mage v1.6.2
-	github.com/magiconair/properties v0.0.0-20180515204000-c2353362d570
+	github.com/magiconair/properties v0.0.0-20180515204000-c2353362d570 // indirect
 	github.com/mdlayher/raw v0.0.0-20181016155347-fa5ef3332ca9 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
