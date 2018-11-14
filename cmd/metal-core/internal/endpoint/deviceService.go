@@ -1,15 +1,15 @@
-package core
+package endpoint
 
 import (
+	"git.f-i-ts.de/cloud-native/maas/metal-core/domain"
 	"net/http"
 
-	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/models"
-	restful "github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
+	"github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful-openapi"
 )
 
-func NewDeviceService() *restful.WebService {
+func (e endpoint) NewDeviceService() *restful.WebService {
 	ws := new(restful.WebService)
 	ws.Path("/device").
 		Consumes(restful.MIME_JSON).
@@ -18,7 +18,7 @@ func NewDeviceService() *restful.WebService {
 	tags := []string{"device"}
 
 	ws.Route(ws.POST("/register/{id}").
-		To(registerEndpoint).
+		To(e.Register).
 		Doc("register device by ID").
 		Param(ws.PathParameter("id", "identifier of the device").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
@@ -29,7 +29,7 @@ func NewDeviceService() *restful.WebService {
 		Returns(http.StatusInternalServerError, "Accepted", nil))
 
 	ws.Route(ws.GET("/install/{id}").
-		To(installEndpoint).
+		To(e.Install).
 		Doc("install device by ID").
 		Param(ws.PathParameter("id", "identifier of the device").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
@@ -38,12 +38,12 @@ func NewDeviceService() *restful.WebService {
 		Returns(http.StatusNotFound, "Not Found", nil))
 
 	ws.Route(ws.POST("/report/{id}").
-		To(reportEndpoint).
+		To(e.Report).
 		Doc("report device by ID").
 		Param(ws.PathParameter("id", "identifier of the device").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads(Report{}).
-		Writes(BootResponse{}).
+		Reads(domain.Report{}).
+		Writes(domain.BootResponse{}).
 		Returns(http.StatusOK, "OK", models.MetalDevice{}).
 		Returns(http.StatusNotAcceptable, "Not acceptable", nil).
 		Returns(http.StatusInternalServerError, "Accepted", nil))

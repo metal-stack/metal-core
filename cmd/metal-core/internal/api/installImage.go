@@ -12,13 +12,14 @@ import (
 func (c client) InstallImage(deviceId string) (int, *models.MetalDeviceWithPhoneHomeToken) {
 	params := device.NewWaitForAllocationParams()
 	params.ID = deviceId
-	if ok, err := c.Device().WaitForAllocation(params); err != nil {
+
+	ok, err := c.DeviceClient.WaitForAllocation(params)
+	if err != nil {
 		zapup.MustRootLogger().Error("Failed to GET installation image from Metal-APIs wait endpoint",
 			zap.String("deviceID", deviceId),
 			zap.Error(err),
 		)
 		return http.StatusInternalServerError, nil
-	} else {
-		return http.StatusOK, ok.Payload
 	}
+	return http.StatusOK, ok.Payload
 }

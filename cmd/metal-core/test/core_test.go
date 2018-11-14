@@ -1,9 +1,9 @@
-package int
+package test
 
 import (
 	"fmt"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/domain"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/cmd/metal-core/internal/rest"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/models"
 	"github.com/emicklei/go-restful"
 	"github.com/stretchr/testify/assert"
@@ -41,7 +41,7 @@ func registerDevice() (*resty.Response, error) {
 	rdr.Nics = []*models.MetalNic{}
 	rdr.Disks = []*models.MetalBlockDevice{}
 	return resty.R().SetBody(rdr).
-		Post(fmt.Sprintf("http://localhost:%d/device/register/%v", srv.Config().Port, devId))
+		Post(fmt.Sprintf("http://localhost:%d/device/register/%v", cfg.Port, devId))
 }
 
 func registerDeviceAPIEndpointMock(request *restful.Request, response *restful.Response) {

@@ -1,23 +1,21 @@
-package core
+package endpoint
 
 import (
-	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/ipmi"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/cmd/metal-core/internal/ipmi"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/cmd/metal-core/internal/rest"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
 	"go.uber.org/zap"
 	"net/http"
 )
 
-// Report is send back to metal-core after installation finished
-type Report struct {
-	Success bool   `json:"success,omitempty" description:"true if installation succeeded"`
-	Message string `json:"message" description:"if installation failed, the error message"`
-}
+func (e endpoint) Report(request *restful.Request, response *restful.Response) {
+	var err error
+	report := &domain.Report{}
 
-func reportEndpoint(request *restful.Request, response *restful.Response) {
-	report := &Report{}
-	if err := request.ReadEntity(report); err != nil {
+	err = request.ReadEntity(report)
+	if err != nil {
 		rest.Respond(response, http.StatusInternalServerError, nil)
 		return
 	}
@@ -34,7 +32,8 @@ func reportEndpoint(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	if err := ipmi.SetBootDevHd(srv.IPMI()); err != nil {
+	err = ipmi.SetBootDevHd(e.IpmiConnection)
+	if err != nil {
 		zapup.MustRootLogger().Error("Unable to set boot order of device to HD",
 			zap.String("deviceID", devId),
 			zap.Error(err),

@@ -28,14 +28,14 @@ func (TEST) All() error {
 // Run all unit tests
 func (TEST) Unit() error {
 	return runTests(func(dir string) bool {
-		return !strings.HasPrefix(dir, "./test")
+		return !strings.HasPrefix(dir, "./cmd/metal-core/test")
 	})
 }
 
 // Run all integration tests
 func (TEST) Int() error {
 	return runTests(func(dir string) bool {
-		return dir == "./test/int"
+		return dir == "./cmd/metal-core/test"
 	})
 }
 

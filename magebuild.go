@@ -24,7 +24,9 @@ func Build() error {
 	gitsha, _ := sh.Output("git", "rev-parse", "--short=8", "HEAD")
 	buildDate, _ := sh.Output("date", "-Iseconds")
 	ldflags := fmt.Sprintf("-X 'git.f-i-ts.de/cloud-native/metallib/version.Version=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Revision=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Gitsha1=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Builddate=%v'", version, gitVersion, gitsha, buildDate)
-	return sh.RunV("go", "build", "-tags", "netgo", "-ldflags", ldflags, "-o", "bin/metal-core")
+	defer os.Chdir("../..")
+	os.Chdir("cmd/metal-core")
+	return sh.RunV("go", "build", "-tags", "netgo", "-ldflags", ldflags, "-o", "../../bin/metal-core")
 }
 
 // (Re)build metal-core specification
@@ -66,7 +68,7 @@ func (BUILD) Model() error {
 	}
 	defer os.Setenv("GO111MODULE", "on")
 	os.Setenv("GO111MODULE", "off")
-	return sh.RunV("bin/swagger", "generate", "client", "-f", "internal/domain/metal-api.json", "--skip-validation")
+	return sh.RunV("bin/swagger", "generate", "client", "-f", "domain/metal-api.json", "--skip-validation")
 }
 
 // (Re)build metal-core image

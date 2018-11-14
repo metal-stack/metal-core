@@ -1,10 +1,10 @@
-package int
+package test
 
 import (
 	"encoding/json"
 	"fmt"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/core"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/internal/rest"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/cmd/metal-core/internal/rest"
+	"git.f-i-ts.de/cloud-native/maas/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/maas/metal-core/models"
 	"github.com/emicklei/go-restful"
 	"github.com/stretchr/testify/assert"
@@ -27,19 +27,19 @@ func TestPXEBoot(t *testing.T) {
 	})
 	defer shutdown()
 
-	expected := core.BootResponse{
+	expected := domain.BootResponse{
 		Kernel: "https://blobstore.fi-ts.io/metal/images/pxeboot-kernel",
 		InitRamDisk: []string{
 			"https://blobstore.fi-ts.io/metal/images/pxeboot-initrd.img.lz4",
 		},
-		CommandLine: fmt.Sprintf("METAL_CORE_ADDRESS=127.0.0.1:%d METAL_API_URL=http://%v:%d", srv.Config().Port, srv.Config().ApiIP, srv.Config().ApiPort),
+		CommandLine: fmt.Sprintf("METAL_CORE_ADDRESS=127.0.0.1:%d METAL_API_URL=http://%v:%d", cfg.Port, cfg.ApiIP, cfg.ApiPort),
 	}
 
 	// WHEN
 	resp, err := fakePXEBootRequest()
 
 	// THEN
-	bootResponse := &core.BootResponse{}
+	bootResponse := &domain.BootResponse{}
 	if err != nil {
 		assert.Failf(t, "Invalid boot response: %v", err.Error())
 	} else if err := json.Unmarshal(resp.Body(), bootResponse); err != nil {
@@ -64,5 +64,5 @@ func findDevicesAPIEndpointMock(request *restful.Request, response *restful.Resp
 }
 
 func fakePXEBootRequest() (*resty.Response, error) {
-	return resty.R().Get(fmt.Sprintf("http://127.0.0.1:%d/v1/boot/%v", srv.Config().Port, fakeMac))
+	return resty.R().Get(fmt.Sprintf("http://127.0.0.1:%d/v1/boot/%v", cfg.Port, fakeMac))
 }
