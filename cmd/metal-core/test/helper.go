@@ -54,12 +54,12 @@ func runMetalCoreServer() {
 	transport := client.New(fmt.Sprintf("%v:%d", cfg.ApiIP, cfg.ApiPort), "", nil)
 
 	appContext = &domain.AppContext{
-		Config:           cfg,
-		ApiClientHandler: api.Handler,
-		ServerHandler:    server.Handler,
-		EndpointHandler:  ep.Handler,
-		EventHandler:     event.Handler,
-		DeviceClient:     device.New(transport, strfmt.Default),
+		Config:              cfg,
+		ApiClientHandler:    api.Handler,
+		ServerHandler:       server.Handler,
+		EndpointHandler:     ep.Handler,
+		EventHandlerHandler: event.Handler,
+		DeviceClient:        device.New(transport, strfmt.Default),
 		IpmiConnection: &domain.IpmiConnection{
 			// Requires gateway of the control plane for running in Metal Lab... this is just a quick workaround for the poc
 			Hostname:  cfg.IP[:strings.LastIndex(cfg.IP, ".")] + ".1",

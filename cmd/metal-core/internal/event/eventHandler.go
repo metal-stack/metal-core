@@ -6,6 +6,6 @@ type listener struct {
 	*domain.AppContext
 }
 
-func Handler(ctx *domain.AppContext) domain.EventReaction {
+func Handler(ctx *domain.AppContext) domain.EventHandler {
 	return listener{ctx}
 }

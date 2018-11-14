@@ -27,7 +27,7 @@ type (
 		Report(request *restful.Request, response *restful.Response)
 	}
 
-	EventReaction interface {
+	EventHandler interface {
 		FreeDevice(device *models.MetalDevice)
 	}
 
@@ -57,12 +57,12 @@ type (
 
 	AppContext struct {
 		*Config
-		ApiClientHandler func(*AppContext) APIClient
-		ServerHandler    func(*AppContext) Server
-		EndpointHandler  func(*AppContext) Endpoint
-		EventHandler     func(*AppContext) EventReaction
-		DeviceClient     *device.Client
-		IpmiConnection   *IpmiConnection
+		ApiClientHandler    func(*AppContext) APIClient
+		ServerHandler       func(*AppContext) Server
+		EndpointHandler     func(*AppContext) Endpoint
+		EventHandlerHandler func(*AppContext) EventHandler
+		DeviceClient        *device.Client
+		IpmiConnection      *IpmiConnection
 	}
 )
 
@@ -78,6 +78,6 @@ func (a *AppContext) Endpoint() Endpoint {
 	return a.EndpointHandler(a)
 }
 
-func (a *AppContext) EventReaction() EventReaction {
-	return a.EventHandler(a)
+func (a *AppContext) EventHandler() EventHandler {
+	return a.EventHandlerHandler(a)
 }
