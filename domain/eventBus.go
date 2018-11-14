@@ -1,6 +1,6 @@
 package domain
 
-import "git.f-i-ts.de/cloud-native/maas/metal-core/models"
+import "git.f-i-ts.de/cloud-native/metal/metal-core/models"
 
 type (
 	EventType string

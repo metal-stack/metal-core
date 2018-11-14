@@ -35,15 +35,19 @@ func (b BUILD) Spec() error {
 	exec.Command("docker", "rm", "-f", "spec-metal-core").Run()
 	if err := b.Core(); err != nil {
 		return err
-	} else if err := sh.RunV("docker-compose", "run", "--name", "spec-metal-core", "-d", "metal-core"); err != nil {
-		return err
-	} else if out, err := sh.Output("docker", "inspect", "-f", "{{ .NetworkSettings.Networks.metal.IPAddress }}", "spec-metal-core"); err != nil {
-		return err
-	} else if out, err := sh.Output("curl", "-s", fmt.Sprintf("http://%v:4242/apidocs.json", out)); err != nil {
-		return err
-	} else {
-		return ioutil.WriteFile("spec/metal-core.json", []byte(out), 0644)
 	}
+	if err := sh.RunV("docker-compose", "run", "--name", "spec-metal-core", "-d", "metal-core"); err != nil {
+		return err
+	}
+	out, err := sh.Output("docker", "inspect", "-f", "{{ .NetworkSettings.Networks.metal.IPAddress }}", "spec-metal-core")
+	if err != nil {
+		return err
+	}
+	out, err = sh.Output("curl", "-s", fmt.Sprintf("http://%v:4242/apidocs.json", out))
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile("spec/metal-core.json", []byte(out), 0644)
 }
 
 // (Re)build metal-core binary in the bin subdirectory
@@ -61,7 +65,8 @@ func (BUILD) Model() error {
 			if err := exec.Command("wget", "-O", swagger,
 				"https://github.com/go-swagger/go-swagger/releases/download/v0.17.2/swagger_linux_amd64").Run(); err != nil {
 				return err
-			} else if err := os.Chmod(swagger, 0755); err != nil {
+			}
+			if err := os.Chmod(swagger, 0755); err != nil {
 				return err
 			}
 		}

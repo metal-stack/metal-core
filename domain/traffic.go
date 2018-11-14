@@ -2,7 +2,7 @@ package domain
 
 import (
 	"errors"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/models"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
 	"go.uber.org/zap"

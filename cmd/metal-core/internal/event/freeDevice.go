@@ -1,8 +1,8 @@
 package event
 
 import (
-	"git.f-i-ts.de/cloud-native/maas/metal-core/cmd/metal-core/internal/ipmi"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/models"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/ipmi"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"go.uber.org/zap"
 )

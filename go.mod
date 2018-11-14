@@ -1,4 +1,4 @@
-module git.f-i-ts.de/cloud-native/maas/metal-core
+module git.f-i-ts.de/cloud-native/metal/metal-core
 
 require (
 	git.f-i-ts.de/cloud-native/metallib v0.0.0-20181029133253-47681819e5fe

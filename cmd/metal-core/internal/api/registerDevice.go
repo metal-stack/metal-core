@@ -1,11 +1,11 @@
 package api
 
 import (
-	"git.f-i-ts.de/cloud-native/maas/metal-core/domain"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"net/http"
 
-	"git.f-i-ts.de/cloud-native/maas/metal-core/client/device"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/models"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/client/device"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"go.uber.org/zap"
 )

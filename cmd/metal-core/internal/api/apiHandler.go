@@ -1,6 +1,6 @@
 package api
 
-import "git.f-i-ts.de/cloud-native/maas/metal-core/domain"
+import "git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 
 type client struct {
 	*domain.AppContext

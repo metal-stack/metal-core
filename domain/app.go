@@ -1,8 +1,8 @@
 package domain
 
 import (
-	"git.f-i-ts.de/cloud-native/maas/metal-core/client/device"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/models"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/client/device"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"github.com/emicklei/go-restful"
 )
 

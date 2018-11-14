@@ -1,5 +1,5 @@
 BINARY := metal-core
-MAINMODULE := git.f-i-ts.de/cloud-native/maas/metal-core
+MAINMODULE := git.f-i-ts.de/cloud-native/metal/metal-core
 COMMONDIR := $(or ${COMMONDIR},../../common)
 
 include $(COMMONDIR)/Makefile.inc

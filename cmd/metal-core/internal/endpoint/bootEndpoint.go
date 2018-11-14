@@ -2,8 +2,8 @@ package endpoint
 
 import (
 	"fmt"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/cmd/metal-core/internal/rest"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/domain"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/rest"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"net/http"
 	"strings"
 

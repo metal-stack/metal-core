@@ -1,9 +1,9 @@
 package endpoint
 
 import (
-	"git.f-i-ts.de/cloud-native/maas/metal-core/cmd/metal-core/internal/ipmi"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/cmd/metal-core/internal/rest"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/domain"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/ipmi"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/rest"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
 	"go.uber.org/zap"

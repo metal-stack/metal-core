@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/client/device"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/cmd/metal-core/internal/api"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/cmd/metal-core/internal/endpoint"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/cmd/metal-core/internal/event"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/cmd/metal-core/internal/server"
-	"git.f-i-ts.de/cloud-native/maas/metal-core/domain"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/client/device"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/api"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/endpoint"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/event"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/server"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"github.com/go-openapi/strfmt"
 	"os"
 	"strings"

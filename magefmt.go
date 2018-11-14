@@ -19,9 +19,8 @@ func Fmt() {
 func fetchGoPackages() []string {
 	if out, err := exec.Command("find", "./cmd", "-mindepth", "1", "-type", "d").CombinedOutput(); err == nil && len(out) > 0 {
 		return append(append(strings.Split(string(out), "\n"), "."), "./domain")
-	} else {
-		return []string{}
 	}
+	return []string{}
 }
 
 func containsGoSources(dir string) bool {

@@ -1,10 +1,10 @@
 package endpoint
 
 import (
-	"git.f-i-ts.de/cloud-native/maas/metal-core/domain"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"net/http"
 
-	"git.f-i-ts.de/cloud-native/maas/metal-core/models"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
 )
