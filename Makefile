@@ -17,4 +17,4 @@ spec:
 .PHONY: generate-client
 generate-client:
 	rm -rf client/*
-	GO111MODULE=off swagger generate client -f internal/domain/metal-api.json --skip-validation
+	GO111MODULE=off swagger generate client -f domain/metal-api.json --skip-validation
