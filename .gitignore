@@ -1,5 +1,6 @@
 vendor
 bin
 .idea
+.vscode
 models
 client
