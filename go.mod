@@ -22,5 +22,4 @@ require (
 	go.uber.org/zap v1.9.1
 	golang.org/x/net v0.0.0-20181114220301-adae6a3d119a
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
-	gopkg.in/resty.v1 v1.10.2
 )

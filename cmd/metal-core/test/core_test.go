@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
+	"github.com/emicklei/go-restful"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/resty.v1"
 	"net/http"
 	"testing"
 )
@@ -16,29 +16,28 @@ type apiHandlerCoreTest struct{}
 
 func TestLoggingMiddleware(t *testing.T) {
 	// GIVEN
-	runMetalCoreServer(func(ctx *domain.AppContext) domain.APIClient {
+	e := mockApiEndpoint(func(ctx *domain.AppContext) domain.APIClient {
 		return apiHandlerCoreTest{}
 	})
 	defer deleteLogFile()
 
+	restful.Add(e.NewDeviceService())
+
+	payload := &domain.MetalHammerRegisterDeviceRequest{
+		UUID: devId,
+	}
+	payload.Nics = []*models.MetalNic{}
+	payload.Disks = []*models.MetalBlockDevice{}
+
 	// WHEN
-	registerDevice()
+	sc := doPost(fmt.Sprintf("/device/register/%v", devId), payload)
 
 	// THEN
+	assert.Equal(t, http.StatusOK, sc)
 	logs := getLogs()
 	assert.Contains(t, logs, "Register device at Metal-API")
 	assert.Contains(t, logs, "Device registered")
 	assert.NotContains(t, logs, "level=error")
-}
-
-func registerDevice() (*resty.Response, error) {
-	rdr := &domain.MetalHammerRegisterDeviceRequest{
-		UUID: devId,
-	}
-	rdr.Nics = []*models.MetalNic{}
-	rdr.Disks = []*models.MetalBlockDevice{}
-	return resty.R().SetBody(rdr).
-		Post(fmt.Sprintf("http://localhost:%d/device/register/%v", cfg.Port, devId))
 }
 
 func (a apiHandlerCoreTest) FindDevices(mac string) (int, []*models.MetalDevice) {

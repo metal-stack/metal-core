@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/rest"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
 	"go.uber.org/zap"
-	"gopkg.in/resty.v1"
 )
 
 func (e endpoint) Boot(request *restful.Request, response *restful.Response) {
@@ -57,14 +57,21 @@ func createBootDiscoveryImageResponse(cfg *domain.Config) domain.BootResponse {
 	metalAPIURL := fmt.Sprintf("METAL_API_URL=%s://%s:%d", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort)
 
 	var cmdlineOptions []string
-	if resp, err := resty.R().Get(cmdlineSource); err != nil {
+	if resp, err := http.Get(cmdlineSource); err != nil {
 		zapup.MustRootLogger().Error("Could not retrieve cmdline source",
 			zap.String("cmdlineSource", cmdlineSource),
 			zap.Error(err),
 		)
 		cmdlineOptions = append(cmdlineOptions, "console=tty0")
 	} else {
-		cmdlineOptions = append(cmdlineOptions, string(resp.Body()))
+		if body, err := ioutil.ReadAll(resp.Body); err != nil {
+			zapup.MustRootLogger().Error("Could not read cmdline source",
+				zap.String("cmdlineSource", cmdlineSource),
+				zap.Error(err),
+			)
+		} else {
+			cmdlineOptions = append(cmdlineOptions, string(body))
+		}
 	}
 	cmdlineOptions = append(cmdlineOptions, metalCoreAddress, metalAPIURL)
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
