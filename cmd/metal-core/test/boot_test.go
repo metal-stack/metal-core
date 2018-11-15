@@ -3,29 +3,25 @@ package test
 import (
 	"encoding/json"
 	"fmt"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/rest"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
-	"github.com/emicklei/go-restful"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/resty.v1"
 	"net/http"
 	"strings"
 	"testing"
-
-	"gopkg.in/resty.v1"
 )
 
 var fakeMac = "00:11:22:33:44:55"
 
+type apiHandlerBootTest struct{}
+
 func TestPXEBoot(t *testing.T) {
 	// GIVEN
-	runMetalCoreServer()
-	mockMetalAPIServer(endpoint{
-		path:    "/device/find",
-		handler: findDevicesAPIEndpointMock,
-		method:  http.MethodGet,
+	runMetalCoreServer(func(ctx *domain.AppContext) domain.APIClient {
+		return apiHandlerBootTest{}
 	})
-	defer shutdown()
+	defer truncateLogFile()
 
 	expected := domain.BootResponse{
 		Kernel: "https://blobstore.fi-ts.io/metal/images/pxeboot-kernel",
@@ -39,30 +35,39 @@ func TestPXEBoot(t *testing.T) {
 	resp, err := fakePXEBootRequest()
 
 	// THEN
-	bootResponse := &domain.BootResponse{}
 	if err != nil {
 		assert.Failf(t, "Invalid boot response: %v", err.Error())
-	} else if err := json.Unmarshal(resp.Body(), bootResponse); err != nil {
+	}
+	bootResponse := &domain.BootResponse{}
+	err = json.Unmarshal(resp.Body(), bootResponse)
+	if err != nil {
 		assert.Failf(t, "Invalid boot response: %v", string(resp.Body()))
-	} else {
-		assert.Equal(t, expected.Kernel, bootResponse.Kernel)
-		assert.Equal(t, expected.InitRamDisk, bootResponse.InitRamDisk)
-		bootResponse.CommandLine = bootResponse.CommandLine[strings.Index(bootResponse.CommandLine, "METAL_CORE_ADDRESS"):]
-		assert.Equal(t, expected.CommandLine, bootResponse.CommandLine)
-		assert.Equal(t, http.StatusOK, resp.StatusCode())
+		return
 	}
-}
-
-func findDevicesAPIEndpointMock(request *restful.Request, response *restful.Response) {
-	if request.QueryParameter("mac") == fakeMac {
-		rest.Respond(response, http.StatusOK, []models.MetalDevice{})
-	} else {
-		rest.Respond(response, http.StatusAlreadyReported, []models.MetalDevice{
-			{}, // Simulate at least one existing device
-		})
-	}
+	assert.Equal(t, expected.Kernel, bootResponse.Kernel)
+	assert.Equal(t, expected.InitRamDisk, bootResponse.InitRamDisk)
+	bootResponse.CommandLine = bootResponse.CommandLine[strings.Index(bootResponse.CommandLine, "METAL_CORE_ADDRESS"):]
+	assert.Equal(t, expected.CommandLine, bootResponse.CommandLine)
+	assert.Equal(t, http.StatusOK, resp.StatusCode())
 }
 
 func fakePXEBootRequest() (*resty.Response, error) {
 	return resty.R().Get(fmt.Sprintf("http://127.0.0.1:%d/v1/boot/%v", cfg.Port, fakeMac))
+}
+
+func (a apiHandlerBootTest) FindDevices(mac string) (int, []*models.MetalDevice) {
+	if mac == fakeMac {
+		return http.StatusOK, []*models.MetalDevice{}
+	}
+	return http.StatusAlreadyReported, []*models.MetalDevice{
+		{}, // Simulate at least one existing device
+	}
+}
+
+func (a apiHandlerBootTest) RegisterDevice(deviceId string, request *domain.MetalHammerRegisterDeviceRequest) (int, *models.MetalDevice) {
+	return -1, nil
+}
+
+func (a apiHandlerBootTest) InstallImage(deviceId string) (int, *models.MetalDeviceWithPhoneHomeToken) {
+	return -1, nil
 }
