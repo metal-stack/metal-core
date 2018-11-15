@@ -10,7 +10,6 @@ import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"github.com/go-openapi/strfmt"
 	"os"
-	"strings"
 
 	"git.f-i-ts.de/cloud-native/metallib/bus"
 	"git.f-i-ts.de/cloud-native/metallib/version"
@@ -66,14 +65,6 @@ func init() {
 		EndpointHandler:     endpoint.Handler,
 		EventHandlerHandler: event.Handler,
 		DeviceClient:        device.New(transport, strfmt.Default),
-		IpmiConnection: &domain.IpmiConnection{
-			// Requires gateway of the control plane for running in Metal Lab... this is just a quick workaround for the poc
-			Hostname:  cfg.IP[:strings.LastIndex(cfg.IP, ".")] + ".1",
-			Interface: "lanplus",
-			Port:      6230,
-			Username:  "vagrant",
-			Password:  "vagrant",
-		},
 	}
 
 	initConsumer()

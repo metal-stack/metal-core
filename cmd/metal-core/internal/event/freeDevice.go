@@ -10,7 +10,16 @@ import (
 func (l listener) FreeDevice(device *models.MetalDevice) {
 	var err error
 
-	err = ipmi.SetBootDevPxe(l.IpmiConnection)
+	ipmiConn := l.ApiClient().IPMIData(device.ID)
+	if ipmiConn == nil {
+		zapup.MustRootLogger().Error("Unable to set read IPMI connection details",
+			zap.Any("device", device),
+			zap.Error(err),
+		)
+		return
+	}
+
+	err = ipmi.SetBootDevPxe(ipmiConn)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to set boot order of device to HD",
 			zap.Any("device", device),
@@ -23,7 +32,7 @@ func (l listener) FreeDevice(device *models.MetalDevice) {
 		zap.Any("device", device),
 	)
 
-	err = ipmi.PowerOff(l.IpmiConnection)
+	err = ipmi.PowerOff(ipmiConn)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to power off device",
 			zap.Any("device", device),
@@ -32,7 +41,7 @@ func (l listener) FreeDevice(device *models.MetalDevice) {
 		return
 	}
 
-	err = ipmi.PowerOn(l.IpmiConnection)
+	err = ipmi.PowerOn(ipmiConn)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to power on device",
 			zap.Any("device", device),

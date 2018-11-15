@@ -49,14 +49,6 @@ func runMetalCoreServer(apiHandler func(ctx *domain.AppContext) domain.APIClient
 		EndpointHandler:     ep.Handler,
 		EventHandlerHandler: event.Handler,
 		DeviceClient:        device.New(transport, strfmt.Default),
-		IpmiConnection: &domain.IpmiConnection{
-			// Requires gateway of the control plane for running in Metal Lab... this is just a quick workaround for the poc
-			Hostname:  cfg.IP[:strings.LastIndex(cfg.IP, ".")] + ".1",
-			Interface: "lanplus",
-			Port:      6230,
-			Username:  "vagrant",
-			Password:  "vagrant",
-		},
 	}
 
 	go func() {

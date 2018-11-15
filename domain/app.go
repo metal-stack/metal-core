@@ -63,7 +63,6 @@ type (
 		EndpointHandler     func(*AppContext) Endpoint
 		EventHandlerHandler func(*AppContext) EventHandler
 		DeviceClient        *device.Client
-		IpmiConnection      *IpmiConnection
 	}
 )
 
