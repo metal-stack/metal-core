@@ -10,8 +10,8 @@ import (
 func (l listener) FreeDevice(device *models.MetalDevice) {
 	var err error
 
-	ipmiConn := l.ApiClient().IPMIData(device.ID)
-	if ipmiConn == nil {
+	ipmiConn, err := l.ApiClient().IPMIData(device.ID)
+	if err != nil {
 		zapup.MustRootLogger().Error("Unable to set read IPMI connection details",
 			zap.Any("device", device),
 			zap.Error(err),

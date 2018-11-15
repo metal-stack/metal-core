@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/device"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
@@ -9,17 +10,17 @@ import (
 	"strings"
 )
 
-func (c client) IPMIData(deviceId string) *domain.IpmiConnection {
+func (c client) IPMIData(deviceId string) (*domain.IpmiConnection, error) {
 	params := device.NewIPMIDataParams()
 	params.ID = deviceId
 
 	ok, err := c.DeviceClient.IPMIData(params)
 	if err != nil {
-		zapup.MustRootLogger().Error("Device(s) not found",
+		zapup.MustRootLogger().Error("IPMI for device not found",
 			zap.String("mac", deviceId),
 			zap.Error(err),
 		)
-		return nil
+		return nil, fmt.Errorf("ipmi for device %s not found: %v", deviceId, err)
 	}
 
 	ipmiData := ok.Payload
@@ -37,5 +38,5 @@ func (c client) IPMIData(deviceId string) *domain.IpmiConnection {
 		Password:  *ipmiData.Password,
 	}
 
-	return ipmiConn
+	return ipmiConn, nil
 }

@@ -32,9 +32,9 @@ func (e endpoint) Report(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	ipmiConn := e.ApiClient().IPMIData(devId)
-	if ipmiConn == nil {
-		rest.Respond(response, http.StatusNotAcceptable, nil)
+	ipmiConn, err := e.ApiClient().IPMIData(devId)
+	if err != nil {
+		rest.Respond(response, http.StatusInternalServerError, nil)
 		return
 	}
 

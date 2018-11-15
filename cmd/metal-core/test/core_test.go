@@ -56,6 +56,6 @@ func (a apiHandlerCoreTest) InstallImage(deviceId string) (int, *models.MetalDev
 	return -1, nil
 }
 
-func (a apiHandlerCoreTest) IPMIData(deviceId string) *domain.IpmiConnection {
-	return nil
+func (a apiHandlerCoreTest) IPMIData(deviceId string) (*domain.IpmiConnection, error) {
+	return nil, nil
 }
