@@ -15,6 +15,6 @@ require (
 	github.com/stretchr/testify v1.2.2
 	github.com/vmware/goipmi v0.0.0-20151205002058-ee598d2a3447
 	go.uber.org/zap v1.9.1
-	golang.org/x/net v0.0.0-20181005035420-146acd28ed58
+	golang.org/x/net v0.0.0-20181114220301-adae6a3d119a
 	gopkg.in/resty.v1 v1.9.1
 )

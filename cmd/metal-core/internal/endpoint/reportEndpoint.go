@@ -32,7 +32,13 @@ func (e endpoint) Report(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	err = ipmi.SetBootDevHd(e.IpmiConnection)
+	ipmiConn := e.ApiClient().IPMIData(devId)
+	if ipmiConn == nil {
+		rest.Respond(response, http.StatusNotAcceptable, nil)
+		return
+	}
+
+	err = ipmi.SetBootDevHd(ipmiConn)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to set boot order of device to HD",
 			zap.String("deviceID", devId),

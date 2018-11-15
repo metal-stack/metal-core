@@ -11,6 +11,7 @@ type (
 		FindDevices(mac string) (int, []*models.MetalDevice)
 		RegisterDevice(deviceId string, request *MetalHammerRegisterDeviceRequest) (int, *models.MetalDevice)
 		InstallImage(deviceId string) (int, *models.MetalDeviceWithPhoneHomeToken)
+		IPMIData(deviceId string) *IpmiConnection
 	}
 
 	Server interface {

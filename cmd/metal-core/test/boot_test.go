@@ -71,3 +71,7 @@ func (a apiHandlerBootTest) RegisterDevice(deviceId string, request *domain.Meta
 func (a apiHandlerBootTest) InstallImage(deviceId string) (int, *models.MetalDeviceWithPhoneHomeToken) {
 	return -1, nil
 }
+
+func (a apiHandlerBootTest) IPMIData(deviceId string) *domain.IpmiConnection {
+	return nil
+}
