@@ -1,42 +1,32 @@
 package test
 
 import (
-	"context"
 	"fmt"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/device"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/api"
 	ep "git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/endpoint"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/event"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/server"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
-	"github.com/emicklei/go-restful"
 	"github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 	"github.com/kelseyhightower/envconfig"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"strings"
 	"time"
 )
 
-type endpoint struct {
-	path    string
-	handler func(request *restful.Request, response *restful.Response)
-	method  string
-}
-
 const logFilename = "output.log"
 
 var (
-	apiServer  *http.Server
 	cfg        *domain.Config
 	appContext *domain.AppContext
 )
 
-func runMetalCoreServer() {
+func runMetalCoreServer(apiHandler func(ctx *domain.AppContext) domain.APIClient) {
 	if cfg != nil {
+		appContext.ApiClientHandler = apiHandler
 		return
 	}
 	os.Setenv(zapup.KeyOutput, logFilename)
@@ -44,7 +34,6 @@ func runMetalCoreServer() {
 	os.Setenv("METAL_CORE_SITE_ID", "FRA")
 	os.Setenv("METAL_CORE_RACK_ID", "Vagrant Rack 1")
 	os.Setenv("METAL_CORE_PORT", "10000")
-	os.Setenv("METAL_CORE_METAL_API_PORT", "10001")
 	cfg = &domain.Config{}
 	if err := envconfig.Process("METAL_CORE", cfg); err != nil {
 		fmt.Println("Cannot fetch configuration")
@@ -55,7 +44,7 @@ func runMetalCoreServer() {
 
 	appContext = &domain.AppContext{
 		Config:              cfg,
-		ApiClientHandler:    api.Handler,
+		ApiClientHandler:    apiHandler,
 		ServerHandler:       server.Handler,
 		EndpointHandler:     ep.Handler,
 		EventHandlerHandler: event.Handler,
@@ -77,42 +66,24 @@ func runMetalCoreServer() {
 }
 
 func getLogs() string {
-	if logs, err := ioutil.ReadFile(logFilename); err != nil {
+	logs, err := ioutil.ReadFile(logFilename)
+	if err != nil {
 		panic(err)
-	} else {
-		os.Remove(logFilename)
-		os.Unsetenv(zapup.KeyOutput)
-		return strings.TrimSpace(string(logs))
 	}
+	return strings.TrimSpace(string(logs))
 }
 
-func mockMetalAPIServer(ee ...endpoint) {
-	handler := restful.NewContainer()
-	ws := new(restful.WebService)
-	ws.Consumes(restful.MIME_JSON).
-		Produces(restful.MIME_JSON)
-	for _, e := range ee {
-		ws.Route(ws.Method(e.method).Path(e.path).To(e.handler))
+func truncateLogFile() {
+	logFile, err := os.OpenFile(logFilename, os.O_RDWR, 0666)
+	if err != nil {
+		return
 	}
-	handler.Add(ws)
+	defer logFile.Close()
 
-	apiServer = &http.Server{
-		Addr:    fmt.Sprintf("%v:%d", cfg.ApiIP, cfg.ApiPort),
-		Handler: handler,
-	}
-	go func() {
-		if err := apiServer.ListenAndServe(); err != http.ErrServerClosed {
-			zapup.MustRootLogger().Fatal(err.Error())
-		}
-	}()
-	time.Sleep(100 * time.Millisecond)
+	logFile.Truncate(0)
+	logFile.Seek(0, 0)
 }
 
-func shutdown() {
-	if apiServer != nil {
-		if err := apiServer.Shutdown(context.Background()); err != nil {
-			fmt.Println(err)
-			os.Exit(-1)
-		}
-	}
+func deleteLogFile() {
+	os.Remove(logFilename)
 }

@@ -2,10 +2,8 @@ package test
 
 import (
 	"fmt"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/rest"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
-	"github.com/emicklei/go-restful"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/resty.v1"
 	"net/http"
@@ -14,15 +12,14 @@ import (
 
 var devId = "fake-device-id"
 
+type apiHandlerCoreTest struct{}
+
 func TestLoggingMiddleware(t *testing.T) {
 	// GIVEN
-	runMetalCoreServer()
-	mockMetalAPIServer(endpoint{
-		path:    "/device/register",
-		handler: registerDeviceAPIEndpointMock,
-		method:  http.MethodPost,
+	runMetalCoreServer(func(ctx *domain.AppContext) domain.APIClient {
+		return apiHandlerCoreTest{}
 	})
-	defer shutdown()
+	defer deleteLogFile()
 
 	// WHEN
 	registerDevice()
@@ -44,9 +41,17 @@ func registerDevice() (*resty.Response, error) {
 		Post(fmt.Sprintf("http://localhost:%d/device/register/%v", cfg.Port, devId))
 }
 
-func registerDeviceAPIEndpointMock(request *restful.Request, response *restful.Response) {
+func (a apiHandlerCoreTest) FindDevices(mac string) (int, []*models.MetalDevice) {
+	return -1, nil
+}
+
+func (a apiHandlerCoreTest) RegisterDevice(deviceId string, request *domain.MetalHammerRegisterDeviceRequest) (int, *models.MetalDevice) {
 	dev := models.MetalDevice{
 		ID: devId,
 	}
-	rest.Respond(response, http.StatusOK, dev)
+	return http.StatusOK, &dev
+}
+
+func (a apiHandlerCoreTest) InstallImage(deviceId string) (int, *models.MetalDeviceWithPhoneHomeToken) {
+	return -1, nil
 }
