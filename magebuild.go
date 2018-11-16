@@ -95,7 +95,7 @@ func (BUILD) Bin() error {
 
 // (Re)build metal-core image
 func (b BUILD) Core() error {
-	if err := b.Bin(); err != nil {
+	if err := Build(); err != nil {
 		return err
 	}
 	return sh.RunV("docker-compose", "build", "metal-core")
