@@ -16,17 +16,13 @@ const version = "devel"
 
 type BUILD mg.Namespace
 
-// Same as build:bin
+// (Re)build model and metal-core binary (useful right after git clone)
 func Build() error {
-	defer os.Setenv("CGO_ENABLED", "1")
-	prepareEnv()
-	gitVersion, _ := sh.Output("git", "describe", "--long", "--all")
-	gitsha, _ := sh.Output("git", "rev-parse", "--short=8", "HEAD")
-	buildDate, _ := sh.Output("date", "-Iseconds")
-	ldflags := fmt.Sprintf("-X 'git.f-i-ts.de/cloud-native/metallib/version.Version=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Revision=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Gitsha1=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Builddate=%v'", version, gitVersion, gitsha, buildDate)
-	defer os.Chdir("../..")
-	os.Chdir("cmd/metal-core")
-	return sh.RunV("go", "build", "-tags", "netgo", "-ldflags", ldflags, "-o", "../../bin/metal-core")
+	b := BUILD{}
+	if err := b.Model(); err != nil {
+		return err
+	}
+	return b.Bin()
 }
 
 // (Re)build metal-core specification
@@ -50,11 +46,6 @@ func (b BUILD) Spec() error {
 	return ioutil.WriteFile("spec/metal-core.json", []byte(out), 0644)
 }
 
-// (Re)build metal-core binary in the bin subdirectory
-func (BUILD) Bin() error {
-	return Build()
-}
-
 // (Re)build model
 func (BUILD) Model() error {
 	swagger := "swagger"
@@ -74,6 +65,19 @@ func (BUILD) Model() error {
 	defer os.Setenv("GO111MODULE", "on")
 	os.Setenv("GO111MODULE", "off")
 	return sh.RunV("bin/swagger", "generate", "client", "-f", "domain/metal-api.json", "--skip-validation")
+}
+
+// (Re)build metal-core binary in the bin subdirectory
+func (BUILD) Bin() error {
+	defer os.Setenv("CGO_ENABLED", "1")
+	prepareEnv()
+	gitVersion, _ := sh.Output("git", "describe", "--long", "--all")
+	gitsha, _ := sh.Output("git", "rev-parse", "--short=8", "HEAD")
+	buildDate, _ := sh.Output("date", "-Iseconds")
+	ldflags := fmt.Sprintf("-X 'git.f-i-ts.de/cloud-native/metallib/version.Version=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Revision=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Gitsha1=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Builddate=%v'", version, gitVersion, gitsha, buildDate)
+	defer os.Chdir("../..")
+	os.Chdir("cmd/metal-core")
+	return sh.RunV("go", "build", "-tags", "netgo", "-ldflags", ldflags, "-o", "../../bin/metal-core")
 }
 
 // (Re)build metal-core image
@@ -97,7 +101,7 @@ func (b BUILD) Api() error {
 	return sh.RunV("docker", "build", "-t", "registry.fi-ts.io/metal/metal-api", "-f", "../../Dockerfile.dev", "../..")
 }
 
-// (Re)build all metal images
+// (Re)build metal-core and metal-api images
 func (b BUILD) All() error {
 	if err := b.Core(); err != nil {
 		return err
