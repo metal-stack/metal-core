@@ -17,7 +17,7 @@ func (c client) IPMIData(deviceId string) (*domain.IpmiConnection, error) {
 	ok, err := c.DeviceClient.IPMIData(params)
 	if err != nil {
 		zapup.MustRootLogger().Error("IPMI for device not found",
-			zap.String("mac", deviceId),
+			zap.String("device", deviceId),
 			zap.Error(err),
 		)
 		return nil, fmt.Errorf("ipmi for device %s not found: %v", deviceId, err)
@@ -26,8 +26,12 @@ func (c client) IPMIData(deviceId string) (*domain.IpmiConnection, error) {
 	ipmiData := ok.Payload
 
 	hostAndPort := strings.Split(*ipmiData.Address, ":")
-	port, err := strconv.Atoi(hostAndPort[0])
+	port, err := strconv.Atoi(hostAndPort[1])
 	if err != nil {
+		zapup.MustRootLogger().Error("unable to extract port from ipmiaddress",
+			zap.String("device", deviceId),
+			zap.Error(err),
+		)
 		port = 632
 	}
 	ipmiConn := &domain.IpmiConnection{
