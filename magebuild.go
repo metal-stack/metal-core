@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
+	"github.com/magiconair/properties"
 	"io/ioutil"
 )
 
@@ -27,19 +29,26 @@ func Build() error {
 
 // (Re)build metal-core specification
 func (b BUILD) Spec() error {
-	defer exec.Command("docker", "rm", "-f", "spec-metal-core").Run()
-	exec.Command("docker", "rm", "-f", "spec-metal-core").Run()
+	var env struct {
+		MetalCoreContainerName string `properties:"METAL_CORE_CONTAINER_NAME"`
+		MetalCoreIP            string `properties:"METAL_CORE_IP"`
+		MetalCorePort          int    `properties:"METAL_CORE_PORT"`
+	}
+	p := properties.MustLoadFile(".env", properties.UTF8)
+	if err := p.Decode(&env); err != nil {
+		return err
+	}
+
+	defer exec.Command("docker-compose", "down", "metal-core").Run()
+	exec.Command("docker-compose", "down", "metal-core").Run()
 	if err := b.Core(); err != nil {
 		return err
 	}
-	if err := sh.RunV("docker-compose", "run", "--name", "spec-metal-core", "-d", "metal-core"); err != nil {
+	if err := sh.RunV("docker-compose", "run", "--name", env.MetalCoreContainerName, "-d", "metal-core"); err != nil {
 		return err
 	}
-	out, err := sh.Output("docker", "inspect", "-f", "{{ .NetworkSettings.Networks.metal.IPAddress }}", "spec-metal-core")
-	if err != nil {
-		return err
-	}
-	out, err = sh.Output("curl", "-s", fmt.Sprintf("http://%v:4242/apidocs.json", out))
+	time.Sleep(2 * time.Second)
+	out, err := sh.Output("curl", "-s", fmt.Sprintf("http://%v:%d/apidocs.json", env.MetalCoreIP, env.MetalCorePort))
 	if err != nil {
 		return err
 	}

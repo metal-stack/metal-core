@@ -61,7 +61,7 @@ services:
     build:
       context: .
     image: registry.fi-ts.io/metal/metal-core
-    container_name: metal-core
+    container_name: ${METAL_CORE_CONTAINER_NAME}
     networks:
       metal:
         ipv4_address: ${METAL_CORE_IP}
