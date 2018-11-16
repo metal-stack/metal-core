@@ -3,7 +3,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
@@ -49,7 +48,7 @@ func runTests(filter func(dir string) bool) error {
 		}
 	}
 	if cnt > 0 {
-		return errors.New(fmt.Sprintf("%d test(s) failed", cnt))
+		return fmt.Errorf("%d test(s) failed", cnt)
 	} else {
 		return nil
 	}
