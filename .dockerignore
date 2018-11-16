@@ -1,6 +1,5 @@
 .dockerignore
 .gitignore
-e2e
-docker-compose.yaml
 Dockerfile
+Dockerfile.dev
 *.md
