@@ -39,8 +39,8 @@ func (b BUILD) Spec() error {
 		return err
 	}
 
-	defer exec.Command("docker-compose", "down", "metal-core").Run()
-	exec.Command("docker-compose", "down", "metal-core").Run()
+	defer exec.Command("docker-compose", "rm", "-sf", "metal-core").Run()
+	exec.Command("docker-compose", "rm", "-sf", "metal-core").Run()
 	if err := b.Core(); err != nil {
 		return err
 	}
