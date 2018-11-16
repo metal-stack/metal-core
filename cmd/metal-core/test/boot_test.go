@@ -25,9 +25,9 @@ func TestPXEBoot(t *testing.T) {
 	restful.Add(e.NewBootService())
 
 	expected := domain.BootResponse{
-		Kernel: "https://blobstore.fi-ts.io/metal/images/pxeboot-kernel",
+		Kernel: "https://blobstore.fi-ts.io/metal/images/metal-hammer/metal-hammer-kernel",
 		InitRamDisk: []string{
-			"https://blobstore.fi-ts.io/metal/images/pxeboot-initrd.img.lz4",
+			"https://blobstore.fi-ts.io/metal/images/metal-hammer/metal-hammer-initrd.img.lz4",
 		},
 		CommandLine: fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d METAL_API_URL=http://%v:%d", cfg.IP, cfg.Port, cfg.ApiIP, cfg.ApiPort),
 	}
