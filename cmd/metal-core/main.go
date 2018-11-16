@@ -10,6 +10,7 @@ import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"github.com/go-openapi/strfmt"
 	"os"
+	"strings"
 
 	"git.f-i-ts.de/cloud-native/metallib/bus"
 	"git.f-i-ts.de/cloud-native/metallib/version"
@@ -68,6 +69,10 @@ func init() {
 	}
 
 	initConsumer()
+
+	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
+		os.Setenv("DEBUG", "1")
+	}
 }
 
 func initConsumer() {
