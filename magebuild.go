@@ -59,7 +59,11 @@ func (b BUILD) Spec() error {
 func (BUILD) Model() error {
 	swagger := "swagger"
 	if _, err := exec.Command("which", swagger).CombinedOutput(); err != nil {
-		swagger = "bin/swagger"
+		wd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		swagger = fmt.Sprintf("%v/bin/swagger", wd)
 		if _, err := os.Stat(swagger); os.IsNotExist(err) {
 			os.Mkdir("bin", 0755)
 			if err := exec.Command("wget", "-O", swagger,
