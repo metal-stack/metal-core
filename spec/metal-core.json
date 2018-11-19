@@ -364,7 +364,8 @@
     "hostname",
     "name",
     "project",
-    "ssh_pub_keys"
+    "ssh_pub_keys",
+    "tenant"
    ],
    "properties": {
     "cidr": {
@@ -393,6 +394,9 @@
      "items": {
       "type": "string"
      }
+    },
+    "tenant": {
+     "type": "string"
     }
    }
   },

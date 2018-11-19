@@ -1,0 +1,28 @@
+version: '3.5'
+
+networks:
+  metal:
+    name: ${NETWORK_NAME}
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: ${NETWORK_SUBNET}
+
+services:
+  metal-core:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: registry.fi-ts.io/metal/metal-core
+    networks:
+      metal:
+        ipv4_address: ${METAL_CORE_IP}
+    ports:
+      - "${METAL_CORE_PORT}:${METAL_CORE_PORT}"
+    environment:
+      METAL_CORE_BIND_ADDRESS: 0.0.0.0
+      METAL_CORE_IP: ${METAL_CORE_IP}
+      METAL_CORE_PORT: ${METAL_CORE_PORT}
+      METAL_CORE_SITE_ID: FRA
+      METAL_CORE_RACK_ID: Vagrant Rack 1

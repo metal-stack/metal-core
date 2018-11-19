@@ -30,9 +30,8 @@ func Build() error {
 // (Re)build metal-core specification
 func (b BUILD) Spec() error {
 	var env struct {
-		MetalCoreContainerName string `properties:"METAL_CORE_CONTAINER_NAME"`
-		MetalCoreIP            string `properties:"METAL_CORE_IP"`
-		MetalCorePort          int    `properties:"METAL_CORE_PORT"`
+		MetalCoreIP   string `properties:"METAL_CORE_IP"`
+		MetalCorePort int    `properties:"METAL_CORE_PORT"`
 	}
 	p := properties.MustLoadFile(".env", properties.UTF8)
 	if err := p.Decode(&env); err != nil {
@@ -44,7 +43,7 @@ func (b BUILD) Spec() error {
 	if err := b.Core(); err != nil {
 		return err
 	}
-	if err := sh.RunV("docker-compose", "run", "--name", env.MetalCoreContainerName, "-d", "metal-core"); err != nil {
+	if err := sh.RunV("docker-compose", "run", "--name", "metal-core", "-d", "metal-core"); err != nil {
 		return err
 	}
 	time.Sleep(2 * time.Second)
@@ -98,7 +97,7 @@ func (b BUILD) Core() error {
 	if err := Build(); err != nil {
 		return err
 	}
-	return sh.RunV("docker", "build", "-t", "registry.fi-ts.io/metal/metal-core", "-f", "Dockerfile.dev", ".")
+	return sh.RunV("docker-compose", "build", "metal-core")
 }
 
 // (Re)build metal-api image
