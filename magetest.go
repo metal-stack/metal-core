@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 	"os"
@@ -13,7 +14,7 @@ import (
 
 type TEST mg.Namespace
 
-// Same as test:all
+// Run all unit and integration tests
 func Test() error {
 	t := TEST{}
 	if err := t.Unit(); err != nil {
@@ -24,8 +25,8 @@ func Test() error {
 
 // Run all unit tests
 func (TEST) Unit() error {
-	defer os.Unsetenv("ZAP_LEVEL")
-	os.Setenv("ZAP_LEVEL", "panic")
+	defer os.Unsetenv(zapup.KeyLogLevel)
+	os.Setenv(zapup.KeyLogLevel, "panic")
 	return runTests(func(dir string) bool {
 		return !strings.HasPrefix(dir, "./cmd/metal-core/test")
 	})

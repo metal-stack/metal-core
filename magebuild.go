@@ -93,12 +93,12 @@ func (BUILD) Bin() error {
 	return sh.RunV("go", "build", "-tags", "netgo", "-ldflags", ldflags, "-o", "../../bin/metal-core")
 }
 
-// (Re)build metal-core image
+// (Re)build model, metal-core binary and metal-core image
 func (b BUILD) Core() error {
 	if err := Build(); err != nil {
 		return err
 	}
-	return sh.RunV("docker-compose", "build", "metal-core")
+	return sh.RunV("docker-compose", "build", "metal-core-dev")
 }
 
 // (Re)build metal-api image
@@ -114,7 +114,7 @@ func (b BUILD) Api() error {
 	return sh.RunV("docker", "build", "-t", "registry.fi-ts.io/metal/metal-api", "-f", "../../Dockerfile.dev", "../..")
 }
 
-// (Re)build metal-core and metal-api images
+// (Re)build model and metal-core binary as well as metal-core and metal-api images
 func (b BUILD) All() error {
 	if err := b.Core(); err != nil {
 		return err
