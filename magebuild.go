@@ -98,7 +98,7 @@ func (b BUILD) Core() error {
 	if err := Build(); err != nil {
 		return err
 	}
-	return sh.RunV("docker-compose", "build", "metal-core-dev")
+	return sh.RunV("docker", "build", "-t", "registry.fi-ts.io/metal/metal-core", "-f", "Dockerfile.dev", ".")
 }
 
 // (Re)build metal-api image
