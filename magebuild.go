@@ -102,7 +102,6 @@ func (b BUILD) Core() error {
 
 // (Re)build metal-api image
 func (b BUILD) Api() error {
-	//	return sh.RunV("docker-compose", "build", "metal-api")
 	defer os.Chdir("../../../metal-core")
 	os.Chdir("../metal-api/cmd/metal-api")
 	defer os.Setenv("CGO_ENABLED", "1")
