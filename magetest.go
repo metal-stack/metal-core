@@ -24,6 +24,7 @@ func Test() error {
 
 // Run all unit tests
 func (TEST) Unit() error {
+	defer os.Unsetenv("ZAP_LEVEL")
 	os.Setenv("ZAP_LEVEL", "panic")
 	return runTests(func(dir string) bool {
 		return !strings.HasPrefix(dir, "./cmd/metal-core/test")
