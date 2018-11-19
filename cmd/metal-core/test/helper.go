@@ -54,7 +54,7 @@ func doGet(path string, response interface{}) int {
 func doPost(path string, payload interface{}) int {
 	bodyJSON, _ := json.Marshal(payload)
 	req, _ := http.NewRequest(http.MethodPost, path, bytes.NewBuffer(bodyJSON))
-	req.Header["Content-Type"] = append(make([]string, 0), restful.MIME_JSON)
+	req.Header.Add("Content-Type", restful.MIME_JSON)
 	rr := httptest.NewRecorder()
 	restful.DefaultContainer.ServeHTTP(rr, req)
 	return rr.Result().StatusCode

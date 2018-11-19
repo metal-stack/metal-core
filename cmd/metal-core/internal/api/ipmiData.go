@@ -20,7 +20,7 @@ func (c client) IPMIData(deviceId string) (*domain.IpmiConnection, error) {
 			zap.String("device", deviceId),
 			zap.Error(err),
 		)
-		return nil, fmt.Errorf("ipmi for device %s not found: %v", deviceId, err)
+		return nil, fmt.Errorf("IPMI for device %s not found: %v", deviceId, err)
 	}
 
 	ipmiData := ok.Payload

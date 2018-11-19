@@ -5,7 +5,7 @@ import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"github.com/emicklei/go-restful"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"net/http"
 	"testing"
 )
@@ -33,11 +33,11 @@ func TestLoggingMiddleware(t *testing.T) {
 	sc := doPost(fmt.Sprintf("/device/register/%v", devId), payload)
 
 	// THEN
-	assert.Equal(t, http.StatusOK, sc)
+	require.Equal(t, http.StatusOK, sc)
 	logs := getLogs()
-	assert.Contains(t, logs, "Register device at Metal-API")
-	assert.Contains(t, logs, "Device registered")
-	assert.NotContains(t, logs, "level=error")
+	require.Contains(t, logs, "Register device at Metal-API")
+	require.Contains(t, logs, "Device registered")
+	require.NotContains(t, logs, "level=error")
 }
 
 func (a apiHandlerCoreTest) FindDevices(mac string) (int, []*models.MetalDevice) {

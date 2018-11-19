@@ -5,7 +5,7 @@ import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"github.com/emicklei/go-restful"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"net/http"
 	"strings"
 	"testing"
@@ -37,11 +37,11 @@ func TestPXEBoot(t *testing.T) {
 	sc := doGet(fmt.Sprintf("/v1/boot/%v", fakeMac), bootResponse)
 
 	// THEN
-	assert.Equal(t, http.StatusOK, sc)
-	assert.Equal(t, expected.Kernel, bootResponse.Kernel)
-	assert.Equal(t, expected.InitRamDisk, bootResponse.InitRamDisk)
+	require.Equal(t, http.StatusOK, sc)
+	require.Equal(t, expected.Kernel, bootResponse.Kernel)
+	require.Equal(t, expected.InitRamDisk, bootResponse.InitRamDisk)
 	bootResponse.CommandLine = bootResponse.CommandLine[strings.Index(bootResponse.CommandLine, "METAL_CORE_ADDRESS"):]
-	assert.Equal(t, expected.CommandLine, bootResponse.CommandLine)
+	require.Equal(t, expected.CommandLine, bootResponse.CommandLine)
 }
 
 func (a apiHandlerBootTest) FindDevices(mac string) (int, []*models.MetalDevice) {
