@@ -15,18 +15,16 @@ type TEST mg.Namespace
 
 // Same as test:all
 func Test() error {
-	return runTests(func(dir string) bool {
-		return true
-	})
-}
-
-// Run all tests
-func (TEST) All() error {
-	return Test()
+	t := TEST{}
+	if err := t.Unit(); err != nil {
+		return err
+	}
+	return t.Int()
 }
 
 // Run all unit tests
 func (TEST) Unit() error {
+	os.Setenv("ZAP_LEVEL", "panic")
 	return runTests(func(dir string) bool {
 		return !strings.HasPrefix(dir, "./cmd/metal-core/test")
 	})
@@ -40,7 +38,6 @@ func (TEST) Int() error {
 }
 
 func runTests(filter func(dir string) bool) error {
-	os.Setenv("ZAP_LEVEL", "panic")
 	cnt := 0
 	for _, pkg := range fetchGoPackages() {
 		if filter(pkg) && containsGoTests(pkg) {

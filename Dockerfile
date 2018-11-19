@@ -11,7 +11,7 @@ COPY . .
 RUN go mod download \
  && go get github.com/magefile/mage
 
-RUN mage build test:unit test:int
+RUN mage build test
 
 FROM alpine:3.8
 LABEL maintainer FI-TS Devops <devops@f-i-ts.de>
