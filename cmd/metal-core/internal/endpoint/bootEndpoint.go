@@ -64,6 +64,7 @@ func createBootDiscoveryImageResponse(cfg *domain.Config) domain.BootResponse {
 		)
 		cmdlineOptions = append(cmdlineOptions, "console=tty0")
 	} else {
+		defer resp.Body.Close()
 		if body, err := ioutil.ReadAll(resp.Body); err != nil {
 			zapup.MustRootLogger().Error("Could not read cmdline source",
 				zap.String("cmdlineSource", cmdlineSource),
