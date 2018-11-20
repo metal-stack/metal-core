@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/rest"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -52,27 +51,12 @@ func createBootDiscoveryImageResponse(cfg *domain.Config) domain.BootResponse {
 	prefix := cfg.HammerImagePrefix
 	kernel := fmt.Sprintf("%s/%s-kernel", blobstore, prefix)
 	ramdisk := fmt.Sprintf("%s/%s-initrd.img.lz4", blobstore, prefix)
-	cmdlineSource := fmt.Sprintf("%s/%s-cmdline", blobstore, prefix)
 	metalCoreAddress := fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d", cfg.IP, cfg.Port)
 	metalAPIURL := fmt.Sprintf("METAL_API_URL=%s://%s:%d", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort)
-
-	var cmdlineOptions []string
-	if resp, err := http.Get(cmdlineSource); err != nil {
-		zapup.MustRootLogger().Error("Could not retrieve cmdline source",
-			zap.String("cmdlineSource", cmdlineSource),
-			zap.Error(err),
-		)
-		cmdlineOptions = append(cmdlineOptions, "console=tty0")
-	} else {
-		defer resp.Body.Close()
-		if body, err := ioutil.ReadAll(resp.Body); err != nil {
-			zapup.MustRootLogger().Error("Could not read cmdline source",
-				zap.String("cmdlineSource", cmdlineSource),
-				zap.Error(err),
-			)
-		} else {
-			cmdlineOptions = append(cmdlineOptions, string(body))
-		}
+	cmdlineOptions := []string{
+		"console=tty0",
+		"console=ttyS0",
+		"ip=dhcp",
 	}
 	cmdlineOptions = append(cmdlineOptions, metalCoreAddress, metalAPIURL)
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
