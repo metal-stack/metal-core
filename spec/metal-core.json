@@ -361,6 +361,7 @@
   "models.MetalDeviceAllocation": {
    "required": [
     "cidr",
+    "created",
     "hostname",
     "name",
     "project",
@@ -369,6 +370,9 @@
    ],
    "properties": {
     "cidr": {
+     "type": "string"
+    },
+    "created": {
      "type": "string"
     },
     "description": {
