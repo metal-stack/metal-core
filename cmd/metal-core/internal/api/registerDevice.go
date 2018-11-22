@@ -11,11 +11,13 @@ import (
 )
 
 func (c client) RegisterDevice(deviceId string, request *domain.MetalHammerRegisterDeviceRequest) (int, *models.MetalDevice) {
+	siteId := c.Config.SiteID
+	rackId := c.Config.RackID
 	params := device.NewRegisterDeviceParams()
 	params.Body = &models.ServiceRegisterRequest{
 		UUID:   &deviceId,
-		Siteid: &c.Config.SiteID,
-		Rackid: &c.Config.RackID,
+		Siteid: &siteId,
+		Rackid: &rackId,
 		Hardware: &models.MetalDeviceHardware{
 			Memory:   request.Memory,
 			CPUCores: request.CPUCores,
@@ -28,6 +30,9 @@ func (c client) RegisterDevice(deviceId string, request *domain.MetalHammerRegis
 	ok, created, err := c.DeviceClient.RegisterDevice(params)
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to register device at Metal-API",
+			zap.String("deviceID", deviceId),
+			zap.String("siteID", siteId),
+			zap.String("rackID", rackId),
 			zap.Error(err),
 		)
 		return http.StatusInternalServerError, nil

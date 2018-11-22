@@ -2,6 +2,7 @@ package endpoint
 
 import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"net/http"
 
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
@@ -28,6 +29,10 @@ func (e endpoint) Register(request *restful.Request, response *restful.Response)
 
 	zapup.MustRootLogger().Info("Register device at Metal-API",
 		zap.String("deviceID", devId),
+		zap.String("IPMI-Address", impiAddress(req.IPMI)),
+		zap.String("IPMI-Interface", impiInterface(req.IPMI)),
+		zap.String("IPMI-MAC", impiMAC(req.IPMI)),
+		zap.String("IPMI-User", impiUser(req.IPMI)),
 	)
 
 	sc, dev := e.ApiClient().RegisterDevice(devId, req)
@@ -49,4 +54,32 @@ func (e endpoint) Register(request *restful.Request, response *restful.Response)
 		zap.Any("device", dev),
 	)
 	rest.Respond(response, http.StatusOK, dev)
+}
+
+func impiAddress(ipmi *models.MetalIPMI) string {
+	if ipmi != nil && ipmi.Address != nil {
+		return *ipmi.Address
+	}
+	return ""
+}
+
+func impiInterface(ipmi *models.MetalIPMI) string {
+	if ipmi != nil && ipmi.Interface != nil {
+		return *ipmi.Interface
+	}
+	return ""
+}
+
+func impiMAC(ipmi *models.MetalIPMI) string {
+	if ipmi != nil && ipmi.Mac != nil {
+		return *ipmi.Mac
+	}
+	return ""
+}
+
+func impiUser(ipmi *models.MetalIPMI) string {
+	if ipmi != nil && ipmi.User != nil {
+		return *ipmi.User
+	}
+	return ""
 }
