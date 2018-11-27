@@ -27,33 +27,6 @@ func Build() error {
 	return b.Bin()
 }
 
-// (Re)build metal-core specification
-func (b BUILD) Spec() error {
-	var env struct {
-		MetalCoreIP   string `properties:"METAL_CORE_IP"`
-		MetalCorePort int    `properties:"METAL_CORE_PORT"`
-	}
-	p := properties.MustLoadFile(".env", properties.UTF8)
-	if err := p.Decode(&env); err != nil {
-		return err
-	}
-
-	defer exec.Command("docker-compose", "rm", "-sf", "metal-core").Run()
-	exec.Command("docker-compose", "rm", "-sf", "metal-core").Run()
-	if err := b.Core(); err != nil {
-		return err
-	}
-	if err := sh.RunV("docker-compose", "run", "--name", "metal-core", "-d", "metal-core"); err != nil {
-		return err
-	}
-	time.Sleep(2 * time.Second)
-	out, err := sh.Output("curl", "-s", fmt.Sprintf("http://%v:%d/apidocs.json", env.MetalCoreIP, env.MetalCorePort))
-	if err != nil {
-		return err
-	}
-	return ioutil.WriteFile("spec/metal-core.json", []byte(out), 0644)
-}
-
 // (Re)build model
 func (BUILD) Model() error {
 	swagger := "swagger"
@@ -81,8 +54,9 @@ func (BUILD) Model() error {
 
 // (Re)build metal-core binary in the bin subdirectory
 func (BUILD) Bin() error {
-	defer os.Setenv("CGO_ENABLED", "1")
-	prepareEnv()
+	os.Setenv("GO111MODULE", "on")
+	os.Setenv("CGO_ENABLED", "0")
+	os.Setenv("GOOS", "linux")
 	gitVersion, _ := sh.Output("git", "describe", "--long", "--all")
 	gitsha, _ := sh.Output("git", "rev-parse", "--short=8", "HEAD")
 	buildDate, _ := sh.Output("date", "-Iseconds")
@@ -100,28 +74,29 @@ func (b BUILD) Core() error {
 	return sh.RunV("docker-compose", "build", "metal-core")
 }
 
-// (Re)build metal-api image
-func (b BUILD) Api() error {
-	defer os.Chdir("../../../metal-core")
-	os.Chdir("../metal-api/cmd/metal-api")
-	defer os.Setenv("CGO_ENABLED", "1")
-	prepareEnv()
-	if err := exec.Command("go", "build", "-o", "../../bin/metal-api", ".").Run(); err != nil {
+// (Re)build metal-core specification
+func (b BUILD) Spec() error {
+	var env struct {
+		MetalCoreIP   string `properties:"METAL_CORE_IP"`
+		MetalCorePort int    `properties:"METAL_CORE_PORT"`
+	}
+	p := properties.MustLoadFile(".env", properties.UTF8)
+	if err := p.Decode(&env); err != nil {
 		return err
 	}
-	return sh.RunV("docker", "build", "-t", "registry.fi-ts.io/metal/metal-api", "-f", "../../Dockerfile.dev", "../..")
-}
 
-// (Re)build model and metal-core binary as well as metal-core and metal-api images
-func (b BUILD) All() error {
+	defer exec.Command("docker-compose", "rm", "-sf", "metal-core").Run()
+	exec.Command("docker-compose", "rm", "-sf", "metal-core").Run()
 	if err := b.Core(); err != nil {
 		return err
 	}
-	return b.Api()
-}
-
-func prepareEnv() {
-	os.Setenv("GO111MODULE", "on")
-	os.Setenv("CGO_ENABLED", "0")
-	os.Setenv("GOOS", "linux")
+	if err := sh.RunV("docker-compose", "run", "--name", "metal-core", "-d", "metal-core"); err != nil {
+		return err
+	}
+	time.Sleep(2 * time.Second)
+	out, err := sh.Output("curl", "-s", fmt.Sprintf("http://%v:%d/apidocs.json", env.MetalCoreIP, env.MetalCorePort))
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile("spec/metal-core.json", []byte(out), 0644)
 }
