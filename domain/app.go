@@ -2,6 +2,7 @@ package domain
 
 import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/device"
+	sw "git.f-i-ts.de/cloud-native/metal/metal-core/client/switch_operations"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"github.com/emicklei/go-restful"
 )
@@ -63,6 +64,7 @@ type (
 		EndpointHandler     func(*AppContext) Endpoint
 		EventHandlerHandler func(*AppContext) EventHandler
 		DeviceClient        *device.Client
+		SwitchClient        *sw.Client
 	}
 )
 

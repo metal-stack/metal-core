@@ -2,20 +2,25 @@ package main
 
 import (
 	"fmt"
+	gonet "net"
+	"os"
+	"strings"
+
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/device"
+	sw "git.f-i-ts.de/cloud-native/metal/metal-core/client/switch_operations"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/api"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/endpoint"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/event"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/server"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"github.com/go-openapi/strfmt"
-	"os"
-	"strings"
 
 	"git.f-i-ts.de/cloud-native/metallib/bus"
 	"git.f-i-ts.de/cloud-native/metallib/version"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/go-openapi/runtime/client"
+	"github.com/jaypipes/ghw"
 	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/zap"
 )
@@ -66,9 +71,12 @@ func init() {
 		EndpointHandler:     endpoint.Handler,
 		EventHandlerHandler: event.Handler,
 		DeviceClient:        device.New(transport, strfmt.Default),
+		SwitchClient:        sw.New(transport, strfmt.Default),
 	}
 
 	initConsumer()
+
+	registerSwitch()
 
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
 		os.Setenv("DEBUG", "1")
@@ -88,4 +96,61 @@ func initConsumer() {
 			}
 			return nil
 		}, 5)
+}
+
+func registerSwitch() {
+	nics, err := getNics()
+	if err != nil {
+		zapup.MustRootLogger().Fatal("unable to determine network interfaces",
+			zap.Error(err),
+		)
+		os.Exit(1)
+	}
+
+	hostname, err := os.Hostname()
+	if err != nil {
+		zapup.MustRootLogger().Fatal("unable to determine hostname",
+			zap.Error(err),
+		)
+		os.Exit(1)
+	}
+
+	params := sw.NewRegisterSwitchParams()
+	params.Body = &models.MetalSwitch{
+		ID:     &hostname,
+		SiteID: &appContext.Config.SiteID,
+		Nics:   nics,
+	}
+
+	_, _, err = appContext.SwitchClient.RegisterSwitch(params)
+	if err != nil {
+		zapup.MustRootLogger().Fatal("unable to register at metal-api",
+			zap.Error(err),
+		)
+		os.Exit(1)
+	}
+}
+
+func getNics() ([]*models.MetalNic, error) {
+	net, err := ghw.Network()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get system nic(s), info:%v", err)
+	}
+	nics := []*models.MetalNic{}
+	for _, n := range net.NICs {
+		_, err := gonet.ParseMAC(n.MacAddress)
+		if err != nil {
+			zapup.MustRootLogger().Info("skip interface with invalid mac",
+				zap.String("interface", n.Name),
+				zap.String("mac", n.MacAddress),
+			)
+			continue
+		}
+		nic := &models.MetalNic{
+			Mac:  &n.MacAddress,
+			Name: &n.Name,
+		}
+		nics = append(nics, nic)
+	}
+	return nics, nil
 }
