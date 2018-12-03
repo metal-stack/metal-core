@@ -123,6 +123,7 @@ func registerSwitch() {
 	params.Body = &models.MetalSwitch{
 		ID:     &hostname,
 		SiteID: &appContext.Config.SiteID,
+		RackID: &appContext.Config.RackID,
 		Nics:   nics,
 	}
 
