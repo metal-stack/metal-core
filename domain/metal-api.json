@@ -383,6 +383,14 @@
             "name": "id",
             "in": "path",
             "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/service.allocationReport"
+            }
           }
         ],
         "responses": {
@@ -1463,17 +1471,6 @@
         }
       }
     },
-    "metal.Neighbor": {
-      "required": [
-        "mac"
-      ],
-      "properties": {
-        "mac": {
-          "description": "the mac address of the neighbor interface",
-          "type": "string"
-        }
-      }
-    },
     "metal.Nic": {
       "required": [
         "mac",
@@ -1493,7 +1490,7 @@
           "description": "the neighbors visible to this network interface",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/metal.Neighbor"
+            "$ref": "#/definitions/metal.Nic"
           }
         }
       }
@@ -1670,6 +1667,26 @@
         "tenant": {
           "description": "the name of the owning tenant",
           "type": "string"
+        }
+      }
+    },
+    "service.allocationReport": {
+      "required": [
+        "success",
+        "console_password"
+      ],
+      "properties": {
+        "console_password": {
+          "description": "the console password which was generated while provisioning",
+          "type": "string"
+        },
+        "errormessage": {
+          "description": "contains an errormessage when there was no success",
+          "type": "string"
+        },
+        "success": {
+          "description": "signals if the allocation was successful",
+          "type": "boolean"
         }
       }
     },

@@ -1,10 +1,12 @@
 package endpoint
 
 import (
+	"git.f-i-ts.de/cloud-native/metal/metal-core/client/device"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/ipmi"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/rest"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
+
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
 	"go.uber.org/zap"
@@ -49,13 +51,15 @@ func (e endpoint) Report(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	params := models.ServiceAllocationReport{
-		Success:         report.Success,
-		ConsolePassword: report.ConsolePassword,
-		Errormessage:    report.Errormessage,
+	body := &models.ServiceAllocationReport{
+		Success:         &report.Success,
+		ConsolePassword: &report.ConsolePassword,
+		Errormessage:    report.Message,
 	}
-
-	ok, err := e.DeviceClient.AllocationReport(params)
+	params := device.NewAllocationReportParams()
+	params.ID = devId
+	params.Body = body
+	_, err = e.DeviceClient.AllocationReport(params)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to report device back to api.",
 			zap.String("deviceID", devId),
