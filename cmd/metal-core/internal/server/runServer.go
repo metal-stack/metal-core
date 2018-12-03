@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
@@ -8,6 +9,7 @@ import (
 	"github.com/go-openapi/spec"
 	"go.uber.org/zap"
 	"net/http"
+	"os"
 )
 
 func (s server) Run() {
@@ -20,6 +22,15 @@ func (s server) Run() {
 		PostBuildSwaggerObjectHandler: enrichSwaggerObject,
 	}
 	restful.DefaultContainer.Add(restfulspec.NewOpenAPIService(config))
+
+	actual := restfulspec.BuildSwagger(config)
+	js, err := json.MarshalIndent(actual, "", "  ")
+	if err != nil {
+		panic(err)
+	}
+	if len(os.Getenv("APIJSON")) > 1 {
+		fmt.Fprintf(os.Stderr, "%s\n", js)
+	}
 
 	// enable CORS for the UI to work
 	cors := restful.CrossOriginResourceSharing{

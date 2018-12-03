@@ -12,7 +12,7 @@ localbuild: bin/$(BINARY)
 
 .PHONY: spec
 spec:
-	curl -s http://$(GATEWAY):4242/apidocs.json > spec/metal-core.json
+	METAL_CORE_IP=1.2.3.4 METAL_CORE_SITE_ID=dummy METAL_CORE_RACK_ID=rack1 APIJSON=True bin/metal-core  2> spec/metal-core.json
 
 .PHONY: generate-client
 generate-client:

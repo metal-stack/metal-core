@@ -74,6 +74,10 @@ func init() {
 		SwitchClient:        sw.New(transport, strfmt.Default),
 	}
 
+	if len(os.Getenv("APIJSON")) > 1 {
+		return
+	}
+
 	initConsumer()
 
 	registerSwitch()
