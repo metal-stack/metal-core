@@ -4,6 +4,7 @@ import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/ipmi"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/rest"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
 	"go.uber.org/zap"
@@ -41,6 +42,22 @@ func (e endpoint) Report(request *restful.Request, response *restful.Response) {
 	err = ipmi.SetBootDevHd(ipmiConn)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to set boot order of device to HD",
+			zap.String("deviceID", devId),
+			zap.Error(err),
+		)
+		rest.Respond(response, http.StatusInternalServerError, nil)
+		return
+	}
+
+	params := models.ServiceAllocationReport{
+		Success:         report.Success,
+		ConsolePassword: report.ConsolePassword,
+		Errormessage:    report.Errormessage,
+	}
+
+	ok, err := e.DeviceClient.AllocationReport(params)
+	if err != nil {
+		zapup.MustRootLogger().Error("Unable to report device back to api.",
 			zap.String("deviceID", devId),
 			zap.Error(err),
 		)
