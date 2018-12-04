@@ -33,8 +33,12 @@ var (
 )
 
 func main() {
-	if len(os.Args) == 3 && os.Args[1] == "spec" {
-		buildSpec(os.Args[2])
+	if len(os.Args) > 1 && os.Args[1] == "spec" {
+		filename := ""
+		if len(os.Args) > 2 {
+			filename = os.Args[2]
+		}
+		buildSpec(filename)
 	} else {
 		prepare()
 		appContext.Server().Run()
@@ -164,14 +168,14 @@ func getNics() ([]*models.MetalNic, error) {
 	return nics, nil
 }
 
-func buildSpec(file string) {
+func buildSpec(filename string) {
 	cfg := server.Init(endpoint.Handler(nil))
 	actual := restfulspec.BuildSwagger(*cfg)
 	js, err := json.MarshalIndent(actual, "", "  ")
 	if err != nil {
 		panic(err)
 	}
-	if err := ioutil.WriteFile(file, js, 0644); err != nil {
-		fmt.Printf("%v\n", js)
+	if err := ioutil.WriteFile(filename, js, 0644); err != nil {
+		fmt.Printf("%s\n", js)
 	}
 }
