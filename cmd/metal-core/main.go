@@ -128,7 +128,7 @@ func registerSwitch() {
 	}
 
 	params := sw.NewRegisterSwitchParams()
-	params.Body = &models.MetalSwitch{
+	params.Body = &models.ServiceSwitchRegistration{
 		ID:     &hostname,
 		SiteID: &appContext.Config.SiteID,
 		RackID: &appContext.Config.RackID,
