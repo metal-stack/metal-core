@@ -8,6 +8,7 @@ import (
 	gonet "net"
 	"os"
 	"strings"
+	"time"
 
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/device"
 	sw "git.f-i-ts.de/cloud-native/metal/metal-core/client/switch_operations"
@@ -135,13 +136,17 @@ func registerSwitch() {
 		Nics:   nics,
 	}
 
-	_, _, err = appContext.SwitchClient.RegisterSwitch(params)
-	if err != nil {
-		zapup.MustRootLogger().Fatal("unable to register at metal-api",
-			zap.Error(err),
-		)
-		os.Exit(1)
+	for i := 0; i < 30; i++ {
+		if _, _, err = appContext.SwitchClient.RegisterSwitch(params); err == nil {
+			return
+		}
+		time.Sleep(time.Second)
 	}
+
+	zapup.MustRootLogger().Fatal("unable to register at metal-api",
+		zap.Error(err),
+	)
+	os.Exit(1)
 }
 
 func getNics() ([]*models.MetalNic, error) {

@@ -47,4 +47,3 @@ func enrichSwaggerObject(swo *spec.Swagger) {
 		},
 	}
 }
-
