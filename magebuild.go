@@ -4,14 +4,10 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
-	"time"
-
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
-	"github.com/magiconair/properties"
-	"io/ioutil"
+	"os"
+	"os/exec"
 )
 
 const version = "devel"
@@ -76,27 +72,8 @@ func (b BUILD) Core() error {
 
 // (Re)build metal-core specification
 func (b BUILD) Spec() error {
-	var env struct {
-		MetalCoreIP   string `properties:"METAL_CORE_IP"`
-		MetalCorePort int    `properties:"METAL_CORE_PORT"`
-	}
-	p := properties.MustLoadFile(".env", properties.UTF8)
-	if err := p.Decode(&env); err != nil {
+	if err := b.Bin(); err != nil {
 		return err
 	}
-
-	defer exec.Command("docker-compose", "rm", "-sf", "metal-core").Run()
-	exec.Command("docker-compose", "rm", "-sf", "metal-core").Run()
-	if err := b.Core(); err != nil {
-		return err
-	}
-	if err := sh.RunV("docker-compose", "run", "--name", "metal-core", "-d", "metal-core"); err != nil {
-		return err
-	}
-	time.Sleep(2 * time.Second)
-	out, err := sh.Output("curl", "-s", fmt.Sprintf("http://%v:%d/apidocs.json", env.MetalCoreIP, env.MetalCorePort))
-	if err != nil {
-		return err
-	}
-	return ioutil.WriteFile("spec/metal-core.json", []byte(out), 0644)
+	return sh.RunV("bin/metal-core", "spec", "spec/metal-core.json")
 }

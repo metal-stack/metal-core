@@ -1,7 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/emicklei/go-restful-openapi"
+	"io/ioutil"
 	gonet "net"
 	"os"
 	"strings"
@@ -30,10 +33,15 @@ var (
 )
 
 func main() {
-	appContext.Server().Run()
+	if len(os.Args) == 3 && os.Args[1] == "spec" {
+		buildSpec(os.Args[2])
+	} else {
+		prepare()
+		appContext.Server().Run()
+	}
 }
 
-func init() {
+func prepare() {
 	cfg := &domain.Config{}
 	if err := envconfig.Process("METAL_CORE", cfg); err != nil {
 		zapup.MustRootLogger().Fatal("Bad configuration",
@@ -72,10 +80,6 @@ func init() {
 		EventHandlerHandler: event.Handler,
 		DeviceClient:        device.New(transport, strfmt.Default),
 		SwitchClient:        sw.New(transport, strfmt.Default),
-	}
-
-	if len(os.Getenv("APIJSON")) > 1 {
-		return
 	}
 
 	initConsumer()
@@ -158,4 +162,16 @@ func getNics() ([]*models.MetalNic, error) {
 		nics = append(nics, nic)
 	}
 	return nics, nil
+}
+
+func buildSpec(file string) {
+	cfg := server.Init(endpoint.Handler(nil))
+	actual := restfulspec.BuildSwagger(*cfg)
+	js, err := json.MarshalIndent(actual, "", "  ")
+	if err != nil {
+		panic(err)
+	}
+	if err := ioutil.WriteFile(file, js, 0644); err != nil {
+		fmt.Printf("%v\n", js)
+	}
 }

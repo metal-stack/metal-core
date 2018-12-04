@@ -1,20 +1,16 @@
 package server
 
 import (
-	"encoding/json"
 	"fmt"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
-	"github.com/go-openapi/spec"
 	"go.uber.org/zap"
 	"net/http"
-	"os"
 )
 
 func (s server) Run() {
-	restful.DefaultContainer.Add(s.Endpoint().NewBootService())
-	restful.DefaultContainer.Add(s.Endpoint().NewDeviceService())
+	Init(s.EndpointHandler(s.AppContext))
 
 	config := restfulspec.Config{
 		WebServices:                   restful.RegisteredWebServices(),
@@ -22,15 +18,6 @@ func (s server) Run() {
 		PostBuildSwaggerObjectHandler: enrichSwaggerObject,
 	}
 	restful.DefaultContainer.Add(restfulspec.NewOpenAPIService(config))
-
-	actual := restfulspec.BuildSwagger(config)
-	js, err := json.MarshalIndent(actual, "", "  ")
-	if err != nil {
-		panic(err)
-	}
-	if len(os.Getenv("APIJSON")) > 1 {
-		fmt.Fprintf(os.Stderr, "%s\n", js)
-	}
 
 	// enable CORS for the UI to work
 	cors := restful.CrossOriginResourceSharing{
@@ -48,32 +35,4 @@ func (s server) Run() {
 	)
 
 	http.ListenAndServe(addr, nil)
-}
-
-func enrichSwaggerObject(swo *spec.Swagger) {
-	swo.Info = &spec.Info{
-		InfoProps: spec.InfoProps{
-			Title:       "metal-core",
-			Description: "Resource for managing PXE clients",
-			Contact: &spec.ContactInfo{
-				Name:  "Devops Team",
-				Email: "devops@f-i-ts.de",
-				URL:   "http://www.f-i-ts.de",
-			},
-			License: &spec.License{
-				Name: "MIT",
-				URL:  "http://mit.org",
-			},
-			Version: "1.0.0",
-		},
-	}
-	swo.Tags = []spec.Tag{
-		spec.Tag{TagProps: spec.TagProps{
-			Name:        "boot",
-			Description: "Booting PXE clients"}},
-		spec.Tag{TagProps: spec.TagProps{
-			Name:        "device",
-			Description: "Managing PXE boot clients"},
-		},
-	}
 }
