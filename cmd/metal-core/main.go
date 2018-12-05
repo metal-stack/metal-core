@@ -112,20 +112,28 @@ func initConsumer() {
 }
 
 func registerSwitch() {
-	nics, err := getNics()
-	if err != nil {
-		zapup.MustRootLogger().Fatal("unable to determine network interfaces",
+	var err error
+	var nics []*models.MetalNic
+	var hostname string
+
+	for {
+		if nics, err = getNics(); err == nil {
+			break
+		}
+		zapup.MustRootLogger().Error("unable to determine network interfaces",
 			zap.Error(err),
 		)
-		os.Exit(1)
+		time.Sleep(time.Second)
 	}
 
-	hostname, err := os.Hostname()
-	if err != nil {
-		zapup.MustRootLogger().Fatal("unable to determine hostname",
+	for {
+		if hostname, err = os.Hostname(); err == nil {
+			break
+		}
+		zapup.MustRootLogger().Error("unable to determine hostname",
 			zap.Error(err),
 		)
-		os.Exit(1)
+		time.Sleep(time.Second)
 	}
 
 	params := sw.NewRegisterSwitchParams()
