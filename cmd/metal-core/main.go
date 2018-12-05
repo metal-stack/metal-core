@@ -89,7 +89,7 @@ func prepare() {
 
 	initConsumer()
 
-	registerSwitch()
+	go registerSwitch()
 
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
 		os.Setenv("DEBUG", "1")
@@ -136,17 +136,15 @@ func registerSwitch() {
 		Nics:   nics,
 	}
 
-	for i := 0; i < 30; i++ {
+	for {
 		if _, _, err = appContext.SwitchClient.RegisterSwitch(params); err == nil {
-			return
+			break
 		}
+		zapup.MustRootLogger().Error("unable to register at metal-api",
+			zap.Error(err),
+		)
 		time.Sleep(time.Second)
 	}
-
-	zapup.MustRootLogger().Fatal("unable to register at metal-api",
-		zap.Error(err),
-	)
-	os.Exit(1)
 }
 
 func getNics() ([]*models.MetalNic, error) {
