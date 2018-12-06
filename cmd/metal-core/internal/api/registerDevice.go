@@ -1,8 +1,9 @@
 package api
 
 import (
-	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"net/http"
+
+	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/device"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
@@ -14,7 +15,7 @@ func (c client) RegisterDevice(deviceId string, request *domain.MetalHammerRegis
 	siteId := c.Config.SiteID
 	rackId := c.Config.RackID
 	params := device.NewRegisterDeviceParams()
-	params.Body = &models.ServiceRegisterRequest{
+	params.Body = &models.MetalRegisterDevice{
 		UUID:   &deviceId,
 		Siteid: &siteId,
 		Rackid: &rackId,

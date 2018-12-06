@@ -3,12 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/emicklei/go-restful-openapi"
 	"io/ioutil"
 	gonet "net"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/emicklei/go-restful-openapi"
 
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/device"
 	sw "git.f-i-ts.de/cloud-native/metal/metal-core/client/switch_operations"
@@ -137,7 +138,7 @@ func registerSwitch() {
 	}
 
 	params := sw.NewRegisterSwitchParams()
-	params.Body = &models.ServiceSwitchRegistration{
+	params.Body = &models.MetalRegisterSwitch{
 		ID:     &hostname,
 		SiteID: &appContext.Config.SiteID,
 		RackID: &appContext.Config.RackID,
