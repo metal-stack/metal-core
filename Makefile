@@ -6,6 +6,11 @@ include $(COMMONDIR)/Makefile.inc
 
 export GATEWAY := `docker inspect -f "{{ .NetworkSettings.Networks.metal.Gateway }}" metal-core`
 
+.PHONY: all
+all::
+	@bin/metal-core spec spec/metal-core.json
+	go mod tidy
+
 .PHONY: localbuild
 localbuild: bin/$(BINARY)
 	docker build -t registry.fi-ts.io/metal/metal-core -f Dockerfile.dev .
