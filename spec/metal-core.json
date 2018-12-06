@@ -350,10 +350,16 @@
         "created": {
           "type": "string"
         },
+        "description": {
+          "type": "string"
+        },
         "hardware": {
           "$ref": "#/definitions/models.MetalDeviceHardware"
         },
         "id": {
+          "type": "string"
+        },
+        "name": {
           "type": "string"
         },
         "rackid": {
@@ -489,7 +495,6 @@
     "models.MetalImage": {
       "required": [
         "id",
-        "name",
         "url"
       ],
       "properties": {
@@ -536,9 +541,7 @@
     },
     "models.MetalSite": {
       "required": [
-        "description",
-        "id",
-        "name"
+        "id"
       ],
       "properties": {
         "changed": {
@@ -561,8 +564,7 @@
     "models.MetalSize": {
       "required": [
         "constraints",
-        "id",
-        "name"
+        "id"
       ],
       "properties": {
         "changed": {
