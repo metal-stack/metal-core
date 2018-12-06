@@ -2,12 +2,13 @@ package test
 
 import (
 	"fmt"
+	"net/http"
+	"testing"
+
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"github.com/emicklei/go-restful"
 	"github.com/stretchr/testify/require"
-	"net/http"
-	"testing"
 )
 
 var devId = "fake-device-id"
@@ -46,7 +47,7 @@ func (a apiHandlerCoreTest) FindDevices(mac string) (int, []*models.MetalDevice)
 
 func (a apiHandlerCoreTest) RegisterDevice(deviceId string, request *domain.MetalHammerRegisterDeviceRequest) (int, *models.MetalDevice) {
 	dev := models.MetalDevice{
-		ID: devId,
+		ID: &devId,
 	}
 	return http.StatusOK, &dev
 }

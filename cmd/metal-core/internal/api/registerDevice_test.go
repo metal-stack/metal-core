@@ -2,19 +2,20 @@ package api
 
 import (
 	"errors"
+	"net/http"
+	"testing"
+
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/device"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 	"github.com/stretchr/testify/require"
-	"net/http"
-	"testing"
 )
 
 type registerDeviceMock struct {
 	simulateError                           bool
-	rdr                                     *models.ServiceRegisterRequest
+	rdr                                     *models.MetalRegisterDevice
 	actualDevID, actualSiteID, actualRackID string
 }
 
