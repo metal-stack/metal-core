@@ -11,6 +11,8 @@ all::
 	@bin/metal-core spec spec/metal-core.json
 	go mod tidy
 
+release:: all ;
+
 .PHONY: localbuild
 localbuild: bin/$(BINARY)
 	docker build -t registry.fi-ts.io/metal/metal-core -f Dockerfile.dev .
