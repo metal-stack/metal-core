@@ -7,10 +7,11 @@ import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 
+	"net/http"
+
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
 	"go.uber.org/zap"
-	"net/http"
 )
 
 func (e endpoint) Report(request *restful.Request, response *restful.Response) {
@@ -51,7 +52,7 @@ func (e endpoint) Report(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	body := &models.ServiceAllocationReport{
+	body := &models.MetalReportAllocation{
 		Success:         &report.Success,
 		ConsolePassword: &report.ConsolePassword,
 		Errormessage:    report.Message,
