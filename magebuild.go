@@ -15,43 +15,42 @@ const version = "devel"
 type BUILD mg.Namespace
 
 // (Re)build model and metal-core binary (useful right after git clone)
-func Build() error {
+func Build() {
 	b := BUILD{}
-	if err := b.Model(); err != nil {
-		return err
-	}
-	return b.Bin()
+	b.Model()
+	b.Bin()
 }
 
 // (Re)build model
-func (BUILD) Model() error {
+func (BUILD) Model()  {
 	swagger := "swagger"
 	if _, err := exec.Command("which", swagger).CombinedOutput(); err != nil {
 		wd, err := os.Getwd()
 		if err != nil {
-			return err
+			panic(err)
 		}
 		swagger = fmt.Sprintf("%v/bin/swagger", wd)
 		if _, err := os.Stat(swagger); os.IsNotExist(err) {
 			os.Mkdir("bin", 0755)
 			if err := exec.Command("wget", "-O", swagger,
 				"https://github.com/go-swagger/go-swagger/releases/download/v0.17.2/swagger_linux_amd64").Run(); err != nil {
-				return err
+				panic(err)
 			}
 			if err := os.Chmod(swagger, 0755); err != nil {
-				return err
+				panic(err)
 			}
 		}
 	}
-	defer os.Setenv("GO111MODULE", "on")
 	os.Setenv("GO111MODULE", "off")
-	return sh.RunV("bin/swagger", "generate", "client", "-f", "domain/metal-api.json", "--skip-validation")
+	defer os.Setenv("GO111MODULE", "on")
+	if err := sh.RunV(swagger, "generate", "client", "-f", "domain/metal-api.json", "--skip-validation"); err != nil {
+		panic(err)
+	}
 }
 
 // (Re)build metal-core binary in the bin subdirectory
-func (BUILD) Bin() error {
+func (BUILD) Bin() {
 	os.Setenv("GO111MODULE", "on")
-	os.Setenv("CGO_ENABLED", "0")
 	os.Setenv("GOOS", "linux")
 	gitVersion, _ := sh.Output("git", "describe", "--long", "--all")
 	gitsha, _ := sh.Output("git", "rev-parse", "--short=8", "HEAD")
@@ -59,21 +58,23 @@ func (BUILD) Bin() error {
 	ldflags := fmt.Sprintf("-X 'git.f-i-ts.de/cloud-native/metallib/version.Version=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Revision=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Gitsha1=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Builddate=%v'", version, gitVersion, gitsha, buildDate)
 	defer os.Chdir("../..")
 	os.Chdir("cmd/metal-core")
-	return sh.RunV("go", "build", "-tags", "netgo", "-ldflags", ldflags, "-o", "../../bin/metal-core")
+	if err := sh.RunV("go", "build", "-tags", "netgo", "-ldflags", ldflags, "-o", "../../bin/metal-core"); err != nil {
+		panic(err)
+	}
 }
 
 // (Re)build model, metal-core binary and metal-core image
-func (b BUILD) Core() error {
-	if err := Build(); err != nil {
-		return err
+func (b BUILD) Core() {
+	Build()
+	if err := sh.RunV("docker-compose", "build", "metal-core"); err != nil {
+		panic(err)
 	}
-	return sh.RunV("docker-compose", "build", "metal-core")
 }
 
 // (Re)build metal-core specification
-func (b BUILD) Spec() error {
-	if err := b.Bin(); err != nil {
-		return err
+func (b BUILD) Spec() {
+	b.Bin()
+	if err := sh.RunV("bin/metal-core", "spec", "spec/metal-core.json"); err != nil {
+		panic(err)
 	}
-	return sh.RunV("bin/metal-core", "spec", "spec/metal-core.json")
 }
