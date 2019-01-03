@@ -51,7 +51,7 @@ func createBootDiscoveryImageResponse(cfg *domain.Config) domain.BootResponse {
 	prefix := cfg.HammerImagePrefix
 	version := cfg.HammerImageVersion
 	kernel := fmt.Sprintf("%s/%s-kernel", blobstore, prefix)
-	ramdisk := fmt.Sprintf("%s/%s%s-initrd.img.lz4", blobstore, prefix, version)
+	ramdisk := fmt.Sprintf("%s/%s-initrd%s.img.lz4", blobstore, prefix, version)
 	metalCoreAddress := fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d", cfg.IP, cfg.Port)
 	metalAPIURL := fmt.Sprintf("METAL_API_URL=%s://%s:%d", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort)
 	cmdlineOptions := []string{
