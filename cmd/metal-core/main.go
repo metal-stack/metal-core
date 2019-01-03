@@ -129,7 +129,7 @@ func registerSwitch() (*models.MetalSwitch, error) {
 	var nics []*models.MetalNic
 	var hostname string
 
-	if nics, err = getNics(); err == nil {
+	if nics, err = getNics(); err != nil {
 		return nil, fmt.Errorf("unable to get nics:%v", err)
 	}
 
