@@ -35,19 +35,23 @@ type (
 
 	Config struct {
 		// Valid log levels are: DEBUG, INFO, WARN, ERROR, FATAL and PANIC
-		IP                 string `required:"true" desc:"set the metal core IP"`
-		SiteID             string `required:"true" desc:"set the site ID" split_words:"true"`
-		RackID             string `required:"true" desc:"set the rack ID" split_words:"true"`
-		BindAddress        string `required:"false" default:"0.0.0.0" desc:"set server bind address" split_words:"true"`
-		Port               int    `required:"false" default:"4242" desc:"set server port"`
-		LogLevel           string `required:"false" default:"info" desc:"set log level" split_words:"true"`
-		ConsoleLogging     bool   `required:"false" default:"true" desc:"enable/disable console logging" split_words:"true"`
-		ApiProtocol        string `required:"false" default:"http" desc:"set metal api protocol" envconfig:"metal_api_protocol"`
-		ApiIP              string `required:"false" default:"localhost" desc:"set metal api address" envconfig:"metal_api_ip"`
-		ApiPort            int    `required:"false" default:"8080" desc:"set metal api port" envconfig:"metal_api_port"`
-		HammerImagePrefix  string `required:"false" default:"metal-hammer" desc:"set hammer image prefix for kernel, initrd and cmdline download" split_words:"true" envconfig:"metal_core_hammer_image_prefix"`
-		HammerImageVersion string `required:"false" default:"" desc:"set hammer image version for initrd download" envconfig:"metal_core_hammer_image_version"`
-		MQAddress          string `required:"false" default:"localhost:4161" desc:"set the MQ server address" envconfig:"mq_address"`
+		IP             string `required:"true" desc:"set the metal core IP"`
+		SiteID         string `required:"true" desc:"set the site ID" split_words:"true"`
+		RackID         string `required:"true" desc:"set the rack ID" split_words:"true"`
+		BindAddress    string `required:"false" default:"0.0.0.0" desc:"set server bind address" split_words:"true"`
+		Port           int    `required:"false" default:"4242" desc:"set server port"`
+		LogLevel       string `required:"false" default:"info" desc:"set log level" split_words:"true"`
+		ConsoleLogging bool   `required:"false" default:"true" desc:"enable/disable console logging" split_words:"true"`
+		ApiProtocol    string `required:"false" default:"http" desc:"set metal api protocol" envconfig:"metal_api_protocol"`
+		ApiIP          string `required:"false" default:"localhost" desc:"set metal api address" envconfig:"metal_api_ip"`
+		ApiPort        int    `required:"false" default:"8080" desc:"set metal api port" envconfig:"metal_api_port"`
+		MQAddress      string `required:"false" default:"localhost:4161" desc:"set the MQ server address" envconfig:"mq_address"`
+	}
+
+	BootConfig struct {
+		MetalHammerImageURL    string
+		MetalHammerKernelURL   string
+		MetalHammerCommandLine string
 	}
 
 	IpmiConnection struct {
@@ -60,6 +64,7 @@ type (
 
 	AppContext struct {
 		*Config
+		*BootConfig
 		ApiClientHandler    func(*AppContext) APIClient
 		ServerHandler       func(*AppContext) Server
 		EndpointHandler     func(*AppContext) Endpoint

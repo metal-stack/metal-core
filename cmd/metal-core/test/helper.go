@@ -33,8 +33,15 @@ func mockApiEndpoint(apiHandler func(ctx *domain.AppContext) domain.APIClient) d
 		fmt.Println("Cannot fetch configuration")
 		os.Exit(-1)
 	}
+	bootCfg := &domain.BootConfig{
+		MetalHammerImageURL:    "https://blobstore.fi-ts.io/metal/images/metal-hammer/metal-hammer-initrd.img.lz4",
+		MetalHammerKernelURL:   "https://blobstore.fi-ts.io/metal/images/metal-hammer/metal-hammer-kernel",
+		MetalHammerCommandLine: "",
+	}
+
 	appContext = &domain.AppContext{
 		Config:           cfg,
+		BootConfig:       bootCfg,
 		ApiClientHandler: apiHandler,
 		EndpointHandler:  ep.Handler,
 	}

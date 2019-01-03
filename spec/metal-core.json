@@ -233,10 +233,10 @@
     },
     "domain.MetalHammerRegisterDeviceRequest": {
       "required": [
+        "memory",
         "nics",
         "cpu_cores",
         "disks",
-        "memory",
         "ipmi"
       ],
       "properties": {
@@ -302,6 +302,24 @@
         "size": {
           "type": "integer",
           "format": "int64"
+        }
+      }
+    },
+    "models.MetalBootConfiguration": {
+      "required": [
+        "commandline",
+        "imageurl",
+        "kernelurl"
+      ],
+      "properties": {
+        "commandline": {
+          "type": "string"
+        },
+        "imageurl": {
+          "type": "string"
+        },
+        "kernelurl": {
+          "type": "string"
         }
       }
     },
@@ -541,9 +559,13 @@
     },
     "models.MetalSite": {
       "required": [
+        "bootconfig",
         "id"
       ],
       "properties": {
+        "bootconfig": {
+          "$ref": "#/definitions/models.MetalBootConfiguration"
+        },
         "changed": {
           "type": "string"
         },

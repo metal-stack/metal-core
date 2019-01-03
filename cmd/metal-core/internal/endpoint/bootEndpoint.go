@@ -27,59 +27,31 @@ func (e endpoint) Boot(request *restful.Request, response *restful.Response) {
 				zap.Int("statusCode", sc),
 				zap.String("MAC", mac),
 			)
-			rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse(e.Config))
-			return
+			rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse(&e))
 		}
-
-		zapup.MustRootLogger().Error("There should not exist a device",
-			zap.Int("statusCode", sc),
-			zap.String("MAC", mac),
-		)
-		rest.Respond(response, http.StatusAccepted, createBootTinyCoreLinuxResponse())
-		return
+		// FIXME this should not happen, we should consider returning a recovery image for digging into to root cause.
 	}
-
-	zapup.MustRootLogger().Error("Failed to request Metal-API for a device",
-		zap.Int("apiStatusCode", sc),
-		zap.String("MAC", mac),
-	)
-	rest.Respond(response, http.StatusBadRequest, createBootTinyCoreLinuxResponse())
 }
 
-func createBootDiscoveryImageResponse(cfg *domain.Config) domain.BootResponse {
-	blobstore := "https://blobstore.fi-ts.io/metal/images/metal-hammer"
-	prefix := cfg.HammerImagePrefix
-	version := cfg.HammerImageVersion
-	kernel := fmt.Sprintf("%s/%s-kernel", blobstore, prefix)
-	ramdisk := fmt.Sprintf("%s/%s-initrd%s.img.lz4", blobstore, prefix, version)
+func createBootDiscoveryImageResponse(e *endpoint) domain.BootResponse {
+	cfg := e.Config
+
 	metalCoreAddress := fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d", cfg.IP, cfg.Port)
 	metalAPIURL := fmt.Sprintf("METAL_API_URL=%s://%s:%d", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort)
-	cmdlineOptions := []string{
-		"console=tty0",
-		"console=ttyS0",
-		"ip=dhcp",
-	}
-	cmdlineOptions = append(cmdlineOptions, metalCoreAddress, metalAPIURL)
+
+	cmdline := e.BootConfig.MetalHammerCommandLine
+	cmdline += " " + metalCoreAddress
+	cmdline += " " + metalAPIURL
+
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
-		cmdlineOptions = append(cmdlineOptions, "DEBUG=1")
+		cmdline += " " + "DEBUG=1"
 	}
 
 	return domain.BootResponse{
-		Kernel: kernel,
+		Kernel: e.BootConfig.MetalHammerKernelURL,
 		InitRamDisk: []string{
-			ramdisk,
+			e.BootConfig.MetalHammerImageURL,
 		},
-		CommandLine: strings.Join(cmdlineOptions, " "),
-	}
-}
-
-func createBootTinyCoreLinuxResponse() domain.BootResponse {
-	return domain.BootResponse{
-		Kernel: "http://tinycorelinux.net/7.x/x86/release/distribution_files/vmlinuz64",
-		InitRamDisk: []string{
-			"http://tinycorelinux.net/7.x/x86/release/distribution_files/rootfs.gz",
-			"http://tinycorelinux.net/7.x/x86/release/distribution_files/modules64.gz",
-		},
-		CommandLine: "console=tty0",
+		CommandLine: cmdline,
 	}
 }

@@ -73,8 +73,6 @@ func prepare() {
 		zap.String("API-Protocol", cfg.ApiProtocol),
 		zap.String("API-IP", cfg.ApiIP),
 		zap.Int("API-Port", cfg.ApiPort),
-		zap.String("HammerImagePrefix", cfg.HammerImagePrefix),
-		zap.String("HammerImageVersion", cfg.HammerImageVersion),
 	)
 
 	transport := client.New(fmt.Sprintf("%v:%d", cfg.ApiIP, cfg.ApiPort), "", nil)
@@ -91,7 +89,20 @@ func prepare() {
 
 	initConsumer()
 
-	go registerSwitch()
+	sw, err := registerSwitch()
+
+	if err != nil {
+		zapup.MustRootLogger().Fatal("unable to register",
+			zap.Error(err),
+		)
+		os.Exit(1)
+	}
+
+	appContext.BootConfig = &domain.BootConfig{
+		MetalHammerImageURL:    *sw.Site.Bootconfig.Imageurl,
+		MetalHammerKernelURL:   *sw.Site.Bootconfig.Kernelurl,
+		MetalHammerCommandLine: *sw.Site.Bootconfig.Commandline,
+	}
 
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
 		os.Setenv("DEBUG", "1")
@@ -113,29 +124,17 @@ func initConsumer() {
 		}, 5)
 }
 
-func registerSwitch() {
+func registerSwitch() (*models.MetalSwitch, error) {
 	var err error
 	var nics []*models.MetalNic
 	var hostname string
 
-	for {
-		if nics, err = getNics(); err == nil {
-			break
-		}
-		zapup.MustRootLogger().Error("unable to determine network interfaces",
-			zap.Error(err),
-		)
-		time.Sleep(time.Second)
+	if nics, err = getNics(); err == nil {
+		return nil, fmt.Errorf("unable to get nics:%v", err)
 	}
 
-	for {
-		if hostname, err = os.Hostname(); err == nil {
-			break
-		}
-		zapup.MustRootLogger().Error("unable to determine hostname",
-			zap.Error(err),
-		)
-		time.Sleep(time.Second)
+	if hostname, err = os.Hostname(); err != nil {
+		return nil, fmt.Errorf("unable to get hostname:%v", err)
 	}
 
 	params := sw.NewRegisterSwitchParams()
@@ -147,8 +146,8 @@ func registerSwitch() {
 	}
 
 	for {
-		if _, _, err = appContext.SwitchClient.RegisterSwitch(params); err == nil {
-			break
+		if _, created, err := appContext.SwitchClient.RegisterSwitch(params); err == nil {
+			return created.Payload, nil
 		}
 		zapup.MustRootLogger().Error("unable to register at metal-api",
 			zap.Error(err),
