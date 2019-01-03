@@ -74,6 +74,7 @@ func prepare() {
 		zap.String("API-IP", cfg.ApiIP),
 		zap.Int("API-Port", cfg.ApiPort),
 		zap.String("HammerImagePrefix", cfg.HammerImagePrefix),
+		zap.String("HammerImageVersion", cfg.HammerImageVersion),
 	)
 
 	transport := client.New(fmt.Sprintf("%v:%d", cfg.ApiIP, cfg.ApiPort), "", nil)
