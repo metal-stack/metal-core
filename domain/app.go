@@ -45,8 +45,8 @@ type (
 		ApiProtocol        string `required:"false" default:"http" desc:"set metal api protocol" envconfig:"metal_api_protocol"`
 		ApiIP              string `required:"false" default:"localhost" desc:"set metal api address" envconfig:"metal_api_ip"`
 		ApiPort            int    `required:"false" default:"8080" desc:"set metal api port" envconfig:"metal_api_port"`
-		HammerImagePrefix  string `required:"false" default:"metal-hammer" desc:"set hammer image prefix for kernel, initrd and cmdline download" split_words:"true"`
-		HammerImageVersion string `required:"false" default:"" desc:"set hammer image version for initrd download"`
+		HammerImagePrefix  string `required:"false" default:"metal-hammer" desc:"set hammer image prefix for kernel, initrd and cmdline download" split_words:"true" envconfig:"metal_core_hammer_image_prefix"`
+		HammerImageVersion string `required:"false" default:"" desc:"set hammer image version for initrd download" envconfig:"metal_core_hammer_image_version"`
 		MQAddress          string `required:"false" default:"localhost:4161" desc:"set the MQ server address" envconfig:"mq_address"`
 	}
 
