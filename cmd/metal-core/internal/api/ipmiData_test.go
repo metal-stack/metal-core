@@ -52,15 +52,15 @@ func TestIPMIData_OK(t *testing.T) {
 	}
 	apiClient := Handler(ctx)
 
-	devId := "fakeDeviceID"
+	devID := "fakedeviceID"
 
 	// WHEN
-	ipmiConn, err := apiClient.IPMIData(devId)
+	ipmiConn, err := apiClient.IPMIData(devID)
 
 	// THEN
 	require.NotNil(t, ipmiConn)
 	require.Nil(t, err)
-	require.Equal(t, devId, m.actualDevID)
+	require.Equal(t, devID, m.actualDevID)
 	require.Equal(t, m.host, ipmiConn.Hostname)
 	require.Equal(t, m.port, strconv.Itoa(ipmiConn.Port))
 	require.Equal(t, m.iface, ipmiConn.Interface)
@@ -84,15 +84,15 @@ func TestIPMIData_InvalidPort(t *testing.T) {
 	}
 	apiClient := Handler(ctx)
 
-	devId := "fakeDeviceID"
+	devID := "fakedeviceID"
 
 	// WHEN
-	ipmiConn, err := apiClient.IPMIData(devId)
+	ipmiConn, err := apiClient.IPMIData(devID)
 
 	// THEN
 	require.NotNil(t, ipmiConn)
 	require.Nil(t, err)
-	require.Equal(t, devId, m.actualDevID)
+	require.Equal(t, devID, m.actualDevID)
 	require.Equal(t, m.host, ipmiConn.Hostname)
 	require.Equal(t, 632, ipmiConn.Port)
 	require.Equal(t, m.iface, ipmiConn.Interface)
@@ -111,13 +111,13 @@ func TestIPMIData_Error(t *testing.T) {
 	}
 	apiClient := Handler(ctx)
 
-	devId := "fakeDeviceID"
+	devID := "fakedeviceID"
 
 	// WHEN
-	ipmiConn, err := apiClient.IPMIData(devId)
+	ipmiConn, err := apiClient.IPMIData(devID)
 
 	// THEN
 	require.Nil(t, ipmiConn)
 	require.NotNil(t, err)
-	require.Equal(t, fmt.Sprintf("IPMI for device %s not found: not found", devId), err.Error())
+	require.Equal(t, fmt.Sprintf("IPMI for device %s not found: not found", devID), err.Error())
 }

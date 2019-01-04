@@ -11,12 +11,12 @@ import (
 	"go.uber.org/zap"
 )
 
-func (c client) RegisterDevice(deviceId string, request *domain.MetalHammerRegisterDeviceRequest) (int, *models.MetalDevice) {
+func (c client) RegisterDevice(deviceID string, request *domain.MetalHammerRegisterDeviceRequest) (int, *models.MetalDevice) {
 	siteId := c.Config.SiteID
 	rackId := c.Config.RackID
 	params := device.NewRegisterDeviceParams()
 	params.Body = &models.MetalRegisterDevice{
-		UUID:   &deviceId,
+		UUID:   &deviceID,
 		Siteid: &siteId,
 		Rackid: &rackId,
 		Hardware: &models.MetalDeviceHardware{
@@ -31,7 +31,7 @@ func (c client) RegisterDevice(deviceId string, request *domain.MetalHammerRegis
 	ok, created, err := c.DeviceClient.RegisterDevice(params)
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to register device at Metal-API",
-			zap.String("deviceID", deviceId),
+			zap.String("deviceID", deviceID),
 			zap.String("siteID", siteId),
 			zap.String("rackID", rackId),
 			zap.Error(err),

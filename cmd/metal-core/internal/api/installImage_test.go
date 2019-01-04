@@ -36,14 +36,14 @@ func TestInstallImage_OK(t *testing.T) {
 	}
 	apiClient := Handler(ctx)
 
-	devId := "fakeDeviceID"
+	devID := "fakeDeviceID"
 
 	// WHEN
-	sc, _ := apiClient.InstallImage(devId)
+	sc, _ := apiClient.InstallImage(devID)
 
 	// THEN
 	require.Equal(t, http.StatusOK, sc)
-	require.Equal(t, devId, m.actualDevID)
+	require.Equal(t, devID, m.actualDevID)
 }
 
 func TestInstallImage_Error(t *testing.T) {
@@ -57,12 +57,12 @@ func TestInstallImage_Error(t *testing.T) {
 	}
 	apiClient := Handler(ctx)
 
-	devId := "fakeDeviceID"
+	devID := "fakeDeviceID"
 
 	// WHEN
-	sc, _ := apiClient.InstallImage(devId)
+	sc, _ := apiClient.InstallImage(devID)
 
 	// THEN
 	require.Equal(t, http.StatusInternalServerError, sc)
-	require.Equal(t, devId, m.actualDevID)
+	require.Equal(t, devID, m.actualDevID)
 }

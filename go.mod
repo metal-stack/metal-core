@@ -17,6 +17,7 @@ require (
 	github.com/jaypipes/ghw v0.0.0-20190102220436-783bc6943ce0
 	github.com/jaypipes/pcidb v0.0.0-20181227195446-5e996fc4841b // indirect
 	github.com/kelseyhightower/envconfig v1.3.0
+	github.com/kr/pty v1.1.3 // indirect
 	github.com/magefile/mage v1.8.0
 	github.com/mitchellh/go-homedir v1.0.0 // indirect
 	github.com/stretchr/testify v1.2.2

@@ -9,14 +9,14 @@ import (
 	"go.uber.org/zap"
 )
 
-func (c client) InstallImage(deviceId string) (int, *models.MetalDeviceWithPhoneHomeToken) {
+func (c client) InstallImage(deviceID string) (int, *models.MetalDeviceWithPhoneHomeToken) {
 	params := device.NewWaitForAllocationParams()
-	params.ID = deviceId
+	params.ID = deviceID
 
 	ok, err := c.DeviceClient.WaitForAllocation(params)
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to GET installation image from Metal-APIs wait endpoint",
-			zap.String("deviceID", deviceId),
+			zap.String("deviceID", deviceID),
 			zap.Error(err),
 		)
 		return http.StatusInternalServerError, nil

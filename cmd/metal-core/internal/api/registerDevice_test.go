@@ -37,31 +37,31 @@ func TestRegisterDevice_OK(t *testing.T) {
 		simulateError: false,
 	}
 
-	siteId := "fakeSiteID"
-	rackId := "fakeRackID"
-	devId := "fakeDeviceID"
+	siteID := "fakeSiteID"
+	rackID := "fakeRackID"
+	devID := "fakeDeviceID"
 
 	ctx := &domain.AppContext{
 		DeviceClient: device.New(m, strfmt.Default),
 		Config: &domain.Config{
-			SiteID: siteId,
-			RackID: rackId,
+			SiteID: siteID,
+			RackID: rackID,
 		},
 	}
 	apiClient := Handler(ctx)
 
 	payload := &domain.MetalHammerRegisterDeviceRequest{
-		UUID: devId,
+		UUID: devID,
 	}
 
 	// WHEN
-	sc, _ := apiClient.RegisterDevice(devId, payload)
+	sc, _ := apiClient.RegisterDevice(devID, payload)
 
 	// THEN
 	require.Equal(t, http.StatusOK, sc)
-	require.Equal(t, devId, m.actualDevID)
-	require.Equal(t, siteId, m.actualSiteID)
-	require.Equal(t, rackId, m.actualRackID)
+	require.Equal(t, devID, m.actualDevID)
+	require.Equal(t, siteID, m.actualSiteID)
+	require.Equal(t, rackID, m.actualRackID)
 }
 
 func TestRegisterDevice_Error(t *testing.T) {
@@ -70,29 +70,29 @@ func TestRegisterDevice_Error(t *testing.T) {
 		simulateError: true,
 	}
 
-	siteId := "fakeSiteID"
-	rackId := "fakeRackID"
-	devId := "fakeDeviceID"
+	siteID := "fakeSiteID"
+	rackID := "fakeRackID"
+	devID := "fakeDeviceID"
 
 	ctx := &domain.AppContext{
 		DeviceClient: device.New(m, strfmt.Default),
 		Config: &domain.Config{
-			SiteID: siteId,
-			RackID: rackId,
+			SiteID: siteID,
+			RackID: rackID,
 		},
 	}
 	apiClient := Handler(ctx)
 
 	payload := &domain.MetalHammerRegisterDeviceRequest{
-		UUID: devId,
+		UUID: devID,
 	}
 
 	// WHEN
-	sc, _ := apiClient.RegisterDevice(devId, payload)
+	sc, _ := apiClient.RegisterDevice(devID, payload)
 
 	// THEN
 	require.Equal(t, http.StatusInternalServerError, sc)
-	require.Equal(t, devId, m.actualDevID)
-	require.Equal(t, siteId, m.actualSiteID)
-	require.Equal(t, rackId, m.actualRackID)
+	require.Equal(t, devID, m.actualDevID)
+	require.Equal(t, siteID, m.actualSiteID)
+	require.Equal(t, rackID, m.actualRackID)
 }
