@@ -25,7 +25,8 @@ import (
 	"git.f-i-ts.de/cloud-native/metallib/version"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/go-openapi/runtime/client"
-	"github.com/jaypipes/ghw"
+	"github.com/vishvananda/netlink"
+
 	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/zap"
 )
@@ -157,23 +158,26 @@ func registerSwitch() (*models.MetalSwitch, error) {
 }
 
 func getNics() ([]*models.MetalNic, error) {
-	net, err := ghw.Network()
-	if err != nil {
-		return nil, fmt.Errorf("unable to get system nic(s), info:%v", err)
-	}
 	nics := []*models.MetalNic{}
-	for _, n := range net.NICs {
-		_, err := gonet.ParseMAC(n.MacAddress)
+	links, err := netlink.LinkList()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get all links:%v", err)
+	}
+	for _, l := range links {
+		attrs := l.Attrs()
+		name := attrs.Name
+		mac := attrs.HardwareAddr.String()
+		_, err := gonet.ParseMAC(mac)
 		if err != nil {
 			zapup.MustRootLogger().Info("skip interface with invalid mac",
-				zap.String("interface", n.Name),
-				zap.String("mac", n.MacAddress),
+				zap.String("interface", name),
+				zap.String("mac", mac),
 			)
 			continue
 		}
 		nic := &models.MetalNic{
-			Mac:  &n.MacAddress,
-			Name: &n.Name,
+			Mac:  &mac,
+			Name: &name,
 		}
 		nics = append(nics, nic)
 	}

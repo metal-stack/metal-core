@@ -14,15 +14,14 @@ require (
 	github.com/go-openapi/strfmt v0.18.0
 	github.com/go-openapi/swag v0.18.0
 	github.com/go-openapi/validate v0.18.0
-	github.com/jaypipes/ghw v0.0.0-20190102220436-783bc6943ce0
-	github.com/jaypipes/pcidb v0.0.0-20181227195446-5e996fc4841b // indirect
 	github.com/kelseyhightower/envconfig v1.3.0
-	github.com/kr/pty v1.1.3 // indirect
+	github.com/kr/pretty v0.1.0 // indirect
 	github.com/magefile/mage v1.8.0
-	github.com/mitchellh/go-homedir v1.0.0 // indirect
 	github.com/stretchr/testify v1.2.2
+	github.com/vishvananda/netlink v1.0.0
+	github.com/vishvananda/netns v0.0.0-20180720170159-13995c7128cc // indirect
 	github.com/vmware/goipmi v0.0.0-20181114221114-2333cd82d702
 	go.uber.org/zap v1.9.1
 	golang.org/x/net v0.0.0-20181220203305-927f97764cc3 // indirect
-	howett.net/plist v0.0.0-20181124034731-591f970eefbb // indirect
+	golang.org/x/sys v0.0.0-20190102155601-82a175fd1598 // indirect
 )
