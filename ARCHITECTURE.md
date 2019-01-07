@@ -33,3 +33,12 @@ This way the server is able to communicate with `metal-core` to eventually fetch
 Additionally, `metal-core` is connected to the network switch and handles port configurations to put the
 provisioned servers from PXE into their destination networks, and vice versa when freed by Metal API.
 It therefore also reboots them through IPMI at proper times. 
+
+The trigger to free a certain server is initiated by a user of Metal API, which subsequently publishes it through a
+proper NSQ channel. On the other end `metal-core` consumes from that channel and handles those triggers
+by putting the concerned server(s) back into PXE boot mode.
+
+## NSQ
+
+NSQ is chosen over NATS since it is more lightweight and comes without any message broker, which fosters scalability
+and HA. It also enables message replication through topics and round-robin loadbalancing through topic channels.
