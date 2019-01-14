@@ -147,7 +147,10 @@ func registerSwitch() (*models.MetalSwitch, error) {
 	}
 
 	for {
-		if _, created, err := appContext.SwitchClient.RegisterSwitch(params); err == nil {
+		if ok, created, err := appContext.SwitchClient.RegisterSwitch(params); err == nil {
+			if ok != nil {
+				return ok.Payload, nil
+			}
 			return created.Payload, nil
 		}
 		zapup.MustRootLogger().Error("unable to register at metal-api",
