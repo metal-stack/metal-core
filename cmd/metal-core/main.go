@@ -57,9 +57,9 @@ func prepare() {
 		os.Exit(1)
 	}
 
-	os.Setenv(zapup.KeyFieldApp, "Metal-Core")
+	_ = os.Setenv(zapup.KeyFieldApp, "Metal-Core")
 	if cfg.ConsoleLogging {
-		os.Setenv(zapup.KeyLogEncoding, "console")
+		_ = os.Setenv(zapup.KeyLogEncoding, "console")
 	}
 
 	zapup.MustRootLogger().Info("Metal-Core Version",
@@ -90,7 +90,7 @@ func prepare() {
 
 	initConsumer()
 
-	sw, err := registerSwitch()
+	s, err := registerSwitch()
 
 	if err != nil {
 		zapup.MustRootLogger().Fatal("unable to register",
@@ -100,18 +100,18 @@ func prepare() {
 	}
 
 	appContext.BootConfig = &domain.BootConfig{
-		MetalHammerImageURL:    *sw.Site.Bootconfig.Imageurl,
-		MetalHammerKernelURL:   *sw.Site.Bootconfig.Kernelurl,
-		MetalHammerCommandLine: *sw.Site.Bootconfig.Commandline,
+		MetalHammerImageURL:    *s.Site.Bootconfig.Imageurl,
+		MetalHammerKernelURL:   *s.Site.Bootconfig.Kernelurl,
+		MetalHammerCommandLine: *s.Site.Bootconfig.Commandline,
 	}
 
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
-		os.Setenv("DEBUG", "1")
+		_ = os.Setenv("DEBUG", "1")
 	}
 }
 
 func initConsumer() {
-	bus.NewConsumer(zapup.MustRootLogger(), appContext.Config.MQAddress).
+	_ = bus.NewConsumer(zapup.MustRootLogger(), appContext.Config.MQAddress).
 		MustRegister("device", "rack1").
 		Consume(domain.DeviceEvent{}, func(message interface{}) error {
 			evt := message.(*domain.DeviceEvent)
@@ -147,7 +147,10 @@ func registerSwitch() (*models.MetalSwitch, error) {
 	}
 
 	for {
-		if _, created, err := appContext.SwitchClient.RegisterSwitch(params); err == nil {
+		if ok, created, err := appContext.SwitchClient.RegisterSwitch(params); err == nil {
+			if ok != nil {
+				return ok.Payload, nil
+			}
 			return created.Payload, nil
 		}
 		zapup.MustRootLogger().Error("unable to register at metal-api",
