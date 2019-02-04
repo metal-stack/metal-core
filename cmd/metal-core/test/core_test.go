@@ -16,8 +16,8 @@ var devId = "fake-device-id"
 type apiHandlerCoreTest struct{}
 
 func TestLoggingMiddleware(t *testing.T) {
-	// GIVEN
-	e := mockApiEndpoint(func(ctx *domain.AppContext) domain.APIClient {
+	// given
+	e := mockAPIEndpoint(func(ctx *domain.AppContext) domain.APIClient {
 		return apiHandlerCoreTest{}
 	})
 	defer deleteLogFile()
@@ -30,10 +30,10 @@ func TestLoggingMiddleware(t *testing.T) {
 	payload.Nics = []*models.MetalNic{}
 	payload.Disks = []*models.MetalBlockDevice{}
 
-	// WHEN
+	// when
 	sc := doPost(fmt.Sprintf("/device/register/%v", devId), payload)
 
-	// THEN
+	// then
 	require.Equal(t, http.StatusOK, sc)
 	logs := getLogs()
 	require.Contains(t, logs, "Register device at Metal-API")
@@ -56,6 +56,6 @@ func (a apiHandlerCoreTest) InstallImage(deviceId string) (int, *models.MetalDev
 	return -1, nil
 }
 
-func (a apiHandlerCoreTest) IPMIData(deviceId string) (*domain.IpmiConnection, error) {
+func (a apiHandlerCoreTest) IPMIConfig(deviceId string) (*domain.IPMIConfig, error) {
 	return nil, nil
 }

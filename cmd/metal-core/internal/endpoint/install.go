@@ -9,14 +9,14 @@ import (
 	"go.uber.org/zap"
 )
 
-func (e endpoint) Install(request *restful.Request, response *restful.Response) {
+func (h *endpointHandler) Install(request *restful.Request, response *restful.Response) {
 	devId := request.PathParameter("id")
 
 	zapup.MustRootLogger().Info("Request Metal-API for an image to install",
 		zap.String("deviceID", devId),
 	)
 
-	sc, devWithToken := e.ApiClient().InstallImage(devId)
+	sc, devWithToken := h.APIClient().InstallImage(devId)
 
 	if sc == http.StatusOK && devWithToken != nil && devWithToken.Device != nil {
 		zapup.MustRootLogger().Info("Got image to install",

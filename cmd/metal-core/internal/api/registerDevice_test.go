@@ -48,7 +48,7 @@ func TestRegisterDevice_OK(t *testing.T) {
 			RackID: rackID,
 		},
 	}
-	apiClient := Handler(ctx)
+	apiClient := Client(ctx)
 
 	payload := &domain.MetalHammerRegisterDeviceRequest{
 		UUID: devID,
@@ -81,7 +81,7 @@ func TestRegisterDevice_Error(t *testing.T) {
 			RackID: rackID,
 		},
 	}
-	apiClient := Handler(ctx)
+	apiClient := Client(ctx)
 
 	payload := &domain.MetalHammerRegisterDeviceRequest{
 		UUID: devID,

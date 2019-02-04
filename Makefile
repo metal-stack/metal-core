@@ -21,8 +21,8 @@ localbuild: bin/$(BINARY)
 spec:
 	bin/metal-core spec spec/metal-core.json
 
-.PHONY: generate-client
-generate-client:
+.PHONY: swagger
+swagger:
 	rm -rf client/*
 	cp ../metal-api/spec/metal-api.json domain/metal-api.json
 	GO111MODULE=off swagger generate client -f domain/metal-api.json --skip-validation

@@ -9,7 +9,7 @@ import (
 	"github.com/emicklei/go-restful-openapi"
 )
 
-func (e endpoint) NewDeviceService() *restful.WebService {
+func (h *endpointHandler) NewDeviceService() *restful.WebService {
 	ws := new(restful.WebService)
 	ws.Path("/device").
 		Consumes(restful.MIME_JSON).
@@ -18,7 +18,7 @@ func (e endpoint) NewDeviceService() *restful.WebService {
 	tags := []string{"device"}
 
 	ws.Route(ws.POST("/register/{id}").
-		To(e.Register).
+		To(h.Register).
 		Doc("register device by ID").
 		Param(ws.PathParameter("id", "identifier of the device").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
@@ -29,7 +29,7 @@ func (e endpoint) NewDeviceService() *restful.WebService {
 		Returns(http.StatusInternalServerError, "Accepted", nil))
 
 	ws.Route(ws.GET("/install/{id}").
-		To(e.Install).
+		To(h.Install).
 		Doc("install device by ID").
 		Param(ws.PathParameter("id", "identifier of the device").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
@@ -38,7 +38,7 @@ func (e endpoint) NewDeviceService() *restful.WebService {
 		Returns(http.StatusNotFound, "Not Found", nil))
 
 	ws.Route(ws.POST("/report/{id}").
-		To(e.Report).
+		To(h.Report).
 		Doc("report device by ID").
 		Param(ws.PathParameter("id", "identifier of the device").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).

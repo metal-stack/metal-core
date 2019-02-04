@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (c client) RegisterDevice(deviceID string, request *domain.MetalHammerRegisterDeviceRequest) (int, *models.MetalDevice) {
+func (c *apiClient) RegisterDevice(deviceID string, request *domain.MetalHammerRegisterDeviceRequest) (int, *models.MetalDevice) {
 	siteId := c.Config.SiteID
 	rackId := c.Config.RackID
 	params := device.NewRegisterDeviceParams()

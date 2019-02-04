@@ -14,7 +14,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (e endpoint) Report(request *restful.Request, response *restful.Response) {
+func (h *endpointHandler) Report(request *restful.Request, response *restful.Response) {
 	var err error
 	report := &domain.Report{}
 
@@ -36,7 +36,7 @@ func (e endpoint) Report(request *restful.Request, response *restful.Response) {
 		return
 	}
 
-	ipmiConn, err := e.ApiClient().IPMIData(devId)
+	ipmiConn, err := h.APIClient().IPMIConfig(devId)
 	if err != nil {
 		rest.Respond(response, http.StatusInternalServerError, nil)
 		return
@@ -60,7 +60,7 @@ func (e endpoint) Report(request *restful.Request, response *restful.Response) {
 	params := device.NewAllocationReportParams()
 	params.ID = devId
 	params.Body = body
-	_, err = e.DeviceClient.AllocationReport(params)
+	_, err = h.DeviceClient.AllocationReport(params)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to report device back to api.",
 			zap.String("deviceID", devId),

@@ -12,7 +12,7 @@ import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/rest"
 )
 
-func (e endpoint) Register(request *restful.Request, response *restful.Response) {
+func (h *endpointHandler) Register(request *restful.Request, response *restful.Response) {
 	req := &domain.MetalHammerRegisterDeviceRequest{}
 
 	err := request.ReadEntity(req)
@@ -35,7 +35,7 @@ func (e endpoint) Register(request *restful.Request, response *restful.Response)
 		zap.String("IPMI-User", impiUser(req.IPMI)),
 	)
 
-	sc, dev := e.ApiClient().RegisterDevice(devId, req)
+	sc, dev := h.APIClient().RegisterDevice(devId, req)
 
 	if sc != http.StatusOK {
 		errMsg := "Failed to register device"

@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func (e endpoint) NewBootService() *restful.WebService {
+func (h *endpointHandler) NewBootService() *restful.WebService {
 	ws := new(restful.WebService)
 	ws.Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)
@@ -15,7 +15,7 @@ func (e endpoint) NewBootService() *restful.WebService {
 	tags := []string{"boot"}
 
 	ws.Route(ws.GET("/v1/boot/{mac}").
-		To(e.Boot).
+		To(h.Boot).
 		Doc("boot device by mac").
 		Param(ws.PathParameter("mac", "mac of a network interface of the device").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).

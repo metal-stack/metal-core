@@ -12,14 +12,14 @@ import (
 	"go.uber.org/zap"
 )
 
-func (e endpoint) Boot(request *restful.Request, response *restful.Response) {
+func (e *endpointHandler) Boot(request *restful.Request, response *restful.Response) {
 	mac := request.PathParameter("mac")
 
 	zapup.MustRootLogger().Info("Request Metal-API for a device",
 		zap.String("MAC", mac),
 	)
 
-	sc, devs := e.ApiClient().FindDevices(mac)
+	sc, devs := e.APIClient().FindDevices(mac)
 
 	if sc == http.StatusOK {
 		if len(devs) == 0 {
@@ -27,13 +27,13 @@ func (e endpoint) Boot(request *restful.Request, response *restful.Response) {
 				zap.Int("statusCode", sc),
 				zap.String("MAC", mac),
 			)
-			rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse(&e))
+			rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse(e))
 		}
 		// FIXME this should not happen, we should consider returning a recovery image for digging into to root cause.
 	}
 }
 
-func createBootDiscoveryImageResponse(e *endpoint) domain.BootResponse {
+func createBootDiscoveryImageResponse(e *endpointHandler) domain.BootResponse {
 	cfg := e.Config
 
 	metalCoreAddress := fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d", cfg.IP, cfg.Port)

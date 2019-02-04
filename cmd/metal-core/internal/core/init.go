@@ -1,4 +1,4 @@
-package server
+package core
 
 import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
@@ -7,9 +7,9 @@ import (
 	"github.com/go-openapi/spec"
 )
 
-func Init(e domain.Endpoint) *restfulspec.Config {
-	restful.DefaultContainer.Add(e.NewBootService())
-	restful.DefaultContainer.Add(e.NewDeviceService())
+func Init(endpointHandler domain.EndpointHandler) *restfulspec.Config {
+	restful.DefaultContainer.Add(endpointHandler.NewBootService())
+	restful.DefaultContainer.Add(endpointHandler.NewDeviceService())
 
 	cfg := restfulspec.Config{
 		WebServices:                   restful.RegisteredWebServices(),
@@ -38,10 +38,10 @@ func enrichSwaggerObject(swo *spec.Swagger) {
 		},
 	}
 	swo.Tags = []spec.Tag{
-		spec.Tag{TagProps: spec.TagProps{
+		{TagProps: spec.TagProps{
 			Name:        "boot",
 			Description: "Booting PXE clients"}},
-		spec.Tag{TagProps: spec.TagProps{
+		{TagProps: spec.TagProps{
 			Name:        "device",
 			Description: "Managing PXE boot clients"},
 		},

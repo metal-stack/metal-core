@@ -14,9 +14,9 @@ import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/device"
 	sw "git.f-i-ts.de/cloud-native/metal/metal-core/client/switch_operations"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/api"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/core"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/endpoint"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/event"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/server"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"github.com/go-openapi/strfmt"
@@ -31,9 +31,9 @@ import (
 	"go.uber.org/zap"
 )
 
-var (
-	appContext *domain.AppContext
-)
+type app struct {
+	*domain.AppContext
+}
 
 func main() {
 	if len(os.Args) > 1 && os.Args[1] == "spec" {
@@ -43,12 +43,12 @@ func main() {
 		}
 		buildSpec(filename)
 	} else {
-		prepare()
-		appContext.Server().Run()
+		app := prepare()
+		app.Server().Run()
 	}
 }
 
-func prepare() {
+func prepare() *app {
 	cfg := &domain.Config{}
 	if err := envconfig.Process("METAL_CORE", cfg); err != nil {
 		zapup.MustRootLogger().Fatal("Bad configuration",
@@ -78,19 +78,21 @@ func prepare() {
 
 	transport := client.New(fmt.Sprintf("%v:%d", cfg.ApiIP, cfg.ApiPort), "", nil)
 
-	appContext = &domain.AppContext{
-		Config:              cfg,
-		ApiClientHandler:    api.Handler,
-		ServerHandler:       server.Handler,
-		EndpointHandler:     endpoint.Handler,
-		EventHandlerHandler: event.Handler,
-		DeviceClient:        device.New(transport, strfmt.Default),
-		SwitchClient:        sw.New(transport, strfmt.Default),
+	app := &app{
+		AppContext: &domain.AppContext{
+			Config:       cfg,
+			DeviceClient: device.New(transport, strfmt.Default),
+			SwitchClient: sw.New(transport, strfmt.Default),
+		},
 	}
+	app.SetAPIClient(api.Client)
+	app.SetServer(core.Server)
+	app.SetEndpointHandler(endpoint.Handler)
+	app.SetEventHandler(event.Handler)
 
-	initConsumer()
+	app.initConsumer()
 
-	s, err := registerSwitch()
+	s, err := app.registerSwitch()
 
 	if err != nil {
 		zapup.MustRootLogger().Fatal("unable to register",
@@ -99,7 +101,7 @@ func prepare() {
 		os.Exit(1)
 	}
 
-	appContext.BootConfig = &domain.BootConfig{
+	app.BootConfig = &domain.BootConfig{
 		MetalHammerImageURL:    *s.Site.Bootconfig.Imageurl,
 		MetalHammerKernelURL:   *s.Site.Bootconfig.Kernelurl,
 		MetalHammerCommandLine: *s.Site.Bootconfig.Commandline,
@@ -108,24 +110,26 @@ func prepare() {
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
 		_ = os.Setenv("DEBUG", "1")
 	}
+
+	return app
 }
 
-func initConsumer() {
-	_ = bus.NewConsumer(zapup.MustRootLogger(), appContext.Config.MQAddress).
+func (a *app) initConsumer() {
+	_ = bus.NewConsumer(zapup.MustRootLogger(), a.Config.MQAddress).
 		MustRegister("device", "rack1").
 		Consume(domain.DeviceEvent{}, func(message interface{}) error {
 			evt := message.(*domain.DeviceEvent)
 			zapup.MustRootLogger().Info("Got message",
 				zap.Any("event", evt),
 			)
-			if evt.Type == domain.DELETE {
-				appContext.EventHandler().FreeDevice(evt.Old)
+			if evt.Type == domain.Delete {
+				a.EventHandler().FreeDevice(evt.Old)
 			}
 			return nil
 		}, 5)
 }
 
-func registerSwitch() (*models.MetalSwitch, error) {
+func (a *app) registerSwitch() (*models.MetalSwitch, error) {
 	var err error
 	var nics []*models.MetalNic
 	var hostname string
@@ -141,13 +145,13 @@ func registerSwitch() (*models.MetalSwitch, error) {
 	params := sw.NewRegisterSwitchParams()
 	params.Body = &models.MetalRegisterSwitch{
 		ID:     &hostname,
-		SiteID: &appContext.Config.SiteID,
-		RackID: &appContext.Config.RackID,
+		SiteID: &a.Config.SiteID,
+		RackID: &a.Config.RackID,
 		Nics:   nics,
 	}
 
 	for {
-		if ok, created, err := appContext.SwitchClient.RegisterSwitch(params); err == nil {
+		if ok, created, err := a.SwitchClient.RegisterSwitch(params); err == nil {
 			if ok != nil {
 				return ok.Payload, nil
 			}
@@ -161,7 +165,7 @@ func registerSwitch() (*models.MetalSwitch, error) {
 }
 
 func getNics() ([]*models.MetalNic, error) {
-	nics := []*models.MetalNic{}
+	var nics []*models.MetalNic
 	links, err := netlink.LinkList()
 	if err != nil {
 		return nil, fmt.Errorf("unable to get all links:%v", err)
@@ -188,7 +192,7 @@ func getNics() ([]*models.MetalNic, error) {
 }
 
 func buildSpec(filename string) {
-	cfg := server.Init(endpoint.Handler(nil))
+	cfg := core.Init(endpoint.Handler(nil))
 	actual := restfulspec.BuildSwagger(*cfg)
 	js, err := json.MarshalIndent(actual, "", "  ")
 	if err != nil {

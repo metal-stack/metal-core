@@ -50,12 +50,12 @@ func TestIPMIData_OK(t *testing.T) {
 	ctx := &domain.AppContext{
 		DeviceClient: device.New(m, strfmt.Default),
 	}
-	apiClient := Handler(ctx)
+	apiClient := Client(ctx)
 
 	devID := "fakedeviceID"
 
 	// WHEN
-	ipmiConn, err := apiClient.IPMIData(devID)
+	ipmiConn, err := apiClient.IPMIConfig(devID)
 
 	// THEN
 	require.NotNil(t, ipmiConn)
@@ -82,12 +82,12 @@ func TestIPMIData_InvalidPort(t *testing.T) {
 	ctx := &domain.AppContext{
 		DeviceClient: device.New(m, strfmt.Default),
 	}
-	apiClient := Handler(ctx)
+	apiClient := Client(ctx)
 
 	devID := "fakedeviceID"
 
 	// WHEN
-	ipmiConn, err := apiClient.IPMIData(devID)
+	ipmiConn, err := apiClient.IPMIConfig(devID)
 
 	// THEN
 	require.NotNil(t, ipmiConn)
@@ -109,12 +109,12 @@ func TestIPMIData_Error(t *testing.T) {
 	ctx := &domain.AppContext{
 		DeviceClient: device.New(m, strfmt.Default),
 	}
-	apiClient := Handler(ctx)
+	apiClient := Client(ctx)
 
 	devID := "fakedeviceID"
 
 	// WHEN
-	ipmiConn, err := apiClient.IPMIData(devID)
+	ipmiConn, err := apiClient.IPMIConfig(devID)
 
 	// THEN
 	require.Nil(t, ipmiConn)

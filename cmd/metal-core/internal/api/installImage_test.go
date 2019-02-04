@@ -34,7 +34,7 @@ func TestInstallImage_OK(t *testing.T) {
 	ctx := &domain.AppContext{
 		DeviceClient: device.New(m, strfmt.Default),
 	}
-	apiClient := Handler(ctx)
+	apiClient := Client(ctx)
 
 	devID := "fakeDeviceID"
 
@@ -55,7 +55,7 @@ func TestInstallImage_Error(t *testing.T) {
 	ctx := &domain.AppContext{
 		DeviceClient: device.New(m, strfmt.Default),
 	}
-	apiClient := Handler(ctx)
+	apiClient := Client(ctx)
 
 	devID := "fakeDeviceID"
 

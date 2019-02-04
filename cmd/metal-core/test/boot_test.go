@@ -16,8 +16,8 @@ var fakeMac = "00:11:22:33:44:55"
 type apiHandlerBootTest struct{}
 
 func TestPXEBoot(t *testing.T) {
-	// GIVEN
-	e := mockApiEndpoint(func(ctx *domain.AppContext) domain.APIClient {
+	// given
+	e := mockAPIEndpoint(func(ctx *domain.AppContext) domain.APIClient {
 		return apiHandlerBootTest{}
 	})
 	defer truncateLogFile()
@@ -32,11 +32,11 @@ func TestPXEBoot(t *testing.T) {
 		CommandLine: fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d METAL_API_URL=http://%v:%d", cfg.IP, cfg.Port, cfg.ApiIP, cfg.ApiPort),
 	}
 
-	// WHEN
+	// when
 	bootResponse := &domain.BootResponse{}
 	sc := doGet(fmt.Sprintf("/v1/boot/%v", fakeMac), bootResponse)
 
-	// THEN
+	// then
 	require.Equal(t, http.StatusOK, sc)
 	require.Equal(t, expected.Kernel, bootResponse.Kernel)
 	require.Equal(t, expected.InitRamDisk, bootResponse.InitRamDisk)
@@ -61,6 +61,6 @@ func (a apiHandlerBootTest) InstallImage(deviceId string) (int, *models.MetalDev
 	return -1, nil
 }
 
-func (a apiHandlerBootTest) IPMIData(deviceId string) (*domain.IpmiConnection, error) {
+func (a apiHandlerBootTest) IPMIConfig(deviceId string) (*domain.IPMIConfig, error) {
 	return nil, nil
 }

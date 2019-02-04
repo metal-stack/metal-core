@@ -23,11 +23,12 @@ var (
 	appContext *domain.AppContext
 )
 
-func mockApiEndpoint(apiHandler func(ctx *domain.AppContext) domain.APIClient) domain.Endpoint {
-	os.Setenv(zapup.KeyOutput, logFilename)
-	os.Setenv("METAL_CORE_IP", "test-host")
-	os.Setenv("METAL_CORE_SITE_ID", "FRA")
-	os.Setenv("METAL_CORE_RACK_ID", "Vagrant Rack 1")
+func mockAPIEndpoint(apiClient func(ctx *domain.AppContext) domain.APIClient) domain.EndpointHandler {
+	_ = os.Setenv(zapup.KeyOutput, logFilename)
+	_ = os.Setenv("METAL_CORE_IP", "test-host")
+	_ = os.Setenv("METAL_CORE_SITE_ID", "FRA")
+	_ = os.Setenv("METAL_CORE_RACK_ID", "Vagrant Rack 1")
+
 	cfg = &domain.Config{}
 	if err := envconfig.Process("METAL_CORE", cfg); err != nil {
 		fmt.Println("Cannot fetch configuration")
@@ -40,12 +41,13 @@ func mockApiEndpoint(apiHandler func(ctx *domain.AppContext) domain.APIClient) d
 	}
 
 	appContext = &domain.AppContext{
-		Config:           cfg,
-		BootConfig:       bootCfg,
-		ApiClientHandler: apiHandler,
-		EndpointHandler:  ep.Handler,
+		Config:     cfg,
+		BootConfig: bootCfg,
 	}
-	return appContext.Endpoint()
+	appContext.SetAPIClient(apiClient)
+	appContext.SetEndpointHandler(ep.Handler)
+
+	return appContext.EndpointHandler()
 }
 
 func doGet(path string, response interface{}) int {
@@ -80,12 +82,15 @@ func truncateLogFile() {
 	if err != nil {
 		return
 	}
-	defer logFile.Close()
 
-	logFile.Truncate(0)
-	logFile.Seek(0, 0)
+	defer func() {
+		_ = logFile.Close()
+	}()
+
+	_ = logFile.Truncate(0)
+	_, _ = logFile.Seek(0, 0)
 }
 
 func deleteLogFile() {
-	os.Remove(logFilename)
+	_ = os.Remove(logFilename)
 }

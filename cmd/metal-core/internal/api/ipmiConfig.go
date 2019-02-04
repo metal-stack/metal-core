@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func (c client) IPMIData(deviceID string) (*domain.IpmiConnection, error) {
+func (c *apiClient) IPMIConfig(deviceID string) (*domain.IPMIConfig, error) {
 	params := device.NewIPMIDataParams()
 	params.ID = deviceID
 
@@ -34,7 +34,7 @@ func (c client) IPMIData(deviceID string) (*domain.IpmiConnection, error) {
 		)
 		port = 632
 	}
-	ipmiConn := &domain.IpmiConnection{
+	ipmiConn := &domain.IPMIConfig{
 		Hostname:  hostAndPort[0],
 		Port:      port,
 		Interface: *ipmiData.Interface,

@@ -7,10 +7,10 @@ import (
 	"go.uber.org/zap"
 )
 
-func (l listener) FreeDevice(device *models.MetalDevice) {
+func (h *eventHandler) FreeDevice(device *models.MetalDevice) {
 	var err error
 
-	ipmiConn, err := l.ApiClient().IPMIData(*device.ID)
+	ipmiConn, err := h.APIClient().IPMIConfig(*device.ID)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to set read IPMI connection details",
 			zap.Any("device", device),

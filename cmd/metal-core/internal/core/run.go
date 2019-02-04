@@ -1,15 +1,16 @@
-package server
+package core
 
 import (
 	"fmt"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/endpoint"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
 	"go.uber.org/zap"
 	"net/http"
 )
 
-func (s server) Run() {
-	Init(s.EndpointHandler(s.AppContext))
+func (s *coreServer) Run() {
+	Init(endpoint.Handler(s.AppContext))
 
 	// enable CORS for the UI to work
 	cors := restful.CrossOriginResourceSharing{
@@ -26,5 +27,5 @@ func (s server) Run() {
 		zap.String("address", addr),
 	)
 
-	http.ListenAndServe(addr, nil)
+	zapup.MustRootLogger().Sugar().Fatal(http.ListenAndServe(addr, nil))
 }

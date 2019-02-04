@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func (c client) FindDevices(mac string) (int, []*models.MetalDevice) {
+func (c *apiClient) FindDevices(mac string) (int, []*models.MetalDevice) {
 	params := device.NewSearchDeviceParams()
 	params.Mac = &mac
 
