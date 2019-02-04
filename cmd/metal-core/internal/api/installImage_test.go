@@ -34,12 +34,12 @@ func TestInstallImage_OK(t *testing.T) {
 	ctx := &domain.AppContext{
 		DeviceClient: device.New(m, strfmt.Default),
 	}
-	apiClient := NewClient(ctx)
+	ctx.SetAPIClient(NewClient)
 
 	devID := "fakeDeviceID"
 
 	// WHEN
-	sc, _ := apiClient.InstallImage(devID)
+	sc, _ := ctx.APIClient().InstallImage(devID)
 
 	// THEN
 	require.Equal(t, http.StatusOK, sc)
@@ -55,12 +55,12 @@ func TestInstallImage_Error(t *testing.T) {
 	ctx := &domain.AppContext{
 		DeviceClient: device.New(m, strfmt.Default),
 	}
-	apiClient := NewClient(ctx)
+	ctx.SetAPIClient(NewClient)
 
 	devID := "fakeDeviceID"
 
 	// WHEN
-	sc, _ := apiClient.InstallImage(devID)
+	sc, _ := ctx.APIClient().InstallImage(devID)
 
 	// THEN
 	require.Equal(t, http.StatusInternalServerError, sc)

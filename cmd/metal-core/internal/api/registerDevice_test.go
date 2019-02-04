@@ -48,14 +48,14 @@ func TestRegisterDevice_OK(t *testing.T) {
 			RackID: rackID,
 		},
 	}
-	apiClient := NewClient(ctx)
+	ctx.SetAPIClient(NewClient)
 
 	payload := &domain.MetalHammerRegisterDeviceRequest{
 		UUID: devID,
 	}
 
 	// WHEN
-	sc, _ := apiClient.RegisterDevice(devID, payload)
+	sc, _ := ctx.APIClient().RegisterDevice(devID, payload)
 
 	// THEN
 	require.Equal(t, http.StatusOK, sc)
@@ -81,14 +81,14 @@ func TestRegisterDevice_Error(t *testing.T) {
 			RackID: rackID,
 		},
 	}
-	apiClient := NewClient(ctx)
+	ctx.SetAPIClient(NewClient)
 
 	payload := &domain.MetalHammerRegisterDeviceRequest{
 		UUID: devID,
 	}
 
 	// WHEN
-	sc, _ := apiClient.RegisterDevice(devID, payload)
+	sc, _ := ctx.APIClient().RegisterDevice(devID, payload)
 
 	// THEN
 	require.Equal(t, http.StatusInternalServerError, sc)

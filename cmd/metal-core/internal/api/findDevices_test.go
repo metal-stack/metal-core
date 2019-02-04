@@ -34,12 +34,12 @@ func TestFindDevices_OK(t *testing.T) {
 	ctx := &domain.AppContext{
 		DeviceClient: device.New(m, strfmt.Default),
 	}
-	apiClient := NewClient(ctx)
+	ctx.SetAPIClient(NewClient)
 
 	mac := "00:11:22:33:44:55:66:77"
 
 	// WHEN
-	sc, _ := apiClient.FindDevices(mac)
+	sc, _ := ctx.APIClient().FindDevices(mac)
 
 	// THEN
 	require.Equal(t, http.StatusOK, sc)
@@ -55,12 +55,12 @@ func TestFindDevices_Error(t *testing.T) {
 	ctx := &domain.AppContext{
 		DeviceClient: device.New(m, strfmt.Default),
 	}
-	apiClient := NewClient(ctx)
+	ctx.SetAPIClient(NewClient)
 
 	mac := "00:11:22:33:44:55:66:77"
 
 	// WHEN
-	sc, _ := apiClient.FindDevices(mac)
+	sc, _ := ctx.APIClient().FindDevices(mac)
 
 	// THEN
 	require.Equal(t, http.StatusInternalServerError, sc)
