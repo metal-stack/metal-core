@@ -34,7 +34,7 @@ func TestFindDevices_OK(t *testing.T) {
 	ctx := &domain.AppContext{
 		DeviceClient: device.New(m, strfmt.Default),
 	}
-	apiClient := Client(ctx)
+	apiClient := NewClient(ctx)
 
 	mac := "00:11:22:33:44:55:66:77"
 
@@ -55,7 +55,7 @@ func TestFindDevices_Error(t *testing.T) {
 	ctx := &domain.AppContext{
 		DeviceClient: device.New(m, strfmt.Default),
 	}
-	apiClient := Client(ctx)
+	apiClient := NewClient(ctx)
 
 	mac := "00:11:22:33:44:55:66:77"
 

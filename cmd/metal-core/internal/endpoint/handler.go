@@ -8,6 +8,6 @@ type endpointHandler struct {
 	*domain.AppContext
 }
 
-func Handler(ctx *domain.AppContext) domain.EndpointHandler {
+func NewHandler(ctx *domain.AppContext) domain.EndpointHandler {
 	return &endpointHandler{ctx}
 }

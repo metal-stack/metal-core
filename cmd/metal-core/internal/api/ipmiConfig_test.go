@@ -50,7 +50,7 @@ func TestIPMIData_OK(t *testing.T) {
 	ctx := &domain.AppContext{
 		DeviceClient: device.New(m, strfmt.Default),
 	}
-	apiClient := Client(ctx)
+	apiClient := NewClient(ctx)
 
 	devID := "fakedeviceID"
 
@@ -82,7 +82,7 @@ func TestIPMIData_InvalidPort(t *testing.T) {
 	ctx := &domain.AppContext{
 		DeviceClient: device.New(m, strfmt.Default),
 	}
-	apiClient := Client(ctx)
+	apiClient := NewClient(ctx)
 
 	devID := "fakedeviceID"
 
@@ -109,7 +109,7 @@ func TestIPMIData_Error(t *testing.T) {
 	ctx := &domain.AppContext{
 		DeviceClient: device.New(m, strfmt.Default),
 	}
-	apiClient := Client(ctx)
+	apiClient := NewClient(ctx)
 
 	devID := "fakedeviceID"
 

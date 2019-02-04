@@ -8,6 +8,6 @@ type coreServer struct {
 	*domain.AppContext
 }
 
-func Server(ctx *domain.AppContext) domain.Server {
+func NewServer(ctx *domain.AppContext) domain.Server {
 	return &coreServer{ctx}
 }

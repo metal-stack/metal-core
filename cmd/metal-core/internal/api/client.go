@@ -6,6 +6,6 @@ type apiClient struct {
 	*domain.AppContext
 }
 
-func Client(ctx *domain.AppContext) domain.APIClient {
+func NewClient(ctx *domain.AppContext) domain.APIClient {
 	return &apiClient{ctx}
 }

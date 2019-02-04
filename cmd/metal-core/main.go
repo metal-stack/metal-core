@@ -85,10 +85,10 @@ func prepare() *app {
 			SwitchClient: sw.New(transport, strfmt.Default),
 		},
 	}
-	app.SetAPIClient(api.Client)
-	app.SetServer(core.Server)
-	app.SetEndpointHandler(endpoint.Handler)
-	app.SetEventHandler(event.Handler)
+	app.SetAPIClient(api.NewClient)
+	app.SetServer(core.NewServer)
+	app.SetEndpointHandler(endpoint.NewHandler)
+	app.SetEventHandler(event.NewHandler)
 
 	app.initConsumer()
 
@@ -192,7 +192,7 @@ func getNics() ([]*models.MetalNic, error) {
 }
 
 func buildSpec(filename string) {
-	cfg := core.Init(endpoint.Handler(nil))
+	cfg := core.Init(endpoint.NewHandler(nil))
 	actual := restfulspec.BuildSwagger(*cfg)
 	js, err := json.MarshalIndent(actual, "", "  ")
 	if err != nil {

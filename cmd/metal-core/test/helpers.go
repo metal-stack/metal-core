@@ -45,7 +45,7 @@ func mockAPIEndpoint(apiClient func(ctx *domain.AppContext) domain.APIClient) do
 		BootConfig: bootCfg,
 	}
 	appContext.SetAPIClient(apiClient)
-	appContext.SetEndpointHandler(ep.Handler)
+	appContext.SetEndpointHandler(ep.NewHandler)
 
 	return appContext.EndpointHandler()
 }

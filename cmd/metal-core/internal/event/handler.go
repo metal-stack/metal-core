@@ -6,6 +6,6 @@ type eventHandler struct {
 	*domain.AppContext
 }
 
-func Handler(ctx *domain.AppContext) domain.EventHandler {
+func NewHandler(ctx *domain.AppContext) domain.EventHandler {
 	return &eventHandler{ctx}
 }

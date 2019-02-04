@@ -10,7 +10,7 @@ import (
 )
 
 func (s *coreServer) Run() {
-	Init(endpoint.Handler(s.AppContext))
+	Init(endpoint.NewHandler(s.AppContext))
 
 	// enable CORS for the UI to work
 	cors := restful.CrossOriginResourceSharing{
