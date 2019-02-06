@@ -102,9 +102,9 @@ func prepare() *app {
 	}
 
 	app.BootConfig = &domain.BootConfig{
-		MetalHammerImageURL:    *s.Site.Bootconfig.Imageurl,
-		MetalHammerKernelURL:   *s.Site.Bootconfig.Kernelurl,
-		MetalHammerCommandLine: *s.Site.Bootconfig.Commandline,
+		MetalHammerImageURL:    *s.Partition.Bootconfig.Imageurl,
+		MetalHammerKernelURL:   *s.Partition.Bootconfig.Kernelurl,
+		MetalHammerCommandLine: *s.Partition.Bootconfig.Commandline,
 	}
 
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
@@ -145,7 +145,7 @@ func (a *app) registerSwitch() (*models.MetalSwitch, error) {
 	params := sw.NewRegisterSwitchParams()
 	params.Body = &models.MetalRegisterSwitch{
 		ID:     &hostname,
-		SiteID: &a.Config.SiteID,
+		PartitionID: &a.Config.PartitionID,
 		RackID: &a.Config.RackID,
 		Nics:   nics,
 	}

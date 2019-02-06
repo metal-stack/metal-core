@@ -16,14 +16,14 @@ import (
 type registerDeviceMock struct {
 	simulateError                           bool
 	rdr                                     *models.MetalRegisterDevice
-	actualDevID, actualSiteID, actualRackID string
+	actualDevID, actualPartitionID, actualRackID string
 }
 
 func (m *registerDeviceMock) Submit(o *runtime.ClientOperation) (interface{}, error) {
 	params := o.Params.(*device.RegisterDeviceParams)
 	m.rdr = params.Body
 	m.actualDevID = *m.rdr.UUID
-	m.actualSiteID = *m.rdr.Siteid
+	m.actualPartitionID = *m.rdr.Partitionid
 	m.actualRackID = *m.rdr.Rackid
 	if m.simulateError {
 		return nil, errors.New("not found")
@@ -37,14 +37,14 @@ func TestRegisterDevice_OK(t *testing.T) {
 		simulateError: false,
 	}
 
-	siteID := "fakeSiteID"
+	partitionID := "fakePartitionID"
 	rackID := "fakeRackID"
 	devID := "fakeDeviceID"
 
 	ctx := &domain.AppContext{
 		DeviceClient: device.New(m, strfmt.Default),
 		Config: &domain.Config{
-			SiteID: siteID,
+			PartitionID: partitionID,
 			RackID: rackID,
 		},
 	}
@@ -60,7 +60,7 @@ func TestRegisterDevice_OK(t *testing.T) {
 	// THEN
 	require.Equal(t, http.StatusOK, sc)
 	require.Equal(t, devID, m.actualDevID)
-	require.Equal(t, siteID, m.actualSiteID)
+	require.Equal(t, partitionID, m.actualPartitionID)
 	require.Equal(t, rackID, m.actualRackID)
 }
 
@@ -70,14 +70,14 @@ func TestRegisterDevice_Error(t *testing.T) {
 		simulateError: true,
 	}
 
-	siteID := "fakeSiteID"
+	partitionID := "fakePartitionID"
 	rackID := "fakeRackID"
 	devID := "fakeDeviceID"
 
 	ctx := &domain.AppContext{
 		DeviceClient: device.New(m, strfmt.Default),
 		Config: &domain.Config{
-			SiteID: siteID,
+			PartitionID: partitionID,
 			RackID: rackID,
 		},
 	}
@@ -93,6 +93,6 @@ func TestRegisterDevice_Error(t *testing.T) {
 	// THEN
 	require.Equal(t, http.StatusInternalServerError, sc)
 	require.Equal(t, devID, m.actualDevID)
-	require.Equal(t, siteID, m.actualSiteID)
+	require.Equal(t, partitionID, m.actualPartitionID)
 	require.Equal(t, rackID, m.actualRackID)
 }
