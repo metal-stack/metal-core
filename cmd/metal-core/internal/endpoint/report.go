@@ -24,10 +24,10 @@ func (h *endpointHandler) Report(request *restful.Request, response *restful.Res
 		return
 	}
 
-	devId := request.PathParameter("id")
+	machineID := request.PathParameter("id")
 
 	zapup.MustRootLogger().Info("Got report for machine",
-		zap.String("machineID", devId),
+		zap.String("machineID", machineID),
 		zap.Any("report", report),
 	)
 
@@ -36,7 +36,7 @@ func (h *endpointHandler) Report(request *restful.Request, response *restful.Res
 		return
 	}
 
-	ipmiConn, err := h.APIClient().IPMIConfig(devId)
+	ipmiConn, err := h.APIClient().IPMIConfig(machineID)
 	if err != nil {
 		rest.Respond(response, http.StatusInternalServerError, nil)
 		return
@@ -45,7 +45,7 @@ func (h *endpointHandler) Report(request *restful.Request, response *restful.Res
 	err = ipmi.SetBootDevHd(ipmiConn)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to set boot order of machine to HD",
-			zap.String("machineID", devId),
+			zap.String("machineID", machineID),
 			zap.Error(err),
 		)
 		rest.Respond(response, http.StatusInternalServerError, nil)
@@ -58,12 +58,12 @@ func (h *endpointHandler) Report(request *restful.Request, response *restful.Res
 		Errormessage:    report.Message,
 	}
 	params := machine.NewAllocationReportParams()
-	params.ID = devId
+	params.ID = machineID
 	params.Body = body
 	_, err = h.MachineClient.AllocationReport(params)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to report machine back to api.",
-			zap.String("machineID", devId),
+			zap.String("machineID", machineID),
 			zap.Error(err),
 		)
 		rest.Respond(response, http.StatusInternalServerError, nil)

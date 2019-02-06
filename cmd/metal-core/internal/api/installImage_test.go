@@ -13,12 +13,12 @@ import (
 
 type installImageMock struct {
 	simulateError bool
-	actualDevID   string
+	actualmachineID   string
 }
 
 func (m *installImageMock) Submit(o *runtime.ClientOperation) (interface{}, error) {
 	params := o.Params.(*machine.WaitForAllocationParams)
-	m.actualDevID = params.ID
+	m.actualmachineID = params.ID
 	if m.simulateError {
 		return nil, errors.New("not found")
 	}
@@ -36,14 +36,14 @@ func TestInstallImage_OK(t *testing.T) {
 	}
 	ctx.SetAPIClient(NewClient)
 
-	devID := "fakeMachineID"
+	machineID := "fakeMachineID"
 
 	// WHEN
-	sc, _ := ctx.APIClient().InstallImage(devID)
+	sc, _ := ctx.APIClient().InstallImage(machineID)
 
 	// THEN
 	require.Equal(t, http.StatusOK, sc)
-	require.Equal(t, devID, m.actualDevID)
+	require.Equal(t, machineID, m.actualmachineID)
 }
 
 func TestInstallImage_Error(t *testing.T) {
@@ -57,12 +57,12 @@ func TestInstallImage_Error(t *testing.T) {
 	}
 	ctx.SetAPIClient(NewClient)
 
-	devID := "fakeMachineID"
+	machineID := "fakeMachineID"
 
 	// WHEN
-	sc, _ := ctx.APIClient().InstallImage(devID)
+	sc, _ := ctx.APIClient().InstallImage(machineID)
 
 	// THEN
 	require.Equal(t, http.StatusInternalServerError, sc)
-	require.Equal(t, devID, m.actualDevID)
+	require.Equal(t, machineID, m.actualmachineID)
 }

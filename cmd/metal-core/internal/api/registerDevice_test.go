@@ -16,13 +16,13 @@ import (
 type registerMachineMock struct {
 	simulateError                           bool
 	rdr                                     *models.MetalRegisterMachine
-	actualDevID, actualPartitionID, actualRackID string
+	actualmachineID, actualPartitionID, actualRackID string
 }
 
 func (m *registerMachineMock) Submit(o *runtime.ClientOperation) (interface{}, error) {
 	params := o.Params.(*machine.RegisterMachineParams)
 	m.rdr = params.Body
-	m.actualDevID = *m.rdr.UUID
+	m.actualmachineID = *m.rdr.UUID
 	m.actualPartitionID = *m.rdr.Partitionid
 	m.actualRackID = *m.rdr.Rackid
 	if m.simulateError {
@@ -39,7 +39,7 @@ func TestRegisterMachine_OK(t *testing.T) {
 
 	partitionID := "fakePartitionID"
 	rackID := "fakeRackID"
-	devID := "fakeMachineID"
+	machineID := "fakeMachineID"
 
 	ctx := &domain.AppContext{
 		MachineClient: machine.New(m, strfmt.Default),
@@ -51,15 +51,15 @@ func TestRegisterMachine_OK(t *testing.T) {
 	ctx.SetAPIClient(NewClient)
 
 	payload := &domain.MetalHammerRegisterMachineRequest{
-		UUID: devID,
+		UUID: machineID,
 	}
 
 	// WHEN
-	sc, _ := ctx.APIClient().RegisterMachine(devID, payload)
+	sc, _ := ctx.APIClient().RegisterMachine(machineID, payload)
 
 	// THEN
 	require.Equal(t, http.StatusOK, sc)
-	require.Equal(t, devID, m.actualDevID)
+	require.Equal(t, machineID, m.actualmachineID)
 	require.Equal(t, partitionID, m.actualPartitionID)
 	require.Equal(t, rackID, m.actualRackID)
 }
@@ -72,7 +72,7 @@ func TestRegisterMachine_Error(t *testing.T) {
 
 	partitionID := "fakePartitionID"
 	rackID := "fakeRackID"
-	devID := "fakeMachineID"
+	machineID := "fakeMachineID"
 
 	ctx := &domain.AppContext{
 		MachineClient: machine.New(m, strfmt.Default),
@@ -84,15 +84,15 @@ func TestRegisterMachine_Error(t *testing.T) {
 	ctx.SetAPIClient(NewClient)
 
 	payload := &domain.MetalHammerRegisterMachineRequest{
-		UUID: devID,
+		UUID: machineID,
 	}
 
 	// WHEN
-	sc, _ := ctx.APIClient().RegisterMachine(devID, payload)
+	sc, _ := ctx.APIClient().RegisterMachine(machineID, payload)
 
 	// THEN
 	require.Equal(t, http.StatusInternalServerError, sc)
-	require.Equal(t, devID, m.actualDevID)
+	require.Equal(t, machineID, m.actualmachineID)
 	require.Equal(t, partitionID, m.actualPartitionID)
 	require.Equal(t, rackID, m.actualRackID)
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var devId = "fake-machine-id"
+var machineID = "fake-machine-id"
 
 type apiHandlerCoreTest struct{}
 
@@ -25,13 +25,13 @@ func TestLoggingMiddleware(t *testing.T) {
 	restful.Add(e.NewMachineService())
 
 	payload := &domain.MetalHammerRegisterMachineRequest{
-		UUID: devId,
+		UUID: machineID,
 	}
 	payload.Nics = []*models.MetalNic{}
 	payload.Disks = []*models.MetalBlockMachine{}
 
 	// when
-	sc := doPost(fmt.Sprintf("/machine/register/%v", devId), payload)
+	sc := doPost(fmt.Sprintf("/machine/register/%v", machineID), payload)
 
 	// then
 	require.Equal(t, http.StatusOK, sc)
@@ -47,7 +47,7 @@ func (a apiHandlerCoreTest) FindMachines(mac string) (int, []*models.MetalMachin
 
 func (a apiHandlerCoreTest) RegisterMachine(machineId string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.MetalMachine) {
 	dev := models.MetalMachine{
-		ID: &devId,
+		ID: &machineID,
 	}
 	return http.StatusOK, &dev
 }

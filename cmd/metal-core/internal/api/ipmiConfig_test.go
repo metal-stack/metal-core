@@ -16,12 +16,12 @@ import (
 type ipmiDataMock struct {
 	simulateError                     bool
 	host, port, iface, user, password string
-	actualDevID                       string
+	actualmachineID                       string
 }
 
 func (m *ipmiDataMock) Submit(o *runtime.ClientOperation) (interface{}, error) {
 	params := o.Params.(*machine.IPMIDataParams)
-	m.actualDevID = params.ID
+	m.actualmachineID = params.ID
 	if m.simulateError {
 		return nil, errors.New("not found")
 	}
@@ -52,15 +52,15 @@ func TestIPMIData_OK(t *testing.T) {
 	}
 	ctx.SetAPIClient(NewClient)
 
-	devID := "fakemachineID"
+	machineID := "fakemachineID"
 
 	// WHEN
-	ipmiConn, err := ctx.APIClient().IPMIConfig(devID)
+	ipmiConn, err := ctx.APIClient().IPMIConfig(machineID)
 
 	// THEN
 	require.NotNil(t, ipmiConn)
 	require.Nil(t, err)
-	require.Equal(t, devID, m.actualDevID)
+	require.Equal(t, machineID, m.actualmachineID)
 	require.Equal(t, m.host, ipmiConn.Hostname)
 	require.Equal(t, m.port, strconv.Itoa(ipmiConn.Port))
 	require.Equal(t, m.iface, ipmiConn.Interface)
@@ -84,15 +84,15 @@ func TestIPMIData_InvalidPort(t *testing.T) {
 	}
 	ctx.SetAPIClient(NewClient)
 
-	devID := "fakemachineID"
+	machineID := "fakemachineID"
 
 	// WHEN
-	ipmiConn, err := ctx.APIClient().IPMIConfig(devID)
+	ipmiConn, err := ctx.APIClient().IPMIConfig(machineID)
 
 	// THEN
 	require.NotNil(t, ipmiConn)
 	require.Nil(t, err)
-	require.Equal(t, devID, m.actualDevID)
+	require.Equal(t, machineID, m.actualmachineID)
 	require.Equal(t, m.host, ipmiConn.Hostname)
 	require.Equal(t, 632, ipmiConn.Port)
 	require.Equal(t, m.iface, ipmiConn.Interface)
@@ -111,13 +111,13 @@ func TestIPMIData_Error(t *testing.T) {
 	}
 	ctx.SetAPIClient(NewClient)
 
-	devID := "fakemachineID"
+	machineID := "fakemachineID"
 
 	// WHEN
-	ipmiConn, err := ctx.APIClient().IPMIConfig(devID)
+	ipmiConn, err := ctx.APIClient().IPMIConfig(machineID)
 
 	// THEN
 	require.Nil(t, ipmiConn)
 	require.NotNil(t, err)
-	require.Equal(t, fmt.Sprintf("IPMI for machine %s not found: not found", devID), err.Error())
+	require.Equal(t, fmt.Sprintf("IPMI for machine %s not found: not found", machineID), err.Error())
 }

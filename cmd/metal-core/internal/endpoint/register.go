@@ -25,23 +25,23 @@ func (h *endpointHandler) Register(request *restful.Request, response *restful.R
 		return
 	}
 
-	devId := request.PathParameter("id")
+	machineID := request.PathParameter("id")
 
 	zapup.MustRootLogger().Info("Register machine at Metal-API",
-		zap.String("machineID", devId),
+		zap.String("machineID", machineID),
 		zap.String("IPMI-Address", impiAddress(req.IPMI)),
 		zap.String("IPMI-Interface", impiInterface(req.IPMI)),
 		zap.String("IPMI-MAC", impiMAC(req.IPMI)),
 		zap.String("IPMI-User", impiUser(req.IPMI)),
 	)
 
-	sc, dev := h.APIClient().RegisterMachine(devId, req)
+	sc, dev := h.APIClient().RegisterMachine(machineID, req)
 
 	if sc != http.StatusOK {
 		errMsg := "Failed to register machine"
 		zapup.MustRootLogger().Error(errMsg,
 			zap.Int("statusCode", sc),
-			zap.String("machineID", devId),
+			zap.String("machineID", machineID),
 			zap.Any("machine", dev),
 			zap.Error(err),
 		)
