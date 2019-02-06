@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"git.f-i-ts.de/cloud-native/metal/metal-core/client/device"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	sw "git.f-i-ts.de/cloud-native/metal/metal-core/client/switch_operations"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"github.com/emicklei/go-restful"
@@ -9,10 +9,10 @@ import (
 
 type EventType string
 
-type DeviceEvent struct {
+type MachineEvent struct {
 	Type EventType           `json:"type,omitempty"`
-	Old  *models.MetalDevice `json:"old,omitempty"`
-	New  *models.MetalDevice `json:"new,omitempty"`
+	Old  *models.MetalMachine `json:"old,omitempty"`
+	New  *models.MetalMachine `json:"new,omitempty"`
 }
 
 // Some EventType enums.
@@ -23,10 +23,10 @@ const (
 )
 
 type APIClient interface {
-	FindDevices(mac string) (int, []*models.MetalDevice)
-	RegisterDevice(deviceId string, request *MetalHammerRegisterDeviceRequest) (int, *models.MetalDevice)
-	InstallImage(deviceId string) (int, *models.MetalDeviceWithPhoneHomeToken)
-	IPMIConfig(deviceId string) (*IPMIConfig, error)
+	FindMachines(mac string) (int, []*models.MetalMachine)
+	RegisterMachine(machineId string, request *MetalHammerRegisterMachineRequest) (int, *models.MetalMachine)
+	InstallImage(machineId string) (int, *models.MetalMachineWithPhoneHomeToken)
+	IPMIConfig(machineId string) (*IPMIConfig, error)
 }
 
 type Server interface {
@@ -35,7 +35,7 @@ type Server interface {
 
 type EndpointHandler interface {
 	NewBootService() *restful.WebService
-	NewDeviceService() *restful.WebService
+	NewMachineService() *restful.WebService
 
 	Boot(request *restful.Request, response *restful.Response)
 	Install(request *restful.Request, response *restful.Response)
@@ -44,7 +44,7 @@ type EndpointHandler interface {
 }
 
 type EventHandler interface {
-	FreeDevice(device *models.MetalDevice)
+	FreeMachine(machine *models.MetalMachine)
 }
 
 type Config struct {
@@ -83,7 +83,7 @@ type AppContext struct {
 	server          func(*AppContext) Server
 	endpointHandler func(*AppContext) EndpointHandler
 	eventHandler    func(*AppContext) EventHandler
-	DeviceClient    *device.Client
+	MachineClient    *machine.Client
 	SwitchClient    *sw.Client
 }
 

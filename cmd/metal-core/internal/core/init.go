@@ -9,7 +9,7 @@ import (
 
 func Init(endpointHandler domain.EndpointHandler) *restfulspec.Config {
 	restful.DefaultContainer.Add(endpointHandler.NewBootService())
-	restful.DefaultContainer.Add(endpointHandler.NewDeviceService())
+	restful.DefaultContainer.Add(endpointHandler.NewMachineService())
 
 	cfg := restfulspec.Config{
 		WebServices:                   restful.RegisteredWebServices(),
@@ -42,7 +42,7 @@ func enrichSwaggerObject(swo *spec.Swagger) {
 			Name:        "boot",
 			Description: "Booting PXE clients"}},
 		{TagProps: spec.TagProps{
-			Name:        "device",
+			Name:        "machine",
 			Description: "Managing PXE boot clients"},
 		},
 	}

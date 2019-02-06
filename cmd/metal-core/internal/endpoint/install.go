@@ -13,15 +13,15 @@ func (h *endpointHandler) Install(request *restful.Request, response *restful.Re
 	devId := request.PathParameter("id")
 
 	zapup.MustRootLogger().Info("Request Metal-API for an image to install",
-		zap.String("deviceID", devId),
+		zap.String("machineID", devId),
 	)
 
 	sc, devWithToken := h.APIClient().InstallImage(devId)
 
-	if sc == http.StatusOK && devWithToken != nil && devWithToken.Device != nil {
+	if sc == http.StatusOK && devWithToken != nil && devWithToken.Machine != nil {
 		zapup.MustRootLogger().Info("Got image to install",
 			zap.Int("statusCode", sc),
-			zap.Any("deviceWithToken", devWithToken),
+			zap.Any("machineWithToken", devWithToken),
 		)
 		rest.Respond(response, http.StatusOK, devWithToken)
 		return
@@ -30,7 +30,7 @@ func (h *endpointHandler) Install(request *restful.Request, response *restful.Re
 	errMsg := "No installation image found"
 	zapup.MustRootLogger().Error(errMsg,
 		zap.Int("statusCode", sc),
-		zap.String("deviceID", devId),
+		zap.String("machineID", devId),
 	)
 	rest.RespondError(response, http.StatusNotFound, errMsg)
 }

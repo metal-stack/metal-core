@@ -15,7 +15,7 @@
     "version": "1.0.0"
   },
   "paths": {
-    "/v1/device": {
+    "/v1/machine": {
       "get": {
         "consumes": [
           "application/json"
@@ -24,17 +24,17 @@
           "application/json"
         ],
         "tags": [
-          "device"
+          "machine"
         ],
-        "summary": "get all known devices",
-        "operationId": "listDevices",
+        "summary": "get all known machines",
+        "operationId": "listMachines",
         "responses": {
           "200": {
             "description": "OK",
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/metal.Device"
+                "$ref": "#/definitions/metal.Machine"
               }
             }
           },
@@ -46,14 +46,14 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/metal.Device"
+                "$ref": "#/definitions/metal.Machine"
               }
             }
           }
         }
       }
     },
-    "/v1/device/allocate": {
+    "/v1/machine/allocate": {
       "post": {
         "consumes": [
           "application/json"
@@ -62,17 +62,17 @@
           "application/json"
         ],
         "tags": [
-          "device"
+          "machine"
         ],
-        "summary": "allocate a device",
-        "operationId": "allocateDevice",
+        "summary": "allocate a machine",
+        "operationId": "allocateMachine",
         "parameters": [
           {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/metal.AllocateDevice"
+              "$ref": "#/definitions/metal.AllocateMachine"
             }
           }
         ],
@@ -80,11 +80,11 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/metal.Device"
+              "$ref": "#/definitions/metal.Machine"
             }
           },
           "404": {
-            "description": "No free device for allocation found"
+            "description": "No free machine for allocation found"
           },
           "422": {
             "description": "Unprocessable Entity",
@@ -95,13 +95,13 @@
           "default": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/metal.Device"
+              "$ref": "#/definitions/metal.Machine"
             }
           }
         }
       }
     },
-    "/v1/device/find": {
+    "/v1/machine/find": {
       "get": {
         "consumes": [
           "application/json"
@@ -110,14 +110,14 @@
           "application/json"
         ],
         "tags": [
-          "device"
+          "machine"
         ],
-        "summary": "search devices",
-        "operationId": "searchDevice",
+        "summary": "search machines",
+        "operationId": "searchMachine",
         "parameters": [
           {
             "type": "string",
-            "description": "one of the MAC address of the device",
+            "description": "one of the MAC address of the machine",
             "name": "mac",
             "in": "query"
           }
@@ -128,7 +128,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/metal.Device"
+                "$ref": "#/definitions/metal.Machine"
               }
             }
           },
@@ -140,14 +140,14 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/metal.Device"
+                "$ref": "#/definitions/metal.Machine"
               }
             }
           }
         }
       }
     },
-    "/v1/device/phoneHome": {
+    "/v1/machine/phoneHome": {
       "post": {
         "consumes": [
           "application/json"
@@ -156,9 +156,9 @@
           "application/json"
         ],
         "tags": [
-          "device"
+          "machine"
         ],
-        "summary": "phone back home from the device",
+        "summary": "phone back home from the machine",
         "operationId": "phoneHome",
         "parameters": [
           {
@@ -175,7 +175,7 @@
             "description": "OK"
           },
           "404": {
-            "description": "Device could not be found by id"
+            "description": "Machine could not be found by id"
           },
           "422": {
             "description": "Unprocessable Entity",
@@ -189,7 +189,7 @@
         }
       }
     },
-    "/v1/device/register": {
+    "/v1/machine/register": {
       "post": {
         "consumes": [
           "application/json"
@@ -198,17 +198,17 @@
           "application/json"
         ],
         "tags": [
-          "device"
+          "machine"
         ],
-        "summary": "register a device",
-        "operationId": "registerDevice",
+        "summary": "register a machine",
+        "operationId": "registerMachine",
         "parameters": [
           {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/metal.RegisterDevice"
+              "$ref": "#/definitions/metal.RegisterMachine"
             }
           }
         ],
@@ -216,13 +216,13 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/metal.Device"
+              "$ref": "#/definitions/metal.Machine"
             }
           },
           "201": {
             "description": "Created",
             "schema": {
-              "$ref": "#/definitions/metal.Device"
+              "$ref": "#/definitions/metal.Machine"
             }
           },
           "404": {
@@ -231,13 +231,13 @@
           "default": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/metal.Device"
+              "$ref": "#/definitions/metal.Machine"
             }
           }
         }
       }
     },
-    "/v1/device/{id}": {
+    "/v1/machine/{id}": {
       "get": {
         "consumes": [
           "application/json"
@@ -246,14 +246,14 @@
           "application/json"
         ],
         "tags": [
-          "device"
+          "machine"
         ],
-        "summary": "get device by id",
-        "operationId": "findDevice",
+        "summary": "get machine by id",
+        "operationId": "findMachine",
         "parameters": [
           {
             "type": "string",
-            "description": "identifier of the device",
+            "description": "identifier of the machine",
             "name": "id",
             "in": "path",
             "required": true
@@ -263,7 +263,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/metal.Device"
+              "$ref": "#/definitions/metal.Machine"
             }
           },
           "404": {
@@ -272,13 +272,13 @@
           "default": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/metal.Device"
+              "$ref": "#/definitions/metal.Machine"
             }
           }
         }
       }
     },
-    "/v1/device/{id}/free": {
+    "/v1/machine/{id}/free": {
       "delete": {
         "consumes": [
           "application/json"
@@ -287,14 +287,14 @@
           "application/json"
         ],
         "tags": [
-          "device"
+          "machine"
         ],
-        "summary": "free a device",
-        "operationId": "freeDevice",
+        "summary": "free a machine",
+        "operationId": "freeMachine",
         "parameters": [
           {
             "type": "string",
-            "description": "identifier of the device",
+            "description": "identifier of the machine",
             "name": "id",
             "in": "path",
             "required": true
@@ -304,7 +304,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/metal.Device"
+              "$ref": "#/definitions/metal.Machine"
             }
           },
           "422": {
@@ -316,13 +316,13 @@
           "default": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/metal.Device"
+              "$ref": "#/definitions/metal.Machine"
             }
           }
         }
       }
     },
-    "/v1/device/{id}/ipmi": {
+    "/v1/machine/{id}/ipmi": {
       "get": {
         "consumes": [
           "application/json"
@@ -331,14 +331,14 @@
           "application/json"
         ],
         "tags": [
-          "device"
+          "machine"
         ],
-        "summary": "returns the IPMI connection data for a device",
+        "summary": "returns the IPMI connection data for a machine",
         "operationId": "ipmiData",
         "parameters": [
           {
             "type": "string",
-            "description": "identifier of the device",
+            "description": "identifier of the machine",
             "name": "id",
             "in": "path",
             "required": true
@@ -363,7 +363,7 @@
         }
       }
     },
-    "/v1/device/{id}/report": {
+    "/v1/machine/{id}/report": {
       "post": {
         "consumes": [
           "application/json"
@@ -372,14 +372,14 @@
           "application/json"
         ],
         "tags": [
-          "device"
+          "machine"
         ],
-        "summary": "send the allocation report of a given device",
+        "summary": "send the allocation report of a given machine",
         "operationId": "allocationReport",
         "parameters": [
           {
             "type": "string",
-            "description": "identifier of the device",
+            "description": "identifier of the machine",
             "name": "id",
             "in": "path",
             "required": true
@@ -397,7 +397,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/metal.DeviceAllocation"
+              "$ref": "#/definitions/metal.MachineAllocation"
             }
           },
           "404": {
@@ -412,13 +412,13 @@
           "default": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/metal.DeviceAllocation"
+              "$ref": "#/definitions/metal.MachineAllocation"
             }
           }
         }
       }
     },
-    "/v1/device/{id}/wait": {
+    "/v1/machine/{id}/wait": {
       "get": {
         "consumes": [
           "application/json"
@@ -427,14 +427,14 @@
           "application/json"
         ],
         "tags": [
-          "device"
+          "machine"
         ],
-        "summary": "wait for an allocation of this device",
+        "summary": "wait for an allocation of this machine",
         "operationId": "waitForAllocation",
         "parameters": [
           {
             "type": "string",
-            "description": "identifier of the device",
+            "description": "identifier of the machine",
             "name": "id",
             "in": "path",
             "required": true
@@ -444,7 +444,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/metal.DeviceWithPhoneHomeToken"
+              "$ref": "#/definitions/metal.MachineWithPhoneHomeToken"
             }
           },
           "404": {
@@ -456,7 +456,7 @@
           "default": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/metal.DeviceWithPhoneHomeToken"
+              "$ref": "#/definitions/metal.MachineWithPhoneHomeToken"
             }
           }
         }
@@ -1249,7 +1249,7 @@
     }
   },
   "definitions": {
-    "metal.AllocateDevice": {
+    "metal.AllocateMachine": {
       "required": [
         "tenant",
         "hostname",
@@ -1261,35 +1261,35 @@
       ],
       "properties": {
         "description": {
-          "description": "the description for the allocated device",
+          "description": "the description for the allocated machine",
           "type": "string"
         },
         "hostname": {
-          "description": "the hostname for the allocated device",
+          "description": "the hostname for the allocated machine",
           "type": "string"
         },
         "imageid": {
-          "description": "the image id to assign this device to",
+          "description": "the image id to assign this machine to",
           "type": "string"
         },
         "name": {
-          "description": "the new name for the allocated device",
+          "description": "the new name for the allocated machine",
           "type": "string"
         },
         "projectid": {
-          "description": "the project id to assign this device to",
+          "description": "the project id to assign this machine to",
           "type": "string"
         },
         "partitionid": {
-          "description": "the partition id to assign this device to",
+          "description": "the partition id to assign this machine to",
           "type": "string"
         },
         "sizeid": {
-          "description": "the size id to assign this device to",
+          "description": "the size id to assign this machine to",
           "type": "string"
         },
         "ssh_pub_keys": {
-          "description": "the public ssh keys to access the device with",
+          "description": "the public ssh keys to access the machine with",
           "type": "array",
           "items": {
             "type": "string"
@@ -1305,18 +1305,18 @@
         }
       }
     },
-    "metal.BlockDevice": {
+    "metal.BlockMachine": {
       "required": [
         "name",
         "size"
       ],
       "properties": {
         "name": {
-          "description": "the name of this block device",
+          "description": "the name of this block machine",
           "type": "string"
         },
         "size": {
-          "description": "the size of this block device",
+          "description": "the size of this block machine",
           "type": "integer"
         }
       }
@@ -1347,8 +1347,8 @@
         "nic"
       ],
       "properties": {
-        "device_id": {
-          "description": "the device id of the device connected to the nic",
+        "machine_id": {
+          "description": "the machine id of the machine connected to the nic",
           "type": "string"
         },
         "nic": {
@@ -1385,8 +1385,8 @@
         }
       }
     },
-    "metal.Device": {
-      "description": "A device representing a bare metal machine.",
+    "metal.Machine": {
+      "description": "A machine representing a bare metal machine.",
       "required": [
         "id",
         "partition",
@@ -1397,8 +1397,8 @@
       ],
       "properties": {
         "allocation": {
-          "description": "the allocation data of an allocated device",
-          "$ref": "#/definitions/metal.DeviceAllocation"
+          "description": "the allocation data of an allocated machine",
+          "$ref": "#/definitions/metal.MachineAllocation"
         },
         "changed": {
           "description": "the last changed timestamp",
@@ -1417,8 +1417,8 @@
           "type": "string"
         },
         "hardware": {
-          "description": "the hardware of this device",
-          "$ref": "#/definitions/metal.DeviceHardware"
+          "description": "the hardware of this machine",
+          "$ref": "#/definitions/metal.MachineHardware"
         },
         "id": {
           "description": "a unique ID",
@@ -1430,23 +1430,23 @@
           "type": "string"
         },
         "rackid": {
-          "description": "the rack assigned to this device",
+          "description": "the rack assigned to this machine",
           "type": "string",
           "readOnly": true
         },
         "partition": {
-          "description": "the partition assigned to this device",
+          "description": "the partition assigned to this machine",
           "$ref": "#/definitions/metal.Partition",
           "readOnly": true
         },
         "size": {
-          "description": "the size of this device",
+          "description": "the size of this machine",
           "$ref": "#/definitions/metal.Size",
           "readOnly": true
         }
       }
     },
-    "metal.DeviceAllocation": {
+    "metal.MachineAllocation": {
       "required": [
         "created",
         "name",
@@ -1458,7 +1458,7 @@
       ],
       "properties": {
         "cidr": {
-          "description": "the cidr address of the allocated device",
+          "description": "the cidr address of the allocated machine",
           "type": "string"
         },
         "console_password": {
@@ -1466,7 +1466,7 @@
           "type": "string"
         },
         "created": {
-          "description": "the time when the device was created",
+          "description": "the time when the machine was created",
           "type": "string",
           "format": "date-time"
         },
@@ -1475,37 +1475,37 @@
           "type": "string"
         },
         "hostname": {
-          "description": "the hostname which will be used when creating the device",
+          "description": "the hostname which will be used when creating the machine",
           "type": "string"
         },
         "image": {
-          "description": "the image assigned to this device",
+          "description": "the image assigned to this machine",
           "$ref": "#/definitions/metal.Image",
           "readOnly": true
         },
         "last_ping": {
-          "description": "the timestamp of the last phone home call/ping from the device",
+          "description": "the timestamp of the last phone home call/ping from the machine",
           "type": "string",
           "format": "date-time",
           "readOnly": true
         },
         "name": {
-          "description": "the name of the device",
+          "description": "the name of the machine",
           "type": "string"
         },
         "project": {
-          "description": "the project that this device is assigned to",
+          "description": "the project that this machine is assigned to",
           "type": "string"
         },
         "ssh_pub_keys": {
-          "description": "the public ssh keys to access the device with",
+          "description": "the public ssh keys to access the machine with",
           "type": "array",
           "items": {
             "type": "string"
           }
         },
         "tenant": {
-          "description": "the tenant that this device is assigned to",
+          "description": "the tenant that this machine is assigned to",
           "type": "string"
         },
         "user_data": {
@@ -1514,7 +1514,7 @@
         }
       }
     },
-    "metal.DeviceHardware": {
+    "metal.MachineHardware": {
       "required": [
         "memory",
         "cpu_cores",
@@ -1528,18 +1528,18 @@
           "format": "int32"
         },
         "disks": {
-          "description": "the list of block devices of this device",
+          "description": "the list of block machines of this machine",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/metal.BlockDevice"
+            "$ref": "#/definitions/metal.BlockMachine"
           }
         },
         "memory": {
-          "description": "the total memory of the device",
+          "description": "the total memory of the machine",
           "type": "integer"
         },
         "nics": {
-          "description": "the list of network interfaces of this device",
+          "description": "the list of network interfaces of this machine",
           "type": "array",
           "items": {
             "$ref": "#/definitions/metal.Nic"
@@ -1547,14 +1547,14 @@
         }
       }
     },
-    "metal.DeviceWithPhoneHomeToken": {
+    "metal.MachineWithPhoneHomeToken": {
       "required": [
-        "device",
+        "machine",
         "phone_home_token"
       ],
       "properties": {
-        "device": {
-          "$ref": "#/definitions/metal.Device"
+        "machine": {
+          "$ref": "#/definitions/metal.Machine"
         },
         "phone_home_token": {
           "type": "string"
@@ -1611,7 +1611,7 @@
       }
     },
     "metal.Image": {
-      "description": "An image that can be put on a device.",
+      "description": "An image that can be put on a machine.",
       "required": [
         "id",
         "url"
@@ -1678,12 +1678,12 @@
       ],
       "properties": {
         "phone_home_token": {
-          "description": "the jwt that was issued for the device",
+          "description": "the jwt that was issued for the machine",
           "type": "string"
         }
       }
     },
-    "metal.RegisterDevice": {
+    "metal.RegisterMachine": {
       "required": [
         "uuid",
         "partitionid",
@@ -1693,23 +1693,23 @@
       ],
       "properties": {
         "hardware": {
-          "description": "the hardware of this device",
-          "$ref": "#/definitions/metal.DeviceHardware"
+          "description": "the hardware of this machine",
+          "$ref": "#/definitions/metal.MachineHardware"
         },
         "ipmi": {
           "description": "the ipmi access infos",
           "$ref": "#/definitions/metal.IPMI"
         },
         "rackid": {
-          "description": "the rack id where this device is connected to",
+          "description": "the rack id where this machine is connected to",
           "type": "string"
         },
         "partitionid": {
-          "description": "the partition id to register this device with",
+          "description": "the partition id to register this machine with",
           "type": "string"
         },
         "uuid": {
-          "description": "the product uuid of the device to register",
+          "description": "the product uuid of the machine to register",
           "type": "string"
         }
       }
@@ -1859,7 +1859,7 @@
           "readOnly": true
         },
         "connections": {
-          "description": "a connection between a switch port and a device",
+          "description": "a connection between a switch port and a machine",
           "type": "array",
           "items": {
             "$ref": "#/definitions/metal.Connection"
@@ -1952,8 +1952,8 @@
       "name": "size"
     },
     {
-      "description": "Managing devices",
-      "name": "device"
+      "description": "Managing machines",
+      "name": "machine"
     },
     {
       "description": "Managing switches",

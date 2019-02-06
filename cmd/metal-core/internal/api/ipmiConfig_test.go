@@ -3,7 +3,7 @@ package api
 import (
 	"errors"
 	"fmt"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/client/device"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"github.com/go-openapi/runtime"
@@ -20,13 +20,13 @@ type ipmiDataMock struct {
 }
 
 func (m *ipmiDataMock) Submit(o *runtime.ClientOperation) (interface{}, error) {
-	params := o.Params.(*device.IPMIDataParams)
+	params := o.Params.(*machine.IPMIDataParams)
 	m.actualDevID = params.ID
 	if m.simulateError {
 		return nil, errors.New("not found")
 	}
 	address := fmt.Sprintf("%v:%v", m.host, m.port)
-	return &device.IPMIDataOK{
+	return &machine.IPMIDataOK{
 		Payload: &models.MetalIPMI{
 			Address:   &address,
 			Interface: &m.iface,
@@ -48,11 +48,11 @@ func TestIPMIData_OK(t *testing.T) {
 	}
 
 	ctx := &domain.AppContext{
-		DeviceClient: device.New(m, strfmt.Default),
+		MachineClient: machine.New(m, strfmt.Default),
 	}
 	ctx.SetAPIClient(NewClient)
 
-	devID := "fakedeviceID"
+	devID := "fakemachineID"
 
 	// WHEN
 	ipmiConn, err := ctx.APIClient().IPMIConfig(devID)
@@ -80,11 +80,11 @@ func TestIPMIData_InvalidPort(t *testing.T) {
 	}
 
 	ctx := &domain.AppContext{
-		DeviceClient: device.New(m, strfmt.Default),
+		MachineClient: machine.New(m, strfmt.Default),
 	}
 	ctx.SetAPIClient(NewClient)
 
-	devID := "fakedeviceID"
+	devID := "fakemachineID"
 
 	// WHEN
 	ipmiConn, err := ctx.APIClient().IPMIConfig(devID)
@@ -107,11 +107,11 @@ func TestIPMIData_Error(t *testing.T) {
 	}
 
 	ctx := &domain.AppContext{
-		DeviceClient: device.New(m, strfmt.Default),
+		MachineClient: machine.New(m, strfmt.Default),
 	}
 	ctx.SetAPIClient(NewClient)
 
-	devID := "fakedeviceID"
+	devID := "fakemachineID"
 
 	// WHEN
 	ipmiConn, err := ctx.APIClient().IPMIConfig(devID)
@@ -119,5 +119,5 @@ func TestIPMIData_Error(t *testing.T) {
 	// THEN
 	require.Nil(t, ipmiConn)
 	require.NotNil(t, err)
-	require.Equal(t, fmt.Sprintf("IPMI for device %s not found: not found", devID), err.Error())
+	require.Equal(t, fmt.Sprintf("IPMI for machine %s not found: not found", devID), err.Error())
 }

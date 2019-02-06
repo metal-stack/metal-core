@@ -7,13 +7,13 @@ import (
 	"go.uber.org/zap"
 )
 
-func (h *eventHandler) FreeDevice(device *models.MetalDevice) {
+func (h *eventHandler) FreeMachine(machine *models.MetalMachine) {
 	var err error
 
-	ipmiConn, err := h.APIClient().IPMIConfig(*device.ID)
+	ipmiConn, err := h.APIClient().IPMIConfig(*machine.ID)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to set read IPMI connection details",
-			zap.Any("device", device),
+			zap.Any("machine", machine),
 			zap.Error(err),
 		)
 		return
@@ -21,21 +21,21 @@ func (h *eventHandler) FreeDevice(device *models.MetalDevice) {
 
 	err = ipmi.SetBootDevPxe(ipmiConn)
 	if err != nil {
-		zapup.MustRootLogger().Error("Unable to set boot order of device to HD",
-			zap.Any("device", device),
+		zapup.MustRootLogger().Error("Unable to set boot order of machine to HD",
+			zap.Any("machine", machine),
 			zap.Error(err),
 		)
 		return
 	}
 
-	zapup.MustRootLogger().Info("Freed device",
-		zap.Any("device", device),
+	zapup.MustRootLogger().Info("Freed machine",
+		zap.Any("machine", machine),
 	)
 
 	err = ipmi.PowerOff(ipmiConn)
 	if err != nil {
-		zapup.MustRootLogger().Error("Unable to power off device",
-			zap.Any("device", device),
+		zapup.MustRootLogger().Error("Unable to power off machine",
+			zap.Any("machine", machine),
 			zap.Error(err),
 		)
 		return
@@ -43,8 +43,8 @@ func (h *eventHandler) FreeDevice(device *models.MetalDevice) {
 
 	err = ipmi.PowerOn(ipmiConn)
 	if err != nil {
-		zapup.MustRootLogger().Error("Unable to power on device",
-			zap.Any("device", device),
+		zapup.MustRootLogger().Error("Unable to power on machine",
+			zap.Any("machine", machine),
 			zap.Error(err),
 		)
 		return

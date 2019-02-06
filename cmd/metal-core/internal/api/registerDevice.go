@@ -5,21 +5,21 @@ import (
 
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 
-	"git.f-i-ts.de/cloud-native/metal/metal-core/client/device"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"go.uber.org/zap"
 )
 
-func (c *apiClient) RegisterDevice(deviceID string, request *domain.MetalHammerRegisterDeviceRequest) (int, *models.MetalDevice) {
+func (c *apiClient) RegisterMachine(machineID string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.MetalMachine) {
 	partitionId := c.Config.PartitionID
 	rackId := c.Config.RackID
-	params := device.NewRegisterDeviceParams()
-	params.Body = &models.MetalRegisterDevice{
-		UUID:   &deviceID,
+	params := machine.NewRegisterMachineParams()
+	params.Body = &models.MetalRegisterMachine{
+		UUID:   &machineID,
 		Partitionid: &partitionId,
 		Rackid: &rackId,
-		Hardware: &models.MetalDeviceHardware{
+		Hardware: &models.MetalMachineHardware{
 			Memory:   request.Memory,
 			CPUCores: request.CPUCores,
 			Nics:     request.Nics,
@@ -28,10 +28,10 @@ func (c *apiClient) RegisterDevice(deviceID string, request *domain.MetalHammerR
 		IPMI: request.IPMI,
 	}
 
-	ok, created, err := c.DeviceClient.RegisterDevice(params)
+	ok, created, err := c.MachineClient.RegisterMachine(params)
 	if err != nil {
-		zapup.MustRootLogger().Error("Failed to register device at Metal-API",
-			zap.String("deviceID", deviceID),
+		zapup.MustRootLogger().Error("Failed to register machine at Metal-API",
+			zap.String("machineID", machineID),
 			zap.String("partitionID", partitionId),
 			zap.String("rackID", rackId),
 			zap.Error(err),

@@ -17,8 +17,8 @@ type Report struct {
 	ConsolePassword string `json:"console_password" description:"the console password which was generated while provisioning"`
 }
 
-type MetalHammerRegisterDeviceRequest struct {
-	models.MetalDeviceHardware
-	UUID string            `json:"uuid,omitempty" description:"the uuid of the device to register"`
+type MetalHammerRegisterMachineRequest struct {
+	models.MetalMachineHardware
+	UUID string            `json:"uuid,omitempty" description:"the uuid of the machine to register"`
 	IPMI *models.MetalIPMI `json:"ipmi" description:"the IPMI connection configuration"`
 }

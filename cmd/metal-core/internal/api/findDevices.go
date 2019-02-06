@@ -1,20 +1,20 @@
 package api
 
 import (
-	"git.f-i-ts.de/cloud-native/metal/metal-core/client/device"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"go.uber.org/zap"
 	"net/http"
 )
 
-func (c *apiClient) FindDevices(mac string) (int, []*models.MetalDevice) {
-	params := device.NewSearchDeviceParams()
+func (c *apiClient) FindMachines(mac string) (int, []*models.MetalMachine) {
+	params := machine.NewSearchMachineParams()
 	params.Mac = &mac
 
-	ok, err := c.DeviceClient.SearchDevice(params)
+	ok, err := c.MachineClient.SearchMachine(params)
 	if err != nil {
-		zapup.MustRootLogger().Error("Device(s) not found",
+		zapup.MustRootLogger().Error("Machine(s) not found",
 			zap.String("mac", mac),
 			zap.Error(err),
 		)

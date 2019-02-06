@@ -9,42 +9,42 @@ import (
 	"github.com/emicklei/go-restful-openapi"
 )
 
-func (h *endpointHandler) NewDeviceService() *restful.WebService {
+func (h *endpointHandler) NewMachineService() *restful.WebService {
 	ws := new(restful.WebService)
-	ws.Path("/device").
+	ws.Path("/machine").
 		Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)
 
-	tags := []string{"device"}
+	tags := []string{"machine"}
 
 	ws.Route(ws.POST("/register/{id}").
 		To(h.Register).
-		Doc("register device by ID").
-		Param(ws.PathParameter("id", "identifier of the device").DataType("string")).
+		Doc("register machine by ID").
+		Param(ws.PathParameter("id", "identifier of the machine").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads(domain.MetalHammerRegisterDeviceRequest{}).
-		Writes(models.MetalDevice{}).
-		Returns(http.StatusOK, "OK", models.MetalDevice{}).
+		Reads(domain.MetalHammerRegisterMachineRequest{}).
+		Writes(models.MetalMachine{}).
+		Returns(http.StatusOK, "OK", models.MetalMachine{}).
 		Returns(http.StatusBadRequest, "Bad request", nil).
 		Returns(http.StatusInternalServerError, "Accepted", nil))
 
 	ws.Route(ws.GET("/install/{id}").
 		To(h.Install).
-		Doc("install device by ID").
-		Param(ws.PathParameter("id", "identifier of the device").DataType("string")).
+		Doc("install machine by ID").
+		Param(ws.PathParameter("id", "identifier of the machine").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Writes(models.MetalDevice{}).
-		Returns(http.StatusOK, "OK", models.MetalDeviceWithPhoneHomeToken{}).
+		Writes(models.MetalMachine{}).
+		Returns(http.StatusOK, "OK", models.MetalMachineWithPhoneHomeToken{}).
 		Returns(http.StatusNotFound, "Not Found", nil))
 
 	ws.Route(ws.POST("/report/{id}").
 		To(h.Report).
-		Doc("report device by ID").
-		Param(ws.PathParameter("id", "identifier of the device").DataType("string")).
+		Doc("report machine by ID").
+		Param(ws.PathParameter("id", "identifier of the machine").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Reads(domain.Report{}).
 		Writes(domain.BootResponse{}).
-		Returns(http.StatusOK, "OK", models.MetalDevice{}).
+		Returns(http.StatusOK, "OK", models.MetalMachine{}).
 		Returns(http.StatusNotAcceptable, "Not acceptable", nil).
 		Returns(http.StatusInternalServerError, "Accepted", nil))
 

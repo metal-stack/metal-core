@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"git.f-i-ts.de/cloud-native/metal/metal-core/client/device"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"github.com/go-openapi/runtime"
@@ -13,14 +13,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type registerDeviceMock struct {
+type registerMachineMock struct {
 	simulateError                           bool
-	rdr                                     *models.MetalRegisterDevice
+	rdr                                     *models.MetalRegisterMachine
 	actualDevID, actualPartitionID, actualRackID string
 }
 
-func (m *registerDeviceMock) Submit(o *runtime.ClientOperation) (interface{}, error) {
-	params := o.Params.(*device.RegisterDeviceParams)
+func (m *registerMachineMock) Submit(o *runtime.ClientOperation) (interface{}, error) {
+	params := o.Params.(*machine.RegisterMachineParams)
 	m.rdr = params.Body
 	m.actualDevID = *m.rdr.UUID
 	m.actualPartitionID = *m.rdr.Partitionid
@@ -28,21 +28,21 @@ func (m *registerDeviceMock) Submit(o *runtime.ClientOperation) (interface{}, er
 	if m.simulateError {
 		return nil, errors.New("not found")
 	}
-	return &device.RegisterDeviceOK{}, nil
+	return &machine.RegisterMachineOK{}, nil
 }
 
-func TestRegisterDevice_OK(t *testing.T) {
+func TestRegisterMachine_OK(t *testing.T) {
 	// GIVEN
-	m := &registerDeviceMock{
+	m := &registerMachineMock{
 		simulateError: false,
 	}
 
 	partitionID := "fakePartitionID"
 	rackID := "fakeRackID"
-	devID := "fakeDeviceID"
+	devID := "fakeMachineID"
 
 	ctx := &domain.AppContext{
-		DeviceClient: device.New(m, strfmt.Default),
+		MachineClient: machine.New(m, strfmt.Default),
 		Config: &domain.Config{
 			PartitionID: partitionID,
 			RackID: rackID,
@@ -50,12 +50,12 @@ func TestRegisterDevice_OK(t *testing.T) {
 	}
 	ctx.SetAPIClient(NewClient)
 
-	payload := &domain.MetalHammerRegisterDeviceRequest{
+	payload := &domain.MetalHammerRegisterMachineRequest{
 		UUID: devID,
 	}
 
 	// WHEN
-	sc, _ := ctx.APIClient().RegisterDevice(devID, payload)
+	sc, _ := ctx.APIClient().RegisterMachine(devID, payload)
 
 	// THEN
 	require.Equal(t, http.StatusOK, sc)
@@ -64,18 +64,18 @@ func TestRegisterDevice_OK(t *testing.T) {
 	require.Equal(t, rackID, m.actualRackID)
 }
 
-func TestRegisterDevice_Error(t *testing.T) {
+func TestRegisterMachine_Error(t *testing.T) {
 	// GIVEN
-	m := &registerDeviceMock{
+	m := &registerMachineMock{
 		simulateError: true,
 	}
 
 	partitionID := "fakePartitionID"
 	rackID := "fakeRackID"
-	devID := "fakeDeviceID"
+	devID := "fakeMachineID"
 
 	ctx := &domain.AppContext{
-		DeviceClient: device.New(m, strfmt.Default),
+		MachineClient: machine.New(m, strfmt.Default),
 		Config: &domain.Config{
 			PartitionID: partitionID,
 			RackID: rackID,
@@ -83,12 +83,12 @@ func TestRegisterDevice_Error(t *testing.T) {
 	}
 	ctx.SetAPIClient(NewClient)
 
-	payload := &domain.MetalHammerRegisterDeviceRequest{
+	payload := &domain.MetalHammerRegisterMachineRequest{
 		UUID: devID,
 	}
 
 	// WHEN
-	sc, _ := ctx.APIClient().RegisterDevice(devID, payload)
+	sc, _ := ctx.APIClient().RegisterMachine(devID, payload)
 
 	// THEN
 	require.Equal(t, http.StatusInternalServerError, sc)

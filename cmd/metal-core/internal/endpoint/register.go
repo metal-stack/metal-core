@@ -13,7 +13,7 @@ import (
 )
 
 func (h *endpointHandler) Register(request *restful.Request, response *restful.Response) {
-	req := &domain.MetalHammerRegisterDeviceRequest{}
+	req := &domain.MetalHammerRegisterMachineRequest{}
 
 	err := request.ReadEntity(req)
 	if err != nil {
@@ -27,31 +27,31 @@ func (h *endpointHandler) Register(request *restful.Request, response *restful.R
 
 	devId := request.PathParameter("id")
 
-	zapup.MustRootLogger().Info("Register device at Metal-API",
-		zap.String("deviceID", devId),
+	zapup.MustRootLogger().Info("Register machine at Metal-API",
+		zap.String("machineID", devId),
 		zap.String("IPMI-Address", impiAddress(req.IPMI)),
 		zap.String("IPMI-Interface", impiInterface(req.IPMI)),
 		zap.String("IPMI-MAC", impiMAC(req.IPMI)),
 		zap.String("IPMI-User", impiUser(req.IPMI)),
 	)
 
-	sc, dev := h.APIClient().RegisterDevice(devId, req)
+	sc, dev := h.APIClient().RegisterMachine(devId, req)
 
 	if sc != http.StatusOK {
-		errMsg := "Failed to register device"
+		errMsg := "Failed to register machine"
 		zapup.MustRootLogger().Error(errMsg,
 			zap.Int("statusCode", sc),
-			zap.String("deviceID", devId),
-			zap.Any("device", dev),
+			zap.String("machineID", devId),
+			zap.Any("machine", dev),
 			zap.Error(err),
 		)
 		rest.RespondError(response, http.StatusInternalServerError, errMsg)
 		return
 	}
 
-	zapup.MustRootLogger().Info("Device registered",
+	zapup.MustRootLogger().Info("Machine registered",
 		zap.Int("statusCode", sc),
-		zap.Any("device", dev),
+		zap.Any("machine", dev),
 	)
 	rest.Respond(response, http.StatusOK, dev)
 }

@@ -15,15 +15,15 @@ import (
 func (e *endpointHandler) Boot(request *restful.Request, response *restful.Response) {
 	mac := request.PathParameter("mac")
 
-	zapup.MustRootLogger().Info("Request Metal-API for a device",
+	zapup.MustRootLogger().Info("Request Metal-API for a machine",
 		zap.String("MAC", mac),
 	)
 
-	sc, devs := e.APIClient().FindDevices(mac)
+	sc, devs := e.APIClient().FindMachines(mac)
 
 	if sc == http.StatusOK {
 		if len(devs) == 0 {
-			zapup.MustRootLogger().Info("Device(s) not found",
+			zapup.MustRootLogger().Info("Machine(s) not found",
 				zap.Int("statusCode", sc),
 				zap.String("MAC", mac),
 			)

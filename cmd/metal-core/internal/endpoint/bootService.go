@@ -16,8 +16,8 @@ func (h *endpointHandler) NewBootService() *restful.WebService {
 
 	ws.Route(ws.GET("/v1/boot/{mac}").
 		To(h.Boot).
-		Doc("boot device by mac").
-		Param(ws.PathParameter("mac", "mac of a network interface of the device").DataType("string")).
+		Doc("boot machine by mac").
+		Param(ws.PathParameter("mac", "mac of a network interface of the machine").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(domain.BootResponse{}).
 		Returns(http.StatusOK, "OK", domain.BootResponse{}).

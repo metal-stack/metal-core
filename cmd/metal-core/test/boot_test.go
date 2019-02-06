@@ -44,23 +44,23 @@ func TestPXEBoot(t *testing.T) {
 	require.Equal(t, expected.CommandLine, bootResponse.CommandLine)
 }
 
-func (a apiHandlerBootTest) FindDevices(mac string) (int, []*models.MetalDevice) {
+func (a apiHandlerBootTest) FindMachines(mac string) (int, []*models.MetalMachine) {
 	if mac == fakeMac {
-		return http.StatusOK, []*models.MetalDevice{}
+		return http.StatusOK, []*models.MetalMachine{}
 	}
-	return http.StatusAlreadyReported, []*models.MetalDevice{
-		{}, // Simulate at least one existing device
+	return http.StatusAlreadyReported, []*models.MetalMachine{
+		{}, // Simulate at least one existing machine
 	}
 }
 
-func (a apiHandlerBootTest) RegisterDevice(deviceId string, request *domain.MetalHammerRegisterDeviceRequest) (int, *models.MetalDevice) {
+func (a apiHandlerBootTest) RegisterMachine(machineId string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.MetalMachine) {
 	return -1, nil
 }
 
-func (a apiHandlerBootTest) InstallImage(deviceId string) (int, *models.MetalDeviceWithPhoneHomeToken) {
+func (a apiHandlerBootTest) InstallImage(machineId string) (int, *models.MetalMachineWithPhoneHomeToken) {
 	return -1, nil
 }
 
-func (a apiHandlerBootTest) IPMIConfig(deviceId string) (*domain.IPMIConfig, error) {
+func (a apiHandlerBootTest) IPMIConfig(machineId string) (*domain.IPMIConfig, error) {
 	return nil, nil
 }
