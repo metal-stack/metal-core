@@ -16,14 +16,14 @@ func (h *endpointHandler) Install(request *restful.Request, response *restful.Re
 		zap.String("machineID", machineID),
 	)
 
-	sc, devWithToken := h.APIClient().InstallImage(machineID)
+	sc, machineWithToken := h.APIClient().InstallImage(machineID)
 
-	if sc == http.StatusOK && devWithToken != nil && devWithToken.Machine != nil {
+	if sc == http.StatusOK && machineWithToken != nil && machineWithToken.Machine != nil {
 		zapup.MustRootLogger().Info("Got image to install",
 			zap.Int("statusCode", sc),
-			zap.Any("machineWithToken", devWithToken),
+			zap.Any("machineWithToken", machineWithToken),
 		)
-		rest.Respond(response, http.StatusOK, devWithToken)
+		rest.Respond(response, http.StatusOK, machineWithToken)
 		return
 	}
 

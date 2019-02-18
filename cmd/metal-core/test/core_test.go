@@ -46,10 +46,10 @@ func (a apiHandlerCoreTest) FindMachines(mac string) (int, []*models.MetalMachin
 }
 
 func (a apiHandlerCoreTest) RegisterMachine(machineId string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.MetalMachine) {
-	dev := models.MetalMachine{
+	machine := models.MetalMachine{
 		ID: &machineID,
 	}
-	return http.StatusOK, &dev
+	return http.StatusOK, &machine
 }
 
 func (a apiHandlerCoreTest) InstallImage(machineId string) (int, *models.MetalMachineWithPhoneHomeToken) {

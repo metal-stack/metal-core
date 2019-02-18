@@ -233,10 +233,10 @@
     },
     "domain.MetalHammerRegisterMachineRequest": {
       "required": [
-        "cpu_cores",
-        "disks",
         "memory",
         "nics",
+        "cpu_cores",
+        "disks",
         "ipmi"
       ],
       "properties": {
@@ -247,7 +247,7 @@
         "disks": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/models.MetalBlockMachine"
+            "$ref": "#/definitions/models.MetalBlockDevice"
           }
         },
         "ipmi": {
@@ -290,7 +290,7 @@
         }
       }
     },
-    "models.MetalBlockMachine": {
+    "models.MetalBlockDevice": {
       "required": [
         "name",
         "size"
@@ -451,7 +451,8 @@
         "name",
         "project",
         "ssh_pub_keys",
-        "tenant"
+        "tenant",
+        "vrf"
       ],
       "properties": {
         "cidr": {
@@ -492,6 +493,10 @@
         },
         "user_data": {
           "type": "string"
+        },
+        "vrf": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },
@@ -510,7 +515,7 @@
         "disks": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/models.MetalBlockMachine"
+            "$ref": "#/definitions/models.MetalBlockDevice"
           }
         },
         "memory": {
@@ -557,6 +562,9 @@
           "items": {
             "$ref": "#/definitions/models.MetalNic"
           }
+        },
+        "vrf": {
+          "type": "string"
         }
       }
     },

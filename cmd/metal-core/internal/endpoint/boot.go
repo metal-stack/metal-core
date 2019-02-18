@@ -19,10 +19,10 @@ func (e *endpointHandler) Boot(request *restful.Request, response *restful.Respo
 		zap.String("MAC", mac),
 	)
 
-	sc, devs := e.APIClient().FindMachines(mac)
+	sc, machines := e.APIClient().FindMachines(mac)
 
 	if sc == http.StatusOK {
-		if len(devs) == 0 {
+		if len(machines) == 0 {
 			zapup.MustRootLogger().Info("Machine(s) not found",
 				zap.Int("statusCode", sc),
 				zap.String("MAC", mac),

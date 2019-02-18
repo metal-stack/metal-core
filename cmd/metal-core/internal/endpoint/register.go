@@ -35,14 +35,14 @@ func (h *endpointHandler) Register(request *restful.Request, response *restful.R
 		zap.String("IPMI-User", impiUser(req.IPMI)),
 	)
 
-	sc, dev := h.APIClient().RegisterMachine(machineID, req)
+	sc, machine := h.APIClient().RegisterMachine(machineID, req)
 
 	if sc != http.StatusOK {
 		errMsg := "Failed to register machine"
 		zapup.MustRootLogger().Error(errMsg,
 			zap.Int("statusCode", sc),
 			zap.String("machineID", machineID),
-			zap.Any("machine", dev),
+			zap.Any("machine", machine),
 			zap.Error(err),
 		)
 		rest.RespondError(response, http.StatusInternalServerError, errMsg)
@@ -51,9 +51,9 @@ func (h *endpointHandler) Register(request *restful.Request, response *restful.R
 
 	zapup.MustRootLogger().Info("Machine registered",
 		zap.Int("statusCode", sc),
-		zap.Any("machine", dev),
+		zap.Any("machine", machine),
 	)
-	rest.Respond(response, http.StatusOK, dev)
+	rest.Respond(response, http.StatusOK, machine)
 }
 
 func impiAddress(ipmi *models.MetalIPMI) string {

@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func SetBootDevPxe(cfg *domain.IPMIConfig) error {
+func SetBootMachinePXE(cfg *domain.IPMIConfig) error {
 	client, err := openClientConnection(cfg)
 	if err != nil {
 		return err
@@ -24,7 +24,7 @@ func SetBootDevPxe(cfg *domain.IPMIConfig) error {
 	return nil
 }
 
-func SetBootDevHd(cfg *domain.IPMIConfig) error {
+func SetBootMachineHD(cfg *domain.IPMIConfig) error {
 	client, err := openClientConnection(cfg)
 	if err != nil {
 		return err
