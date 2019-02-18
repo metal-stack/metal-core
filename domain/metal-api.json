@@ -15,6 +15,239 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/v1/health": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "health"
+        ],
+        "summary": "perform a healtcheck",
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/rest.status"
+            }
+          },
+          "500": {
+            "description": "Unhealthy",
+            "schema": {
+              "$ref": "#/definitions/rest.status"
+            }
+          },
+          "default": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/rest.status"
+            }
+          }
+        }
+      }
+    },
+    "/v1/image": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "image"
+        ],
+        "summary": "get all images",
+        "operationId": "listImages",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/metal.Image"
+              }
+            }
+          },
+          "default": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/metal.Image"
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "image"
+        ],
+        "summary": "create an image. if the given ID already exists a conflict is returned",
+        "operationId": "createImage",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/metal.Image"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/metal.Image"
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "schema": {
+              "$ref": "#/definitions/metal.ErrorResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "image"
+        ],
+        "summary": "updates an image. if the image was changed since this one was read, a conflict is returned",
+        "operationId": "updateImage",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/metal.Image"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/metal.Image"
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "schema": {
+              "$ref": "#/definitions/metal.ErrorResponse"
+            }
+          },
+          "default": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/metal.Image"
+            }
+          }
+        }
+      }
+    },
+    "/v1/image/{id}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "image"
+        ],
+        "summary": "get image by id",
+        "operationId": "findImage",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "identifier of the image",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/metal.Image"
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "default": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/metal.Image"
+            }
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "image"
+        ],
+        "summary": "deletes an image and returns the deleted entity",
+        "operationId": "deleteImage",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "identifier of the image",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/metal.Image"
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "default": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/metal.Image"
+            }
+          }
+        }
+      }
+    },
     "/v1/machine": {
       "get": {
         "consumes": [
@@ -457,239 +690,6 @@
             "description": "OK",
             "schema": {
               "$ref": "#/definitions/metal.MachineWithPhoneHomeToken"
-            }
-          }
-        }
-      }
-    },
-    "/v1/health": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "tags": [
-          "health"
-        ],
-        "summary": "perform a healtcheck",
-        "operationId": "health",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/rest.status"
-            }
-          },
-          "500": {
-            "description": "Unhealthy",
-            "schema": {
-              "$ref": "#/definitions/rest.status"
-            }
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/rest.status"
-            }
-          }
-        }
-      }
-    },
-    "/v1/image": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "tags": [
-          "image"
-        ],
-        "summary": "get all images",
-        "operationId": "listImages",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/metal.Image"
-              }
-            }
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/metal.Image"
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "tags": [
-          "image"
-        ],
-        "summary": "create an image. if the given ID already exists a conflict is returned",
-        "operationId": "createImage",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/metal.Image"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Created",
-            "schema": {
-              "$ref": "#/definitions/metal.Image"
-            }
-          },
-          "409": {
-            "description": "Conflict",
-            "schema": {
-              "$ref": "#/definitions/metal.ErrorResponse"
-            }
-          }
-        }
-      },
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "tags": [
-          "image"
-        ],
-        "summary": "updates an image. if the image was changed since this one was read, a conflict is returned",
-        "operationId": "updateImage",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/metal.Image"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.Image"
-            }
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "409": {
-            "description": "Conflict",
-            "schema": {
-              "$ref": "#/definitions/metal.ErrorResponse"
-            }
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.Image"
-            }
-          }
-        }
-      }
-    },
-    "/v1/image/{id}": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "tags": [
-          "image"
-        ],
-        "summary": "get image by id",
-        "operationId": "findImage",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "identifier of the image",
-            "name": "id",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.Image"
-            }
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.Image"
-            }
-          }
-        }
-      },
-      "delete": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "tags": [
-          "image"
-        ],
-        "summary": "deletes an image and returns the deleted entity",
-        "operationId": "deleteImage",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "identifier of the image",
-            "name": "id",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.Image"
-            }
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.Image"
             }
           }
         }
@@ -1276,12 +1276,12 @@
           "description": "the new name for the allocated machine",
           "type": "string"
         },
-        "projectid": {
-          "description": "the project id to assign this machine to",
-          "type": "string"
-        },
         "partitionid": {
           "description": "the partition id to assign this machine to",
+          "type": "string"
+        },
+        "projectid": {
+          "description": "the project id to assign this machine to",
           "type": "string"
         },
         "sizeid": {
@@ -1305,18 +1305,18 @@
         }
       }
     },
-    "metal.BlockMachine": {
+    "metal.BlockDevice": {
       "required": [
         "name",
         "size"
       ],
       "properties": {
         "name": {
-          "description": "the name of this block machine",
+          "description": "the name of this block device",
           "type": "string"
         },
         "size": {
-          "description": "the size of this block machine",
+          "description": "the size of this block device",
           "type": "integer"
         }
       }
@@ -1382,182 +1382,6 @@
         "minmemory": {
           "description": "the minimal amount of memory",
           "type": "integer"
-        }
-      }
-    },
-    "metal.Machine": {
-      "description": "A machine representing a bare metal machine.",
-      "required": [
-        "id",
-        "partition",
-        "rackid",
-        "size",
-        "hardware",
-        "allocation"
-      ],
-      "properties": {
-        "allocation": {
-          "description": "the allocation data of an allocated machine",
-          "$ref": "#/definitions/metal.MachineAllocation"
-        },
-        "changed": {
-          "description": "the last changed timestamp",
-          "type": "string",
-          "format": "date-time",
-          "readOnly": true
-        },
-        "created": {
-          "description": "the creation time of this entity",
-          "type": "string",
-          "format": "date-time",
-          "readOnly": true
-        },
-        "description": {
-          "description": "a description for this entity",
-          "type": "string"
-        },
-        "hardware": {
-          "description": "the hardware of this machine",
-          "$ref": "#/definitions/metal.MachineHardware"
-        },
-        "id": {
-          "description": "a unique ID",
-          "type": "string",
-          "uniqueItems": true
-        },
-        "name": {
-          "description": "the readable name",
-          "type": "string"
-        },
-        "rackid": {
-          "description": "the rack assigned to this machine",
-          "type": "string",
-          "readOnly": true
-        },
-        "partition": {
-          "description": "the partition assigned to this machine",
-          "$ref": "#/definitions/metal.Partition",
-          "readOnly": true
-        },
-        "size": {
-          "description": "the size of this machine",
-          "$ref": "#/definitions/metal.Size",
-          "readOnly": true
-        }
-      }
-    },
-    "metal.MachineAllocation": {
-      "required": [
-        "created",
-        "name",
-        "tenant",
-        "project",
-        "cidr",
-        "hostname",
-        "ssh_pub_keys"
-      ],
-      "properties": {
-        "cidr": {
-          "description": "the cidr address of the allocated machine",
-          "type": "string"
-        },
-        "console_password": {
-          "description": "the console password which was generated while provisioning",
-          "type": "string"
-        },
-        "created": {
-          "description": "the time when the machine was created",
-          "type": "string",
-          "format": "date-time"
-        },
-        "description": {
-          "description": "a description for this machine",
-          "type": "string"
-        },
-        "hostname": {
-          "description": "the hostname which will be used when creating the machine",
-          "type": "string"
-        },
-        "image": {
-          "description": "the image assigned to this machine",
-          "$ref": "#/definitions/metal.Image",
-          "readOnly": true
-        },
-        "last_ping": {
-          "description": "the timestamp of the last phone home call/ping from the machine",
-          "type": "string",
-          "format": "date-time",
-          "readOnly": true
-        },
-        "name": {
-          "description": "the name of the machine",
-          "type": "string"
-        },
-        "project": {
-          "description": "the project that this machine is assigned to",
-          "type": "string"
-        },
-        "ssh_pub_keys": {
-          "description": "the public ssh keys to access the machine with",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "tenant": {
-          "description": "the tenant that this machine is assigned to",
-          "type": "string"
-        },
-        "user_data": {
-          "description": "cloud-init.io compatible userdata, stored base64 encoded",
-          "type": "string"
-        }
-      }
-    },
-    "metal.MachineHardware": {
-      "required": [
-        "memory",
-        "cpu_cores",
-        "nics",
-        "disks"
-      ],
-      "properties": {
-        "cpu_cores": {
-          "description": "the number of cpu cores",
-          "type": "integer",
-          "format": "int32"
-        },
-        "disks": {
-          "description": "the list of block machines of this machine",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/metal.BlockMachine"
-          }
-        },
-        "memory": {
-          "description": "the total memory of the machine",
-          "type": "integer"
-        },
-        "nics": {
-          "description": "the list of network interfaces of this machine",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/metal.Nic"
-          }
-        }
-      }
-    },
-    "metal.MachineWithPhoneHomeToken": {
-      "required": [
-        "machine",
-        "phone_home_token"
-      ],
-      "properties": {
-        "machine": {
-          "$ref": "#/definitions/metal.Machine"
-        },
-        "phone_home_token": {
-          "type": "string"
         }
       }
     },
@@ -1648,6 +1472,188 @@
         }
       }
     },
+    "metal.Machine": {
+      "description": "A machine representing a bare metal machine.",
+      "required": [
+        "id",
+        "partition",
+        "rackid",
+        "size",
+        "hardware",
+        "allocation"
+      ],
+      "properties": {
+        "allocation": {
+          "description": "the allocation data of an allocated machine",
+          "$ref": "#/definitions/metal.MachineAllocation"
+        },
+        "changed": {
+          "description": "the last changed timestamp",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "created": {
+          "description": "the creation time of this entity",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "hardware": {
+          "description": "the hardware of this machine",
+          "$ref": "#/definitions/metal.MachineHardware"
+        },
+        "id": {
+          "description": "a unique ID",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "name": {
+          "description": "the readable name",
+          "type": "string"
+        },
+        "partition": {
+          "description": "the partition assigned to this machine",
+          "$ref": "#/definitions/metal.Partition",
+          "readOnly": true
+        },
+        "rackid": {
+          "description": "the rack assigned to this machine",
+          "type": "string",
+          "readOnly": true
+        },
+        "size": {
+          "description": "the size of this machine",
+          "$ref": "#/definitions/metal.Size",
+          "readOnly": true
+        }
+      }
+    },
+    "metal.MachineAllocation": {
+      "required": [
+        "created",
+        "name",
+        "tenant",
+        "project",
+        "cidr",
+        "vrf",
+        "hostname",
+        "ssh_pub_keys"
+      ],
+      "properties": {
+        "cidr": {
+          "description": "the cidr address of the allocated machine",
+          "type": "string"
+        },
+        "console_password": {
+          "description": "the console password which was generated while provisioning",
+          "type": "string"
+        },
+        "created": {
+          "description": "the time when the machine was created",
+          "type": "string",
+          "format": "date-time"
+        },
+        "description": {
+          "description": "a description for this machine",
+          "type": "string"
+        },
+        "hostname": {
+          "description": "the hostname which will be used when creating the machine",
+          "type": "string"
+        },
+        "image": {
+          "description": "the image assigned to this machine",
+          "$ref": "#/definitions/metal.Image",
+          "readOnly": true
+        },
+        "last_ping": {
+          "description": "the timestamp of the last phone home call/ping from the machine",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "name": {
+          "description": "the name of the machine",
+          "type": "string"
+        },
+        "project": {
+          "description": "the project that this machine is assigned to",
+          "type": "string"
+        },
+        "ssh_pub_keys": {
+          "description": "the public ssh keys to access the machine with",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tenant": {
+          "description": "the tenant that this machine is assigned to",
+          "type": "string"
+        },
+        "user_data": {
+          "description": "userdata to execute post installation tasks",
+          "type": "string"
+        },
+        "vrf": {
+          "description": "the vrf of the allocated machine",
+          "type": "integer",
+          "format": "integer"
+        }
+      }
+    },
+    "metal.MachineHardware": {
+      "required": [
+        "memory",
+        "cpu_cores",
+        "nics",
+        "disks"
+      ],
+      "properties": {
+        "cpu_cores": {
+          "description": "the number of cpu cores",
+          "type": "integer",
+          "format": "int32"
+        },
+        "disks": {
+          "description": "the list of block devices of this machine",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/metal.BlockDevice"
+          }
+        },
+        "memory": {
+          "description": "the total memory of the machine",
+          "type": "integer"
+        },
+        "nics": {
+          "description": "the list of network interfaces of this machine",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/metal.Nic"
+          }
+        }
+      }
+    },
+    "metal.MachineWithPhoneHomeToken": {
+      "required": [
+        "machine",
+        "phone_home_token"
+      ],
+      "properties": {
+        "machine": {
+          "$ref": "#/definitions/metal.Machine"
+        },
+        "phone_home_token": {
+          "type": "string"
+        }
+      }
+    },
     "metal.Nic": {
       "required": [
         "mac",
@@ -1669,98 +1675,10 @@
           "items": {
             "$ref": "#/definitions/metal.Nic"
           }
-        }
-      }
-    },
-    "metal.PhoneHomeRequest": {
-      "required": [
-        "phone_home_token"
-      ],
-      "properties": {
-        "phone_home_token": {
-          "description": "the jwt that was issued for the machine",
+        },
+        "vrf": {
+          "description": "the vrf this network interface is part of",
           "type": "string"
-        }
-      }
-    },
-    "metal.RegisterMachine": {
-      "required": [
-        "uuid",
-        "partitionid",
-        "rackid",
-        "hardware",
-        "ipmi"
-      ],
-      "properties": {
-        "hardware": {
-          "description": "the hardware of this machine",
-          "$ref": "#/definitions/metal.MachineHardware"
-        },
-        "ipmi": {
-          "description": "the ipmi access infos",
-          "$ref": "#/definitions/metal.IPMI"
-        },
-        "rackid": {
-          "description": "the rack id where this machine is connected to",
-          "type": "string"
-        },
-        "partitionid": {
-          "description": "the partition id to register this machine with",
-          "type": "string"
-        },
-        "uuid": {
-          "description": "the product uuid of the machine to register",
-          "type": "string"
-        }
-      }
-    },
-    "metal.RegisterSwitch": {
-      "required": [
-        "id",
-        "nics",
-        "partition_id",
-        "rack_id"
-      ],
-      "properties": {
-        "id": {
-          "description": "a unique ID",
-          "type": "string",
-          "uniqueItems": true
-        },
-        "nics": {
-          "description": "the list of network interfaces on the switch",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/metal.Nic"
-          }
-        },
-        "rack_id": {
-          "description": "the id of the rack in which this switch is located",
-          "type": "string"
-        },
-        "partition_id": {
-          "description": "the id of the partition in which this switch is located",
-          "type": "string"
-        }
-      }
-    },
-    "metal.ReportAllocation": {
-      "required": [
-        "success",
-        "console_password"
-      ],
-      "properties": {
-        "console_password": {
-          "description": "the console password which was generated while provisioning",
-          "type": "string"
-        },
-        "errormessage": {
-          "description": "contains an errormessage when there was no success",
-          "type": "string"
-        },
-        "success": {
-          "description": "signals if the allocation was successful",
-          "type": "boolean"
         }
       }
     },
@@ -1797,6 +1715,98 @@
         "name": {
           "description": "the readable name",
           "type": "string"
+        }
+      }
+    },
+    "metal.PhoneHomeRequest": {
+      "required": [
+        "phone_home_token"
+      ],
+      "properties": {
+        "phone_home_token": {
+          "description": "the jwt that was issued for the machine",
+          "type": "string"
+        }
+      }
+    },
+    "metal.RegisterMachine": {
+      "required": [
+        "uuid",
+        "partitionid",
+        "rackid",
+        "hardware",
+        "ipmi"
+      ],
+      "properties": {
+        "hardware": {
+          "description": "the hardware of this machine",
+          "$ref": "#/definitions/metal.MachineHardware"
+        },
+        "ipmi": {
+          "description": "the ipmi access infos",
+          "$ref": "#/definitions/metal.IPMI"
+        },
+        "partitionid": {
+          "description": "the partition id to register this machine with",
+          "type": "string"
+        },
+        "rackid": {
+          "description": "the rack id where this machine is connected to",
+          "type": "string"
+        },
+        "uuid": {
+          "description": "the product uuid of the machine to register",
+          "type": "string"
+        }
+      }
+    },
+    "metal.RegisterSwitch": {
+      "required": [
+        "id",
+        "nics",
+        "partition_id",
+        "rack_id"
+      ],
+      "properties": {
+        "id": {
+          "description": "a unique ID",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "nics": {
+          "description": "the list of network interfaces on the switch",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/metal.Nic"
+          }
+        },
+        "partition_id": {
+          "description": "the id of the partition in which this switch is located",
+          "type": "string"
+        },
+        "rack_id": {
+          "description": "the id of the rack in which this switch is located",
+          "type": "string"
+        }
+      }
+    },
+    "metal.ReportAllocation": {
+      "required": [
+        "success",
+        "console_password"
+      ],
+      "properties": {
+        "console_password": {
+          "description": "the console password which was generated while provisioning",
+          "type": "string"
+        },
+        "errormessage": {
+          "description": "contains an errormessage when there was no success",
+          "type": "string"
+        },
+        "success": {
+          "description": "signals if the allocation was successful",
+          "type": "boolean"
         }
       }
     },
@@ -1891,16 +1901,16 @@
             "$ref": "#/definitions/metal.Nic"
           }
         },
-        "rack_id": {
-          "description": "the id of the rack in which this switch is located",
-          "type": "string"
-        },
         "partition": {
           "description": "the partition in which this switch is located",
           "$ref": "#/definitions/metal.Partition"
         },
         "partition_id": {
           "description": "the id of the partition in which this switch is located",
+          "type": "string"
+        },
+        "rack_id": {
+          "description": "the id of the rack in which this switch is located",
           "type": "string"
         }
       }

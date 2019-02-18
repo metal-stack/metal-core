@@ -28,7 +28,7 @@ func TestLoggingMiddleware(t *testing.T) {
 		UUID: machineID,
 	}
 	payload.Nics = []*models.MetalNic{}
-	payload.Disks = []*models.MetalBlockMachine{}
+	payload.Disks = []*models.MetalBlockDevice{}
 
 	// when
 	sc := doPost(fmt.Sprintf("/machine/register/%v", machineID), payload)
