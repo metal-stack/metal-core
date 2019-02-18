@@ -11,7 +11,7 @@ import (
 
 	"github.com/emicklei/go-restful-openapi"
 
-	"git.f-i-ts.de/cloud-native/metal/metal-core/client/device"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	sw "git.f-i-ts.de/cloud-native/metal/metal-core/client/switch_operations"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/api"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/core"
@@ -81,7 +81,7 @@ func prepare() *app {
 	app := &app{
 		AppContext: &domain.AppContext{
 			Config:       cfg,
-			DeviceClient: device.New(transport, strfmt.Default),
+			MachineClient: machine.New(transport, strfmt.Default),
 			SwitchClient: sw.New(transport, strfmt.Default),
 		},
 	}
@@ -102,9 +102,9 @@ func prepare() *app {
 	}
 
 	app.BootConfig = &domain.BootConfig{
-		MetalHammerImageURL:    *s.Site.Bootconfig.Imageurl,
-		MetalHammerKernelURL:   *s.Site.Bootconfig.Kernelurl,
-		MetalHammerCommandLine: *s.Site.Bootconfig.Commandline,
+		MetalHammerImageURL:    *s.Partition.Bootconfig.Imageurl,
+		MetalHammerKernelURL:   *s.Partition.Bootconfig.Kernelurl,
+		MetalHammerCommandLine: *s.Partition.Bootconfig.Commandline,
 	}
 
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
@@ -116,14 +116,14 @@ func prepare() *app {
 
 func (a *app) initConsumer() {
 	_ = bus.NewConsumer(zapup.MustRootLogger(), a.Config.MQAddress).
-		MustRegister("device", "rack1").
-		Consume(domain.DeviceEvent{}, func(message interface{}) error {
-			evt := message.(*domain.DeviceEvent)
+		MustRegister("machine", "rack1").
+		Consume(domain.MachineEvent{}, func(message interface{}) error {
+			evt := message.(*domain.MachineEvent)
 			zapup.MustRootLogger().Info("Got message",
 				zap.Any("event", evt),
 			)
 			if evt.Type == domain.Delete {
-				a.EventHandler().FreeDevice(evt.Old)
+				a.EventHandler().FreeMachine(evt.Old)
 			}
 			return nil
 		}, 5)
@@ -145,7 +145,7 @@ func (a *app) registerSwitch() (*models.MetalSwitch, error) {
 	params := sw.NewRegisterSwitchParams()
 	params.Body = &models.MetalRegisterSwitch{
 		ID:     &hostname,
-		SiteID: &a.Config.SiteID,
+		PartitionID: &a.Config.PartitionID,
 		RackID: &a.Config.RackID,
 		Nics:   nics,
 	}

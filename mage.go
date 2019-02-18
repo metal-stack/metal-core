@@ -75,6 +75,8 @@ func (BUILD) Model()  {
 	}
 	os.Setenv("GO111MODULE", "off")
 	defer os.Setenv("GO111MODULE", "on")
+	_ = os.RemoveAll("client")
+	_ = os.RemoveAll("models")
 	if err := sh.RunV(swagger, "generate", "client", "-f", "domain/metal-api.json", "--skip-validation"); err != nil {
 		panic(err)
 	}
@@ -106,6 +108,7 @@ func (b BUILD) Core() {
 // (Re)build metal-core specification
 func (b BUILD) Spec() {
 	b.Bin()
+	_ = os.Remove("spec/metal-core.json")
 	if err := sh.RunV("bin/metal-core", "spec", "spec/metal-core.json"); err != nil {
 		panic(err)
 	}

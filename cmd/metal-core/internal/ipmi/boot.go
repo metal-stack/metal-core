@@ -13,7 +13,7 @@ func SetBootDevPxe(cfg *domain.IPMIConfig) error {
 		return err
 	}
 
-	zapup.MustRootLogger().Info("Setting boot device to PXE boot",
+	zapup.MustRootLogger().Info("Setting boot machine to PXE boot",
 		zap.String("hostname", cfg.Hostname),
 	)
 
@@ -30,7 +30,7 @@ func SetBootDevHd(cfg *domain.IPMIConfig) error {
 		return err
 	}
 
-	zapup.MustRootLogger().Info("Setting boot device to HD boot",
+	zapup.MustRootLogger().Info("Setting boot machine to HD boot",
 		zap.String("hostname", cfg.Hostname),
 	)
 

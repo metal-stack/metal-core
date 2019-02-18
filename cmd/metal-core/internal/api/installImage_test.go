@@ -2,7 +2,7 @@ package api
 
 import (
 	"errors"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/client/device"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
@@ -13,16 +13,16 @@ import (
 
 type installImageMock struct {
 	simulateError bool
-	actualDevID   string
+	actualmachineID   string
 }
 
 func (m *installImageMock) Submit(o *runtime.ClientOperation) (interface{}, error) {
-	params := o.Params.(*device.WaitForAllocationParams)
-	m.actualDevID = params.ID
+	params := o.Params.(*machine.WaitForAllocationParams)
+	m.actualmachineID = params.ID
 	if m.simulateError {
 		return nil, errors.New("not found")
 	}
-	return &device.WaitForAllocationOK{}, nil
+	return &machine.WaitForAllocationOK{}, nil
 }
 
 func TestInstallImage_OK(t *testing.T) {
@@ -32,18 +32,18 @@ func TestInstallImage_OK(t *testing.T) {
 	}
 
 	ctx := &domain.AppContext{
-		DeviceClient: device.New(m, strfmt.Default),
+		MachineClient: machine.New(m, strfmt.Default),
 	}
 	ctx.SetAPIClient(NewClient)
 
-	devID := "fakeDeviceID"
+	machineID := "fakeMachineID"
 
 	// WHEN
-	sc, _ := ctx.APIClient().InstallImage(devID)
+	sc, _ := ctx.APIClient().InstallImage(machineID)
 
 	// THEN
 	require.Equal(t, http.StatusOK, sc)
-	require.Equal(t, devID, m.actualDevID)
+	require.Equal(t, machineID, m.actualmachineID)
 }
 
 func TestInstallImage_Error(t *testing.T) {
@@ -53,16 +53,16 @@ func TestInstallImage_Error(t *testing.T) {
 	}
 
 	ctx := &domain.AppContext{
-		DeviceClient: device.New(m, strfmt.Default),
+		MachineClient: machine.New(m, strfmt.Default),
 	}
 	ctx.SetAPIClient(NewClient)
 
-	devID := "fakeDeviceID"
+	machineID := "fakeMachineID"
 
 	// WHEN
-	sc, _ := ctx.APIClient().InstallImage(devID)
+	sc, _ := ctx.APIClient().InstallImage(machineID)
 
 	// THEN
 	require.Equal(t, http.StatusInternalServerError, sc)
-	require.Equal(t, devID, m.actualDevID)
+	require.Equal(t, machineID, m.actualmachineID)
 }

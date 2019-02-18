@@ -1,7 +1,7 @@
 package endpoint
 
 import (
-	"git.f-i-ts.de/cloud-native/metal/metal-core/client/device"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/ipmi"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/rest"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
@@ -24,10 +24,10 @@ func (h *endpointHandler) Report(request *restful.Request, response *restful.Res
 		return
 	}
 
-	devId := request.PathParameter("id")
+	machineID := request.PathParameter("id")
 
-	zapup.MustRootLogger().Info("Got report for device",
-		zap.String("deviceID", devId),
+	zapup.MustRootLogger().Info("Got report for machine",
+		zap.String("machineID", machineID),
 		zap.Any("report", report),
 	)
 
@@ -36,7 +36,7 @@ func (h *endpointHandler) Report(request *restful.Request, response *restful.Res
 		return
 	}
 
-	ipmiConn, err := h.APIClient().IPMIConfig(devId)
+	ipmiConn, err := h.APIClient().IPMIConfig(machineID)
 	if err != nil {
 		rest.Respond(response, http.StatusInternalServerError, nil)
 		return
@@ -44,8 +44,8 @@ func (h *endpointHandler) Report(request *restful.Request, response *restful.Res
 
 	err = ipmi.SetBootDevHd(ipmiConn)
 	if err != nil {
-		zapup.MustRootLogger().Error("Unable to set boot order of device to HD",
-			zap.String("deviceID", devId),
+		zapup.MustRootLogger().Error("Unable to set boot order of machine to HD",
+			zap.String("machineID", machineID),
 			zap.Error(err),
 		)
 		rest.Respond(response, http.StatusInternalServerError, nil)
@@ -57,13 +57,13 @@ func (h *endpointHandler) Report(request *restful.Request, response *restful.Res
 		ConsolePassword: &report.ConsolePassword,
 		Errormessage:    report.Message,
 	}
-	params := device.NewAllocationReportParams()
-	params.ID = devId
+	params := machine.NewAllocationReportParams()
+	params.ID = machineID
 	params.Body = body
-	_, err = h.DeviceClient.AllocationReport(params)
+	_, err = h.MachineClient.AllocationReport(params)
 	if err != nil {
-		zapup.MustRootLogger().Error("Unable to report device back to api.",
-			zap.String("deviceID", devId),
+		zapup.MustRootLogger().Error("Unable to report machine back to api.",
+			zap.String("machineID", machineID),
 			zap.Error(err),
 		)
 		rest.Respond(response, http.StatusInternalServerError, nil)

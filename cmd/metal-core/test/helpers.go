@@ -26,7 +26,7 @@ var (
 func mockAPIEndpoint(apiClient func(ctx *domain.AppContext) domain.APIClient) domain.EndpointHandler {
 	_ = os.Setenv(zapup.KeyOutput, logFilename)
 	_ = os.Setenv("METAL_CORE_IP", "test-host")
-	_ = os.Setenv("METAL_CORE_SITE_ID", "FRA")
+	_ = os.Setenv("METAL_CORE_PARTITION_ID", "FRA")
 	_ = os.Setenv("METAL_CORE_RACK_ID", "Vagrant Rack 1")
 
 	cfg = &domain.Config{}

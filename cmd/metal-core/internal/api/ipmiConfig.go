@@ -2,7 +2,7 @@ package api
 
 import (
 	"fmt"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/client/device"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"go.uber.org/zap"
@@ -10,17 +10,17 @@ import (
 	"strings"
 )
 
-func (c *apiClient) IPMIConfig(deviceID string) (*domain.IPMIConfig, error) {
-	params := device.NewIPMIDataParams()
-	params.ID = deviceID
+func (c *apiClient) IPMIConfig(machineID string) (*domain.IPMIConfig, error) {
+	params := machine.NewIPMIDataParams()
+	params.ID = machineID
 
-	ok, err := c.DeviceClient.IPMIData(params)
+	ok, err := c.MachineClient.IPMIData(params)
 	if err != nil {
-		zapup.MustRootLogger().Error("IPMI for device not found",
-			zap.String("device", deviceID),
+		zapup.MustRootLogger().Error("IPMI for machine not found",
+			zap.String("machine", machineID),
 			zap.Error(err),
 		)
-		return nil, fmt.Errorf("IPMI for device %s not found: %v", deviceID, err)
+		return nil, fmt.Errorf("IPMI for machine %s not found: %v", machineID, err)
 	}
 
 	ipmiData := ok.Payload
@@ -29,7 +29,7 @@ func (c *apiClient) IPMIConfig(deviceID string) (*domain.IPMIConfig, error) {
 	port, err := strconv.Atoi(hostAndPort[1])
 	if err != nil {
 		zapup.MustRootLogger().Error("unable to extract port from ipmiaddress",
-			zap.String("device", deviceID),
+			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 		port = 632

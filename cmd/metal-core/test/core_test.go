@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var devId = "fake-device-id"
+var machineID = "fake-machine-id"
 
 type apiHandlerCoreTest struct{}
 
@@ -22,40 +22,40 @@ func TestLoggingMiddleware(t *testing.T) {
 	})
 	defer deleteLogFile()
 
-	restful.Add(e.NewDeviceService())
+	restful.Add(e.NewMachineService())
 
-	payload := &domain.MetalHammerRegisterDeviceRequest{
-		UUID: devId,
+	payload := &domain.MetalHammerRegisterMachineRequest{
+		UUID: machineID,
 	}
 	payload.Nics = []*models.MetalNic{}
 	payload.Disks = []*models.MetalBlockDevice{}
 
 	// when
-	sc := doPost(fmt.Sprintf("/device/register/%v", devId), payload)
+	sc := doPost(fmt.Sprintf("/machine/register/%v", machineID), payload)
 
 	// then
 	require.Equal(t, http.StatusOK, sc)
 	logs := getLogs()
-	require.Contains(t, logs, "Register device at Metal-API")
-	require.Contains(t, logs, "Device registered")
+	require.Contains(t, logs, "Register machine at Metal-API")
+	require.Contains(t, logs, "Machine registered")
 	require.NotContains(t, logs, "level=error")
 }
 
-func (a apiHandlerCoreTest) FindDevices(mac string) (int, []*models.MetalDevice) {
+func (a apiHandlerCoreTest) FindMachines(mac string) (int, []*models.MetalMachine) {
 	return -1, nil
 }
 
-func (a apiHandlerCoreTest) RegisterDevice(deviceId string, request *domain.MetalHammerRegisterDeviceRequest) (int, *models.MetalDevice) {
-	dev := models.MetalDevice{
-		ID: &devId,
+func (a apiHandlerCoreTest) RegisterMachine(machineId string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.MetalMachine) {
+	dev := models.MetalMachine{
+		ID: &machineID,
 	}
 	return http.StatusOK, &dev
 }
 
-func (a apiHandlerCoreTest) InstallImage(deviceId string) (int, *models.MetalDeviceWithPhoneHomeToken) {
+func (a apiHandlerCoreTest) InstallImage(machineId string) (int, *models.MetalMachineWithPhoneHomeToken) {
 	return -1, nil
 }
 
-func (a apiHandlerCoreTest) IPMIConfig(deviceId string) (*domain.IPMIConfig, error) {
+func (a apiHandlerCoreTest) IPMIConfig(machineId string) (*domain.IPMIConfig, error) {
 	return nil, nil
 }
