@@ -1,10 +1,10 @@
 package api
 
 import (
-	"fmt"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"strconv"
 	"strings"
@@ -20,7 +20,7 @@ func (c *apiClient) IPMIConfig(machineID string) (*domain.IPMIConfig, error) {
 			zap.String("machine", machineID),
 			zap.Error(err),
 		)
-		return nil, fmt.Errorf("IPMI for machine %s not found: %v", machineID, err)
+		return nil, errors.Wrapf(err, "IPMI for machine %s not found", machineID)
 	}
 
 	ipmiData := ok.Payload

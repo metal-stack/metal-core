@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"io/ioutil"
 	gonet "net"
 	"os"
@@ -135,11 +136,11 @@ func (a *app) registerSwitch() (*models.MetalSwitch, error) {
 	var hostname string
 
 	if nics, err = getNics(); err != nil {
-		return nil, fmt.Errorf("unable to get nics:%v", err)
+		return nil, errors.Wrap(err, "unable to get nics")
 	}
 
 	if hostname, err = os.Hostname(); err != nil {
-		return nil, fmt.Errorf("unable to get hostname:%v", err)
+		return nil, errors.Wrap(err, "unable to get hostname")
 	}
 
 	params := sw.NewRegisterSwitchParams()
@@ -168,7 +169,7 @@ func getNics() ([]*models.MetalNic, error) {
 	var nics []*models.MetalNic
 	links, err := netlink.LinkList()
 	if err != nil {
-		return nil, fmt.Errorf("unable to get all links:%v", err)
+		return nil, errors.Wrap(err, "unable to get all links")
 	}
 	for _, l := range links {
 		attrs := l.Attrs()
