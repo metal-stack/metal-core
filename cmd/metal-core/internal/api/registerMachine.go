@@ -16,9 +16,9 @@ func (c *apiClient) RegisterMachine(machineID string, request *domain.MetalHamme
 	rackId := c.Config.RackID
 	params := machine.NewRegisterMachineParams()
 	params.Body = &models.MetalRegisterMachine{
-		UUID:   &machineID,
+		UUID:        &machineID,
 		Partitionid: &partitionId,
-		Rackid: &rackId,
+		Rackid:      &rackId,
 		Hardware: &models.MetalMachineHardware{
 			Memory:   request.Memory,
 			CPUCores: request.CPUCores,

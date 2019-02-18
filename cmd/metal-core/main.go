@@ -68,22 +68,26 @@ func prepare() *app {
 	)
 
 	zapup.MustRootLogger().Info("Configuration",
-		zap.String("LogLevel", cfg.LogLevel),
-		zap.String("BindAddress", cfg.BindAddress),
 		zap.String("IP", cfg.IP),
+		zap.String("PartitionID", cfg.PartitionID),
+		zap.String("RackID", cfg.RackID),
+		zap.String("BindAddress", cfg.BindAddress),
 		zap.Int("Port", cfg.Port),
+		zap.String("LogLevel", cfg.LogLevel),
+		zap.Bool("ConsoleLogging", cfg.ConsoleLogging),
 		zap.String("API-Protocol", cfg.ApiProtocol),
 		zap.String("API-IP", cfg.ApiIP),
 		zap.Int("API-Port", cfg.ApiPort),
+		zap.String("MQAddress", cfg.MQAddress),
 	)
 
 	transport := client.New(fmt.Sprintf("%v:%d", cfg.ApiIP, cfg.ApiPort), "", nil)
 
 	app := &app{
 		AppContext: &domain.AppContext{
-			Config:       cfg,
+			Config:        cfg,
 			MachineClient: machine.New(transport, strfmt.Default),
-			SwitchClient: sw.New(transport, strfmt.Default),
+			SwitchClient:  sw.New(transport, strfmt.Default),
 		},
 	}
 	app.SetAPIClient(api.NewClient)
@@ -145,10 +149,10 @@ func (a *app) registerSwitch() (*models.MetalSwitch, error) {
 
 	params := sw.NewRegisterSwitchParams()
 	params.Body = &models.MetalRegisterSwitch{
-		ID:     &hostname,
+		ID:          &hostname,
 		PartitionID: &a.Config.PartitionID,
-		RackID: &a.Config.RackID,
-		Nics:   nics,
+		RackID:      &a.Config.RackID,
+		Nics:        nics,
 	}
 
 	for {

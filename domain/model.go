@@ -10,7 +10,7 @@ import (
 type EventType string
 
 type MachineEvent struct {
-	Type EventType           `json:"type,omitempty"`
+	Type EventType            `json:"type,omitempty"`
 	Old  *models.MetalMachine `json:"old,omitempty"`
 	New  *models.MetalMachine `json:"new,omitempty"`
 }
@@ -50,8 +50,8 @@ type EventHandler interface {
 type Config struct {
 	// Valid log levels are: DEBUG, INFO, WARN, ERROR, FATAL and PANIC
 	IP             string `required:"true" desc:"set the metal core IP"`
-	PartitionID         string `required:"true" desc:"set the partition ID" split_words:"true"`
-	RackID         string `required:"true" desc:"set the rack ID" split_words:"true"`
+	PartitionID    string `required:"true" desc:"set the partition ID" envconfig:"partition_id"`
+	RackID         string `required:"true" desc:"set the rack ID" envconfig:"rack_id"`
 	BindAddress    string `required:"false" default:"0.0.0.0" desc:"set server bind address" split_words:"true"`
 	Port           int    `required:"false" default:"4242" desc:"set server port"`
 	LogLevel       string `required:"false" default:"info" desc:"set log level" split_words:"true"`
@@ -83,7 +83,7 @@ type AppContext struct {
 	server          func(*AppContext) Server
 	endpointHandler func(*AppContext) EndpointHandler
 	eventHandler    func(*AppContext) EventHandler
-	MachineClient    *machine.Client
+	MachineClient   *machine.Client
 	SwitchClient    *sw.Client
 }
 

@@ -17,6 +17,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.3.0
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/magefile/mage v1.8.0
+	github.com/pkg/errors v0.8.0
 	github.com/stretchr/testify v1.2.2
 	github.com/vishvananda/netlink v1.0.0
 	github.com/vishvananda/netns v0.0.0-20180720170159-13995c7128cc // indirect

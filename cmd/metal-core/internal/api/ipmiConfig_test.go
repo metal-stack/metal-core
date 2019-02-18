@@ -16,7 +16,7 @@ import (
 type ipmiDataMock struct {
 	simulateError                     bool
 	host, port, iface, user, password string
-	actualmachineID                       string
+	actualmachineID                   string
 }
 
 func (m *ipmiDataMock) Submit(o *runtime.ClientOperation) (interface{}, error) {

@@ -12,8 +12,8 @@ import (
 )
 
 type installImageMock struct {
-	simulateError bool
-	actualmachineID   string
+	simulateError   bool
+	actualmachineID string
 }
 
 func (m *installImageMock) Submit(o *runtime.ClientOperation) (interface{}, error) {

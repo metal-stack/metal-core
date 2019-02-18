@@ -14,8 +14,8 @@ import (
 )
 
 type registerMachineMock struct {
-	simulateError                           bool
-	rdr                                     *models.MetalRegisterMachine
+	simulateError                                    bool
+	rdr                                              *models.MetalRegisterMachine
 	actualmachineID, actualPartitionID, actualRackID string
 }
 
@@ -45,7 +45,7 @@ func TestRegisterMachine_OK(t *testing.T) {
 		MachineClient: machine.New(m, strfmt.Default),
 		Config: &domain.Config{
 			PartitionID: partitionID,
-			RackID: rackID,
+			RackID:      rackID,
 		},
 	}
 	ctx.SetAPIClient(NewClient)
@@ -78,7 +78,7 @@ func TestRegisterMachine_Error(t *testing.T) {
 		MachineClient: machine.New(m, strfmt.Default),
 		Config: &domain.Config{
 			PartitionID: partitionID,
-			RackID: rackID,
+			RackID:      rackID,
 		},
 	}
 	ctx.SetAPIClient(NewClient)
