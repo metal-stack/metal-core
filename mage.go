@@ -90,8 +90,8 @@ func (BUILD) Bin() {
 	gitsha, _ := sh.Output("git", "rev-parse", "--short=8", "HEAD")
 	buildDate, _ := sh.Output("date", "-Iseconds")
 	ldflags := fmt.Sprintf("-X 'git.f-i-ts.de/cloud-native/metallib/version.Version=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Revision=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Gitsha1=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Builddate=%v'", version.V, gitVersion, gitsha, buildDate)
-	defer os.Chdir("../..")
 	os.Chdir("cmd/metal-core")
+	defer os.Chdir("../..")
 	if err := sh.RunV("go", "build", "-tags", "netgo", "-ldflags", ldflags, "-o", "../../bin/metal-core"); err != nil {
 		panic(err)
 	}
