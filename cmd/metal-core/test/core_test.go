@@ -18,7 +18,7 @@ type apiHandlerCoreTest struct{}
 func TestLoggingMiddleware(t *testing.T) {
 	// given
 	e := mockAPIEndpoint(func(ctx *domain.AppContext) domain.APIClient {
-		return apiHandlerCoreTest{}
+		return &apiHandlerCoreTest{}
 	})
 	defer deleteLogFile()
 
@@ -38,24 +38,25 @@ func TestLoggingMiddleware(t *testing.T) {
 	logs := getLogs()
 	require.Contains(t, logs, "Register machine at Metal-API")
 	require.Contains(t, logs, "Machine registered")
+	require.Contains(t, logs, fmt.Sprintf("%q:%q", "id", machineID))
 	require.NotContains(t, logs, "level=error")
 }
 
-func (a apiHandlerCoreTest) FindMachines(mac string) (int, []*models.MetalMachine) {
+func (a *apiHandlerCoreTest) FindMachines(mac string) (int, []*models.MetalMachine) {
 	return -1, nil
 }
 
-func (a apiHandlerCoreTest) RegisterMachine(machineId string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.MetalMachine) {
+func (a *apiHandlerCoreTest) RegisterMachine(machineId string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.MetalMachine) {
 	machine := models.MetalMachine{
 		ID: &machineID,
 	}
 	return http.StatusOK, &machine
 }
 
-func (a apiHandlerCoreTest) InstallImage(machineId string) (int, *models.MetalMachineWithPhoneHomeToken) {
+func (a *apiHandlerCoreTest) InstallImage(machineId string) (int, *models.MetalMachineWithPhoneHomeToken) {
 	return -1, nil
 }
 
-func (a apiHandlerCoreTest) IPMIConfig(machineId string) (*domain.IPMIConfig, error) {
+func (a *apiHandlerCoreTest) IPMIConfig(machineId string) (*domain.IPMIConfig, error) {
 	return nil, nil
 }

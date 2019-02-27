@@ -18,7 +18,7 @@ type apiHandlerBootTest struct{}
 func TestPXEBoot(t *testing.T) {
 	// given
 	e := mockAPIEndpoint(func(ctx *domain.AppContext) domain.APIClient {
-		return apiHandlerBootTest{}
+		return &apiHandlerBootTest{}
 	})
 	defer truncateLogFile()
 
@@ -44,7 +44,7 @@ func TestPXEBoot(t *testing.T) {
 	require.Equal(t, expected.CommandLine, bootResponse.CommandLine)
 }
 
-func (a apiHandlerBootTest) FindMachines(mac string) (int, []*models.MetalMachine) {
+func (a *apiHandlerBootTest) FindMachines(mac string) (int, []*models.MetalMachine) {
 	if mac == fakeMac {
 		return http.StatusOK, []*models.MetalMachine{}
 	}
@@ -53,14 +53,14 @@ func (a apiHandlerBootTest) FindMachines(mac string) (int, []*models.MetalMachin
 	}
 }
 
-func (a apiHandlerBootTest) RegisterMachine(machineId string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.MetalMachine) {
+func (a *apiHandlerBootTest) RegisterMachine(machineId string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.MetalMachine) {
 	return -1, nil
 }
 
-func (a apiHandlerBootTest) InstallImage(machineId string) (int, *models.MetalMachineWithPhoneHomeToken) {
+func (a *apiHandlerBootTest) InstallImage(machineId string) (int, *models.MetalMachineWithPhoneHomeToken) {
 	return -1, nil
 }
 
-func (a apiHandlerBootTest) IPMIConfig(machineId string) (*domain.IPMIConfig, error) {
+func (a *apiHandlerBootTest) IPMIConfig(machineId string) (*domain.IPMIConfig, error) {
 	return nil, nil
 }
