@@ -3,6 +3,7 @@ package event
 import (
 	"strconv"
 	"strings"
+	"sync"
 
 	sw "git.f-i-ts.de/cloud-native/metal/metal-core/client/switch_operations"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
@@ -49,7 +50,11 @@ func buildSwitcherConfig(s *models.MetalSwitch, config *domain.Config) (*switche
 	return c, nil
 }
 
+var mux sync.Mutex
+
 func (h *eventHandler) ReconfigureSwitch(switchID string) {
+	mux.Lock()
+	defer mux.Unlock()
 	params := sw.NewFindSwitchParams()
 	params.ID = switchID
 	fsr, err := h.SwitchClient.FindSwitch(params)
