@@ -80,6 +80,8 @@ func prepare() *app {
 		zap.String("API-IP", cfg.ApiIP),
 		zap.Int("API-Port", cfg.ApiPort),
 		zap.String("MQAddress", cfg.MQAddress),
+		zap.String("MachineTopic", cfg.MachineTopic),
+		zap.String("SwitchTopic", cfg.SwitchTopic),
 		zap.String("LoopbackIP", cfg.LoopbackIP),
 		zap.String("ASN", cfg.ASN),
 		zap.String("SpineUplinks", cfg.SpineUplinks),
@@ -125,7 +127,7 @@ func prepare() *app {
 
 func (a *app) initConsumer() {
 	_ = bus.NewConsumer(zapup.MustRootLogger(), a.Config.MQAddress).
-		MustRegister("machine", "rack1").
+		MustRegister(a.Config.MachineTopic, "rack1").
 		Consume(domain.MachineEvent{}, func(message interface{}) error {
 			evt := message.(*domain.MachineEvent)
 			zapup.MustRootLogger().Info("Got message",
@@ -139,7 +141,7 @@ func (a *app) initConsumer() {
 
 	hostname, _ := os.Hostname()
 	_ = bus.NewConsumer(zapup.MustRootLogger(), a.Config.MQAddress).
-		MustRegister("switch", "rack1").
+		MustRegister(a.Config.SwitchTopic, "rack1").
 		Consume(domain.SwitchEvent{}, func(message interface{}) error {
 			evt := message.(*domain.SwitchEvent)
 			zapup.MustRootLogger().Info("Got message",
