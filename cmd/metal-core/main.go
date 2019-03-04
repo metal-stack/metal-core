@@ -137,14 +137,16 @@ func (a *app) initConsumer() {
 			case domain.Delete:
 				a.EventHandler().FreeMachine(evt.Old)
 			case domain.Update:
-				if evt.SwitchID != hostname {
-					zapup.MustRootLogger().Info("Skip event because it is not intended for this switch",
-						zap.String("SwitchID", evt.SwitchID),
-						zap.String("Hostname", hostname),
-					)
-					break
+				for _, sid := range evt.SwitchIDs {
+					if sid == hostname {
+						a.EventHandler().ReconfigureSwitch(sid)
+						return nil
+					}
 				}
-				a.EventHandler().ReconfigureSwitch(evt.SwitchID)
+				zapup.MustRootLogger().Info("Skip event because it is not intended for this switch",
+					zap.Any("SwitchIDs", evt.SwitchIDs),
+					zap.String("Hostname", hostname),
+				)
 			}
 			return nil
 		}, 5)

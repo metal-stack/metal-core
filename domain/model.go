@@ -10,10 +10,10 @@ import (
 type EventType string
 
 type MachineEvent struct {
-	Type     EventType            `json:"type,omitempty"`
-	Old      *models.MetalMachine `json:"old,omitempty"`
-	New      *models.MetalMachine `json:"new,omitempty"`
-	SwitchID string               `json:"switchID,omitempty"`
+	Type      EventType            `json:"type,omitempty"`
+	Old       *models.MetalMachine `json:"old,omitempty"`
+	New       *models.MetalMachine `json:"new,omitempty"`
+	SwitchIDs []string             `json:"switchIDs,omitempty"`
 }
 
 // Some EventType enums.
