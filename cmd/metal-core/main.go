@@ -81,7 +81,6 @@ func prepare() *app {
 		zap.Int("API-Port", cfg.ApiPort),
 		zap.String("MQAddress", cfg.MQAddress),
 		zap.String("MachineTopic", cfg.MachineTopic),
-		zap.String("SwitchTopic", cfg.SwitchTopic),
 		zap.String("LoopbackIP", cfg.LoopbackIP),
 		zap.String("ASN", cfg.ASN),
 		zap.String("SpineUplinks", cfg.SpineUplinks),
@@ -126,36 +125,29 @@ func prepare() *app {
 }
 
 func (a *app) initConsumer() {
+	hostname, _ := os.Hostname()
 	_ = bus.NewConsumer(zapup.MustRootLogger(), a.Config.MQAddress).
-		MustRegister(a.Config.MachineTopic, "rack1").
+		MustRegister(a.Config.MachineTopic, "core").
 		Consume(domain.MachineEvent{}, func(message interface{}) error {
 			evt := message.(*domain.MachineEvent)
 			zapup.MustRootLogger().Info("Got message",
 				zap.Any("event", evt),
 			)
-			if evt.Type == domain.Delete {
+			switch evt.Type {
+			case domain.Delete:
 				a.EventHandler().FreeMachine(evt.Old)
+			case domain.Update:
+				if evt.SwitchID != hostname {
+					zapup.MustRootLogger().Info("Skip event because it is not intended for this switch",
+						zap.String("SwitchID", evt.SwitchID),
+						zap.String("Hostname", hostname),
+					)
+					break
+				}
+				a.EventHandler().ReconfigureSwitch(evt.SwitchID)
 			}
 			return nil
 		}, 5)
-
-	hostname, _ := os.Hostname()
-	_ = bus.NewConsumer(zapup.MustRootLogger(), a.Config.MQAddress).
-		MustRegister(a.Config.SwitchTopic, "rack1").
-		Consume(domain.SwitchEvent{}, func(message interface{}) error {
-			evt := message.(*domain.SwitchEvent)
-			zapup.MustRootLogger().Info("Got message",
-				zap.Any("event", evt),
-			)
-			if evt.Type == domain.Update {
-				if evt.SwitchID != hostname {
-					zapup.MustRootLogger().Info("Skip event because it is not intended for this switch", zap.String("SwitchID", evt.SwitchID), zap.String("Hostname", hostname))
-				} else {
-					a.EventHandler().ReconfigureSwitch(evt.SwitchID)
-				}
-			}
-			return nil
-		}, 1)
 }
 
 func (a *app) registerSwitch() (*models.MetalSwitch, error) {
