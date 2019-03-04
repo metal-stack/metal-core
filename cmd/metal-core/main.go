@@ -3,14 +3,15 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	gonet "net"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/emicklei/go-restful-openapi"
+	"github.com/pkg/errors"
+
+	restfulspec "github.com/emicklei/go-restful-openapi"
 
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	sw "git.f-i-ts.de/cloud-native/metal/metal-core/client/switch_operations"
@@ -79,6 +80,9 @@ func prepare() *app {
 		zap.String("API-IP", cfg.ApiIP),
 		zap.Int("API-Port", cfg.ApiPort),
 		zap.String("MQAddress", cfg.MQAddress),
+		zap.String("LoopbackIP", cfg.LoopbackIP),
+		zap.String("ASN", cfg.ASN),
+		zap.String("SpineUplinks", cfg.SpineUplinks),
 	)
 
 	transport := client.New(fmt.Sprintf("%v:%d", cfg.ApiIP, cfg.ApiPort), "", nil)
@@ -132,6 +136,24 @@ func (a *app) initConsumer() {
 			}
 			return nil
 		}, 5)
+
+	hostname, _ := os.Hostname()
+	_ = bus.NewConsumer(zapup.MustRootLogger(), a.Config.MQAddress).
+		MustRegister("switch", "rack1").
+		Consume(domain.SwitchEvent{}, func(message interface{}) error {
+			evt := message.(*domain.SwitchEvent)
+			zapup.MustRootLogger().Info("Got message",
+				zap.Any("event", evt),
+			)
+			if evt.Type == domain.Update {
+				if evt.SwitchID != hostname {
+					zapup.MustRootLogger().Info("Skip event because it is not intended for this switch", zap.String("SwitchID", evt.SwitchID), zap.String("Hostname", hostname))
+				} else {
+					a.EventHandler().ReconfigureSwitch(evt.SwitchID)
+				}
+			}
+			return nil
+		}, 1)
 }
 
 func (a *app) registerSwitch() (*models.MetalSwitch, error) {

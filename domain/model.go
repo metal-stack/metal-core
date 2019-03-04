@@ -15,6 +15,11 @@ type MachineEvent struct {
 	New  *models.MetalMachine `json:"new,omitempty"`
 }
 
+type SwitchEvent struct {
+	Type     EventType
+	SwitchID string
+}
+
 // Some EventType enums.
 const (
 	Create EventType = "create"
@@ -45,21 +50,26 @@ type EndpointHandler interface {
 
 type EventHandler interface {
 	FreeMachine(machine *models.MetalMachine)
+	ReconfigureSwitch(switchID string)
 }
 
 type Config struct {
 	// Valid log levels are: DEBUG, INFO, WARN, ERROR, FATAL and PANIC
-	IP             string `required:"true" desc:"set the metal core IP"`
-	PartitionID    string `required:"true" desc:"set the partition ID" envconfig:"partition_id"`
-	RackID         string `required:"true" desc:"set the rack ID" envconfig:"rack_id"`
-	BindAddress    string `required:"false" default:"0.0.0.0" desc:"set server bind address" split_words:"true"`
-	Port           int    `required:"false" default:"4242" desc:"set server port"`
-	LogLevel       string `required:"false" default:"info" desc:"set log level" split_words:"true"`
-	ConsoleLogging bool   `required:"false" default:"true" desc:"enable/disable console logging" split_words:"true"`
-	ApiProtocol    string `required:"false" default:"http" desc:"set metal api protocol" envconfig:"metal_api_protocol"`
-	ApiIP          string `required:"false" default:"localhost" desc:"set metal api address" envconfig:"metal_api_ip"`
-	ApiPort        int    `required:"false" default:"8080" desc:"set metal api port" envconfig:"metal_api_port"`
-	MQAddress      string `required:"false" default:"localhost:4161" desc:"set the MQ server address" envconfig:"mq_address"`
+	IP                string `required:"true" desc:"set the metal core IP"`
+	PartitionID       string `required:"true" desc:"set the partition ID" envconfig:"partition_id"`
+	RackID            string `required:"true" desc:"set the rack ID" envconfig:"rack_id"`
+	BindAddress       string `required:"false" default:"0.0.0.0" desc:"set server bind address" split_words:"true"`
+	Port              int    `required:"false" default:"4242" desc:"set server port"`
+	LogLevel          string `required:"false" default:"info" desc:"set log level" split_words:"true"`
+	ConsoleLogging    bool   `required:"false" default:"true" desc:"enable/disable console logging" split_words:"true"`
+	ApiProtocol       string `required:"false" default:"http" desc:"set metal api protocol" envconfig:"metal_api_protocol"`
+	ApiIP             string `required:"false" default:"localhost" desc:"set metal api address" envconfig:"metal_api_ip"`
+	ApiPort           int    `required:"false" default:"8080" desc:"set metal api port" envconfig:"metal_api_port"`
+	MQAddress         string `required:"false" default:"localhost:4161" desc:"set the MQ server address" envconfig:"mq_address"`
+	LoopbackIP        string `required:"false" default:"10.0.0.11" desc:"set the loopback ip address that is used with BGP unnumbered" envconfig:"metal_loopback_ip"`
+	ASN               string `required:"false" default:"420000011" desc:"set the ASN that is used with BGP"`
+	SpineUplinks      string `required:"false" default:"swp31,swp32" desc:"set the ports that are connected to spines" split_words:"true"`
+	ReconfigureSwitch bool   `required:"false" default:"false" desc:"let metal-core reconfigure the switch" split_words:"true"`
 }
 
 type BootConfig struct {
