@@ -84,6 +84,7 @@ func prepare() *app {
 		zap.String("LoopbackIP", cfg.LoopbackIP),
 		zap.String("ASN", cfg.ASN),
 		zap.String("SpineUplinks", cfg.SpineUplinks),
+		zap.Bool("ReconfigureSwitch", cfg.ReconfigureSwitch),
 	)
 
 	transport := client.New(fmt.Sprintf("%v:%d", cfg.ApiIP, cfg.ApiPort), "", nil)
@@ -197,6 +198,13 @@ func getNics() ([]*models.MetalNic, error) {
 		attrs := l.Attrs()
 		name := attrs.Name
 		mac := attrs.HardwareAddr.String()
+		if !strings.HasPrefix(name, "swp") {
+			zapup.MustRootLogger().Info("skip interface, because only swp* switch ports are reported to metal-api",
+				zap.String("interface", name),
+				zap.String("mac", mac),
+			)
+			continue
+		}
 		_, err := gonet.ParseMAC(mac)
 		if err != nil {
 			zapup.MustRootLogger().Info("skip interface with invalid mac",

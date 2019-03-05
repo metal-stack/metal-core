@@ -60,13 +60,15 @@ func (h *eventHandler) ReconfigureSwitch(switchID string) {
 	if err != nil {
 		zapup.MustRootLogger().Error("Could not fetch switch from metal-api",
 			zap.Error(err))
+		return
 	}
 
 	s := fsr.Payload
 	c, err := h.buildSwitcherConfig(s)
 	if err != nil {
-		zapup.MustRootLogger().Error("Could build switcher config",
+		zapup.MustRootLogger().Error("Could not build switcher config",
 			zap.Error(err))
+		return
 	}
 
 	zapup.MustRootLogger().Info("Would apply this configuration to the switch",
