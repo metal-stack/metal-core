@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	sw "git.f-i-ts.de/cloud-native/metal/metal-core/client/switch_operations"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"git.f-i-ts.de/cloud-native/metallib/switcher"
 	"git.f-i-ts.de/cloud-native/metallib/vlan"
@@ -13,22 +14,25 @@ import (
 	"go.uber.org/zap"
 )
 
-func (h *eventHandler) buildSwitcherConfig(s *models.MetalSwitch) (*switcher.Conf, error) {
+func buildSwitcherConfig(conf *domain.Config, s *models.MetalSwitch) (*switcher.Conf, error) {
 	c := &switcher.Conf{}
 	c.Name = s.Name
-	asn64, err := strconv.ParseUint(h.Config.ASN, 10, 32)
+	asn64, err := strconv.ParseUint(conf.ASN, 10, 32)
 	asn := uint32(asn64)
 	if err != nil {
 		return nil, err
 	}
 	c.ASN = asn
-	c.Loopback = h.Config.LoopbackIP
-	c.Neighbors = strings.Split(h.Config.SpineUplinks, ",")
+	c.Loopback = conf.LoopbackIP
+	c.Neighbors = strings.Split(conf.SpineUplinks, ",")
 	c.Tenants = make(map[string]*switcher.Tenant)
 	for _, nic := range s.Nics {
 		tenant := &switcher.Tenant{}
 		if t, has := c.Tenants[nic.Vrf]; has {
 			tenant = t
+		}
+		if nic.Vrf == "" {
+			continue
 		}
 		vni64, err := strconv.ParseUint(strings.TrimPrefix(nic.Vrf, "vrf"), 10, 32)
 		if err != nil {
@@ -64,7 +68,7 @@ func (h *eventHandler) ReconfigureSwitch(switchID string) {
 	}
 
 	s := fsr.Payload
-	c, err := h.buildSwitcherConfig(s)
+	c, err := buildSwitcherConfig(h.Config, s)
 	if err != nil {
 		zapup.MustRootLogger().Error("Could not build switcher config",
 			zap.Error(err))

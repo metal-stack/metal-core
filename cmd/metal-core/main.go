@@ -137,6 +137,7 @@ func (a *app) initConsumer() {
 			switch evt.Type {
 			case domain.Delete:
 				a.EventHandler().FreeMachine(evt.Old)
+				a.EventHandler().ReconfigureSwitch(hostname)
 			case domain.Update:
 				for _, sid := range evt.SwitchIDs {
 					if sid == hostname {
