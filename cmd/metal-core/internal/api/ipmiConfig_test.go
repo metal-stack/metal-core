@@ -119,5 +119,5 @@ func TestIPMIData_Error(t *testing.T) {
 	// THEN
 	require.Nil(t, ipmiCfg)
 	require.NotNil(t, err)
-	require.Equal(t, fmt.Sprintf("IPMI for machine %s not found: not found", machineID), err.Error())
+	require.Equal(t, fmt.Sprintf("IPMI data for machine %s not found: not found", machineID), err.Error())
 }
