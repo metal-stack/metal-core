@@ -9,9 +9,9 @@ func openClientConnection(connection *domain.IPMIConfig) (*goipmi.Client, error)
 	conn := &goipmi.Connection{
 		Hostname:  connection.Hostname,
 		Port:      connection.Port,
-		Username:  connection.Username,
-		Password:  connection.Password,
-		Interface: connection.Interface,
+		Username:  *connection.Ipmi.User,
+		Password:  *connection.Ipmi.Password,
+		Interface: *connection.Ipmi.Interface,
 	}
 
 	client, err := goipmi.NewClient(conn)

@@ -11,7 +11,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	restfulspec "github.com/emicklei/go-restful-openapi"
+	"github.com/emicklei/go-restful-openapi"
 
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	sw "git.f-i-ts.de/cloud-native/metal/metal-core/client/switch_operations"
@@ -149,6 +149,15 @@ func (a *app) initConsumer() {
 					zap.Any("SwitchIDs", evt.SwitchIDs),
 					zap.String("Hostname", hostname),
 				)
+			case domain.Command:
+				switch evt.Cmd.Command {
+				case domain.MachineOnCmd:
+					a.EventHandler().PowerOnMachine(evt.Cmd.Target, evt.Cmd.Params)
+				case domain.MachineOffCmd:
+					a.EventHandler().PowerOffMachine(evt.Cmd.Target, evt.Cmd.Params)
+				case domain.MachineResetCmd:
+					a.EventHandler().PowerResetMachine(evt.Cmd.Target, evt.Cmd.Params)
+				}
 			}
 			return nil
 		}, 5)

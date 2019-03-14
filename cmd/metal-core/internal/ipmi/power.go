@@ -13,14 +13,16 @@ func PowerOn(cfg *domain.IPMIConfig) error {
 		return err
 	}
 
-	zapup.MustRootLogger().Info("Powering up",
+	zapup.MustRootLogger().Info("Power ON",
 		zap.String("hostname", cfg.Hostname),
+		zap.String("mac", *cfg.Ipmi.Mac),
 	)
 
 	err = client.Control(goipmi.ControlPowerUp)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -30,13 +32,34 @@ func PowerOff(cfg *domain.IPMIConfig) error {
 		return err
 	}
 
-	zapup.MustRootLogger().Info("Powering off",
+	zapup.MustRootLogger().Info("Power OFF",
 		zap.String("hostname", cfg.Hostname),
+		zap.String("mac", *cfg.Ipmi.Mac),
 	)
 
 	err = client.Control(goipmi.ControlPowerDown)
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func PowerReset(cfg *domain.IPMIConfig) error {
+	client, err := openClientConnection(cfg)
+	if err != nil {
+		return err
+	}
+
+	zapup.MustRootLogger().Info("Power RESET",
+		zap.String("hostname", cfg.Hostname),
+		zap.String("mac", *cfg.Ipmi.Mac),
+	)
+
+	err = client.Control(goipmi.ControlPowerHardReset)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

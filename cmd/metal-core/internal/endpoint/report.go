@@ -36,13 +36,13 @@ func (h *endpointHandler) Report(request *restful.Request, response *restful.Res
 		return
 	}
 
-	ipmiConn, err := h.APIClient().IPMIConfig(machineID)
+	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
 	if err != nil {
 		rest.Respond(response, http.StatusInternalServerError, nil)
 		return
 	}
 
-	err = ipmi.SetBootMachineHD(ipmiConn)
+	err = ipmi.SetBootMachineHD(ipmiCfg)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to set boot order of machine to HD",
 			zap.String("machineID", machineID),

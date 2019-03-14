@@ -9,18 +9,34 @@ import (
 
 type EventType string
 
+type MachineCommand string
+
+const (
+	MachineOnCmd    MachineCommand = "ON"
+	MachineOffCmd   MachineCommand = "OFF"
+	MachineResetCmd MachineCommand = "RESET"
+)
+
+type MachineExecCommand struct {
+	Target  *models.MetalMachine `json:"target,omitempty"`
+	Command MachineCommand       `json:"cmd,omitempty"`
+	Params  []string             `json:"params,omitempty"`
+}
+
 type MachineEvent struct {
 	Type      EventType            `json:"type,omitempty"`
 	Old       *models.MetalMachine `json:"old,omitempty"`
 	New       *models.MetalMachine `json:"new,omitempty"`
+	Cmd       *MachineExecCommand  `json:"cmd,omitempty"`
 	SwitchIDs []string             `json:"switchIDs,omitempty"`
 }
 
 // Some EventType enums.
 const (
-	Create EventType = "create"
-	Update EventType = "update"
-	Delete EventType = "delete"
+	Create  EventType = "create"
+	Update  EventType = "update"
+	Delete  EventType = "delete"
+	Command EventType = "command"
 )
 
 type APIClient interface {
@@ -46,6 +62,9 @@ type EndpointHandler interface {
 
 type EventHandler interface {
 	FreeMachine(machine *models.MetalMachine)
+	PowerOnMachine(machine *models.MetalMachine, params []string)
+	PowerOffMachine(machine *models.MetalMachine, params []string)
+	PowerResetMachine(machine *models.MetalMachine, params []string)
 	ReconfigureSwitch(switchID string)
 }
 
@@ -76,11 +95,9 @@ type BootConfig struct {
 }
 
 type IPMIConfig struct {
-	Hostname  string
-	Interface string
-	Port      int
-	Username  string
-	Password  string
+	Ipmi     *models.MetalIPMI
+	Hostname string
+	Port     int
 }
 
 type AppContext struct {
