@@ -15,13 +15,10 @@ func SetBootMachinePXE(cfg *domain.IPMIConfig) error {
 
 	zapup.MustRootLogger().Info("Setting boot machine to PXE boot",
 		zap.String("hostname", cfg.Hostname),
+		zap.String("MAC", cfg.Mac()),
 	)
 
-	err = client.SetBootDevice(goipmi.BootDevicePxe)
-	if err != nil {
-		return err
-	}
-	return nil
+	return client.SetBootDevice(goipmi.BootDevicePxe)
 }
 
 func SetBootMachineHD(cfg *domain.IPMIConfig) error {
@@ -32,11 +29,22 @@ func SetBootMachineHD(cfg *domain.IPMIConfig) error {
 
 	zapup.MustRootLogger().Info("Setting boot machine to HD boot",
 		zap.String("hostname", cfg.Hostname),
+		zap.String("MAC", cfg.Mac()),
 	)
 
-	err = client.SetBootDevice(goipmi.BootDeviceDisk)
+	return client.SetBootDevice(goipmi.BootDeviceDisk)
+}
+
+func SetBootMachineBios(cfg *domain.IPMIConfig) error {
+	client, err := openClientConnection(cfg)
 	if err != nil {
 		return err
 	}
-	return nil
+
+	zapup.MustRootLogger().Info("Setting boot machine to BIOS boot",
+		zap.String("hostname", cfg.Hostname),
+		zap.String("MAC", cfg.Mac()),
+	)
+
+	return client.SetBootDevice(goipmi.BootDeviceBios)
 }

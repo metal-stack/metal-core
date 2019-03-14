@@ -15,7 +15,7 @@ func (c *apiClient) FindMachines(mac string) (int, []*models.MetalMachine) {
 	ok, err := c.MachineClient.SearchMachine(params)
 	if err != nil {
 		zapup.MustRootLogger().Error("Machine(s) not found",
-			zap.String("mac", mac),
+			zap.String("MAC", mac),
 			zap.Error(err),
 		)
 		return http.StatusInternalServerError, nil

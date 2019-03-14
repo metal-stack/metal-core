@@ -157,6 +157,8 @@ func (a *app) initConsumer() {
 					a.EventHandler().PowerOffMachine(evt.Cmd.Target, evt.Cmd.Params)
 				case domain.MachineResetCmd:
 					a.EventHandler().PowerResetMachine(evt.Cmd.Target, evt.Cmd.Params)
+				case domain.MachineBootBiosCmd:
+					a.EventHandler().BootBiosMachine(evt.Cmd.Target, evt.Cmd.Params)
 				}
 			}
 			return nil
@@ -211,7 +213,7 @@ func getNics() ([]*models.MetalNic, error) {
 		if !strings.HasPrefix(name, "swp") {
 			zapup.MustRootLogger().Info("skip interface, because only swp* switch ports are reported to metal-api",
 				zap.String("interface", name),
-				zap.String("mac", mac),
+				zap.String("MAC", mac),
 			)
 			continue
 		}
@@ -219,7 +221,7 @@ func getNics() ([]*models.MetalNic, error) {
 		if err != nil {
 			zapup.MustRootLogger().Info("skip interface with invalid mac",
 				zap.String("interface", name),
-				zap.String("mac", mac),
+				zap.String("MAC", mac),
 			)
 			continue
 		}
