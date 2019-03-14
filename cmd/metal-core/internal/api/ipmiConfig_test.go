@@ -63,9 +63,9 @@ func TestIPMIData_OK(t *testing.T) {
 	require.Equal(t, machineID, m.actualmachineID)
 	require.Equal(t, m.host, ipmiCfg.Hostname)
 	require.Equal(t, m.port, strconv.Itoa(ipmiCfg.Port))
-	require.Equal(t, m.iface, *ipmiCfg.Ipmi.Interface)
-	require.Equal(t, m.user, *ipmiCfg.Ipmi.User)
-	require.Equal(t, m.password, *ipmiCfg.Ipmi.Password)
+	require.Equal(t, m.iface, ipmiCfg.Interface())
+	require.Equal(t, m.user, ipmiCfg.User())
+	require.Equal(t, m.password, ipmiCfg.Password())
 }
 
 func TestIPMIData_InvalidPort(t *testing.T) {
@@ -95,9 +95,9 @@ func TestIPMIData_InvalidPort(t *testing.T) {
 	require.Equal(t, machineID, m.actualmachineID)
 	require.Equal(t, m.host, ipmiCfg.Hostname)
 	require.Equal(t, 632, ipmiCfg.Port)
-	require.Equal(t, m.iface, *ipmiCfg.Ipmi.Interface)
-	require.Equal(t, m.user, *ipmiCfg.Ipmi.User)
-	require.Equal(t, m.password, *ipmiCfg.Ipmi.Password)
+	require.Equal(t, m.iface, ipmiCfg.Interface())
+	require.Equal(t, m.user, ipmiCfg.User())
+	require.Equal(t, m.password, ipmiCfg.Password())
 }
 
 func TestIPMIData_Error(t *testing.T) {

@@ -100,6 +100,26 @@ type IPMIConfig struct {
 	Port     int
 }
 
+func (i *IPMIConfig) Address() string {
+	return IPMIAddress(i.Ipmi)
+}
+
+func (i *IPMIConfig) Interface() string {
+	return IPMIInterface(i.Ipmi)
+}
+
+func (i *IPMIConfig) Mac() string {
+	return IPMIMAC(i.Ipmi)
+}
+
+func (i *IPMIConfig) User() string {
+	return IPMIUser(i.Ipmi)
+}
+
+func (i *IPMIConfig) Password() string {
+	return IPMIPassword(i.Ipmi)
+}
+
 type AppContext struct {
 	*Config
 	*BootConfig

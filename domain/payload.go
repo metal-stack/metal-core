@@ -22,3 +22,23 @@ type MetalHammerRegisterMachineRequest struct {
 	UUID string            `json:"uuid,omitempty" description:"the uuid of the machine to register"`
 	IPMI *models.MetalIPMI `json:"ipmi" description:"the IPMI connection configuration"`
 }
+
+func (r *MetalHammerRegisterMachineRequest) IPMIAddress() string {
+	return IPMIAddress(r.IPMI)
+}
+
+func (r *MetalHammerRegisterMachineRequest) IPMIInterface() string {
+	return IPMIInterface(r.IPMI)
+}
+
+func (r *MetalHammerRegisterMachineRequest) IPMIMAC() string {
+	return IPMIMAC(r.IPMI)
+}
+
+func (r *MetalHammerRegisterMachineRequest) IPMIUser() string {
+	return IPMIUser(r.IPMI)
+}
+
+func (r *MetalHammerRegisterMachineRequest) IPMIPassword() string {
+	return IPMIPassword(r.IPMI)
+}
