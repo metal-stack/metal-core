@@ -12,10 +12,10 @@ type EventType string
 type MachineCommand string
 
 const (
-	MachineOnCmd       MachineCommand = "ON"
-	MachineOffCmd      MachineCommand = "OFF"
-	MachineResetCmd    MachineCommand = "RESET"
-	MachineBootBiosCmd MachineCommand = "BOOTBIOS"
+	MachineOnCmd    MachineCommand = "ON"
+	MachineOffCmd   MachineCommand = "OFF"
+	MachineResetCmd MachineCommand = "RESET"
+	MachineBiosCmd  MachineCommand = "BIOS"
 )
 
 type MachineExecCommand struct {
