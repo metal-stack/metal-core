@@ -55,17 +55,17 @@ func TestIPMIData_OK(t *testing.T) {
 	machineID := "fakemachineID"
 
 	// WHEN
-	ipmiConn, err := ctx.APIClient().IPMIConfig(machineID)
+	ipmiCfg, err := ctx.APIClient().IPMIConfig(machineID)
 
 	// THEN
-	require.NotNil(t, ipmiConn)
+	require.NotNil(t, ipmiCfg)
 	require.Nil(t, err)
 	require.Equal(t, machineID, m.actualmachineID)
-	require.Equal(t, m.host, ipmiConn.Hostname)
-	require.Equal(t, m.port, strconv.Itoa(ipmiConn.Port))
-	require.Equal(t, m.iface, ipmiConn.Interface)
-	require.Equal(t, m.user, ipmiConn.Username)
-	require.Equal(t, m.password, ipmiConn.Password)
+	require.Equal(t, m.host, ipmiCfg.Hostname)
+	require.Equal(t, m.port, strconv.Itoa(ipmiCfg.Port))
+	require.Equal(t, m.iface, *ipmiCfg.Ipmi.Interface)
+	require.Equal(t, m.user, *ipmiCfg.Ipmi.User)
+	require.Equal(t, m.password, *ipmiCfg.Ipmi.Password)
 }
 
 func TestIPMIData_InvalidPort(t *testing.T) {
@@ -87,17 +87,17 @@ func TestIPMIData_InvalidPort(t *testing.T) {
 	machineID := "fakemachineID"
 
 	// WHEN
-	ipmiConn, err := ctx.APIClient().IPMIConfig(machineID)
+	ipmiCfg, err := ctx.APIClient().IPMIConfig(machineID)
 
 	// THEN
-	require.NotNil(t, ipmiConn)
+	require.NotNil(t, ipmiCfg)
 	require.Nil(t, err)
 	require.Equal(t, machineID, m.actualmachineID)
-	require.Equal(t, m.host, ipmiConn.Hostname)
-	require.Equal(t, 632, ipmiConn.Port)
-	require.Equal(t, m.iface, ipmiConn.Interface)
-	require.Equal(t, m.user, ipmiConn.Username)
-	require.Equal(t, m.password, ipmiConn.Password)
+	require.Equal(t, m.host, ipmiCfg.Hostname)
+	require.Equal(t, 632, ipmiCfg.Port)
+	require.Equal(t, m.iface, *ipmiCfg.Ipmi.Interface)
+	require.Equal(t, m.user, *ipmiCfg.Ipmi.User)
+	require.Equal(t, m.password, *ipmiCfg.Ipmi.Password)
 }
 
 func TestIPMIData_Error(t *testing.T) {
@@ -114,10 +114,10 @@ func TestIPMIData_Error(t *testing.T) {
 	machineID := "fakemachineID"
 
 	// WHEN
-	ipmiConn, err := ctx.APIClient().IPMIConfig(machineID)
+	ipmiCfg, err := ctx.APIClient().IPMIConfig(machineID)
 
 	// THEN
-	require.Nil(t, ipmiConn)
+	require.Nil(t, ipmiCfg)
 	require.NotNil(t, err)
 	require.Equal(t, fmt.Sprintf("IPMI for machine %s not found: not found", machineID), err.Error())
 }

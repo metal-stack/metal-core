@@ -8,18 +8,16 @@ import (
 )
 
 func (h *eventHandler) FreeMachine(machine *models.MetalMachine) {
-	var err error
-
-	ipmiConn, err := h.APIClient().IPMIConfig(*machine.ID)
+	ipmiCfg, err := h.APIClient().IPMIConfig(*machine.ID)
 	if err != nil {
-		zapup.MustRootLogger().Error("Unable to set read IPMI connection details",
+		zapup.MustRootLogger().Error("Unable to read IPMI connection details",
 			zap.Any("machine", machine),
 			zap.Error(err),
 		)
 		return
 	}
 
-	err = ipmi.SetBootMachinePXE(ipmiConn)
+	err = ipmi.SetBootMachinePXE(ipmiCfg)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to set boot order of machine to HD",
 			zap.Any("machine", machine),
@@ -32,7 +30,7 @@ func (h *eventHandler) FreeMachine(machine *models.MetalMachine) {
 		zap.Any("machine", machine),
 	)
 
-	err = ipmi.PowerOff(ipmiConn)
+	err = ipmi.PowerOff(ipmiCfg)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to power off machine",
 			zap.Any("machine", machine),
@@ -41,7 +39,7 @@ func (h *eventHandler) FreeMachine(machine *models.MetalMachine) {
 		return
 	}
 
-	err = ipmi.PowerOn(ipmiConn)
+	err = ipmi.PowerOn(ipmiCfg)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to power on machine",
 			zap.Any("machine", machine),
