@@ -32,7 +32,7 @@ func buildSwitcherConfig(conf *domain.Config, s *models.MetalSwitch) (*switcher.
 		if t, has := c.Tenants[nic.Vrf]; has {
 			tenant = t
 		}
-		if nic.Vrf == "" {
+		if nic.Vrf == "" && !contains(c.Neighbors, *nic.Name) {
 			c.Unprovisioned = append(c.Unprovisioned, *nic.Name)
 			continue
 		}
@@ -81,10 +81,20 @@ func (h *eventHandler) ReconfigureSwitch(switchID string) {
 		zap.Any("config", c))
 	if !h.Config.ReconfigureSwitch {
 		zapup.MustRootLogger().Info("Skip configuration application because of environment setting")
+		return
 	}
 	err = c.Apply()
 	if err != nil {
 		zapup.MustRootLogger().Error("Could not apply switch config",
 			zap.Error(err))
 	}
+}
+
+func contains(l []string, e string) bool {
+	for _, i := range l {
+		if i == e {
+			return true
+		}
+	}
+	return false
 }
