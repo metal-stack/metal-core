@@ -26,12 +26,14 @@ func buildSwitcherConfig(conf *domain.Config, s *models.MetalSwitch) (*switcher.
 	c.Loopback = conf.LoopbackIP
 	c.Neighbors = strings.Split(conf.SpineUplinks, ",")
 	c.Tenants = make(map[string]*switcher.Tenant)
+	c.Unprovisioned = []string{}
 	for _, nic := range s.Nics {
 		tenant := &switcher.Tenant{}
 		if t, has := c.Tenants[nic.Vrf]; has {
 			tenant = t
 		}
 		if nic.Vrf == "" {
+			c.Unprovisioned = append(c.Unprovisioned, *nic.Name)
 			continue
 		}
 		vni64, err := strconv.ParseUint(strings.TrimPrefix(nic.Vrf, "vrf"), 10, 32)
@@ -77,6 +79,9 @@ func (h *eventHandler) ReconfigureSwitch(switchID string) {
 
 	zapup.MustRootLogger().Info("Would apply this configuration to the switch",
 		zap.Any("config", c))
+	if !h.Config.ReconfigureSwitch {
+		zapup.MustRootLogger().Info("Skip configuration application because of environment setting")
+	}
 	err = c.Apply()
 	if err != nil {
 		zapup.MustRootLogger().Error("Could not apply switch config",
