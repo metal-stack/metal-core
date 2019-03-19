@@ -32,8 +32,10 @@ func buildSwitcherConfig(conf *domain.Config, s *models.MetalSwitch) (*switcher.
 		if t, has := c.Tenants[nic.Vrf]; has {
 			tenant = t
 		}
-		if nic.Vrf == "" && !contains(c.Neighbors, *nic.Name) {
-			c.Unprovisioned = append(c.Unprovisioned, *nic.Name)
+		if nic.Vrf == "" {
+			if !contains(c.Neighbors, *nic.Name) {
+				c.Unprovisioned = append(c.Unprovisioned, *nic.Name)
+			}
 			continue
 		}
 		vni64, err := strconv.ParseUint(strings.TrimPrefix(nic.Vrf, "vrf"), 10, 32)
