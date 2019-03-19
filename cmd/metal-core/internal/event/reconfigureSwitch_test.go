@@ -41,9 +41,10 @@ func TestBuildSwitcherConfig(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, actual)
 	expected := &switcher.Conf{
-		Loopback:  "10.0.0.1",
-		ASN:       420000001,
-		Neighbors: []string{"swp31", "swp32"},
+		Loopback:      "10.0.0.1",
+		ASN:           420000001,
+		Neighbors:     []string{"swp31", "swp32"},
+		Unprovisioned: []string{"swp1"},
 		Tenants: map[string]*switcher.Tenant{"vrf104001": &switcher.Tenant{
 			VNI:       104001,
 			VLANID:    1001,
