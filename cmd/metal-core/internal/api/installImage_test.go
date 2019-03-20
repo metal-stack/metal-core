@@ -24,7 +24,7 @@ func (m *installImageMock) Submit(o *runtime.ClientOperation) (interface{}, erro
 		return nil, errors.New("not found")
 	}
 	return &machine.WaitForAllocationOK{Payload: &models.MetalMachineWithPhoneHomeToken{
-		Machine: &models.MetalMachine{Allocation: &models.MetalMachineAllocation{}}},
+		Machine: &models.MetalMachine{Allocation: &models.MetalMachineAllocation{Image: &models.MetalImage{}}}},
 	}, nil
 }
 
