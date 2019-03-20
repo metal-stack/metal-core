@@ -25,11 +25,16 @@ type MachineExecCommand struct {
 }
 
 type MachineEvent struct {
-	Type      EventType            `json:"type,omitempty"`
-	Old       *models.MetalMachine `json:"old,omitempty"`
-	New       *models.MetalMachine `json:"new,omitempty"`
-	Cmd       *MachineExecCommand  `json:"cmd,omitempty"`
-	SwitchIDs []string             `json:"switchIDs,omitempty"`
+	Type EventType            `json:"type,omitempty"`
+	Old  *models.MetalMachine `json:"old,omitempty"`
+	New  *models.MetalMachine `json:"new,omitempty"`
+	Cmd  *MachineExecCommand  `json:"cmd,omitempty"`
+}
+
+type SwitchEvent struct {
+	Type     EventType            `json:"type"`
+	Machine  models.MetalMachine  `json:"machine"`
+	Switches []models.MetalSwitch `json:"switches"`
 }
 
 // Some EventType enums.
@@ -84,6 +89,7 @@ type Config struct {
 	ApiPort           int    `required:"false" default:"8080" desc:"set metal api port" envconfig:"metal_api_port"`
 	MQAddress         string `required:"false" default:"localhost:4161" desc:"set the MQ server address" envconfig:"mq_address"`
 	MachineTopic      string `required:"false" default:"machine" desc:"set the machine topic name" split_words:"true"`
+	SwitchTopic       string `required:"false" default:"switch" desc:"set the switch topic name" split_words:"true"`
 	LoopbackIP        string `required:"false" default:"10.0.0.11" desc:"set the loopback ip address that is used with BGP unnumbered" split_words:"true"`
 	ASN               string `required:"false" default:"420000011" desc:"set the ASN that is used with BGP"`
 	SpineUplinks      string `required:"false" default:"swp31,swp32" desc:"set the ports that are connected to spines" split_words:"true"`
