@@ -29,37 +29,6 @@ func buildSwitcherConfig(conf *domain.Config, s *models.MetalSwitch) (*switcher.
 	c.ASN = asn
 	c.Loopback = conf.LoopbackIP
 	c.Neighbors = strings.Split(conf.SpineUplinks, ",")
-
-	c.Eth0 = switcher.Nic{}
-	eth0, err := netlink.LinkByName("eth0")
-	if err != nil {
-		return nil, err
-	}
-	addrs, err := netlink.AddrList(eth0, netlink.FAMILY_V4)
-	if err != nil {
-		return nil, err
-	}
-	if len(addrs) < 1 {
-		return nil, fmt.Errorf("there is no ip address configured at eth0")
-	}
-
-	eth0Addr := addrs[0]
-	permanent := unix.IFA_F_PERMANENT & eth0Addr.Flags
-	zapup.MustRootLogger().Debug("eth0", zap.Int("flags", eth0Addr.Flags))
-	if permanent != 0 {
-		zapup.MustRootLogger().Info("eth0 ip address was assigned statically, reuse this setting")
-		ip := eth0Addr.IP
-		n := eth0Addr.IPNet
-		masked := ip.Mask(n.Mask)
-		gw := net.IPv4(masked[0], masked[1], masked[2], masked[3]+1)
-		c.Eth0.Dhcp = false
-		c.Eth0.AddressCIDR = ip.String()
-		c.Eth0.Gateway = gw.String()
-	} else {
-		zapup.MustRootLogger().Info("eth0 ip address was assigned with dhcp, reuse this setting")
-		c.Eth0.Dhcp = true
-	}
-
 	c.Tenants = make(map[string]*switcher.Tenant)
 	c.Unprovisioned = []string{}
 	for _, nic := range s.Nics {
@@ -114,10 +83,17 @@ func (h *eventHandler) ReconfigureSwitch(switchID string) {
 		return
 	}
 
-	zapup.MustRootLogger().Info("Would apply this configuration to the switch",
+	err = fillEth0Info(c)
+	if err != nil {
+		zapup.MustRootLogger().Error("Could not gather information about eth0 nic",
+			zap.Error(err))
+		return
+	}
+
+	zapup.MustRootLogger().Info("Assembled new config for switch",
 		zap.Any("config", c))
 	if !h.Config.ReconfigureSwitch {
-		zapup.MustRootLogger().Info("Skip configuration application because of environment setting")
+		zapup.MustRootLogger().Info("Skip config application because of environment setting")
 		return
 	}
 	err = c.Apply()
@@ -125,6 +101,39 @@ func (h *eventHandler) ReconfigureSwitch(switchID string) {
 		zapup.MustRootLogger().Error("Could not apply switch config",
 			zap.Error(err))
 	}
+}
+
+func fillEth0Info(c *switcher.Conf) error {
+	c.Eth0 = switcher.Nic{}
+	eth0, err := netlink.LinkByName("eth0")
+	if err != nil {
+		return err
+	}
+	addrs, err := netlink.AddrList(eth0, netlink.FAMILY_V4)
+	if err != nil {
+		return err
+	}
+	if len(addrs) < 1 {
+		return fmt.Errorf("there is no ip address configured at eth0")
+	}
+
+	eth0Addr := addrs[0]
+	permanent := unix.IFA_F_PERMANENT & eth0Addr.Flags
+	zapup.MustRootLogger().Debug("eth0", zap.Int("flags", eth0Addr.Flags))
+	if permanent != 0 {
+		zapup.MustRootLogger().Info("eth0 ip address was assigned statically, reuse this setting")
+		ip := eth0Addr.IP
+		n := eth0Addr.IPNet
+		masked := ip.Mask(n.Mask)
+		gw := net.IPv4(masked[0], masked[1], masked[2], masked[3]+1)
+		c.Eth0.Dhcp = false
+		c.Eth0.AddressCIDR = ip.String()
+		c.Eth0.Gateway = gw.String()
+	} else {
+		zapup.MustRootLogger().Info("eth0 ip address was assigned with dhcp, reuse this setting")
+		c.Eth0.Dhcp = true
+	}
+	return nil
 }
 
 func contains(l []string, e string) bool {
