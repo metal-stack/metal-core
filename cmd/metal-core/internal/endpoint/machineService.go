@@ -35,6 +35,7 @@ func (h *endpointHandler) NewMachineService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(models.MetalMachine{}).
 		Returns(http.StatusOK, "OK", models.MetalMachineWithPhoneHomeToken{}).
+		Returns(http.StatusNotModified, "No allocation", nil).
 		Returns(http.StatusNotFound, "Not Found", nil))
 
 	ws.Route(ws.POST("/report/{id}").

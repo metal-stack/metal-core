@@ -27,6 +27,11 @@ func (h *endpointHandler) Install(request *restful.Request, response *restful.Re
 		return
 	}
 
+	if sc == http.StatusNotModified {
+		rest.Respond(response, http.StatusNotModified, nil)
+		return
+	}
+
 	errMsg := "No installation image found"
 	zapup.MustRootLogger().Error(errMsg,
 		zap.Int("statusCode", sc),
