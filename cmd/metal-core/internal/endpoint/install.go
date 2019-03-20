@@ -18,7 +18,7 @@ func (h *endpointHandler) Install(request *restful.Request, response *restful.Re
 
 	sc, machineWithToken := h.APIClient().InstallImage(machineID)
 
-	if sc == http.StatusOK && machineWithToken != nil && machineWithToken.Machine != nil {
+	if sc == http.StatusOK {
 		zapup.MustRootLogger().Info("Got image to install",
 			zap.Int("statusCode", sc),
 			zap.Any("machineWithToken", machineWithToken),
