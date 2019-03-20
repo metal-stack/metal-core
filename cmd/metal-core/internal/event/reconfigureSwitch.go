@@ -1,8 +1,10 @@
 package event
 
 import (
+	"bufio"
 	"fmt"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -15,7 +17,6 @@ import (
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/vishvananda/netlink"
 	"go.uber.org/zap"
-	"golang.org/x/sys/unix"
 )
 
 func buildSwitcherConfig(conf *domain.Config, s *models.MetalSwitch) (*switcher.Conf, error) {
@@ -103,6 +104,29 @@ func (h *eventHandler) ReconfigureSwitch(switchID string) {
 	}
 }
 
+// Helper function to check whether a given interface is configured with DHCP
+// Note: is will be unnecessary once we configure leaves in the metal-lab and physical environments in the same way
+// (eth0 with static ip address and mgmt vrf)
+func isDhcp(i string) (bool, error) {
+	f, err := os.Open("/etc/network/interfaces")
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		if strings.Contains(scanner.Text(), fmt.Sprintf("iface %s", i)) {
+			if strings.Contains(scanner.Text(), "dhcp") {
+				return true, nil
+			}
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return false, err
+	}
+	return false, nil
+}
+
 func fillEth0Info(c *switcher.Conf) error {
 	c.Eth0 = switcher.Nic{}
 	eth0, err := netlink.LinkByName("eth0")
@@ -117,10 +141,15 @@ func fillEth0Info(c *switcher.Conf) error {
 		return fmt.Errorf("there is no ip address configured at eth0")
 	}
 
+	dhcp, err := isDhcp("eth0")
+	if err != nil {
+		return fmt.Errorf("could not check whether eth0 is configured with dhcp %v", err)
+	}
 	eth0Addr := addrs[0]
-	permanent := unix.IFA_F_PERMANENT & eth0Addr.Flags
-	zapup.MustRootLogger().Debug("eth0", zap.Int("flags", eth0Addr.Flags))
-	if permanent != 0 {
+	if dhcp {
+		zapup.MustRootLogger().Info("eth0 ip address was assigned with dhcp, reuse this setting")
+		c.Eth0.Dhcp = true
+	} else {
 		zapup.MustRootLogger().Info("eth0 ip address was assigned statically, reuse this setting")
 		ip := eth0Addr.IP
 		n := eth0Addr.IPNet
@@ -129,9 +158,6 @@ func fillEth0Info(c *switcher.Conf) error {
 		c.Eth0.Dhcp = false
 		c.Eth0.AddressCIDR = ip.String()
 		c.Eth0.Gateway = gw.String()
-	} else {
-		zapup.MustRootLogger().Info("eth0 ip address was assigned with dhcp, reuse this setting")
-		c.Eth0.Dhcp = true
 	}
 	return nil
 }
