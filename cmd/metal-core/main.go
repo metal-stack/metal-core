@@ -11,7 +11,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/emicklei/go-restful-openapi"
+	restfulspec "github.com/emicklei/go-restful-openapi"
 
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	sw "git.f-i-ts.de/cloud-native/metal/metal-core/client/switch_operations"
@@ -104,9 +104,23 @@ func prepare() *app {
 	app.initConsumer()
 
 	s, err := app.registerSwitch()
-
 	if err != nil {
 		zapup.MustRootLogger().Fatal("unable to register",
+			zap.Error(err),
+		)
+		os.Exit(1)
+	}
+
+	host, err := os.Hostname()
+	if err != nil {
+		zapup.MustRootLogger().Fatal("unable to detect hostname",
+			zap.Error(err),
+		)
+		os.Exit(1)
+	}
+	err = app.EventHandler().ReconfigureSwitch(host)
+	if err != nil {
+		zapup.MustRootLogger().Fatal("unable to fetch and apply current switch configuration",
 			zap.Error(err),
 		)
 		os.Exit(1)
@@ -137,18 +151,6 @@ func (a *app) initConsumer() {
 			switch evt.Type {
 			case domain.Delete:
 				a.EventHandler().FreeMachine(evt.Old)
-				a.EventHandler().ReconfigureSwitch(hostname)
-			case domain.Update:
-				for _, sid := range evt.SwitchIDs {
-					if sid == hostname {
-						a.EventHandler().ReconfigureSwitch(sid)
-						return nil
-					}
-				}
-				zapup.MustRootLogger().Info("Skip event because it is not intended for this switch",
-					zap.Any("SwitchIDs", evt.SwitchIDs),
-					zap.String("Hostname", hostname),
-				)
 			case domain.Command:
 				switch evt.Cmd.Command {
 				case domain.MachineOnCmd:
@@ -163,6 +165,35 @@ func (a *app) initConsumer() {
 			}
 			return nil
 		}, 5)
+
+	_ = bus.NewConsumer(zapup.MustRootLogger(), a.Config.MQAddress).
+		// the hostname is used here as channel name
+		// this is intended so that messages in the switch topics get replicated
+		// to all channels leaf01, leaf02
+		MustRegister(a.Config.SwitchTopic, hostname).
+		Consume(domain.SwitchEvent{}, func(message interface{}) error {
+			evt := message.(*domain.SwitchEvent)
+			zapup.MustRootLogger().Info("Got message",
+				zap.Any("event", evt),
+			)
+			switch evt.Type {
+			case domain.Update:
+				for _, s := range evt.Switches {
+					sid := *s.ID
+					if sid == hostname {
+						err := a.EventHandler().ReconfigureSwitch(sid)
+						zapup.MustRootLogger().Error("could not fetch and apply switch configuration", zap.Error(err))
+						return nil
+					}
+				}
+				zapup.MustRootLogger().Info("Skip event because it is not intended for this switch",
+					zap.Any("Machine", evt.Machine),
+					zap.Any("Switches", evt.Switches),
+					zap.String("Hostname", hostname),
+				)
+			}
+			return nil
+		}, 1)
 }
 
 func (a *app) registerSwitch() (*models.MetalSwitch, error) {
