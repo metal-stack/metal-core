@@ -15,6 +15,7 @@ import (
 	"git.f-i-ts.de/cloud-native/metallib/switcher"
 	"git.f-i-ts.de/cloud-native/metallib/vlan"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
+	"github.com/pkg/errors"
 	"github.com/vishvananda/netlink"
 	"go.uber.org/zap"
 )
@@ -64,44 +65,38 @@ func buildSwitcherConfig(conf *domain.Config, s *models.MetalSwitch) (*switcher.
 
 var mux sync.Mutex
 
-func (h *eventHandler) ReconfigureSwitch(switchID string) {
+func (h *eventHandler) ReconfigureSwitch(switchID string) error {
 	mux.Lock()
 	defer mux.Unlock()
 	params := sw.NewFindSwitchParams()
 	params.ID = switchID
 	fsr, err := h.SwitchClient.FindSwitch(params)
 	if err != nil {
-		zapup.MustRootLogger().Error("Could not fetch switch from metal-api",
-			zap.Error(err))
-		return
+		return errors.Wrap(err, "could not fetch switch from metal-api")
 	}
 
 	s := fsr.Payload
 	c, err := buildSwitcherConfig(h.Config, s)
 	if err != nil {
-		zapup.MustRootLogger().Error("Could not build switcher config",
-			zap.Error(err))
-		return
+		return errors.Wrap(err, "could not build switcher config")
 	}
 
 	err = fillEth0Info(c)
 	if err != nil {
-		zapup.MustRootLogger().Error("Could not gather information about eth0 nic",
-			zap.Error(err))
-		return
+		return errors.Wrap(err, "could not gather information about eth0 nic")
 	}
 
 	zapup.MustRootLogger().Info("Assembled new config for switch",
 		zap.Any("config", c))
 	if !h.Config.ReconfigureSwitch {
 		zapup.MustRootLogger().Info("Skip config application because of environment setting")
-		return
+		return nil
 	}
 	err = c.Apply()
 	if err != nil {
-		zapup.MustRootLogger().Error("Could not apply switch config",
-			zap.Error(err))
+		return errors.Wrap(err, "could not apply switch config")
 	}
+	return nil
 }
 
 // Helper function to check whether a given interface is configured with DHCP

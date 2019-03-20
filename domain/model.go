@@ -72,7 +72,7 @@ type EventHandler interface {
 	PowerOffMachine(machine *models.MetalMachine, params []string)
 	PowerResetMachine(machine *models.MetalMachine, params []string)
 	BootBiosMachine(machine *models.MetalMachine, params []string)
-	ReconfigureSwitch(switchID string)
+	ReconfigureSwitch(switchID string) error
 }
 
 type Config struct {

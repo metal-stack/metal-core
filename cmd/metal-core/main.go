@@ -104,9 +104,23 @@ func prepare() *app {
 	app.initConsumer()
 
 	s, err := app.registerSwitch()
-
 	if err != nil {
 		zapup.MustRootLogger().Fatal("unable to register",
+			zap.Error(err),
+		)
+		os.Exit(1)
+	}
+
+	host, err := os.Hostname()
+	if err != nil {
+		zapup.MustRootLogger().Fatal("unable to detect hostname",
+			zap.Error(err),
+		)
+		os.Exit(1)
+	}
+	err = app.EventHandler().ReconfigureSwitch(host)
+	if err != nil {
+		zapup.MustRootLogger().Fatal("unable to fetch and apply current switch configuration",
 			zap.Error(err),
 		)
 		os.Exit(1)
@@ -167,7 +181,8 @@ func (a *app) initConsumer() {
 				for _, s := range evt.Switches {
 					sid := *s.ID
 					if sid == hostname {
-						a.EventHandler().ReconfigureSwitch(sid)
+						err := a.EventHandler().ReconfigureSwitch(sid)
+						zapup.MustRootLogger().Error("could not fetch and apply switch configuration", zap.Error(err))
 						return nil
 					}
 				}
