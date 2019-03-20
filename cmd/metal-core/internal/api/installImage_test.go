@@ -4,6 +4,7 @@ import (
 	"errors"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 	"github.com/stretchr/testify/require"
@@ -22,7 +23,9 @@ func (m *installImageMock) Submit(o *runtime.ClientOperation) (interface{}, erro
 	if m.simulateError {
 		return nil, errors.New("not found")
 	}
-	return &machine.WaitForAllocationOK{}, nil
+	return &machine.WaitForAllocationOK{Payload: &models.MetalMachineWithPhoneHomeToken{
+		Machine: &models.MetalMachine{Allocation: &models.MetalMachineAllocation{}}},
+	}, nil
 }
 
 func TestInstallImage_OK(t *testing.T) {

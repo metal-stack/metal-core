@@ -22,6 +22,6 @@ require (
 	github.com/vishvananda/netlink v1.0.0
 	github.com/vmware/goipmi v0.0.0-20181114221114-2333cd82d702
 	go.uber.org/zap v1.9.1
-	golang.org/x/net v0.0.0-20190213061140-3a22650c66bd // indirect
+	golang.org/x/net v0.0.0-20190213061140-3a22650c66bd
 	golang.org/x/sys v0.0.0-20190228124157-a34e9553db1e
 )
