@@ -1,6 +1,8 @@
 package event
 
 import (
+	"fmt"
+	"net"
 	"strconv"
 	"strings"
 	"sync"
@@ -11,7 +13,9 @@ import (
 	"git.f-i-ts.de/cloud-native/metallib/switcher"
 	"git.f-i-ts.de/cloud-native/metallib/vlan"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
+	"github.com/vishvananda/netlink"
 	"go.uber.org/zap"
+	"golang.org/x/sys/unix"
 )
 
 func buildSwitcherConfig(conf *domain.Config, s *models.MetalSwitch) (*switcher.Conf, error) {
@@ -25,6 +29,37 @@ func buildSwitcherConfig(conf *domain.Config, s *models.MetalSwitch) (*switcher.
 	c.ASN = asn
 	c.Loopback = conf.LoopbackIP
 	c.Neighbors = strings.Split(conf.SpineUplinks, ",")
+
+	c.Eth0 = switcher.Nic{}
+	eth0, err := netlink.LinkByName("eth0")
+	if err != nil {
+		return nil, err
+	}
+	addrs, err := netlink.AddrList(eth0, netlink.FAMILY_V4)
+	if err != nil {
+		return nil, err
+	}
+	if len(addrs) < 1 {
+		return nil, fmt.Errorf("there is no ip address configured at eth0")
+	}
+
+	eth0Addr := addrs[0]
+	permanent := unix.IFA_F_PERMANENT & eth0Addr.Flags
+	zapup.MustRootLogger().Debug("eth0", zap.Int("flags", eth0Addr.Flags))
+	if permanent != 0 {
+		zapup.MustRootLogger().Info("eth0 ip address was assigned statically, reuse this setting")
+		ip := eth0Addr.IP
+		n := eth0Addr.IPNet
+		masked := ip.Mask(n.Mask)
+		gw := net.IPv4(masked[0], masked[1], masked[2], masked[3]+1)
+		c.Eth0.Dhcp = false
+		c.Eth0.AddressCIDR = ip.String()
+		c.Eth0.Gateway = gw.String()
+	} else {
+		zapup.MustRootLogger().Info("eth0 ip address was assigned with dhcp, reuse this setting")
+		c.Eth0.Dhcp = true
+	}
+
 	c.Tenants = make(map[string]*switcher.Tenant)
 	c.Unprovisioned = []string{}
 	for _, nic := range s.Nics {
