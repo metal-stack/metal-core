@@ -1,7 +1,7 @@
 module git.f-i-ts.de/cloud-native/metal/metal-core
 
 require (
-	git.f-i-ts.de/cloud-native/metallib v0.0.0-20190320074721-bc1e2f1a232a
+	git.f-i-ts.de/cloud-native/metallib v0.0.0-20190321162824-6109e144cbbe
 	github.com/emicklei/go-restful v2.8.0+incompatible
 	github.com/emicklei/go-restful-openapi v1.0.0
 	github.com/go-openapi/analysis v0.18.0 // indirect
@@ -22,6 +22,5 @@ require (
 	github.com/vishvananda/netlink v1.0.0
 	github.com/vmware/goipmi v0.0.0-20181114221114-2333cd82d702
 	go.uber.org/zap v1.9.1
-	golang.org/x/net v0.0.0-20190213061140-3a22650c66bd
-	golang.org/x/sys v0.0.0-20190228124157-a34e9553db1e
+	golang.org/x/net v0.0.0-20190213061140-3a22650c66bd // indirect
 )
