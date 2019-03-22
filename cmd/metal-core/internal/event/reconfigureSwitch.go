@@ -3,7 +3,6 @@ package event
 import (
 	"bufio"
 	"fmt"
-	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -81,7 +80,7 @@ func (h *eventHandler) ReconfigureSwitch(switchID string) error {
 		return errors.Wrap(err, "could not build switcher config")
 	}
 
-	err = fillEth0Info(c)
+	err = fillEth0Info(c, h.Config.ManagementGateway)
 	if err != nil {
 		return errors.Wrap(err, "could not gather information about eth0 nic")
 	}
@@ -122,7 +121,7 @@ func isDhcp(i string) (bool, error) {
 	return false, nil
 }
 
-func fillEth0Info(c *switcher.Conf) error {
+func fillEth0Info(c *switcher.Conf, gw string) error {
 	c.Eth0 = switcher.Nic{}
 	eth0, err := netlink.LinkByName("eth0")
 	if err != nil {
@@ -140,14 +139,10 @@ func fillEth0Info(c *switcher.Conf) error {
 	if err != nil {
 		return fmt.Errorf("could not check whether eth0 is configured with dhcp %v", err)
 	}
-	eth0Addr := addrs[0]
-	ip := eth0Addr.IP
-	n := eth0Addr.IPNet
-	masked := ip.Mask(n.Mask)
-	gw := net.IPv4(masked[0], masked[1], masked[2], masked[3]+1)
+	ip := addrs[0].IP
 	c.Eth0.Dhcp = dhcp
 	c.Eth0.AddressCIDR = ip.String() + "/24"
-	c.Eth0.Gateway = gw.String()
+	c.Eth0.Gateway = gw
 	if dhcp {
 		zapup.MustRootLogger().Info("eth0 ip address was assigned with dhcp, reuse this setting")
 	} else {

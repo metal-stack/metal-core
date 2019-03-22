@@ -94,6 +94,7 @@ type Config struct {
 	ASN               string `required:"false" default:"420000011" desc:"set the ASN that is used with BGP"`
 	SpineUplinks      string `required:"false" default:"swp31,swp32" desc:"set the ports that are connected to spines" split_words:"true"`
 	ReconfigureSwitch bool   `required:"false" default:"false" desc:"let metal-core reconfigure the switch" split_words:"true"`
+	ManagementGateway string `required:"false" default:"192.168.0.1" desc:"the default gateway for the management network" split_words:"true"`
 }
 
 type BootConfig struct {
