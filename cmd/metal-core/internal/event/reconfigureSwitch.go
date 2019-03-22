@@ -146,7 +146,7 @@ func fillEth0Info(c *switcher.Conf) error {
 	masked := ip.Mask(n.Mask)
 	gw := net.IPv4(masked[0], masked[1], masked[2], masked[3]+1)
 	c.Eth0.Dhcp = dhcp
-	c.Eth0.AddressCIDR = ip.String()
+	c.Eth0.AddressCIDR = ip.String() + "/24"
 	c.Eth0.Gateway = gw.String()
 	if dhcp {
 		zapup.MustRootLogger().Info("eth0 ip address was assigned with dhcp, reuse this setting")
