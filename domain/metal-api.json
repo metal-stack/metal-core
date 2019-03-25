@@ -40,12 +40,6 @@
             "schema": {
               "$ref": "#/definitions/rest.status"
             }
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/rest.status"
-            }
           }
         }
       }
@@ -65,15 +59,6 @@
         "operationId": "listImages",
         "responses": {
           "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/metal.Image"
-              }
-            }
-          },
-          "default": {
             "description": "OK",
             "schema": {
               "type": "array",
@@ -158,12 +143,6 @@
             "schema": {
               "$ref": "#/definitions/metal.ErrorResponse"
             }
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.Image"
-            }
           }
         }
       }
@@ -199,12 +178,6 @@
           },
           "404": {
             "description": "Not Found"
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.Image"
-            }
           }
         }
       },
@@ -238,12 +211,6 @@
           },
           "404": {
             "description": "Not Found"
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.Image"
-            }
           }
         }
       }
@@ -273,15 +240,6 @@
           },
           "404": {
             "description": "Not Found"
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/metal.Machine"
-              }
-            }
           }
         }
       }
@@ -324,12 +282,6 @@
             "schema": {
               "$ref": "#/definitions/metal.ErrorResponse"
             }
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.Machine"
-            }
           }
         }
       }
@@ -367,15 +319,6 @@
           },
           "404": {
             "description": "Not Found"
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/metal.Machine"
-              }
-            }
           }
         }
       }
@@ -415,9 +358,6 @@
             "schema": {
               "$ref": "#/definitions/metal.ErrorResponse"
             }
-          },
-          "default": {
-            "description": "OK"
           }
         }
       }
@@ -460,12 +400,6 @@
           },
           "404": {
             "description": "one of the given key values was not found"
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.Machine"
-            }
           }
         }
       }
@@ -501,12 +435,6 @@
           },
           "404": {
             "description": "Not Found"
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.Machine"
-            }
           }
         }
       }
@@ -559,12 +487,6 @@
             "schema": {
               "$ref": "#/definitions/metal.ErrorResponse"
             }
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.MachineAllocation"
-            }
           }
         }
       }
@@ -603,12 +525,6 @@
             "schema": {
               "$ref": "#/definitions/metal.ErrorResponse"
             }
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.Machine"
-            }
           }
         }
       }
@@ -644,12 +560,6 @@
           },
           "404": {
             "description": "Not Found"
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.IPMI"
-            }
           }
         }
       }
@@ -701,12 +611,6 @@
             "description": "Unprocessable Entity",
             "schema": {
               "$ref": "#/definitions/metal.ErrorResponse"
-            }
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.MachineAllocation"
             }
           }
         }
@@ -760,12 +664,6 @@
             "schema": {
               "$ref": "#/definitions/metal.ErrorResponse"
             }
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.MachineAllocation"
-            }
           }
         }
       }
@@ -814,12 +712,6 @@
             "description": "Unprocessable Entity",
             "schema": {
               "$ref": "#/definitions/metal.ErrorResponse"
-            }
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.MachineAllocation"
             }
           }
         }
@@ -873,12 +765,6 @@
             "schema": {
               "$ref": "#/definitions/metal.ErrorResponse"
             }
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.MachineAllocation"
-            }
           }
         }
       }
@@ -917,12 +803,6 @@
           },
           "504": {
             "description": "Timeout"
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.MachineWithPhoneHomeToken"
-            }
           }
         }
       }
@@ -942,15 +822,6 @@
         "operationId": "listPartitions",
         "responses": {
           "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/metal.Partition"
-              }
-            }
-          },
-          "default": {
             "description": "OK",
             "schema": {
               "type": "array",
@@ -1035,12 +906,6 @@
             "schema": {
               "$ref": "#/definitions/metal.ErrorResponse"
             }
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.Partition"
-            }
           }
         }
       }
@@ -1076,12 +941,6 @@
           },
           "404": {
             "description": "Not Found"
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.Partition"
-            }
           }
         }
       },
@@ -1115,12 +974,6 @@
           },
           "404": {
             "description": "Not Found"
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.Partition"
-            }
           }
         }
       }
@@ -1140,15 +993,6 @@
         "operationId": "listSizes",
         "responses": {
           "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/metal.Size"
-              }
-            }
-          },
-          "default": {
             "description": "OK",
             "schema": {
               "type": "array",
@@ -1233,11 +1077,47 @@
             "schema": {
               "$ref": "#/definitions/metal.ErrorResponse"
             }
-          },
-          "default": {
+          }
+        }
+      }
+    },
+    "/v1/size/fromHardware": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "size"
+        ],
+        "summary": "Searches all sizes for one to match the given hardwarespecs. If nothing is found, a list of entries is returned which describe the constraint which did not match",
+        "operationId": "fromHardware",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/metal.MachineHardware"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/metal.Size"
+              "$ref": "#/definitions/metal.SizeMatchingLog"
+            }
+          },
+          "404": {
+            "description": "NotFound",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/metal.SizeMatchingLog"
+              }
             }
           }
         }
@@ -1274,12 +1154,6 @@
           },
           "404": {
             "description": "Not Found"
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.Image"
-            }
           }
         }
       },
@@ -1313,12 +1187,6 @@
           },
           "404": {
             "description": "Not Found"
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.Size"
-            }
           }
         }
       }
@@ -1338,15 +1206,6 @@
         "operationId": "listSwitches",
         "responses": {
           "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/metal.Switch"
-              }
-            }
-          },
-          "default": {
             "description": "OK",
             "schema": {
               "type": "array",
@@ -1399,12 +1258,6 @@
             "schema": {
               "$ref": "#/definitions/metal.ErrorResponse"
             }
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.Switch"
-            }
           }
         }
       }
@@ -1440,12 +1293,6 @@
           },
           "404": {
             "description": "Not Found"
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.Switch"
-            }
           }
         }
       },
@@ -1479,12 +1326,6 @@
           },
           "404": {
             "description": "Not Found"
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/metal.Switch"
-            }
           }
         }
       }
@@ -1504,12 +1345,6 @@
         "operationId": "info",
         "responses": {
           "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/rest.version"
-            }
-          },
-          "default": {
             "description": "OK",
             "schema": {
               "$ref": "#/definitions/rest.version"
@@ -1638,29 +1473,32 @@
     },
     "metal.Constraint": {
       "required": [
-        "mincores",
-        "maxcores",
-        "minmemory",
-        "maxmemory"
+        "type",
+        "min",
+        "max"
       ],
       "properties": {
-        "maxcores": {
-          "description": "the maximal number of cores",
-          "type": "integer",
-          "format": "int32"
-        },
-        "maxmemory": {
-          "description": "the maximal amount of memory",
+        "max": {
+          "description": "the maximal value",
           "type": "integer"
         },
-        "mincores": {
-          "description": "the minimal number of cores",
-          "type": "integer",
-          "format": "int32"
-        },
-        "minmemory": {
-          "description": "the minimal amount of memory",
+        "min": {
+          "description": "the minimal value",
           "type": "integer"
+        },
+        "type": {
+          "description": "the type of constraint",
+          "type": "string"
+        }
+      }
+    },
+    "metal.ConstraintMatchingLog": {
+      "properties": {
+        "constraint": {
+          "$ref": "#/definitions/metal.Constraint"
+        },
+        "log": {
+          "type": "string"
         }
       }
     },
@@ -2142,6 +1980,29 @@
         },
         "name": {
           "description": "the readable name",
+          "type": "string"
+        }
+      }
+    },
+    "metal.SizeMatchingLog": {
+      "required": [
+        "name",
+        "match"
+      ],
+      "properties": {
+        "constraints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/metal.ConstraintMatchingLog"
+          }
+        },
+        "log": {
+          "type": "string"
+        },
+        "match": {
+          "type": "boolean"
+        },
+        "name": {
           "type": "string"
         }
       }
