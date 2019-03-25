@@ -11,7 +11,7 @@ func RespondError(response *restful.Response, statusCode int, errMsg string) {
 	err := response.WriteError(statusCode, errors.New(errMsg))
 	if err != nil {
 		zapup.MustRootLogger().Error(err.Error())
-		return
+		response.WriteHeader(statusCode)
 	}
 
 	response.Flush()
@@ -24,20 +24,13 @@ func RespondError(response *restful.Response, statusCode int, errMsg string) {
 }
 
 func Respond(response *restful.Response, statusCode int, body interface{}) {
-	if body == nil {
-		zapup.MustRootLogger().Info("Sent empty response",
-			zap.Int("statusCode", statusCode),
-		)
-		return
-	}
-
-	err := response.WriteEntity(body)
+	err := response.WriteHeaderAndEntity(statusCode, body)
 	if err != nil {
 		zapup.MustRootLogger().Error("Cannot write body",
 			zap.Any("body", body),
 			zap.Error(err),
 		)
-		return
+		response.WriteHeader(statusCode)
 	}
 
 	response.Flush()

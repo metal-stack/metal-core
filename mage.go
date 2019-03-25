@@ -5,9 +5,9 @@ package main
 import (
 	"fmt"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/version"
+	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
-	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"os"
 	"os/exec"
 )
@@ -54,7 +54,7 @@ func Build() {
 }
 
 // (Re)build model
-func (BUILD) Model()  {
+func (BUILD) Model() {
 	swagger := "swagger"
 	if _, err := exec.Command("which", swagger).CombinedOutput(); err != nil {
 		wd, err := os.Getwd()
