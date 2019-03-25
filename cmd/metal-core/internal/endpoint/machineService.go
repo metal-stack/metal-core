@@ -26,7 +26,7 @@ func (h *endpointHandler) NewMachineService() *restful.WebService {
 		Writes(models.MetalMachine{}).
 		Returns(http.StatusOK, "OK", models.MetalMachine{}).
 		Returns(http.StatusBadRequest, "Bad request", nil).
-		Returns(http.StatusInternalServerError, "Accepted", nil))
+		Returns(http.StatusInternalServerError, "Error", nil))
 
 	ws.Route(ws.GET("/install/{id}").
 		To(h.Install).
@@ -36,7 +36,8 @@ func (h *endpointHandler) NewMachineService() *restful.WebService {
 		Writes(models.MetalMachine{}).
 		Returns(http.StatusOK, "OK", models.MetalMachineWithPhoneHomeToken{}).
 		Returns(http.StatusNotModified, "No allocation", nil).
-		Returns(http.StatusNotFound, "Not Found", nil))
+		Returns(http.StatusNotFound, "Not Found", nil).
+		Returns(http.StatusInternalServerError, "Error", nil))
 
 	ws.Route(ws.POST("/report/{id}").
 		To(h.Report).
@@ -47,7 +48,7 @@ func (h *endpointHandler) NewMachineService() *restful.WebService {
 		Writes(domain.BootResponse{}).
 		Returns(http.StatusOK, "OK", models.MetalMachine{}).
 		Returns(http.StatusNotAcceptable, "Not acceptable", nil).
-		Returns(http.StatusInternalServerError, "Accepted", nil))
+		Returns(http.StatusInternalServerError, "Error", nil))
 
 	return ws
 }

@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strings"
 
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
@@ -15,11 +16,11 @@ func (c *apiClient) InstallImage(machineID string) (int, *models.MetalMachineWit
 
 	ok, err := c.MachineClient.WaitForAllocation(params)
 	if err != nil {
-
-		if e, ok := err.(*machine.WaitForAllocationGatewayTimeout); ok {
+		// FIXME make this type safe, reuse error types from wait_responses.
+		if strings.Contains(err.Error(), "context deadline exceeded") {
 			zapup.MustRootLogger().Info("Long polling timeout while GET from Metal-APIs wait endpoint",
 				zap.String("machineID", machineID),
-				zap.String("response", e.Error()),
+				zap.String("response", err.Error()),
 			)
 			return http.StatusNotModified, nil
 		}
