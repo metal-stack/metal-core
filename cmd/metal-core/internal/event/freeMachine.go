@@ -30,18 +30,9 @@ func (h *eventHandler) FreeMachine(machine *models.MetalMachine) {
 		zap.Any("machine", machine),
 	)
 
-	err = ipmi.PowerOff(ipmiCfg)
+	err = ipmi.PowerCycle(ipmiCfg)
 	if err != nil {
-		zapup.MustRootLogger().Error("Unable to power off machine",
-			zap.Any("machine", machine),
-			zap.Error(err),
-		)
-		return
-	}
-
-	err = ipmi.PowerOn(ipmiCfg)
-	if err != nil {
-		zapup.MustRootLogger().Error("Unable to power on machine",
+		zapup.MustRootLogger().Error("Unable to power cycle machine",
 			zap.Any("machine", machine),
 			zap.Error(err),
 		)

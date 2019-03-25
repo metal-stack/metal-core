@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// PowerOn sets power to on of the machine
 func PowerOn(cfg *domain.IPMIConfig) error {
 	client, err := openClientConnection(cfg)
 	if err != nil {
@@ -26,6 +27,7 @@ func PowerOn(cfg *domain.IPMIConfig) error {
 	return nil
 }
 
+// PowerOff sets power to off of the machine
 func PowerOff(cfg *domain.IPMIConfig) error {
 	client, err := openClientConnection(cfg)
 	if err != nil {
@@ -45,6 +47,7 @@ func PowerOff(cfg *domain.IPMIConfig) error {
 	return nil
 }
 
+// PowerReset resets power of the machine
 func PowerReset(cfg *domain.IPMIConfig) error {
 	client, err := openClientConnection(cfg)
 	if err != nil {
@@ -57,6 +60,26 @@ func PowerReset(cfg *domain.IPMIConfig) error {
 	)
 
 	err = client.Control(goipmi.ControlPowerHardReset)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// PowerCycle cycles power of the machine
+func PowerCycle(cfg *domain.IPMIConfig) error {
+	client, err := openClientConnection(cfg)
+	if err != nil {
+		return err
+	}
+
+	zapup.MustRootLogger().Info("Power RESET",
+		zap.String("hostname", cfg.Hostname),
+		zap.String("MAC", cfg.Mac()),
+	)
+
+	err = client.Control(goipmi.ControlPowerCycle)
 	if err != nil {
 		return err
 	}
