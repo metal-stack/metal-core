@@ -28,6 +28,10 @@ func (h *endpointHandler) Install(request *restful.Request, response *restful.Re
 	}
 
 	if sc == http.StatusNotModified {
+		zapup.MustRootLogger().Info("Not allocated yet",
+			zap.Int("statusCode", sc),
+			zap.String("machineID", machineID),
+		)
 		rest.Respond(response, http.StatusNotModified, nil)
 		return
 	}
