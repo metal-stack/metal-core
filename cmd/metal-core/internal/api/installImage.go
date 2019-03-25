@@ -34,7 +34,7 @@ func (c *apiClient) InstallImage(machineID string) (int, *models.MetalMachineWit
 	m := ok.Payload
 
 	if m == nil || m.Machine == nil || m.Machine.Allocation == nil || m.Machine.Allocation.Image == nil {
-		zapup.MustRootLogger().Error("Got empty response from Metal-APIs wait endpoint",
+		zapup.MustRootLogger().Error("Got unexpected response from Metal-APIs wait endpoint",
 			zap.String("machineID", machineID),
 			zap.Any("machineWithToken", m),
 		)
