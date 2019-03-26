@@ -18,28 +18,31 @@ func (h *endpointHandler) Install(request *restful.Request, response *restful.Re
 
 	sc, machineWithToken := h.APIClient().InstallImage(machineID)
 
-	if sc == http.StatusOK {
+	switch sc {
+	case http.StatusOK:
 		zapup.MustRootLogger().Info("Got image to install",
 			zap.Int("statusCode", sc),
 			zap.Any("machineWithToken", machineWithToken),
 		)
 		rest.Respond(response, http.StatusOK, machineWithToken)
-		return
-	}
-
-	if sc == http.StatusNotModified {
+	case http.StatusNotModified:
 		zapup.MustRootLogger().Info("Not allocated yet",
 			zap.Int("statusCode", sc),
 			zap.String("machineID", machineID),
 		)
 		rest.Respond(response, http.StatusNotModified, nil)
-		return
+	case http.StatusExpectationFailed:
+		zapup.MustRootLogger().Error("Incomplete machine response",
+			zap.Int("statusCode", sc),
+			zap.String("machineID", machineID),
+		)
+		rest.Respond(response, http.StatusExpectationFailed, nil)
+	default:
+		errMsg := "No installation image found"
+		zapup.MustRootLogger().Error(errMsg,
+			zap.Int("statusCode", sc),
+			zap.String("machineID", machineID),
+		)
+		rest.RespondError(response, http.StatusNotFound, errMsg)
 	}
-
-	errMsg := "No installation image found"
-	zapup.MustRootLogger().Error(errMsg,
-		zap.Int("statusCode", sc),
-		zap.String("machineID", machineID),
-	)
-	rest.RespondError(response, http.StatusNotFound, errMsg)
 }

@@ -37,6 +37,7 @@ func (h *endpointHandler) NewMachineService() *restful.WebService {
 		Returns(http.StatusOK, "OK", models.MetalMachineWithPhoneHomeToken{}).
 		Returns(http.StatusNotModified, "No allocation", nil).
 		Returns(http.StatusNotFound, "Not Found", nil).
+		Returns(http.StatusExpectationFailed, "Incomplete machine", nil).
 		Returns(http.StatusInternalServerError, "Error", nil))
 
 	ws.Route(ws.POST("/report/{id}").

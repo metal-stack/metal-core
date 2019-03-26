@@ -50,6 +50,9 @@
           "404": {
             "description": "Not Found"
           },
+          "417": {
+            "description": "Incomplete machine"
+          },
           "500": {
             "description": "Error"
           },
@@ -239,10 +242,10 @@
     },
     "domain.MetalHammerRegisterMachineRequest": {
       "required": [
-        "nics",
         "cpu_cores",
         "disks",
         "memory",
+        "nics",
         "ipmi"
       ],
       "properties": {
