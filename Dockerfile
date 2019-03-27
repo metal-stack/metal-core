@@ -1,4 +1,4 @@
-FROM golang:1.11-stretch as builder
+FROM golang:1.12-stretch as builder
 
 ENV CGO_ENABLED=0 \
     GO111MODULE=on \
@@ -13,7 +13,7 @@ RUN go mod download \
 
 RUN mage build test
 
-FROM alpine:3.8
+FROM alpine:3.9
 LABEL maintainer FI-TS Devops <devops@f-i-ts.de>
 
 RUN apk update \
