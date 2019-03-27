@@ -44,15 +44,18 @@ func (h *endpointHandler) Report(request *restful.Request, response *restful.Res
 	}
 
 	// This is our implementation of setBootDevice which has supermicro adoptions.
-	err = ipmi.SetBootDevice(ipmiCfg, goipmi.BootDeviceDisk)
-	if err != nil {
-		zapup.MustRootLogger().Error("Unable to set boot order of machine to HD",
-			zap.String("machineID", machineID),
-			zap.Error(err),
-		)
-		rest.Respond(response, http.StatusInternalServerError, nil)
-		return
-	}
+
+	// FIXME enable Error handling, disable temporarily because of
+	// https://git.f-i-ts.de/cloud-native/metal/metal-core/issues/9
+	_ = ipmi.SetBootDevice(ipmiCfg, goipmi.BootDeviceDisk)
+	// if err != nil {
+	// 	zapup.MustRootLogger().Error("Unable to set boot order of machine to HD",
+	// 		zap.String("machineID", machineID),
+	// 		zap.Error(err),
+	// 	)
+	// 	rest.Respond(response, http.StatusInternalServerError, nil)
+	// 	return
+	// }
 
 	body := &models.MetalReportAllocation{
 		Success:         &report.Success,
