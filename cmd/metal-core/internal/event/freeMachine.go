@@ -4,7 +4,6 @@ import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/ipmi"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
-	goipmi "github.com/vmware/goipmi"
 	"go.uber.org/zap"
 )
 
@@ -18,8 +17,7 @@ func (h *eventHandler) FreeMachine(machine *models.MetalMachine) {
 		return
 	}
 
-	// This is our implementation of setBootDevice which has supermicro adoptions.
-	err = ipmi.SetBootDevice(ipmiCfg, goipmi.BootDevicePxe)
+	err = ipmi.SetBootMachinePXE(ipmiCfg)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to set boot order of machine to HD",
 			zap.Any("machine", machine),
