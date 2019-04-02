@@ -104,9 +104,9 @@ type BootConfig struct {
 }
 
 type IPMIConfig struct {
-	Ipmi     *models.MetalIPMI
 	Hostname string
 	Port     int
+	Ipmi     *models.MetalIPMI
 }
 
 func (i *IPMIConfig) Address() string {
