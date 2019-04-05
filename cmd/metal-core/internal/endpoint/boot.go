@@ -40,7 +40,7 @@ func createBootDiscoveryImageResponse(e *endpointHandler) domain.BootResponse {
 	metalCoreAddress := fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d", cfg.IP, cfg.Port)
 	metalAPIURL := fmt.Sprintf("METAL_API_URL=%s://%s:%d", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort)
 
-	cmdline := []string{e.BootConfig.MetalHammerCommandLine, metalCoreAddress, metalAPIURL, "carrier_timeout=5"}
+	cmdline := []string{e.BootConfig.MetalHammerCommandLine, metalCoreAddress, metalAPIURL}
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
 		cmdline = append(cmdline, "DEBUG=1")
 	}
