@@ -8,54 +8,62 @@ import (
 	"go.uber.org/zap"
 )
 
-func SetBootMachinePXE(cfg *domain.IPMIConfig) error {
-	client, err := openClientConnection(cfg)
-	if err != nil {
-		return err
-	}
-
-	zapup.MustRootLogger().Info("Setting boot machine to PXE boot",
-		zap.String("hostname", cfg.Hostname),
-		zap.String("MAC", cfg.Mac()),
-	)
-
-	return client.SetBootDevice(goipmi.BootDevicePxe)
+var bootFuncMap = map[string]func(*domain.IPMIConfig, goipmi.BootDevice) error{
+	"SYS-2029BT-HNTR":     setBootMachineRaw,
+	"SYS-2029BT-HNR":      setBootMachineRaw,
+	"SSG-5049P-E1CR45H":   setBootMachineRaw,
+	"MBI-6418A-T5H":       setBootMachineRaw,
+	"MBI-6219G-T7LX-PACK": setBootMachineRaw,
+	"vagrant":             setBootMachineIPMI,
 }
 
-func SetBootMachineHD(cfg *domain.IPMIConfig) error {
-	client, err := openClientConnection(cfg)
-	if err != nil {
-		return err
-	}
+func SetBootMachinePXE(cfg *domain.IPMIConfig) error {
+	return fetchBootFunc(cfg)(cfg, goipmi.BootDevicePxe)
+}
 
-	zapup.MustRootLogger().Info("Setting boot machine to HD boot",
-		zap.String("hostname", cfg.Hostname),
-		zap.String("MAC", cfg.Mac()),
-	)
-
-	return client.SetBootDevice(goipmi.BootDeviceDisk)
+func SetBootMachineDisk(cfg *domain.IPMIConfig) error {
+	return fetchBootFunc(cfg)(cfg, goipmi.BootDeviceDisk)
 }
 
 func SetBootMachineBios(cfg *domain.IPMIConfig) error {
+	return fetchBootFunc(cfg)(cfg, goipmi.BootDeviceBios)
+}
+
+func fetchBootFunc(cfg *domain.IPMIConfig) func(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
+	if cfg.Ipmi.Fru == nil {
+		return setBootMachineIPMI
+	}
+
+	bootFunc, ok := bootFuncMap[cfg.Ipmi.Fru.ProductPartNumber]
+	if !ok {
+		return setBootMachineIPMI
+	}
+
+	return bootFunc
+
+}
+
+func setBootMachineIPMI(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
 	client, err := openClientConnection(cfg)
 	if err != nil {
 		return err
 	}
 
-	zapup.MustRootLogger().Info("Setting boot machine to BIOS boot",
+	zapup.MustRootLogger().Info("Setting boot machine",
+		zap.String("device", dev.String()),
 		zap.String("hostname", cfg.Hostname),
 		zap.String("MAC", cfg.Mac()),
 	)
 
-	return client.SetBootDevice(goipmi.BootDeviceBios)
+	return client.SetBootDevice(dev)
 }
 
-// SetBootDevice is a modified wrapper around
+// SetBootMachine is a modified wrapper around
 // SetSystemBootOptionsRequest to configure the BootDevice
 // per section 28.12 - table 28
 // We send modified raw parameters according to:
 // https://www.supermicro.com/support/faqs/faq.cfm?faq=25559
-func SetBootDevice(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
+func setBootMachineRaw(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
 	client, err := openClientConnection(cfg)
 	if err != nil {
 		return err
@@ -79,7 +87,7 @@ func SetBootDevice(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
 	case goipmi.BootDevicePxe:
 		superMicroBootDevice = SuperMicroBootPxeQualifier
 	default:
-		return fmt.Errorf("unsupported boot device:%v", dev)
+		return fmt.Errorf("unsupported boot device:%s", dev.String())
 	}
 
 	zapup.MustRootLogger().Info("Setting boot machine to boot from",
@@ -123,9 +131,9 @@ func SetBootDevice(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
 
 func setBootParam(client *goipmi.Client, param uint8, data ...uint8) error {
 	r := &goipmi.Request{
-		goipmi.NetworkFunctionChassis,      // 0x00
-		goipmi.CommandSetSystemBootOptions, // 0x08
-		&goipmi.SetSystemBootOptionsRequest{
+		NetworkFunction: goipmi.NetworkFunctionChassis,      // 0x00
+		Command:         goipmi.CommandSetSystemBootOptions, // 0x08
+		Data: &goipmi.SetSystemBootOptionsRequest{
 			Param: param,
 			Data:  data,
 		},

@@ -182,7 +182,9 @@ func (a *app) initConsumer() {
 					sid := *s.ID
 					if sid == hostname {
 						err := a.EventHandler().ReconfigureSwitch(sid)
-						zapup.MustRootLogger().Error("could not fetch and apply switch configuration", zap.Error(err))
+						if err != nil {
+							zapup.MustRootLogger().Error("could not fetch and apply switch configuration", zap.Error(err))
+						}
 						return nil
 					}
 				}
