@@ -51,5 +51,15 @@ func (h *endpointHandler) NewMachineService() *restful.WebService {
 		Returns(http.StatusNotAcceptable, "Not acceptable", nil).
 		Returns(http.StatusInternalServerError, "Error", nil))
 
+	ws.Route(ws.POST("/{id}/event").
+		To(h.AddProvisioningEvent).
+		Doc("adds a machine provisioning event").
+		Param(ws.PathParameter("id", "identifier of the machine").DataType("string")).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Reads(models.MetalProvisioningEvent{}).
+		Returns(http.StatusOK, "OK", nil).
+		Returns(http.StatusNotFound, "Not Found", nil).
+		DefaultReturns("Unexpected Error", nil))
+
 	return ws
 }
