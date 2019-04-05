@@ -2,13 +2,14 @@ package test
 
 import (
 	"fmt"
+	"net/http"
+	"strings"
+	"testing"
+
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"github.com/emicklei/go-restful"
 	"github.com/stretchr/testify/require"
-	"net/http"
-	"strings"
-	"testing"
 )
 
 var fakeMac = "00:11:22:33:44:55"
@@ -29,7 +30,7 @@ func TestPXEBoot(t *testing.T) {
 		InitRamDisk: []string{
 			"https://blobstore.fi-ts.io/metal/images/metal-hammer/metal-hammer-initrd.img.lz4",
 		},
-		CommandLine: fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d METAL_API_URL=http://%v:%d", cfg.IP, cfg.Port, cfg.ApiIP, cfg.ApiPort),
+		CommandLine: fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d METAL_API_URL=http://%v:%d ipv6.disable=1", cfg.IP, cfg.Port, cfg.ApiIP, cfg.ApiPort),
 	}
 
 	// when

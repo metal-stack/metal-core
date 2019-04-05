@@ -2,10 +2,11 @@ package endpoint
 
 import (
 	"fmt"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/rest"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"net/http"
 	"strings"
+
+	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/rest"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
@@ -39,12 +40,9 @@ func createBootDiscoveryImageResponse(e *endpointHandler) domain.BootResponse {
 	metalCoreAddress := fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d", cfg.IP, cfg.Port)
 	metalAPIURL := fmt.Sprintf("METAL_API_URL=%s://%s:%d", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort)
 
-	cmdline := e.BootConfig.MetalHammerCommandLine
-	cmdline += " " + metalCoreAddress
-	cmdline += " " + metalAPIURL
-
+	cmdline := []string{e.BootConfig.MetalHammerCommandLine, metalCoreAddress, metalAPIURL, "ipv6.disable=1"}
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
-		cmdline += " " + "DEBUG=1"
+		cmdline = append(cmdline, "DEBUG=1")
 	}
 
 	return domain.BootResponse{
@@ -52,6 +50,6 @@ func createBootDiscoveryImageResponse(e *endpointHandler) domain.BootResponse {
 		InitRamDisk: []string{
 			e.BootConfig.MetalHammerImageURL,
 		},
-		CommandLine: cmdline,
+		CommandLine: strings.Join(cmdline, " "),
 	}
 }
