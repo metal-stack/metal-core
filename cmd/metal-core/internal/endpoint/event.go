@@ -11,6 +11,8 @@ import (
 )
 
 func (h *endpointHandler) AddProvisioningEvent(request *restful.Request, response *restful.Response) {
+	zapup.MustRootLogger().Info("event")
+
 	var event *models.MetalProvisioningEvent
 	err := request.ReadEntity(event)
 	if err != nil {
@@ -19,6 +21,8 @@ func (h *endpointHandler) AddProvisioningEvent(request *restful.Request, respons
 	}
 
 	machineID := request.PathParameter("id")
+	zapup.MustRootLogger().Info("event", zap.String("machineID", machineID))
+
 	err = h.APIClient().AddProvisioningEvent(machineID, event)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to send machine event back to api.",

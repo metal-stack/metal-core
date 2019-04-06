@@ -10,6 +10,7 @@ import (
 )
 
 func (c *apiClient) AddProvisioningEvent(machineID string, event *models.MetalProvisioningEvent) error {
+	zapup.MustRootLogger().Info("event", zap.String("machineID", machineID))
 
 	params := machine.NewAddProvisioningEventParams()
 	params.ID = machineID
