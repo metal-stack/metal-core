@@ -1,7 +1,6 @@
 package endpoint
 
 import (
-	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/rest"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"net/http"
@@ -20,10 +19,7 @@ func (h *endpointHandler) AddProvisioningEvent(request *restful.Request, respons
 	}
 
 	machineID := request.PathParameter("id")
-	params := machine.NewAddProvisioningEventParams()
-	params.ID = machineID
-	params.Body = event
-	_, err = h.MachineClient.AddProvisioningEvent(params)
+	err = h.APIClient().AddProvisioningEvent(machineID, event)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to send machine event back to api.",
 			zap.String("machineID", machineID),

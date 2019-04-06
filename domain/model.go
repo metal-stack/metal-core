@@ -50,6 +50,7 @@ type APIClient interface {
 	RegisterMachine(machineId string, request *MetalHammerRegisterMachineRequest) (int, *models.MetalMachine)
 	InstallImage(machineId string) (int, *models.MetalMachineWithPhoneHomeToken)
 	IPMIConfig(machineId string) (*IPMIConfig, error)
+	AddProvisioningEvent(machineID string, event *models.MetalProvisioningEvent) error
 }
 
 type Server interface {
