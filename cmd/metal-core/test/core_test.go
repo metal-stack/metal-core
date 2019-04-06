@@ -60,3 +60,6 @@ func (a *apiHandlerCoreTest) InstallImage(machineId string) (int, *models.MetalM
 func (a *apiHandlerCoreTest) IPMIConfig(machineId string) (*domain.IPMIConfig, error) {
 	return nil, nil
 }
+func (a *apiHandlerCoreTest) AddProvisioningEvent(machineID string, event *models.MetalProvisioningEvent) error {
+	return nil
+}
