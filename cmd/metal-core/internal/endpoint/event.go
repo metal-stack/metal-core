@@ -13,7 +13,7 @@ import (
 func (h *endpointHandler) AddProvisioningEvent(request *restful.Request, response *restful.Response) {
 	zapup.MustRootLogger().Info("event")
 
-	var event *models.MetalProvisioningEvent
+	event := &models.MetalProvisioningEvent{}
 	err := request.ReadEntity(event)
 	if err != nil {
 		rest.Respond(response, http.StatusInternalServerError, nil)
