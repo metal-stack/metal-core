@@ -15,16 +15,13 @@ func (c *apiClient) AddProvisioningEvent(machineID string, event *models.MetalPr
 	params := machine.NewAddProvisioningEventParams()
 	params.ID = machineID
 	params.Body = event
-	ok, err := c.MachineClient.AddProvisioningEvent(params)
+	_, err := c.MachineClient.AddProvisioningEvent(params)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to send machine event back to api.",
 			zap.String("machineID", machineID),
 			zap.Error(err),
 		)
 		return errors.Wrapf(err, "unable to send event for machineID:%s with event:%s", machineID, *event.Event)
-	}
-	if ok != nil {
-		return errors.Errorf("unable to send event for machineID:%s with event:%s", machineID, *event.Event)
 	}
 	return nil
 }
