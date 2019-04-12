@@ -1,9 +1,7 @@
 package event
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -80,7 +78,8 @@ func (h *eventHandler) ReconfigureSwitch(switchID string) error {
 		return errors.Wrap(err, "could not build switcher config")
 	}
 
-	err = fillEth0Info(c, h.Config.ManagementGateway)
+	devMode := h.Config.PartitionID == "vagrant-lab"
+	err = fillEth0Info(c, h.Config.ManagementGateway, devMode)
 	if err != nil {
 		return errors.Wrap(err, "could not gather information about eth0 nic")
 	}
@@ -98,30 +97,7 @@ func (h *eventHandler) ReconfigureSwitch(switchID string) error {
 	return nil
 }
 
-// Helper function to check whether a given interface is configured with DHCP
-// Note: is will be unnecessary once we configure leaves in the metal-lab and physical environments in the same way
-// (eth0 with static ip address and mgmt vrf)
-func isDhcp(i string) (bool, error) {
-	f, err := os.Open("/etc/network/interfaces")
-	if err != nil {
-		return false, err
-	}
-	defer f.Close()
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		if strings.Contains(scanner.Text(), fmt.Sprintf("iface %s", i)) {
-			if strings.Contains(scanner.Text(), "dhcp") {
-				return true, nil
-			}
-		}
-	}
-	if err := scanner.Err(); err != nil {
-		return false, err
-	}
-	return false, nil
-}
-
-func fillEth0Info(c *switcher.Conf, gw string) error {
+func fillEth0Info(c *switcher.Conf, gw string, devMode bool) error {
 	c.Eth0 = switcher.Nic{}
 	eth0, err := netlink.LinkByName("eth0")
 	if err != nil {
@@ -135,14 +111,10 @@ func fillEth0Info(c *switcher.Conf, gw string) error {
 		return fmt.Errorf("there is no ip address configured at eth0")
 	}
 
-	dhcp, err := isDhcp("eth0")
-	if err != nil {
-		return fmt.Errorf("could not check whether eth0 is configured with dhcp %v", err)
-	}
 	ip := addrs[0].IP
-	c.Eth0.Dhcp = dhcp
 	c.Eth0.AddressCIDR = ip.String() + "/24"
 	c.Eth0.Gateway = gw
+	c.DevMode = devMode
 	if dhcp {
 		zapup.MustRootLogger().Info("eth0 ip address was assigned with dhcp, reuse this setting")
 	} else {
