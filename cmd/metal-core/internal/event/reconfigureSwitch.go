@@ -115,11 +115,6 @@ func fillEth0Info(c *switcher.Conf, gw string, devMode bool) error {
 	c.Eth0.AddressCIDR = ip.String() + "/24"
 	c.Eth0.Gateway = gw
 	c.DevMode = devMode
-	if dhcp {
-		zapup.MustRootLogger().Info("eth0 ip address was assigned with dhcp, reuse this setting")
-	} else {
-		zapup.MustRootLogger().Info("eth0 ip address was assigned statically, reuse this setting")
-	}
 	return nil
 }
 
