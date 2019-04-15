@@ -11,7 +11,7 @@ import (
 var bootFuncMap = map[string]func(*domain.IPMIConfig, goipmi.BootDevice) error{
 	"SYS-2029BT-HNTR":     setBootMachineRaw,
 	"SYS-2029BT-HNR":      setBootMachineRaw,
-	"SSG-5049P-E1CR45H":   setBootMachineIPMI,
+	"SSG-5049P-E1CR45H":   setBootMachineRaw,
 	"MBI-6418A-T5H":       setBootMachineRaw,
 	"MBI-6219G-T7LX-PACK": setBootMachineRaw,
 	"vagrant":             setBootMachineIPMI,
