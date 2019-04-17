@@ -29,4 +29,4 @@ swagger-prepare:
 # 'swaggergenerate' generates swagger client with SWAGGERSPEC="swagger.json" SWAGGERTARET="./".
 .PHONY: swagger
 swagger: SWAGGERSPEC="domain/metal-api.json"
-swagger: swagger-prepare swaggergernerate
+swagger: swagger-prepare swaggergenerate
