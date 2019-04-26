@@ -11,7 +11,7 @@ import (
 
 func TestBuildSwitcherConfig(t *testing.T) {
 	config := &domain.Config{
-		IP:           "10.0.0.1",
+		IP:           "10.255.255.2",
 		PartitionID:  "fra-equ01",
 		RackID:       "rack01",
 		ASN:          "420000001",
@@ -42,6 +42,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 	require.NotNil(t, actual)
 	expected := &switcher.Conf{
 		Loopback:      "10.0.0.1",
+		MetalCoreCIDR: "10.255.255.2",
 		ASN:           420000001,
 		Neighbors:     []string{"swp31", "swp32"},
 		Unprovisioned: []string{"swp1"},
