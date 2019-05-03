@@ -31,6 +31,8 @@ func (e *endpointHandler) Boot(request *restful.Request, response *restful.Respo
 			rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse(e))
 		}
 		// FIXME this should not happen, we should consider returning a recovery image for digging into to root cause.
+	} else {
+		zapup.MustRootLogger().Warn("Request Metal-API for a machine", zap.String("MAC", mac), zap.String("StatusCode", string(sc)))
 	}
 }
 
