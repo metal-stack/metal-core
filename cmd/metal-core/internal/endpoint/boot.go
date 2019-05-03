@@ -33,7 +33,9 @@ func (e *endpointHandler) Boot(request *restful.Request, response *restful.Respo
 			} else {
 				zapup.MustRootLogger().Error("machine tries to pxe boot which is not expected.",
 					zap.Int("statusCode", sc),
-					zap.String("MAC", mac))
+					zap.String("MAC", mac),
+					zap.String("machineID", *machines[0].ID),
+				)
 			}
 			return
 		}
