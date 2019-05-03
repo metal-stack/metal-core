@@ -28,7 +28,7 @@ func (e *endpointHandler) Boot(request *restful.Request, response *restful.Respo
 			return
 		}
 		if len(machines) == 1 {
-			if machines[0].Allocation != nil {
+			if machines[0].Allocation == nil {
 				rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse(e))
 			} else {
 				zapup.MustRootLogger().Error("machine tries to pxe boot which is not expected.",
