@@ -24,15 +24,27 @@ func (e *endpointHandler) Boot(request *restful.Request, response *restful.Respo
 
 	if sc == http.StatusOK {
 		if len(machines) == 0 {
-			zapup.MustRootLogger().Info("Machine(s) not found",
-				zap.Int("statusCode", sc),
-				zap.String("MAC", mac),
-			)
 			rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse(e))
+			return
 		}
+		if len(machines) == 1 {
+			if machines[0].Allocation != nil {
+				rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse(e))
+			} else {
+				zapup.MustRootLogger().Error("machine tries to pxe boot which is not expected.",
+					zap.Int("statusCode", sc),
+					zap.String("MAC", mac))
+			}
+			return
+		}
+
+		zapup.MustRootLogger().Error("more than one machines with same mac found, not booting machine.",
+			zap.Int("statusCode", sc),
+			zap.String("MAC", mac),
+		)
 		// FIXME this should not happen, we should consider returning a recovery image for digging into to root cause.
 	} else {
-		zapup.MustRootLogger().Warn("Request Metal-API for a machine", zap.String("MAC", mac), zap.String("StatusCode", string(sc)))
+		zapup.MustRootLogger().Error("Request Metal-API for a machine", zap.String("MAC", mac), zap.String("StatusCode", string(sc)))
 	}
 }
 
