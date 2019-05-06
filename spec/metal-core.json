@@ -359,38 +359,38 @@
     },
     "models.MetalBootConfiguration": {
       "required": [
-        "commandline",
-        "imageurl",
-        "kernelurl"
+        "CommandLine",
+        "ImageURL",
+        "KernelURL"
       ],
       "properties": {
-        "commandline": {
+        "CommandLine": {
           "type": "string"
         },
-        "imageurl": {
+        "ImageURL": {
           "type": "string"
         },
-        "kernelurl": {
+        "KernelURL": {
           "type": "string"
         }
       }
     },
     "models.MetalConstraint": {
       "required": [
-        "max",
-        "min",
-        "type"
+        "Max",
+        "Min",
+        "Type"
       ],
       "properties": {
-        "max": {
+        "Max": {
           "type": "integer",
           "format": "int64"
         },
-        "min": {
+        "Min": {
           "type": "integer",
           "format": "int64"
         },
-        "type": {
+        "Type": {
           "type": "string"
         }
       }
@@ -455,10 +455,20 @@
     },
     "models.MetalImage": {
       "required": [
-        "id",
-        "url"
+        "Features",
+        "URL",
+        "id"
       ],
       "properties": {
+        "Features": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        },
+        "URL": {
+          "type": "string"
+        },
         "changed": {
           "type": "string"
         },
@@ -472,9 +482,6 @@
           "type": "string"
         },
         "name": {
-          "type": "string"
-        },
-        "url": {
           "type": "string"
         }
       }
@@ -542,19 +549,15 @@
     },
     "models.MetalMachineAllocation": {
       "required": [
-        "cidr",
         "created",
         "hostname",
         "name",
+        "networks",
         "project",
         "ssh_pub_keys",
-        "tenant",
-        "vrf"
+        "tenant"
       ],
       "properties": {
-        "cidr": {
-          "type": "string"
-        },
         "console_password": {
           "type": "string"
         },
@@ -576,6 +579,12 @@
         "name": {
           "type": "string"
         },
+        "networks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/models.MetalMachineNetwork"
+          }
+        },
         "project": {
           "type": "string"
         },
@@ -590,10 +599,6 @@
         },
         "user_data": {
           "type": "string"
-        },
-        "vrf": {
-          "type": "integer",
-          "format": "int64"
         }
       }
     },
@@ -624,6 +629,32 @@
           "items": {
             "$ref": "#/definitions/models.MetalNic"
           }
+        }
+      }
+    },
+    "models.MetalMachineNetwork": {
+      "required": [
+        "ips",
+        "networkid",
+        "primary",
+        "vrf"
+      ],
+      "properties": {
+        "ips": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "networkid": {
+          "type": "string"
+        },
+        "primary": {
+          "type": "boolean"
+        },
+        "vrf": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },
@@ -681,12 +712,21 @@
     },
     "models.MetalPartition": {
       "required": [
-        "bootconfig",
+        "BootConfiguration",
+        "MgmtServiceAddress",
+        "ProjectNetworkPrefixLength",
         "id"
       ],
       "properties": {
-        "bootconfig": {
+        "BootConfiguration": {
           "$ref": "#/definitions/models.MetalBootConfiguration"
+        },
+        "MgmtServiceAddress": {
+          "type": "string"
+        },
+        "ProjectNetworkPrefixLength": {
+          "type": "integer",
+          "format": "int32"
         },
         "changed": {
           "type": "string"
@@ -744,18 +784,18 @@
     },
     "models.MetalSize": {
       "required": [
-        "constraints",
+        "Constraints",
         "id"
       ],
       "properties": {
-        "changed": {
-          "type": "string"
-        },
-        "constraints": {
+        "Constraints": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/models.MetalConstraint"
           }
+        },
+        "changed": {
+          "type": "string"
         },
         "created": {
           "type": "string"

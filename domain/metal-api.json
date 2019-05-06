@@ -15,6 +15,121 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/v1/firewall": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "firewall"
+        ],
+        "summary": "get all known firewalls",
+        "operationId": "listFirewalls",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/v1.FirewallListResponse"
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/v1/firewall/allocate": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "firewall"
+        ],
+        "summary": "allocate a firewall",
+        "operationId": "allocateFirewall",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.FirewallCreateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/v1.FirewallDetailResponse"
+            }
+          },
+          "404": {
+            "description": "No free firewall for allocation found",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/v1/firewall/{id}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "firewall"
+        ],
+        "summary": "get firewall by id",
+        "operationId": "findFirewall",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "identifier of the firewall",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/v1.FirewallDetailResponse"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          }
+        }
+      }
+    },
     "/v1/health": {
       "get": {
         "consumes": [
@@ -63,8 +178,14 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/metal.Image"
+                "$ref": "#/definitions/v1.ImageListResponse"
               }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
             }
           }
         }
@@ -87,7 +208,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/metal.Image"
+              "$ref": "#/definitions/v1.ImageCreateRequest"
             }
           }
         ],
@@ -95,11 +216,17 @@
           "201": {
             "description": "Created",
             "schema": {
-              "$ref": "#/definitions/metal.Image"
+              "$ref": "#/definitions/v1.ImageDetailResponse"
             }
           },
           "409": {
             "description": "Conflict",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Error",
             "schema": {
               "$ref": "#/definitions/httperrors.HTTPErrorResponse"
             }
@@ -124,7 +251,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/metal.Image"
+              "$ref": "#/definitions/v1.ImageUpdateRequest"
             }
           }
         ],
@@ -132,14 +259,17 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/metal.Image"
+              "$ref": "#/definitions/v1.ImageDetailResponse"
             }
-          },
-          "404": {
-            "description": "Not Found"
           },
           "409": {
             "description": "Conflict",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Error",
             "schema": {
               "$ref": "#/definitions/httperrors.HTTPErrorResponse"
             }
@@ -173,11 +303,11 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/metal.Image"
+              "$ref": "#/definitions/v1.ImageDetailResponse"
             }
           },
-          "404": {
-            "description": "Not Found",
+          "default": {
+            "description": "Error",
             "schema": {
               "$ref": "#/definitions/httperrors.HTTPErrorResponse"
             }
@@ -209,11 +339,199 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/metal.Image"
+              "$ref": "#/definitions/v1.ImageDetailResponse"
             }
           },
-          "404": {
-            "description": "Not Found",
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/v1/ip": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ip"
+        ],
+        "summary": "get all ips",
+        "operationId": "listIPs",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/v1.IPListResponse"
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ip"
+        ],
+        "summary": "updates an ip. if the ip was changed since this one was read, a conflict is returned",
+        "operationId": "updateIP",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.IPUpdateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/v1.IPDetailResponse"
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/v1/ip/allocate": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ip"
+        ],
+        "summary": "allocate an ip in the given network for a project.",
+        "operationId": "allocateIP",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.IPAllocateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/v1.IPDetailResponse"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/v1/ip/{id}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ip"
+        ],
+        "summary": "get ip by id",
+        "operationId": "findIP",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "identifier of the ip",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/v1.IPDetailResponse"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ip"
+        ],
+        "summary": "deletes an ip and returns the deleted entity",
+        "operationId": "deleteIP",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "identifier of the ip",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/v1.IPDetailResponse"
+            }
+          },
+          "default": {
+            "description": "Error",
             "schema": {
               "$ref": "#/definitions/httperrors.HTTPErrorResponse"
             }
@@ -1032,7 +1350,202 @@
             }
           },
           "504": {
-            "description": "Timeout"
+            "description": "Timeout",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/v1/network": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "network"
+        ],
+        "summary": "get all networks",
+        "operationId": "listNetworks",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/v1.NetworkListResponse"
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "network"
+        ],
+        "summary": "create an network. if the given ID already exists a conflict is returned",
+        "operationId": "createNetwork",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.NetworkCreateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/v1.NetworkDetailResponse"
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "network"
+        ],
+        "summary": "updates an network. if the network was changed since this one was read, a conflict is returned",
+        "operationId": "updateNetwork",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.NetworkUpdateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/v1.NetworkDetailResponse"
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/v1/network/{id}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "network"
+        ],
+        "summary": "get network by id",
+        "operationId": "findNetwork",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "identifier of the network",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/v1.NetworkDetailResponse"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "network"
+        ],
+        "summary": "deletes an network and returns the deleted entity",
+        "operationId": "deleteNetwork",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "identifier of the network",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/v1.NetworkDetailResponse"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
           }
         }
       }
@@ -1056,8 +1569,14 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/metal.Partition"
+                "$ref": "#/definitions/v1.PartitionListResponse"
               }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
             }
           }
         }
@@ -1080,7 +1599,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/metal.Partition"
+              "$ref": "#/definitions/v1.PartitionCreateRequest"
             }
           }
         ],
@@ -1088,11 +1607,17 @@
           "201": {
             "description": "Created",
             "schema": {
-              "$ref": "#/definitions/metal.Partition"
+              "$ref": "#/definitions/v1.PartitionDetailResponse"
             }
           },
           "409": {
             "description": "Conflict",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Error",
             "schema": {
               "$ref": "#/definitions/httperrors.HTTPErrorResponse"
             }
@@ -1117,7 +1642,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/metal.Partition"
+              "$ref": "#/definitions/v1.PartitionUpdateRequest"
             }
           }
         ],
@@ -1125,17 +1650,17 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/metal.Partition"
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "schema": {
-              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+              "$ref": "#/definitions/v1.PartitionDetailResponse"
             }
           },
           "409": {
             "description": "Conflict",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Error",
             "schema": {
               "$ref": "#/definitions/httperrors.HTTPErrorResponse"
             }
@@ -1169,11 +1694,11 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/metal.Partition"
+              "$ref": "#/definitions/v1.PartitionDetailResponse"
             }
           },
-          "404": {
-            "description": "Not Found",
+          "default": {
+            "description": "Error",
             "schema": {
               "$ref": "#/definitions/httperrors.HTTPErrorResponse"
             }
@@ -1205,11 +1730,11 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/metal.Partition"
+              "$ref": "#/definitions/v1.PartitionDetailResponse"
             }
           },
-          "404": {
-            "description": "Not Found",
+          "default": {
+            "description": "Error",
             "schema": {
               "$ref": "#/definitions/httperrors.HTTPErrorResponse"
             }
@@ -1236,8 +1761,14 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/metal.Size"
+                "$ref": "#/definitions/v1.SizeListResponse"
               }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
             }
           }
         }
@@ -1260,7 +1791,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/metal.Size"
+              "$ref": "#/definitions/v1.SizeCreateRequest"
             }
           }
         ],
@@ -1268,11 +1799,17 @@
           "201": {
             "description": "Created",
             "schema": {
-              "$ref": "#/definitions/metal.Size"
+              "$ref": "#/definitions/v1.SizeDetailResponse"
             }
           },
           "409": {
             "description": "Conflict",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Error",
             "schema": {
               "$ref": "#/definitions/httperrors.HTTPErrorResponse"
             }
@@ -1297,7 +1834,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/metal.Size"
+              "$ref": "#/definitions/v1.SizeUpdateRequest"
             }
           }
         ],
@@ -1305,13 +1842,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/metal.Size"
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "schema": {
-              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+              "$ref": "#/definitions/v1.SizeDetailResponse"
             }
           },
           "409": {
@@ -1319,11 +1850,17 @@
             "schema": {
               "$ref": "#/definitions/httperrors.HTTPErrorResponse"
             }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
           }
         }
       }
     },
-    "/v1/size/fromHardware": {
+    "/v1/size/from-hardware": {
       "post": {
         "consumes": [
           "application/json"
@@ -1361,6 +1898,12 @@
                 "$ref": "#/definitions/metal.SizeMatchingLog"
               }
             }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
           }
         }
       }
@@ -1391,11 +1934,11 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/metal.Image"
+              "$ref": "#/definitions/v1.SizeDetailResponse"
             }
           },
-          "404": {
-            "description": "Not Found",
+          "default": {
+            "description": "Error",
             "schema": {
               "$ref": "#/definitions/httperrors.HTTPErrorResponse"
             }
@@ -1427,11 +1970,11 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/metal.Size"
+              "$ref": "#/definitions/v1.SizeDetailResponse"
             }
           },
-          "404": {
-            "description": "Not Found",
+          "default": {
+            "description": "Error",
             "schema": {
               "$ref": "#/definitions/httperrors.HTTPErrorResponse"
             }
@@ -1635,12 +2178,19 @@
         "sizeid",
         "imageid",
         "ssh_pub_keys",
-        "tags"
+        "tags",
+        "networks",
+        "ips",
+        "ha"
       ],
       "properties": {
         "description": {
           "description": "the description for the allocated machine",
           "type": "string"
+        },
+        "ha": {
+          "description": "if set to true, this firewall is set up in a High Available manner. optional",
+          "type": "boolean"
         },
         "hostname": {
           "description": "the hostname for the allocated machine",
@@ -1650,9 +2200,23 @@
           "description": "the image id to assign this machine to",
           "type": "string"
         },
+        "ips": {
+          "description": "the additional ips of this firewall, optional.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "name": {
           "description": "the new name for the allocated machine",
           "type": "string"
+        },
+        "networks": {
+          "description": "the networks of this firewall, required.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "partitionid": {
           "description": "the partition id to assign this machine to",
@@ -1712,21 +2276,18 @@
     },
     "metal.BootConfiguration": {
       "required": [
-        "imageurl",
-        "kernelurl",
-        "commandline"
+        "ImageURL",
+        "KernelURL",
+        "CommandLine"
       ],
       "properties": {
-        "commandline": {
-          "description": "the cmdline to the kernel for the boot image",
+        "CommandLine": {
           "type": "string"
         },
-        "imageurl": {
-          "description": "the url to download the initrd for the boot image",
+        "ImageURL": {
           "type": "string"
         },
-        "kernelurl": {
-          "description": "the url to download the kernel for the boot image",
+        "KernelURL": {
           "type": "string"
         }
       }
@@ -1748,21 +2309,18 @@
     },
     "metal.Constraint": {
       "required": [
-        "type",
-        "min",
-        "max"
+        "Type",
+        "Min",
+        "Max"
       ],
       "properties": {
-        "max": {
-          "description": "the maximal value",
+        "Max": {
           "type": "integer"
         },
-        "min": {
-          "description": "the minimal value",
+        "Min": {
           "type": "integer"
         },
-        "type": {
-          "description": "the type of constraint",
+        "Type": {
           "type": "string"
         }
       }
@@ -1851,12 +2409,21 @@
       }
     },
     "metal.Image": {
-      "description": "An image that can be put on a machine.",
       "required": [
         "id",
-        "url"
+        "URL",
+        "Features"
       ],
       "properties": {
+        "Features": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        },
+        "URL": {
+          "type": "string"
+        },
         "changed": {
           "description": "the last changed timestamp",
           "type": "string",
@@ -1880,10 +2447,6 @@
         },
         "name": {
           "description": "the readable name",
-          "type": "string"
-        },
-        "url": {
-          "description": "the url to this image",
           "type": "string"
         }
       }
@@ -1978,16 +2541,11 @@
         "name",
         "tenant",
         "project",
-        "cidr",
-        "vrf",
+        "networks",
         "hostname",
         "ssh_pub_keys"
       ],
       "properties": {
-        "cidr": {
-          "description": "the cidr address of the allocated machine",
-          "type": "string"
-        },
         "console_password": {
           "description": "the console password which was generated while provisioning",
           "type": "string"
@@ -2020,6 +2578,13 @@
           "description": "the name of the machine",
           "type": "string"
         },
+        "networks": {
+          "description": "the networks of this machine",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/metal.MachineNetwork"
+          }
+        },
         "project": {
           "description": "the project that this machine is assigned to",
           "type": "string"
@@ -2038,11 +2603,6 @@
         "user_data": {
           "description": "userdata to execute post installation tasks",
           "type": "string"
-        },
-        "vrf": {
-          "description": "the vrf of the allocated machine",
-          "type": "integer",
-          "format": "integer"
         }
       }
     },
@@ -2100,6 +2660,36 @@
           "description": "the number of machines with unknown liveliness",
           "type": "integer",
           "format": "int32"
+        }
+      }
+    },
+    "metal.MachineNetwork": {
+      "required": [
+        "networkid",
+        "ips",
+        "vrf",
+        "primary"
+      ],
+      "properties": {
+        "ips": {
+          "description": "the ip addresses of the allocated machine in this vrf",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "networkid": {
+          "description": "the networkID of the allocated machine in this vrf",
+          "type": "string"
+        },
+        "primary": {
+          "description": "this network is the primary vrf of the allocated machine, aka tenant vrf",
+          "type": "boolean"
+        },
+        "vrf": {
+          "description": "the vrf of the allocated machine",
+          "type": "integer",
+          "format": "integer"
         }
       }
     },
@@ -2164,11 +2754,20 @@
     "metal.Partition": {
       "required": [
         "id",
-        "bootconfig"
+        "BootConfiguration",
+        "MgmtServiceAddress",
+        "ProjectNetworkPrefixLength"
       ],
       "properties": {
-        "bootconfig": {
+        "BootConfiguration": {
           "$ref": "#/definitions/metal.BootConfiguration"
+        },
+        "MgmtServiceAddress": {
+          "type": "string"
+        },
+        "ProjectNetworkPrefixLength": {
+          "type": "integer",
+          "format": "int32"
         },
         "changed": {
           "description": "the last changed timestamp",
@@ -2374,24 +2973,22 @@
       }
     },
     "metal.Size": {
-      "description": "A Size describes our supported t-shirt sizes.",
       "required": [
         "id",
-        "constraints"
+        "Constraints"
       ],
       "properties": {
+        "Constraints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/metal.Constraint"
+          }
+        },
         "changed": {
           "description": "the last changed timestamp",
           "type": "string",
           "format": "date-time",
           "readOnly": true
-        },
-        "constraints": {
-          "description": "a list of constraints that defines this size",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/metal.Constraint"
-          }
         },
         "created": {
           "description": "the creation time of this entity",
@@ -2536,12 +3133,1045 @@
           "type": "string"
         }
       }
+    },
+    "v1.FirewallCreateRequest": {
+      "required": [
+        "ha",
+        "imageid",
+        "ssh_pub_keys",
+        "networks",
+        "ips",
+        "projectid",
+        "partitionid",
+        "sizeid",
+        "tags",
+        "hostname",
+        "tenant"
+      ],
+      "properties": {
+        "description": {
+          "description": "the description for the allocated machine",
+          "type": "string"
+        },
+        "ha": {
+          "description": "if set to true, this firewall is set up in a High Available manner. optional",
+          "type": "boolean"
+        },
+        "hostname": {
+          "description": "the hostname for the allocated machine",
+          "type": "string"
+        },
+        "imageid": {
+          "description": "the image id to assign this machine to",
+          "type": "string"
+        },
+        "ips": {
+          "description": "the additional ips of this firewall, optional.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "description": "the new name for the allocated machine",
+          "type": "string"
+        },
+        "networks": {
+          "description": "the networks of this firewall, required.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "partitionid": {
+          "description": "the partition id to assign this machine to",
+          "type": "string"
+        },
+        "projectid": {
+          "description": "the project id to assign this machine to",
+          "type": "string"
+        },
+        "sizeid": {
+          "description": "the size id to assign this machine to",
+          "type": "string"
+        },
+        "ssh_pub_keys": {
+          "description": "the public ssh keys to access the machine with",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tags": {
+          "description": "tags for this machine",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tenant": {
+          "description": "the name of the owning tenant",
+          "type": "string"
+        },
+        "user_data": {
+          "description": "cloud-init.io compatible userdata must be base64 encoded.",
+          "type": "string"
+        },
+        "uuid": {
+          "description": "if this field is set, this specific machine will be allocated if it is not in available state and not currently allocated. this field overrules size and partition",
+          "type": "string"
+        }
+      }
+    },
+    "v1.FirewallDetailResponse": {
+      "required": [
+        "allocation",
+        "events",
+        "liveliness",
+        "size",
+        "hardware",
+        "partition",
+        "tags",
+        "state",
+        "id",
+        "rackid"
+      ],
+      "properties": {
+        "allocation": {
+          "description": "the allocation data of an allocated machine",
+          "$ref": "#/definitions/metal.MachineAllocation"
+        },
+        "changed": {
+          "description": "the last changed timestamp",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "created": {
+          "description": "the creation time of this entity",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "events": {
+          "description": "recent events of this machine during provisioning",
+          "$ref": "#/definitions/metal.RecentProvisioningEvents"
+        },
+        "hardware": {
+          "description": "the hardware of this machine",
+          "$ref": "#/definitions/metal.MachineHardware"
+        },
+        "id": {
+          "description": "a unique ID",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "liveliness": {
+          "description": "the liveliness of this machine",
+          "type": "string"
+        },
+        "name": {
+          "description": "the readable name",
+          "type": "string"
+        },
+        "partition": {
+          "description": "the partition assigned to this machine",
+          "$ref": "#/definitions/metal.Partition",
+          "readOnly": true
+        },
+        "rackid": {
+          "description": "the rack assigned to this machine",
+          "type": "string",
+          "readOnly": true
+        },
+        "size": {
+          "description": "the size of this machine",
+          "$ref": "#/definitions/metal.Size",
+          "readOnly": true
+        },
+        "state": {
+          "description": "the state of this machine",
+          "$ref": "#/definitions/metal.MachineState"
+        },
+        "tags": {
+          "description": "tags for this machine",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "v1.FirewallListResponse": {
+      "required": [
+        "id",
+        "partitionid",
+        "projectid",
+        "networks"
+      ],
+      "properties": {
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "id": {
+          "description": "the unique ID of this entity",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "name": {
+          "description": "a readable name for this entity",
+          "type": "string"
+        },
+        "networks": {
+          "description": "the networks of this firewall, required.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.FirewallNetwork"
+          }
+        },
+        "partitionid": {
+          "description": "the partition this firewall belongs to.",
+          "type": "string"
+        },
+        "projectid": {
+          "description": "the project this firewall belongs to, can be empty if globally available.",
+          "type": "string"
+        }
+      }
+    },
+    "v1.FirewallNetwork": {
+      "required": [
+        "networkid",
+        "ips",
+        "vrf",
+        "primary"
+      ],
+      "properties": {
+        "ips": {
+          "description": "the ip addresses of the allocated machine in this vrf",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "networkid": {
+          "description": "the networkID of the allocated machine in this vrf",
+          "type": "string"
+        },
+        "primary": {
+          "description": "this network is the primary vrf of the allocated machine, aka tenant vrf",
+          "type": "boolean"
+        },
+        "vrf": {
+          "description": "the vrf of the allocated machine",
+          "type": "integer",
+          "format": "integer"
+        }
+      }
+    },
+    "v1.IPAllocateRequest": {
+      "required": [
+        "projectid",
+        "networkid"
+      ],
+      "properties": {
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "name": {
+          "description": "a readable name for this entity",
+          "type": "string"
+        },
+        "networkid": {
+          "description": "the network this ip allocate request address belongs to",
+          "type": "string"
+        },
+        "projectid": {
+          "description": "the project this ip address belongs to",
+          "type": "string"
+        }
+      }
+    },
+    "v1.IPDetailResponse": {
+      "required": [
+        "projectid",
+        "networkid",
+        "ipaddress",
+        "created",
+        "changed"
+      ],
+      "properties": {
+        "changed": {
+          "description": "the last changed timestamp of this entity",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "created": {
+          "description": "the creation time of this entity",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "ipaddress": {
+          "description": "the address (ipv4 or ipv6) of this ip",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "name": {
+          "description": "a readable name for this entity",
+          "type": "string"
+        },
+        "networkid": {
+          "description": "the network this ip allocate request address belongs to",
+          "type": "string"
+        },
+        "projectid": {
+          "description": "the project this ip address belongs to",
+          "type": "string"
+        }
+      }
+    },
+    "v1.IPListResponse": {
+      "required": [
+        "projectid",
+        "networkid",
+        "ipaddress"
+      ],
+      "properties": {
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "ipaddress": {
+          "description": "the address (ipv4 or ipv6) of this ip",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "name": {
+          "description": "a readable name for this entity",
+          "type": "string"
+        },
+        "networkid": {
+          "description": "the network this ip allocate request address belongs to",
+          "type": "string"
+        },
+        "projectid": {
+          "description": "the project this ip address belongs to",
+          "type": "string"
+        }
+      }
+    },
+    "v1.IPUpdateRequest": {
+      "required": [
+        "ipaddress"
+      ],
+      "properties": {
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "ipaddress": {
+          "description": "the address (ipv4 or ipv6) of this ip",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "name": {
+          "description": "a readable name for this entity",
+          "type": "string"
+        }
+      }
+    },
+    "v1.ImageCreateRequest": {
+      "required": [
+        "id",
+        "url"
+      ],
+      "properties": {
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "features": {
+          "description": "features of this image",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "description": "the unique ID of this entity",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "name": {
+          "description": "a readable name for this entity",
+          "type": "string"
+        },
+        "url": {
+          "description": "the url of this image",
+          "type": "string"
+        }
+      }
+    },
+    "v1.ImageDetailResponse": {
+      "required": [
+        "id",
+        "created",
+        "changed"
+      ],
+      "properties": {
+        "changed": {
+          "description": "the last changed timestamp of this entity",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "created": {
+          "description": "the creation time of this entity",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "features": {
+          "description": "features of this image",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "description": "the unique ID of this entity",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "name": {
+          "description": "a readable name for this entity",
+          "type": "string"
+        },
+        "url": {
+          "description": "the url of this image",
+          "type": "string"
+        }
+      }
+    },
+    "v1.ImageListResponse": {
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "features": {
+          "description": "features of this image",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "description": "the unique ID of this entity",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "name": {
+          "description": "a readable name for this entity",
+          "type": "string"
+        },
+        "url": {
+          "description": "the url of this image",
+          "type": "string"
+        }
+      }
+    },
+    "v1.ImageUpdateRequest": {
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "features": {
+          "description": "features of this image",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "description": "the unique ID of this entity",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "name": {
+          "description": "a readable name for this entity",
+          "type": "string"
+        },
+        "url": {
+          "description": "the url of this image",
+          "type": "string"
+        }
+      }
+    },
+    "v1.NetworkCreateRequest": {
+      "required": [
+        "nat",
+        "primary",
+        "prefixes"
+      ],
+      "properties": {
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "name": {
+          "description": "a readable name for this entity",
+          "type": "string"
+        },
+        "nat": {
+          "description": "if set to true, packets leaving this network get masqueraded behind interface ip",
+          "type": "boolean"
+        },
+        "partitionid": {
+          "description": "the partition this network belongs to",
+          "type": "string"
+        },
+        "prefixes": {
+          "description": "the prefixes of this network",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "primary": {
+          "description": "if set to true, this network is attached to a machine/firewall",
+          "type": "boolean"
+        },
+        "projectid": {
+          "description": "the project this network belongs to, can be empty if globally available",
+          "type": "string"
+        }
+      }
+    },
+    "v1.NetworkDetailResponse": {
+      "required": [
+        "prefixes",
+        "usage",
+        "nat",
+        "primary",
+        "id",
+        "created",
+        "changed"
+      ],
+      "properties": {
+        "changed": {
+          "description": "the last changed timestamp of this entity",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "created": {
+          "description": "the creation time of this entity",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "id": {
+          "description": "the unique ID of this entity",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "name": {
+          "description": "a readable name for this entity",
+          "type": "string"
+        },
+        "nat": {
+          "description": "if set to true, packets leaving this network get masqueraded behind interface ip",
+          "type": "boolean"
+        },
+        "partitionid": {
+          "description": "the partition this network belongs to",
+          "type": "string"
+        },
+        "prefixes": {
+          "description": "the prefixes of this network",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "primary": {
+          "description": "if set to true, this network is attached to a machine/firewall",
+          "type": "boolean"
+        },
+        "projectid": {
+          "description": "the project this network belongs to, can be empty if globally available",
+          "type": "string"
+        },
+        "usage": {
+          "description": "usage of ips and prefixes in this network",
+          "$ref": "#/definitions/v1.NetworkUsage"
+        }
+      }
+    },
+    "v1.NetworkListResponse": {
+      "required": [
+        "id",
+        "prefixes",
+        "nat",
+        "primary",
+        "usage"
+      ],
+      "properties": {
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "id": {
+          "description": "the unique ID of this entity",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "name": {
+          "description": "a readable name for this entity",
+          "type": "string"
+        },
+        "nat": {
+          "description": "if set to true, packets leaving this network get masqueraded behind interface ip",
+          "type": "boolean"
+        },
+        "partitionid": {
+          "description": "the partition this network belongs to",
+          "type": "string"
+        },
+        "prefixes": {
+          "description": "the prefixes of this network",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "primary": {
+          "description": "if set to true, this network is attached to a machine/firewall",
+          "type": "boolean"
+        },
+        "projectid": {
+          "description": "the project this network belongs to, can be empty if globally available",
+          "type": "string"
+        },
+        "usage": {
+          "description": "usage of ips and prefixes in this network",
+          "$ref": "#/definitions/v1.NetworkUsage"
+        }
+      }
+    },
+    "v1.NetworkUpdateRequest": {
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "id": {
+          "description": "the unique ID of this entity",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "name": {
+          "description": "a readable name for this entity",
+          "type": "string"
+        },
+        "prefixes": {
+          "description": "the prefixes of this network",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "v1.NetworkUsage": {
+      "required": [
+        "available_ips",
+        "used_ips",
+        "available_prefixes",
+        "used_prefixes"
+      ],
+      "properties": {
+        "available_ips": {
+          "description": "the total available IPs",
+          "type": "integer"
+        },
+        "available_prefixes": {
+          "description": "the total available Prefixes",
+          "type": "integer"
+        },
+        "used_ips": {
+          "description": "the total used IPs",
+          "type": "integer"
+        },
+        "used_prefixes": {
+          "description": "the total used Prefixes",
+          "type": "integer"
+        }
+      }
+    },
+    "v1.PartitionBootConfiguration": {
+      "description": "a partition has a distinct location in a data center, individual entities belong to a partition",
+      "properties": {
+        "commandline": {
+          "description": "the cmdline to the kernel for the boot image",
+          "type": "string"
+        },
+        "imageurl": {
+          "description": "the url to download the initrd for the boot image",
+          "type": "string"
+        },
+        "kernelurl": {
+          "description": "the url to download the kernel for the boot image",
+          "type": "string"
+        }
+      }
+    },
+    "v1.PartitionCreateRequest": {
+      "required": [
+        "id",
+        "bootconfig"
+      ],
+      "properties": {
+        "bootconfig": {
+          "description": "the boot configuration of this partition",
+          "$ref": "#/definitions/v1.PartitionBootConfiguration"
+        },
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "id": {
+          "description": "the unique ID of this entity",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "mgmtserviceaddress": {
+          "description": "the address to the management service of this partition",
+          "type": "string"
+        },
+        "name": {
+          "description": "a readable name for this entity",
+          "type": "string"
+        },
+        "projectnetworkprefixlength": {
+          "description": "the length of project networks for this partition, default 22",
+          "type": "integer",
+          "format": "int32",
+          "maximum": 30,
+          "minimum": 16
+        }
+      }
+    },
+    "v1.PartitionDetailResponse": {
+      "required": [
+        "id",
+        "bootconfig",
+        "created",
+        "changed"
+      ],
+      "properties": {
+        "bootconfig": {
+          "description": "the boot configuration of this partition",
+          "$ref": "#/definitions/v1.PartitionBootConfiguration"
+        },
+        "changed": {
+          "description": "the last changed timestamp of this entity",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "created": {
+          "description": "the creation time of this entity",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "id": {
+          "description": "the unique ID of this entity",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "mgmtserviceaddress": {
+          "description": "the address to the management service of this partition",
+          "type": "string"
+        },
+        "name": {
+          "description": "a readable name for this entity",
+          "type": "string"
+        },
+        "projectnetworkprefixlength": {
+          "description": "the length of project networks for this partition, default 22",
+          "type": "integer",
+          "format": "int32",
+          "maximum": 30,
+          "minimum": 16
+        }
+      }
+    },
+    "v1.PartitionListResponse": {
+      "required": [
+        "id",
+        "bootconfig"
+      ],
+      "properties": {
+        "bootconfig": {
+          "description": "the boot configuration of this partition",
+          "$ref": "#/definitions/v1.PartitionBootConfiguration"
+        },
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "id": {
+          "description": "the unique ID of this entity",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "mgmtserviceaddress": {
+          "description": "the address to the management service of this partition",
+          "type": "string"
+        },
+        "name": {
+          "description": "a readable name for this entity",
+          "type": "string"
+        },
+        "projectnetworkprefixlength": {
+          "description": "the length of project networks for this partition, default 22",
+          "type": "integer",
+          "format": "int32",
+          "maximum": 30,
+          "minimum": 16
+        }
+      }
+    },
+    "v1.PartitionUpdateRequest": {
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "bootconfig": {
+          "description": "the boot configuration of this partition",
+          "$ref": "#/definitions/v1.PartitionBootConfiguration"
+        },
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "id": {
+          "description": "the unique ID of this entity",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "mgmtserviceaddress": {
+          "description": "the address to the management service of this partition",
+          "type": "string"
+        },
+        "name": {
+          "description": "a readable name for this entity",
+          "type": "string"
+        }
+      }
+    },
+    "v1.SizeConstraint": {
+      "description": "a machine matches to a size in order to make them easier to categorize",
+      "required": [
+        "type",
+        "min",
+        "max"
+      ],
+      "properties": {
+        "max": {
+          "description": "the maximum value of the constraint",
+          "type": "integer"
+        },
+        "min": {
+          "description": "the minimum value of the constraint",
+          "type": "integer"
+        },
+        "type": {
+          "description": "the type of the constraint",
+          "type": "string",
+          "enum": [
+            "cores",
+            "memory",
+            "storage"
+          ]
+        }
+      }
+    },
+    "v1.SizeCreateRequest": {
+      "required": [
+        "id",
+        "constraints"
+      ],
+      "properties": {
+        "constraints": {
+          "description": "a list of constraints that defines this size",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.SizeConstraint"
+          }
+        },
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "id": {
+          "description": "the unique ID of this entity",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "name": {
+          "description": "a readable name for this entity",
+          "type": "string"
+        }
+      }
+    },
+    "v1.SizeDetailResponse": {
+      "required": [
+        "id",
+        "constraints",
+        "created",
+        "changed"
+      ],
+      "properties": {
+        "changed": {
+          "description": "the last changed timestamp of this entity",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "constraints": {
+          "description": "a list of constraints that defines this size",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.SizeConstraint"
+          }
+        },
+        "created": {
+          "description": "the creation time of this entity",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "id": {
+          "description": "the unique ID of this entity",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "name": {
+          "description": "a readable name for this entity",
+          "type": "string"
+        }
+      }
+    },
+    "v1.SizeListResponse": {
+      "required": [
+        "id",
+        "constraints"
+      ],
+      "properties": {
+        "constraints": {
+          "description": "a list of constraints that defines this size",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.SizeConstraint"
+          }
+        },
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "id": {
+          "description": "the unique ID of this entity",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "name": {
+          "description": "a readable name for this entity",
+          "type": "string"
+        }
+      }
+    },
+    "v1.SizeUpdateRequest": {
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "constraints": {
+          "description": "a list of constraints that defines this size",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.SizeConstraint"
+          }
+        },
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "id": {
+          "description": "the unique ID of this entity",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "name": {
+          "description": "a readable name for this entity",
+          "type": "string"
+        }
+      }
     }
   },
   "tags": [
     {
       "description": "Managing image entities",
       "name": "image"
+    },
+    {
+      "description": "Managing network entities",
+      "name": "network"
+    },
+    {
+      "description": "Managing ip entities",
+      "name": "ip"
     },
     {
       "description": "Managing size entities",

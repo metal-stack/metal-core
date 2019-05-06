@@ -127,9 +127,9 @@ func prepare() *app {
 	}
 
 	app.BootConfig = &domain.BootConfig{
-		MetalHammerImageURL:    *s.Partition.Bootconfig.Imageurl,
-		MetalHammerKernelURL:   *s.Partition.Bootconfig.Kernelurl,
-		MetalHammerCommandLine: *s.Partition.Bootconfig.Commandline,
+		MetalHammerImageURL:    *s.Partition.BootConfiguration.ImageURL,
+		MetalHammerKernelURL:   *s.Partition.BootConfiguration.KernelURL,
+		MetalHammerCommandLine: *s.Partition.BootConfiguration.CommandLine,
 	}
 
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {

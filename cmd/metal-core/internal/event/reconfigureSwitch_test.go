@@ -46,7 +46,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		ASN:           420000001,
 		Neighbors:     []string{"swp31", "swp32"},
 		Unprovisioned: []string{"swp1"},
-		Tenants: map[string]*switcher.Tenant{"vrf104001": &switcher.Tenant{
+		Tenants: map[string]*switcher.Tenant{"vrf104001": {
 			VNI:       104001,
 			VLANID:    1001,
 			Neighbors: []string{"swp2"},
