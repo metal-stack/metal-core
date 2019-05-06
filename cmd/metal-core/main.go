@@ -33,6 +33,9 @@ import (
 	"go.uber.org/zap"
 )
 
+// timeout for the nsq handler methods
+const receiverHandlerTimeout = 30 * time.Second
+
 type app struct {
 	*domain.AppContext
 }
@@ -143,7 +146,7 @@ func (a *app) initConsumer() {
 	hostname, _ := os.Hostname()
 	_ = bus.NewConsumer(zapup.MustRootLogger(), a.Config.MQAddress).
 		MustRegister(a.Config.MachineTopic, "core").
-		Consume(domain.MachineEvent{}, func(message interface{}) error {
+		ConsumeWithTimeout(domain.MachineEvent{}, func(message interface{}) error {
 			evt := message.(*domain.MachineEvent)
 			zapup.MustRootLogger().Info("Got message",
 				zap.Any("event", evt),
@@ -164,7 +167,7 @@ func (a *app) initConsumer() {
 				}
 			}
 			return nil
-		}, 5)
+		}, receiverHandlerTimeout, 5)
 
 	_ = bus.NewConsumer(zapup.MustRootLogger(), a.Config.MQAddress).
 		// the hostname is used here as channel name
@@ -220,15 +223,14 @@ func (a *app) registerSwitch() (*models.MetalSwitch, error) {
 	}
 
 	for {
-		if ok, created, err := a.SwitchClient.RegisterSwitch(params); err == nil {
+		ok, created, err := a.SwitchClient.RegisterSwitch(params)
+		if err == nil {
 			if ok != nil {
 				return ok.Payload, nil
 			}
 			return created.Payload, nil
 		}
-		zapup.MustRootLogger().Error("unable to register at metal-api",
-			zap.Error(err),
-		)
+		zapup.MustRootLogger().Error("unable to register at metal-api", zap.Error(err))
 		time.Sleep(time.Second)
 	}
 }
