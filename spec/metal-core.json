@@ -682,7 +682,8 @@
     "models.MetalPartition": {
       "required": [
         "bootconfig",
-        "id"
+        "id",
+        "mgmtserviceaddress"
       ],
       "properties": {
         "bootconfig": {
@@ -698,6 +699,9 @@
           "type": "string"
         },
         "id": {
+          "type": "string"
+        },
+        "mgmtserviceaddress": {
           "type": "string"
         },
         "name": {

@@ -34,7 +34,7 @@ import (
 )
 
 // timeout for the nsq handler methods
-const receiverHandlerTimeout = 30 * time.Second
+const receiverHandlerTimeout = 15 * time.Second
 
 type app struct {
 	*domain.AppContext
