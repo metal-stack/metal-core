@@ -42,7 +42,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 	require.NotNil(t, actual)
 	expected := &switcher.Conf{
 		Loopback:      "10.0.0.1",
-		MetalCoreCIDR: "10.255.255.2",
+		MetalCoreCIDR: "10.255.255.2/24",
 		ASN:           420000001,
 		Neighbors:     []string{"swp31", "swp32"},
 		Unprovisioned: []string{"swp1"},
