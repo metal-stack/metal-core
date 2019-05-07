@@ -167,14 +167,18 @@ func (a *app) initConsumer() {
 				}
 			}
 			return nil
-		}, receiverHandlerTimeout, 5)
+		},
+			receiverHandlerTimeout, func(err bus.TimeoutError) error {
+				zapup.MustRootLogger().Error("Timeout processing event", zap.Any("event", err.Event()))
+				return nil
+			}, 5)
 
 	_ = bus.NewConsumer(zapup.MustRootLogger(), a.Config.MQAddress).
 		// the hostname is used here as channel name
 		// this is intended so that messages in the switch topics get replicated
 		// to all channels leaf01, leaf02
 		MustRegister(a.Config.SwitchTopic, hostname).
-		Consume(domain.SwitchEvent{}, func(message interface{}) error {
+		ConsumeWithTimeout(domain.SwitchEvent{}, func(message interface{}) error {
 			evt := message.(*domain.SwitchEvent)
 			zapup.MustRootLogger().Info("Got message",
 				zap.Any("event", evt),
@@ -198,7 +202,11 @@ func (a *app) initConsumer() {
 				)
 			}
 			return nil
-		}, 1)
+		},
+			receiverHandlerTimeout, func(err bus.TimeoutError) error {
+				zapup.MustRootLogger().Error("Timeout processing event", zap.Any("event", err.Event()))
+				return nil
+			}, 1)
 }
 
 func (a *app) registerSwitch() (*models.MetalSwitch, error) {
