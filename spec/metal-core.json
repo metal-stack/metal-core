@@ -285,10 +285,10 @@
     },
     "domain.MetalHammerRegisterMachineRequest": {
       "required": [
-        "cpu_cores",
         "disks",
         "memory",
         "nics",
+        "cpu_cores",
         "ipmi"
       ],
       "properties": {
@@ -634,12 +634,17 @@
     },
     "models.MetalMachineNetwork": {
       "required": [
+        "asn",
         "ips",
         "networkid",
         "primary",
         "vrf"
       ],
       "properties": {
+        "asn": {
+          "type": "integer",
+          "format": "int64"
+        },
         "ips": {
           "type": "array",
           "items": {

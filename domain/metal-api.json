@@ -2668,9 +2668,15 @@
         "networkid",
         "ips",
         "vrf",
-        "primary"
+        "primary",
+        "asn"
       ],
       "properties": {
+        "asn": {
+          "description": "ASN number for this network in the bgp configuration",
+          "type": "integer",
+          "format": "int64"
+        },
         "ips": {
           "description": "the ip addresses of the allocated machine in this vrf",
           "type": "array",
@@ -3136,17 +3142,17 @@
     },
     "v1.FirewallCreateRequest": {
       "required": [
+        "sizeid",
+        "ssh_pub_keys",
+        "ips",
+        "partitionid",
+        "hostname",
+        "tags",
         "ha",
         "imageid",
-        "ssh_pub_keys",
         "networks",
-        "ips",
-        "projectid",
-        "partitionid",
-        "sizeid",
-        "tags",
-        "hostname",
-        "tenant"
+        "tenant",
+        "projectid"
       ],
       "properties": {
         "description": {
@@ -3225,16 +3231,16 @@
     },
     "v1.FirewallDetailResponse": {
       "required": [
-        "allocation",
-        "events",
-        "liveliness",
-        "size",
-        "hardware",
-        "partition",
         "tags",
         "state",
         "id",
-        "rackid"
+        "allocation",
+        "events",
+        "rackid",
+        "size",
+        "liveliness",
+        "hardware",
+        "partition"
       ],
       "properties": {
         "allocation": {
@@ -3349,9 +3355,15 @@
         "networkid",
         "ips",
         "vrf",
-        "primary"
+        "primary",
+        "asn"
       ],
       "properties": {
+        "asn": {
+          "description": "ASN number for this network in the bgp configuration",
+          "type": "integer",
+          "format": "int32"
+        },
         "ips": {
           "description": "the ip addresses of the allocated machine in this vrf",
           "type": "array",
@@ -3400,8 +3412,8 @@
     },
     "v1.IPDetailResponse": {
       "required": [
-        "projectid",
         "networkid",
+        "projectid",
         "ipaddress",
         "created",
         "changed"
@@ -3527,8 +3539,8 @@
     "v1.ImageDetailResponse": {
       "required": [
         "id",
-        "created",
-        "changed"
+        "changed",
+        "created"
       ],
       "properties": {
         "changed": {
@@ -3633,9 +3645,9 @@
     },
     "v1.NetworkCreateRequest": {
       "required": [
-        "nat",
         "primary",
-        "prefixes"
+        "prefixes",
+        "nat"
       ],
       "properties": {
         "description": {
@@ -3673,11 +3685,11 @@
     },
     "v1.NetworkDetailResponse": {
       "required": [
-        "prefixes",
-        "usage",
-        "nat",
         "primary",
+        "prefixes",
+        "nat",
         "id",
+        "usage",
         "created",
         "changed"
       ],
@@ -3895,8 +3907,8 @@
     },
     "v1.PartitionDetailResponse": {
       "required": [
-        "id",
         "bootconfig",
+        "id",
         "created",
         "changed"
       ],
