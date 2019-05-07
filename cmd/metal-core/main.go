@@ -168,10 +168,7 @@ func (a *app) initConsumer() {
 			}
 			return nil
 		},
-			receiverHandlerTimeout, func(err bus.TimeoutError) error {
-				zapup.MustRootLogger().Error("Timeout processing event", zap.Any("event", err.Event()))
-				return nil
-			}, 5)
+			receiverHandlerTimeout, timeoutHandler, 5)
 
 	_ = bus.NewConsumer(zapup.MustRootLogger(), a.Config.MQAddress).
 		// the hostname is used here as channel name
@@ -203,10 +200,12 @@ func (a *app) initConsumer() {
 			}
 			return nil
 		},
-			receiverHandlerTimeout, func(err bus.TimeoutError) error {
-				zapup.MustRootLogger().Error("Timeout processing event", zap.Any("event", err.Event()))
-				return nil
-			}, 1)
+			receiverHandlerTimeout, timeoutHandler, 1)
+}
+
+func timeoutHandler(err bus.TimeoutError) error {
+	zapup.MustRootLogger().Error("Timeout processing event", zap.Any("event", err.Event()))
+	return nil
 }
 
 func (a *app) registerSwitch() (*models.MetalSwitch, error) {
