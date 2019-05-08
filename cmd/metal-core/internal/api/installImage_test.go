@@ -2,14 +2,15 @@ package api
 
 import (
 	"errors"
+	"net/http"
+	"testing"
+
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 	"github.com/stretchr/testify/require"
-	"net/http"
-	"testing"
 )
 
 type installImageMock struct {
@@ -23,8 +24,8 @@ func (m *installImageMock) Submit(o *runtime.ClientOperation) (interface{}, erro
 	if m.simulateError {
 		return nil, errors.New("not found")
 	}
-	return &machine.WaitForAllocationOK{Payload: &models.MetalMachineWithPhoneHomeToken{
-		Machine: &models.MetalMachine{Allocation: &models.MetalMachineAllocation{Image: &models.MetalImage{}}}},
+	return &machine.WaitForAllocationOK{Payload: &models.V1MachineWaitResponse{
+		Allocation: &models.V1MachineAllocation{Image: &models.V1ImageListResponse{}}},
 	}, nil
 }
 

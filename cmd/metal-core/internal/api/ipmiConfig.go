@@ -1,13 +1,14 @@
 package api
 
 import (
+	"strconv"
+	"strings"
+
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"strconv"
-	"strings"
 )
 
 func (c *apiClient) IPMIConfig(machineID string) (*domain.IPMIConfig, error) {

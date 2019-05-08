@@ -45,20 +45,20 @@ func TestPXEBoot(t *testing.T) {
 	require.Equal(t, expected.CommandLine, bootResponse.CommandLine)
 }
 
-func (a *apiHandlerBootTest) FindMachines(mac string) (int, []*models.MetalMachine) {
+func (a *apiHandlerBootTest) FindMachines(mac string) (int, []*models.V1MachineListResponse) {
 	if mac == fakeMac {
-		return http.StatusOK, []*models.MetalMachine{}
+		return http.StatusOK, []*models.V1MachineListResponse{}
 	}
-	return http.StatusAlreadyReported, []*models.MetalMachine{
+	return http.StatusAlreadyReported, []*models.V1MachineListResponse{
 		{}, // Simulate at least one existing machine
 	}
 }
 
-func (a *apiHandlerBootTest) RegisterMachine(machineId string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.MetalMachine) {
+func (a *apiHandlerBootTest) RegisterMachine(machineId string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.V1MachineDetailResponse) {
 	return -1, nil
 }
 
-func (a *apiHandlerBootTest) InstallImage(machineId string) (int, *models.MetalMachineWithPhoneHomeToken) {
+func (a *apiHandlerBootTest) InstallImage(machineId string) (int, *models.V1MachineWaitResponse) {
 	return -1, nil
 }
 
@@ -66,6 +66,6 @@ func (a *apiHandlerBootTest) IPMIConfig(machineId string) (*domain.IPMIConfig, e
 	return nil, nil
 }
 
-func (a *apiHandlerBootTest) AddProvisioningEvent(machineID string, event *models.MetalProvisioningEvent) error {
+func (a *apiHandlerBootTest) AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error {
 	return nil
 }

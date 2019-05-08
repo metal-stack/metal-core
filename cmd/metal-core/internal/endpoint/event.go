@@ -1,9 +1,10 @@
 package endpoint
 
 import (
+	"net/http"
+
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/rest"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
-	"net/http"
 
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
@@ -13,7 +14,7 @@ import (
 func (h *endpointHandler) AddProvisioningEvent(request *restful.Request, response *restful.Response) {
 	zapup.MustRootLogger().Info("event")
 
-	event := &models.MetalProvisioningEvent{}
+	event := &models.V1MachineProvisioningEvent{}
 	err := request.ReadEntity(event)
 	if err != nil {
 		rest.Respond(response, http.StatusInternalServerError, nil)

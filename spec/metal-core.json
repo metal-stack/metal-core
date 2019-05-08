@@ -41,7 +41,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/models.MetalMachineWithPhoneHomeToken"
+              "$ref": "#/definitions/models.V1MachineWaitResponse"
             }
           },
           "304": {
@@ -59,7 +59,7 @@
           "default": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/models.MetalMachineWithPhoneHomeToken"
+              "$ref": "#/definitions/models.V1MachineWaitResponse"
             }
           }
         }
@@ -99,7 +99,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/models.MetalMachine"
+              "$ref": "#/definitions/models.V1MachineDetailResponse"
             }
           },
           "400": {
@@ -111,7 +111,7 @@
           "default": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/models.MetalMachine"
+              "$ref": "#/definitions/models.V1MachineDetailResponse"
             }
           }
         }
@@ -151,7 +151,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/models.MetalMachine"
+              "$ref": "#/definitions/models.V1MachineDetailResponse"
             }
           },
           "406": {
@@ -163,7 +163,7 @@
           "default": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/models.MetalMachine"
+              "$ref": "#/definitions/models.V1MachineDetailResponse"
             }
           }
         }
@@ -195,7 +195,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/models.MetalProvisioningEvent"
+              "$ref": "#/definitions/models.V1MachineProvisioningEvent"
             }
           }
         ],
@@ -285,10 +285,10 @@
     },
     "domain.MetalHammerRegisterMachineRequest": {
       "required": [
+        "cpu_cores",
         "disks",
         "memory",
         "nics",
-        "cpu_cores",
         "ipmi"
       ],
       "properties": {
@@ -299,12 +299,12 @@
         "disks": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/models.MetalBlockDevice"
+            "$ref": "#/definitions/models.V1MachineBlockDevice"
           }
         },
         "ipmi": {
           "description": "the IPMI connection configuration",
-          "$ref": "#/definitions/models.MetalIPMI"
+          "$ref": "#/definitions/models.V1MachineIPMI"
         },
         "memory": {
           "type": "integer",
@@ -313,7 +313,7 @@
         "nics": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/models.MetalNic"
+            "$ref": "#/definitions/models.V1MachineNic"
           }
         },
         "uuid": {
@@ -342,7 +342,88 @@
         }
       }
     },
-    "models.MetalBlockDevice": {
+    "models.V1ImageListResponse": {
+      "required": [
+        "features",
+        "id"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    "models.V1MachineAllocation": {
+      "required": [
+        "created",
+        "hostname",
+        "name",
+        "networks",
+        "project",
+        "ssh_pub_keys",
+        "tenant"
+      ],
+      "properties": {
+        "console_password": {
+          "type": "string"
+        },
+        "created": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "hostname": {
+          "type": "string"
+        },
+        "image": {
+          "$ref": "#/definitions/models.V1ImageListResponse"
+        },
+        "last_ping": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "networks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/models.V1MachineNetwork"
+          }
+        },
+        "project": {
+          "type": "string"
+        },
+        "ssh_pub_keys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tenant": {
+          "type": "string"
+        },
+        "user_data": {
+          "type": "string"
+        }
+      }
+    },
+    "models.V1MachineBlockDevice": {
       "required": [
         "name",
         "size"
@@ -357,45 +438,70 @@
         }
       }
     },
-    "models.MetalBootConfiguration": {
+    "models.V1MachineDetailResponse": {
       "required": [
-        "CommandLine",
-        "ImageURL",
-        "KernelURL"
+        "allocation",
+        "changed",
+        "created",
+        "events",
+        "hardware",
+        "id",
+        "liveliness",
+        "partition",
+        "rackid",
+        "size",
+        "state",
+        "tags"
       ],
       "properties": {
-        "CommandLine": {
+        "allocation": {
+          "$ref": "#/definitions/models.V1MachineAllocation"
+        },
+        "changed": {
           "type": "string"
         },
-        "ImageURL": {
+        "created": {
           "type": "string"
         },
-        "KernelURL": {
+        "description": {
           "type": "string"
+        },
+        "events": {
+          "$ref": "#/definitions/models.V1MachineRecentProvisioningEvents"
+        },
+        "hardware": {
+          "$ref": "#/definitions/models.V1MachineHardware"
+        },
+        "id": {
+          "type": "string"
+        },
+        "liveliness": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "partition": {
+          "$ref": "#/definitions/models.V1PartitionListResponse"
+        },
+        "rackid": {
+          "type": "string"
+        },
+        "size": {
+          "$ref": "#/definitions/models.V1SizeListResponse"
+        },
+        "state": {
+          "$ref": "#/definitions/models.V1MachineState"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
-    "models.MetalConstraint": {
-      "required": [
-        "Max",
-        "Min",
-        "Type"
-      ],
-      "properties": {
-        "Max": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "Min": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "Type": {
-          "type": "string"
-        }
-      }
-    },
-    "models.MetalFru": {
+    "models.V1MachineFru": {
       "properties": {
         "board_mfg": {
           "type": "string"
@@ -423,7 +529,37 @@
         }
       }
     },
-    "models.MetalIPMI": {
+    "models.V1MachineHardware": {
+      "required": [
+        "cpu_cores",
+        "disks",
+        "memory",
+        "nics"
+      ],
+      "properties": {
+        "cpu_cores": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "disks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/models.V1MachineBlockDevice"
+          }
+        },
+        "memory": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "nics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/models.V1MachineNic"
+          }
+        }
+      }
+    },
+    "models.V1MachineIPMI": {
       "required": [
         "address",
         "fru",
@@ -437,7 +573,7 @@
           "type": "string"
         },
         "fru": {
-          "$ref": "#/definitions/models.MetalFru"
+          "$ref": "#/definitions/models.V1MachineFru"
         },
         "interface": {
           "type": "string"
@@ -453,191 +589,11 @@
         }
       }
     },
-    "models.MetalImage": {
-      "required": [
-        "Features",
-        "URL",
-        "id"
-      ],
-      "properties": {
-        "Features": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "boolean"
-          }
-        },
-        "URL": {
-          "type": "string"
-        },
-        "changed": {
-          "type": "string"
-        },
-        "created": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        }
-      }
-    },
-    "models.MetalMachine": {
-      "required": [
-        "allocation",
-        "events",
-        "hardware",
-        "id",
-        "liveliness",
-        "partition",
-        "rackid",
-        "size",
-        "state",
-        "tags"
-      ],
-      "properties": {
-        "allocation": {
-          "$ref": "#/definitions/models.MetalMachineAllocation"
-        },
-        "changed": {
-          "type": "string"
-        },
-        "created": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "events": {
-          "$ref": "#/definitions/models.MetalRecentProvisioningEvents"
-        },
-        "hardware": {
-          "$ref": "#/definitions/models.MetalMachineHardware"
-        },
-        "id": {
-          "type": "string"
-        },
-        "liveliness": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "partition": {
-          "$ref": "#/definitions/models.MetalPartition"
-        },
-        "rackid": {
-          "type": "string"
-        },
-        "size": {
-          "$ref": "#/definitions/models.MetalSize"
-        },
-        "state": {
-          "$ref": "#/definitions/models.MetalMachineState"
-        },
-        "tags": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "models.MetalMachineAllocation": {
-      "required": [
-        "created",
-        "hostname",
-        "name",
-        "networks",
-        "project",
-        "ssh_pub_keys",
-        "tenant"
-      ],
-      "properties": {
-        "console_password": {
-          "type": "string"
-        },
-        "created": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "hostname": {
-          "type": "string"
-        },
-        "image": {
-          "$ref": "#/definitions/models.MetalImage"
-        },
-        "last_ping": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "networks": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/models.MetalMachineNetwork"
-          }
-        },
-        "project": {
-          "type": "string"
-        },
-        "ssh_pub_keys": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "tenant": {
-          "type": "string"
-        },
-        "user_data": {
-          "type": "string"
-        }
-      }
-    },
-    "models.MetalMachineHardware": {
-      "required": [
-        "cpu_cores",
-        "disks",
-        "memory",
-        "nics"
-      ],
-      "properties": {
-        "cpu_cores": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "disks": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/models.MetalBlockDevice"
-          }
-        },
-        "memory": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "nics": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/models.MetalNic"
-          }
-        }
-      }
-    },
-    "models.MetalMachineNetwork": {
+    "models.V1MachineNetwork": {
       "required": [
         "asn",
         "ips",
         "networkid",
-        "primary",
         "vrf"
       ],
       "properties": {
@@ -654,44 +610,13 @@
         "networkid": {
           "type": "string"
         },
-        "primary": {
-          "type": "boolean"
-        },
         "vrf": {
           "type": "integer",
           "format": "int64"
         }
       }
     },
-    "models.MetalMachineState": {
-      "required": [
-        "description",
-        "value"
-      ],
-      "properties": {
-        "description": {
-          "type": "string"
-        },
-        "value": {
-          "type": "string"
-        }
-      }
-    },
-    "models.MetalMachineWithPhoneHomeToken": {
-      "required": [
-        "machine",
-        "phone_home_token"
-      ],
-      "properties": {
-        "machine": {
-          "$ref": "#/definitions/models.MetalMachine"
-        },
-        "phone_home_token": {
-          "type": "string"
-        }
-      }
-    },
-    "models.MetalNic": {
+    "models.V1MachineNic": {
       "required": [
         "mac",
         "name",
@@ -707,50 +632,12 @@
         "neighbors": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/models.MetalNic"
+            "$ref": "#/definitions/models.V1MachineNic"
           }
-        },
-        "vrf": {
-          "type": "string"
         }
       }
     },
-    "models.MetalPartition": {
-      "required": [
-        "BootConfiguration",
-        "MgmtServiceAddress",
-        "ProjectNetworkPrefixLength",
-        "id"
-      ],
-      "properties": {
-        "BootConfiguration": {
-          "$ref": "#/definitions/models.MetalBootConfiguration"
-        },
-        "MgmtServiceAddress": {
-          "type": "string"
-        },
-        "ProjectNetworkPrefixLength": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "changed": {
-          "type": "string"
-        },
-        "created": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        }
-      }
-    },
-    "models.MetalProvisioningEvent": {
+    "models.V1MachineProvisioningEvent": {
       "required": [
         "event"
       ],
@@ -766,7 +653,7 @@
         }
       }
     },
-    "models.MetalRecentProvisioningEvents": {
+    "models.V1MachineRecentProvisioningEvents": {
       "required": [
         "incomplete_provisioning_cycles",
         "last_event_time",
@@ -782,28 +669,163 @@
         "log": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/models.MetalProvisioningEvent"
+            "$ref": "#/definitions/models.V1MachineProvisioningEvent"
           }
         }
       }
     },
-    "models.MetalSize": {
+    "models.V1MachineState": {
       "required": [
-        "Constraints",
-        "id"
+        "description",
+        "value"
       ],
       "properties": {
-        "Constraints": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/models.MetalConstraint"
-          }
+        "description": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "models.V1MachineWaitResponse": {
+      "required": [
+        "allocation",
+        "changed",
+        "created",
+        "events",
+        "hardware",
+        "id",
+        "liveliness",
+        "partition",
+        "phone_home_token",
+        "rackid",
+        "size",
+        "state",
+        "tags"
+      ],
+      "properties": {
+        "allocation": {
+          "$ref": "#/definitions/models.V1MachineAllocation"
         },
         "changed": {
           "type": "string"
         },
         "created": {
           "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "events": {
+          "$ref": "#/definitions/models.V1MachineRecentProvisioningEvents"
+        },
+        "hardware": {
+          "$ref": "#/definitions/models.V1MachineHardware"
+        },
+        "id": {
+          "type": "string"
+        },
+        "liveliness": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "partition": {
+          "$ref": "#/definitions/models.V1PartitionListResponse"
+        },
+        "phone_home_token": {
+          "type": "string"
+        },
+        "rackid": {
+          "type": "string"
+        },
+        "size": {
+          "$ref": "#/definitions/models.V1SizeListResponse"
+        },
+        "state": {
+          "$ref": "#/definitions/models.V1MachineState"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "models.V1PartitionBootConfiguration": {
+      "properties": {
+        "commandline": {
+          "type": "string"
+        },
+        "imageurl": {
+          "type": "string"
+        },
+        "kernelurl": {
+          "type": "string"
+        }
+      }
+    },
+    "models.V1PartitionListResponse": {
+      "required": [
+        "bootconfig",
+        "id"
+      ],
+      "properties": {
+        "bootconfig": {
+          "$ref": "#/definitions/models.V1PartitionBootConfiguration"
+        },
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "mgmtserviceaddress": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "projectnetworkprefixlength": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "models.V1SizeConstraint": {
+      "required": [
+        "max",
+        "min",
+        "type"
+      ],
+      "properties": {
+        "max": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "min": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "type": {
+          "type": "string"
+        }
+      }
+    },
+    "models.V1SizeListResponse": {
+      "required": [
+        "constraints",
+        "id"
+      ],
+      "properties": {
+        "constraints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/models.V1SizeConstraint"
+          }
         },
         "description": {
           "type": "string"

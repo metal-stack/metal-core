@@ -1,14 +1,15 @@
 package api
 
 import (
+	"net/http"
+
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"go.uber.org/zap"
-	"net/http"
 )
 
-func (c *apiClient) FindMachines(mac string) (int, []*models.MetalMachine) {
+func (c *apiClient) FindMachines(mac string) (int, []*models.V1MachineListResponse) {
 	params := machine.NewSearchMachineParams()
 	params.Mac = &mac
 

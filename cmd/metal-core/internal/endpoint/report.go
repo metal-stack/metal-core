@@ -1,12 +1,13 @@
 package endpoint
 
 import (
+	"net/http"
+
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/ipmi"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/rest"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
-	"net/http"
 
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
@@ -51,15 +52,13 @@ func (h *endpointHandler) Report(request *restful.Request, response *restful.Res
 		return
 	}
 
-	body := &models.MetalReportAllocation{
-		Success:         &report.Success,
+	body := &models.V1MachineFinalizeAllocationRequest{
 		ConsolePassword: &report.ConsolePassword,
-		Errormessage:    report.Message,
 	}
-	params := machine.NewAllocationReportParams()
+	params := machine.NewFinalizeAllocationParams()
 	params.ID = machineID
 	params.Body = body
-	_, err = h.MachineClient.AllocationReport(params)
+	_, err = h.MachineClient.FinalizeAllocation(params)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to report machine back to api.",
 			zap.String("machineID", machineID),
