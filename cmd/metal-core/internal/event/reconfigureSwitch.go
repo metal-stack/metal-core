@@ -28,6 +28,7 @@ func buildSwitcherConfig(conf *domain.Config, s *models.MetalSwitch) (*switcher.
 	c.ASN = asn
 	c.Loopback = conf.LoopbackIP
 	c.MetalCoreCIDR = fmt.Sprintf("%s/24", conf.IP)
+	c.AdditionalBridgeVIDs = conf.AdditionalBridgeVIDs
 	c.Neighbors = strings.Split(conf.SpineUplinks, ",")
 	c.Tenants = make(map[string]*switcher.Tenant)
 	c.Unprovisioned = []string{}
