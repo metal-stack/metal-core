@@ -97,6 +97,7 @@ type Config struct {
 	ReconfigureSwitch    bool     `required:"false" default:"false" desc:"let metal-core reconfigure the switch" split_words:"true"`
 	ManagementGateway    string   `required:"false" default:"192.168.0.1" desc:"the default gateway for the management network" split_words:"true"`
 	AdditionalBridgeVIDs []string `required:"false" desc:"additional vlan ids that should be configured at the vlan-aware bridge" envconfig:"additional_bridge_vids"`
+	BladePorts           []string `required:"false" desc:"switch ports that connect to blade centers and can not be used in production" split_words:"true"`
 }
 
 type BootConfig struct {

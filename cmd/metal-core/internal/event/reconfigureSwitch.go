@@ -33,6 +33,10 @@ func buildSwitcherConfig(conf *domain.Config, s *models.MetalSwitch) (*switcher.
 	c.Tenants = make(map[string]*switcher.Tenant)
 	c.Unprovisioned = []string{}
 	for _, nic := range s.Nics {
+		if contains(conf.BladePorts, *nic.Name) {
+			c.Unprovisioned = append(c.Unprovisioned, *nic.Name)
+			continue
+		}
 		tenant := &switcher.Tenant{}
 		if t, has := c.Tenants[nic.Vrf]; has {
 			tenant = t

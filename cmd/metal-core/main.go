@@ -87,6 +87,7 @@ func prepare() *app {
 		zap.Bool("ReconfigureSwitch", cfg.ReconfigureSwitch),
 		zap.String("ManagementGateway", cfg.ManagementGateway),
 		zap.Any("AdditionalBridgeVIDs", cfg.AdditionalBridgeVIDs),
+		zap.Any("BladePorts", cfg.BladePorts),
 	)
 
 	transport := client.New(fmt.Sprintf("%v:%d", cfg.ApiIP, cfg.ApiPort), "", nil)
@@ -205,7 +206,7 @@ func (a *app) registerSwitch() (*models.MetalSwitch, error) {
 	var nics []*models.MetalNic
 	var hostname string
 
-	if nics, err = getNics(); err != nil {
+	if nics, err = getNics(a.Config.BladePorts); err != nil {
 		return nil, errors.Wrap(err, "unable to get nics")
 	}
 
@@ -235,7 +236,7 @@ func (a *app) registerSwitch() (*models.MetalSwitch, error) {
 	}
 }
 
-func getNics() ([]*models.MetalNic, error) {
+func getNics(blacklist []string) ([]*models.MetalNic, error) {
 	var nics []*models.MetalNic
 	links, err := netlink.LinkList()
 	if err != nil {
@@ -245,6 +246,15 @@ func getNics() ([]*models.MetalNic, error) {
 		attrs := l.Attrs()
 		name := attrs.Name
 		mac := attrs.HardwareAddr.String()
+		for _, b := range blacklist {
+			if b == name {
+				zapup.MustRootLogger().Info("skip interface, because it is contained in the blacklist",
+					zap.String("interface", name),
+					zap.Any("blacklist", blacklist),
+				)
+				break
+			}
+		}
 		if !strings.HasPrefix(name, "swp") {
 			zapup.MustRootLogger().Info("skip interface, because only swp* switch ports are reported to metal-api",
 				zap.String("interface", name),
