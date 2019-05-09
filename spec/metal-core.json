@@ -594,6 +594,7 @@
         "asn",
         "ips",
         "networkid",
+        "primary",
         "vrf"
       ],
       "properties": {
@@ -609,6 +610,9 @@
         },
         "networkid": {
           "type": "string"
+        },
+        "primary": {
+          "type": "boolean"
         },
         "vrf": {
           "type": "integer",
