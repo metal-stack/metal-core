@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (c *apiClient) RegisterMachine(machineID string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.V1MachineDetailResponse) {
+func (c *apiClient) RegisterMachine(machineID string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse) {
 	partitionId := c.Config.PartitionID
 	rackId := c.Config.RackID
 	params := machine.NewRegisterMachineParams()

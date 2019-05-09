@@ -19,22 +19,22 @@ const (
 )
 
 type MachineExecCommand struct {
-	Target  *models.V1MachineDetailResponse `json:"target,omitempty"`
-	Command MachineCommand                  `json:"cmd,omitempty"`
-	Params  []string                        `json:"params,omitempty"`
+	Target  *models.V1MachineResponse `json:"target,omitempty"`
+	Command MachineCommand            `json:"cmd,omitempty"`
+	Params  []string                  `json:"params,omitempty"`
 }
 
 type MachineEvent struct {
-	Type EventType                       `json:"type,omitempty"`
-	Old  *models.V1MachineDetailResponse `json:"old,omitempty"`
-	New  *models.V1MachineDetailResponse `json:"new,omitempty"`
-	Cmd  *MachineExecCommand             `json:"cmd,omitempty"`
+	Type EventType                 `json:"type,omitempty"`
+	Old  *models.V1MachineResponse `json:"old,omitempty"`
+	New  *models.V1MachineResponse `json:"new,omitempty"`
+	Cmd  *MachineExecCommand       `json:"cmd,omitempty"`
 }
 
 type SwitchEvent struct {
-	Type     EventType                      `json:"type"`
-	Machine  models.V1MachineDetailResponse `json:"machine"`
-	Switches []models.MetalSwitch           `json:"switches"`
+	Type     EventType                `json:"type"`
+	Machine  models.V1MachineResponse `json:"machine"`
+	Switches []models.MetalSwitch     `json:"switches"`
 }
 
 // Some EventType enums.
@@ -46,8 +46,8 @@ const (
 )
 
 type APIClient interface {
-	FindMachines(mac string) (int, []*models.V1MachineListResponse)
-	RegisterMachine(machineId string, request *MetalHammerRegisterMachineRequest) (int, *models.V1MachineDetailResponse)
+	FindMachines(mac string) (int, []*models.V1MachineResponse)
+	RegisterMachine(machineId string, request *MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse)
 	InstallImage(machineId string) (int, *models.V1MachineWaitResponse)
 	IPMIConfig(machineId string) (*IPMIConfig, error)
 	AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error

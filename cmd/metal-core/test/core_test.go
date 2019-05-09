@@ -42,12 +42,12 @@ func TestLoggingMiddleware(t *testing.T) {
 	require.NotContains(t, logs, "level=error")
 }
 
-func (a *apiHandlerCoreTest) FindMachines(mac string) (int, []*models.V1MachineListResponse) {
+func (a *apiHandlerCoreTest) FindMachines(mac string) (int, []*models.V1MachineResponse) {
 	return -1, nil
 }
 
-func (a *apiHandlerCoreTest) RegisterMachine(machineId string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.V1MachineDetailResponse) {
-	machine := models.V1MachineDetailResponse{
+func (a *apiHandlerCoreTest) RegisterMachine(machineId string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse) {
+	machine := models.V1MachineResponse{
 		ID: &machineID,
 	}
 	return http.StatusOK, &machine

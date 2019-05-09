@@ -25,7 +25,7 @@ func (m *installImageMock) Submit(o *runtime.ClientOperation) (interface{}, erro
 		return nil, errors.New("not found")
 	}
 	return &machine.WaitForAllocationOK{Payload: &models.V1MachineWaitResponse{
-		Allocation: &models.V1MachineAllocation{Image: &models.V1ImageListResponse{}}},
+		Allocation: &models.V1MachineAllocation{Image: &models.V1ImageResponse{}}},
 	}, nil
 }
 

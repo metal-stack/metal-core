@@ -99,7 +99,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/models.V1MachineDetailResponse"
+              "$ref": "#/definitions/models.V1MachineResponse"
             }
           },
           "400": {
@@ -111,7 +111,7 @@
           "default": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/models.V1MachineDetailResponse"
+              "$ref": "#/definitions/models.V1MachineResponse"
             }
           }
         }
@@ -151,7 +151,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/models.V1MachineDetailResponse"
+              "$ref": "#/definitions/models.V1MachineResponse"
             }
           },
           "406": {
@@ -163,7 +163,7 @@
           "default": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/models.V1MachineDetailResponse"
+              "$ref": "#/definitions/models.V1MachineResponse"
             }
           }
         }
@@ -285,10 +285,10 @@
     },
     "domain.MetalHammerRegisterMachineRequest": {
       "required": [
-        "cpu_cores",
         "disks",
         "memory",
         "nics",
+        "cpu_cores",
         "ipmi"
       ],
       "properties": {
@@ -342,12 +342,20 @@
         }
       }
     },
-    "models.V1ImageListResponse": {
+    "models.V1ImageResponse": {
       "required": [
+        "changed",
+        "created",
         "features",
         "id"
       ],
       "properties": {
+        "changed": {
+          "type": "string"
+        },
+        "created": {
+          "type": "string"
+        },
         "description": {
           "type": "string"
         },
@@ -392,7 +400,7 @@
           "type": "string"
         },
         "image": {
-          "$ref": "#/definitions/models.V1ImageListResponse"
+          "$ref": "#/definitions/models.V1ImageResponse"
         },
         "last_ping": {
           "type": "string"
@@ -435,69 +443,6 @@
         "size": {
           "type": "integer",
           "format": "int64"
-        }
-      }
-    },
-    "models.V1MachineDetailResponse": {
-      "required": [
-        "allocation",
-        "changed",
-        "created",
-        "events",
-        "hardware",
-        "id",
-        "liveliness",
-        "partition",
-        "rackid",
-        "size",
-        "state",
-        "tags"
-      ],
-      "properties": {
-        "allocation": {
-          "$ref": "#/definitions/models.V1MachineAllocation"
-        },
-        "changed": {
-          "type": "string"
-        },
-        "created": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "events": {
-          "$ref": "#/definitions/models.V1MachineRecentProvisioningEvents"
-        },
-        "hardware": {
-          "$ref": "#/definitions/models.V1MachineHardware"
-        },
-        "id": {
-          "type": "string"
-        },
-        "liveliness": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "partition": {
-          "$ref": "#/definitions/models.V1PartitionListResponse"
-        },
-        "rackid": {
-          "type": "string"
-        },
-        "size": {
-          "$ref": "#/definitions/models.V1SizeListResponse"
-        },
-        "state": {
-          "$ref": "#/definitions/models.V1MachineState"
-        },
-        "tags": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
         }
       }
     },
@@ -678,6 +623,69 @@
         }
       }
     },
+    "models.V1MachineResponse": {
+      "required": [
+        "allocation",
+        "changed",
+        "created",
+        "events",
+        "hardware",
+        "id",
+        "liveliness",
+        "partition",
+        "rackid",
+        "size",
+        "state",
+        "tags"
+      ],
+      "properties": {
+        "allocation": {
+          "$ref": "#/definitions/models.V1MachineAllocation"
+        },
+        "changed": {
+          "type": "string"
+        },
+        "created": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "events": {
+          "$ref": "#/definitions/models.V1MachineRecentProvisioningEvents"
+        },
+        "hardware": {
+          "$ref": "#/definitions/models.V1MachineHardware"
+        },
+        "id": {
+          "type": "string"
+        },
+        "liveliness": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "partition": {
+          "$ref": "#/definitions/models.V1PartitionResponse"
+        },
+        "rackid": {
+          "type": "string"
+        },
+        "size": {
+          "$ref": "#/definitions/models.V1SizeResponse"
+        },
+        "state": {
+          "$ref": "#/definitions/models.V1MachineState"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "models.V1MachineState": {
       "required": [
         "description",
@@ -737,7 +745,7 @@
           "type": "string"
         },
         "partition": {
-          "$ref": "#/definitions/models.V1PartitionListResponse"
+          "$ref": "#/definitions/models.V1PartitionResponse"
         },
         "phone_home_token": {
           "type": "string"
@@ -746,7 +754,7 @@
           "type": "string"
         },
         "size": {
-          "$ref": "#/definitions/models.V1SizeListResponse"
+          "$ref": "#/definitions/models.V1SizeResponse"
         },
         "state": {
           "$ref": "#/definitions/models.V1MachineState"
@@ -772,14 +780,22 @@
         }
       }
     },
-    "models.V1PartitionListResponse": {
+    "models.V1PartitionResponse": {
       "required": [
         "bootconfig",
+        "changed",
+        "created",
         "id"
       ],
       "properties": {
         "bootconfig": {
           "$ref": "#/definitions/models.V1PartitionBootConfiguration"
+        },
+        "changed": {
+          "type": "string"
+        },
+        "created": {
+          "type": "string"
         },
         "description": {
           "type": "string"
@@ -819,17 +835,25 @@
         }
       }
     },
-    "models.V1SizeListResponse": {
+    "models.V1SizeResponse": {
       "required": [
+        "changed",
         "constraints",
+        "created",
         "id"
       ],
       "properties": {
+        "changed": {
+          "type": "string"
+        },
         "constraints": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/models.V1SizeConstraint"
           }
+        },
+        "created": {
+          "type": "string"
         },
         "description": {
           "type": "string"

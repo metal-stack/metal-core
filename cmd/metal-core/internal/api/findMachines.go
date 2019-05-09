@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (c *apiClient) FindMachines(mac string) (int, []*models.V1MachineListResponse) {
+func (c *apiClient) FindMachines(mac string) (int, []*models.V1MachineResponse) {
 	params := machine.NewSearchMachineParams()
 	params.Mac = &mac
 

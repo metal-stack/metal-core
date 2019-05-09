@@ -45,16 +45,16 @@ func TestPXEBoot(t *testing.T) {
 	require.Equal(t, expected.CommandLine, bootResponse.CommandLine)
 }
 
-func (a *apiHandlerBootTest) FindMachines(mac string) (int, []*models.V1MachineListResponse) {
+func (a *apiHandlerBootTest) FindMachines(mac string) (int, []*models.V1MachineResponse) {
 	if mac == fakeMac {
-		return http.StatusOK, []*models.V1MachineListResponse{}
+		return http.StatusOK, []*models.V1MachineResponse{}
 	}
-	return http.StatusAlreadyReported, []*models.V1MachineListResponse{
+	return http.StatusAlreadyReported, []*models.V1MachineResponse{
 		{}, // Simulate at least one existing machine
 	}
 }
 
-func (a *apiHandlerBootTest) RegisterMachine(machineId string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.V1MachineDetailResponse) {
+func (a *apiHandlerBootTest) RegisterMachine(machineId string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse) {
 	return -1, nil
 }
 

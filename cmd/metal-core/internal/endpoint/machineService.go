@@ -24,8 +24,8 @@ func (h *endpointHandler) NewMachineService() *restful.WebService {
 		Param(ws.PathParameter("id", "identifier of the machine").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Reads(domain.MetalHammerRegisterMachineRequest{}).
-		Writes(models.V1MachineDetailResponse{}).
-		Returns(http.StatusOK, "OK", models.V1MachineDetailResponse{}).
+		Writes(models.V1MachineResponse{}).
+		Returns(http.StatusOK, "OK", models.V1MachineResponse{}).
 		Returns(http.StatusBadRequest, "Bad request", nil).
 		Returns(http.StatusInternalServerError, "Error", nil))
 
@@ -34,7 +34,7 @@ func (h *endpointHandler) NewMachineService() *restful.WebService {
 		Doc("install machine by ID").
 		Param(ws.PathParameter("id", "identifier of the machine").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Writes(models.V1MachineDetailResponse{}).
+		Writes(models.V1MachineResponse{}).
 		Returns(http.StatusOK, "OK", models.V1MachineWaitResponse{}).
 		Returns(http.StatusNotModified, "No allocation", nil).
 		Returns(http.StatusNotFound, "Not Found", nil).
@@ -48,7 +48,7 @@ func (h *endpointHandler) NewMachineService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Reads(domain.Report{}).
 		Writes(domain.BootResponse{}).
-		Returns(http.StatusOK, "OK", models.V1MachineDetailResponse{}).
+		Returns(http.StatusOK, "OK", models.V1MachineResponse{}).
 		Returns(http.StatusNotAcceptable, "Not acceptable", nil).
 		Returns(http.StatusInternalServerError, "Error", nil))
 
