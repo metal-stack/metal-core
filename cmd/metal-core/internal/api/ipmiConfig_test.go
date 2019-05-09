@@ -28,7 +28,7 @@ func (m *ipmiDataMock) Submit(o *runtime.ClientOperation) (interface{}, error) {
 	}
 	address := fmt.Sprintf("%v:%v", m.host, m.port)
 	return &machine.IPMIDataOK{
-		Payload: &models.V1MachineIPMIResponse{
+		Payload: &models.V1MachineIPMI{
 			Address:   &address,
 			Interface: &m.iface,
 			User:      &m.user,
