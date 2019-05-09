@@ -33,6 +33,9 @@ import (
 	"go.uber.org/zap"
 )
 
+// timeout for the nsq handler methods
+const receiverHandlerTimeout = 15 * time.Second
+
 type app struct {
 	*domain.AppContext
 }
@@ -146,7 +149,7 @@ func (a *app) initConsumer() {
 	hostname, _ := os.Hostname()
 	_ = bus.NewConsumer(zapup.MustRootLogger(), a.Config.MQAddress).
 		MustRegister(a.Config.MachineTopic, "core").
-		Consume(domain.MachineEvent{}, func(message interface{}) error {
+		ConsumeWithTimeout(domain.MachineEvent{}, func(message interface{}) error {
 			evt := message.(*domain.MachineEvent)
 			zapup.MustRootLogger().Info("Got message",
 				zap.Any("event", evt),
@@ -167,14 +170,15 @@ func (a *app) initConsumer() {
 				}
 			}
 			return nil
-		}, 5)
+		},
+			receiverHandlerTimeout, timeoutHandler, 5)
 
 	_ = bus.NewConsumer(zapup.MustRootLogger(), a.Config.MQAddress).
 		// the hostname is used here as channel name
 		// this is intended so that messages in the switch topics get replicated
 		// to all channels leaf01, leaf02
 		MustRegister(a.Config.SwitchTopic, hostname).
-		Consume(domain.SwitchEvent{}, func(message interface{}) error {
+		ConsumeWithTimeout(domain.SwitchEvent{}, func(message interface{}) error {
 			evt := message.(*domain.SwitchEvent)
 			zapup.MustRootLogger().Info("Got message",
 				zap.Any("event", evt),
@@ -198,7 +202,13 @@ func (a *app) initConsumer() {
 				)
 			}
 			return nil
-		}, 1)
+		},
+			receiverHandlerTimeout, timeoutHandler, 1)
+}
+
+func timeoutHandler(err bus.TimeoutError) error {
+	zapup.MustRootLogger().Error("Timeout processing event", zap.Any("event", err.Event()))
+	return nil
 }
 
 func (a *app) registerSwitch() (*models.MetalSwitch, error) {
@@ -223,15 +233,14 @@ func (a *app) registerSwitch() (*models.MetalSwitch, error) {
 	}
 
 	for {
-		if ok, created, err := a.SwitchClient.RegisterSwitch(params); err == nil {
+		ok, created, err := a.SwitchClient.RegisterSwitch(params)
+		if err == nil {
 			if ok != nil {
 				return ok.Payload, nil
 			}
 			return created.Payload, nil
 		}
-		zapup.MustRootLogger().Error("unable to register at metal-api",
-			zap.Error(err),
-		)
+		zapup.MustRootLogger().Error("unable to register at metal-api", zap.Error(err))
 		time.Sleep(time.Second)
 	}
 }
