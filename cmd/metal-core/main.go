@@ -88,6 +88,8 @@ func prepare() *app {
 		zap.String("ASN", cfg.ASN),
 		zap.String("SpineUplinks", cfg.SpineUplinks),
 		zap.Bool("ReconfigureSwitch", cfg.ReconfigureSwitch),
+		zap.String("ManagementGateway", cfg.ManagementGateway),
+		zap.Any("AdditionalBridgeVIDs", cfg.AdditionalBridgeVIDs),
 	)
 
 	transport := client.New(fmt.Sprintf("%v:%d", cfg.ApiIP, cfg.ApiPort), "", nil)

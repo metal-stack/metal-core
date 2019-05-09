@@ -11,12 +11,13 @@ import (
 
 func TestBuildSwitcherConfig(t *testing.T) {
 	config := &domain.Config{
-		IP:           "10.255.255.2",
-		PartitionID:  "fra-equ01",
-		RackID:       "rack01",
-		ASN:          "420000001",
-		LoopbackIP:   "10.0.0.1",
-		SpineUplinks: "swp31,swp32",
+		IP:                   "10.255.255.2",
+		PartitionID:          "fra-equ01",
+		RackID:               "rack01",
+		ASN:                  "420000001",
+		LoopbackIP:           "10.0.0.1",
+		SpineUplinks:         "swp31,swp32",
+		AdditionalBridgeVIDs: []string{"201-256", "301-356"},
 	}
 	n1 := "swp1"
 	m1 := "00:00:00:00:00:01"
@@ -42,7 +43,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 	require.NotNil(t, actual)
 	expected := &switcher.Conf{
 		Loopback:      "10.0.0.1",
-		MetalCoreCIDR: "10.255.255.2",
+		MetalCoreCIDR: "10.255.255.2/24",
 		ASN:           420000001,
 		Neighbors:     []string{"swp31", "swp32"},
 		Unprovisioned: []string{"swp1"},
@@ -51,6 +52,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 			VLANID:    1001,
 			Neighbors: []string{"swp2"},
 		}},
+		AdditionalBridgeVIDs: []string{"201-256", "301-356"},
 	}
 	require.EqualValues(t, expected, actual)
 }
