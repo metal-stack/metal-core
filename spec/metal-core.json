@@ -568,6 +568,7 @@
       "required": [
         "asn",
         "ips",
+        "nat",
         "networkid",
         "primary",
         "vrf"
@@ -582,6 +583,9 @@
           "items": {
             "type": "string"
           }
+        },
+        "nat": {
+          "type": "boolean"
         },
         "networkid": {
           "type": "string"
