@@ -2165,7 +2165,8 @@
         "SSHPubKeys",
         "UserData",
         "ConsolePassword",
-        "PhoneHomeToken"
+        "PhoneHomeToken",
+        "Succeeded"
       ],
       "properties": {
         "ConsolePassword": {
@@ -2208,6 +2209,9 @@
           "items": {
             "type": "string"
           }
+        },
+        "Succeeded": {
+          "type": "boolean"
         },
         "Tenant": {
           "type": "string"
@@ -2506,11 +2510,11 @@
     "v1.FirewallCreateRequest": {
       "required": [
         "projectid",
-        "sizeid",
-        "ssh_pub_keys",
         "partitionid",
         "imageid",
         "tenant",
+        "ssh_pub_keys",
+        "sizeid",
         "networks"
       ],
       "properties": {
@@ -2583,18 +2587,18 @@
     },
     "v1.FirewallResponse": {
       "required": [
-        "id",
-        "tags",
-        "state",
-        "events",
-        "rackid",
-        "hardware",
-        "created",
-        "size",
         "allocation",
-        "liveliness",
         "partition",
-        "changed"
+        "size",
+        "hardware",
+        "rackid",
+        "liveliness",
+        "id",
+        "events",
+        "state",
+        "created",
+        "changed",
+        "tags"
       ],
       "properties": {
         "allocation": {
@@ -2668,8 +2672,8 @@
     },
     "v1.IPAllocateRequest": {
       "required": [
-        "networkid",
-        "projectid"
+        "projectid",
+        "networkid"
       ],
       "properties": {
         "description": {
@@ -2936,7 +2940,8 @@
         "project",
         "networks",
         "hostname",
-        "ssh_pub_keys"
+        "ssh_pub_keys",
+        "succeeded"
       ],
       "properties": {
         "console_password": {
@@ -2988,6 +2993,10 @@
           "items": {
             "type": "string"
           }
+        },
+        "succeeded": {
+          "description": "if the allocation of the machine was successful, this is set to true",
+          "type": "boolean"
         },
         "tenant": {
           "description": "the tenant that this machine is assigned to",
@@ -3299,17 +3308,17 @@
     "v1.MachineResponse": {
       "required": [
         "id",
-        "hardware",
-        "events",
-        "size",
         "allocation",
         "state",
         "liveliness",
+        "hardware",
+        "rackid",
+        "size",
+        "events",
         "tags",
         "partition",
-        "rackid",
-        "created",
-        "changed"
+        "changed",
+        "created"
       ],
       "properties": {
         "allocation": {
@@ -3399,18 +3408,18 @@
     },
     "v1.MachineWaitResponse": {
       "required": [
-        "liveliness",
-        "state",
-        "id",
-        "allocation",
         "tags",
         "created",
-        "partition",
-        "rackid",
         "hardware",
+        "allocation",
+        "partition",
         "changed",
-        "events",
+        "id",
+        "rackid",
         "size",
+        "liveliness",
+        "state",
+        "events",
         "phone_home_token"
       ],
       "properties": {
@@ -3488,9 +3497,9 @@
     },
     "v1.NetworkCreateRequest": {
       "required": [
-        "prefixes",
         "nat",
-        "primary"
+        "primary",
+        "prefixes"
       ],
       "properties": {
         "description": {
@@ -3533,8 +3542,8 @@
         "nat",
         "primary",
         "usage",
-        "created",
-        "changed"
+        "changed",
+        "created"
       ],
       "properties": {
         "changed": {
@@ -3834,8 +3843,8 @@
       "required": [
         "id",
         "constraints",
-        "changed",
-        "created"
+        "created",
+        "changed"
       ],
       "properties": {
         "changed": {
