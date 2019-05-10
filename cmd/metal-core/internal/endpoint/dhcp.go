@@ -20,8 +20,8 @@ func (e *endpointHandler) Dhcp(request *restful.Request, response *restful.Respo
 		zap.String("guid", guid),
 	)
 
-	eventType := models.MetalProvisioningEventEventPreparing // FIXME: replace with PXEboot as soon as available
-	event := &models.MetalProvisioningEvent{
+	eventType := string(ProvisioningEventPXEBooting)
+	event := &models.V1MachineProvisioningEvent{
 		Event:   &eventType,
 		Message: "machine sent extended dhcp request",
 	}
