@@ -1,4 +1,4 @@
-FROM golang:1.12-stretch as builder
+FROM registry.fi-ts.io/cloud-native/go-builder:latest as builder
 
 ENV CGO_ENABLED=0 \
     GO111MODULE=on \
@@ -8,10 +8,8 @@ ENV CGO_ENABLED=0 \
 WORKDIR /build/metal-core
 
 COPY . .
-RUN go mod download \
- && go get github.com/magefile/mage
 
-RUN mage build test
+RUN make test all
 
 FROM alpine:3.9
 LABEL maintainer FI-TS Devops <devops@f-i-ts.de>
