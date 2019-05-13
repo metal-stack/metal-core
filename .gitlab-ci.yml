@@ -5,7 +5,7 @@ merge-request:
   script: 
     - docker-make -x rule2,rule3 --summary --build-only metal-core-merge-request
   only:
-    - master
+    - merge_requests
 
 master:
   script:
