@@ -45,10 +45,10 @@ func (c *Conf) apply(tmpFile *os.File, dest *os.File, a Applier) error {
 	if err != nil {
 		return err
 	}
-	err = a.Validate(tmpFile.Name())
-	if err != nil {
-		return err
-	}
+	//err = a.Validate(tmpFile.Name())
+	//if err != nil {
+	//	return err
+	//}
 	err = os.Rename(tmpFile.Name(), dest.Name())
 	if err != nil {
 		return err
