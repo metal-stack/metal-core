@@ -18,9 +18,9 @@ type Report struct {
 }
 
 type MetalHammerRegisterMachineRequest struct {
-	models.MetalMachineHardware
-	UUID string            `json:"uuid,omitempty" description:"the uuid of the machine to register"`
-	IPMI *models.MetalIPMI `json:"ipmi" description:"the IPMI connection configuration"`
+	models.V1MachineHardware
+	UUID string                `json:"uuid,omitempty" description:"the uuid of the machine to register"`
+	IPMI *models.V1MachineIPMI `json:"ipmi" description:"the IPMI connection configuration"`
 }
 
 func (r *MetalHammerRegisterMachineRequest) IPMIAddress() string {

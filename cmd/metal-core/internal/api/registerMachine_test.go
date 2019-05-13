@@ -15,7 +15,7 @@ import (
 
 type registerMachineMock struct {
 	simulateError                                    bool
-	rdr                                              *models.MetalRegisterMachine
+	rdr                                              *models.V1MachineRegisterRequest
 	actualmachineID, actualPartitionID, actualRackID string
 }
 

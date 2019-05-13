@@ -2,6 +2,8 @@ package endpoint
 
 import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
+	"git.f-i-ts.de/cloud-native/metallib/httperrors"
+
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
 	"net/http"
@@ -21,8 +23,16 @@ func (h *endpointHandler) NewBootService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(domain.BootResponse{}).
 		Returns(http.StatusOK, "OK", domain.BootResponse{}).
-		Returns(http.StatusAccepted, "Accepted", domain.BootResponse{}).
-		Returns(http.StatusBadRequest, "Bad request", domain.BootResponse{}))
+		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
 
-	return ws
+	ws.Route(ws.GET("/v1/dhcp/{id}").
+		To(h.Dhcp).
+		Doc("extended dhcp pxeboot request from a machine with guid").
+		Param(ws.PathParameter("id", "the guid of the machine").DataType("string")).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(domain.BootResponse{}).
+		Returns(http.StatusOK, "OK", domain.BootResponse{}).
+		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
+
+	return ws 
 }

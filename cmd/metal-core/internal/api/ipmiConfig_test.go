@@ -3,14 +3,15 @@ package api
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"testing"
+
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 	"github.com/stretchr/testify/require"
-	"strconv"
-	"testing"
 )
 
 type ipmiDataMock struct {
@@ -27,7 +28,7 @@ func (m *ipmiDataMock) Submit(o *runtime.ClientOperation) (interface{}, error) {
 	}
 	address := fmt.Sprintf("%v:%v", m.host, m.port)
 	return &machine.IPMIDataOK{
-		Payload: &models.MetalIPMI{
+		Payload: &models.V1MachineIPMI{
 			Address:   &address,
 			Interface: &m.iface,
 			User:      &m.user,

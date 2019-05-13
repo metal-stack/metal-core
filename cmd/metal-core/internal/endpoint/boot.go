@@ -30,13 +30,19 @@ func (e *endpointHandler) Boot(request *restful.Request, response *restful.Respo
 		if len(machines) == 1 {
 			if machines[0].Allocation == nil {
 				rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse(e))
-			} else {
-				zapup.MustRootLogger().Error("machine tries to pxe boot which is not expected.",
-					zap.Int("statusCode", sc),
-					zap.String("MAC", mac),
-					zap.String("machineID", *machines[0].ID),
-				)
+				return
 			}
+			// Machine was already in the installation phase but crashed before finalizing allocation
+			// we can boot into metal-hammer again.
+			if !*machines[0].Allocation.Succeeded {
+				rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse(e))
+				return
+			}
+			zapup.MustRootLogger().Error("machine tries to pxe boot which is not expected.",
+				zap.Int("statusCode", sc),
+				zap.String("MAC", mac),
+				zap.String("machineID", *machines[0].ID),
+			)
 			return
 		}
 

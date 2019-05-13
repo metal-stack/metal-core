@@ -133,9 +133,9 @@ func prepare() *app {
 	}
 
 	app.BootConfig = &domain.BootConfig{
-		MetalHammerImageURL:    *s.Partition.Bootconfig.Imageurl,
-		MetalHammerKernelURL:   *s.Partition.Bootconfig.Kernelurl,
-		MetalHammerCommandLine: *s.Partition.Bootconfig.Commandline,
+		MetalHammerImageURL:    *s.Partition.BootConfiguration.ImageURL,
+		MetalHammerKernelURL:   *s.Partition.BootConfiguration.KernelURL,
+		MetalHammerCommandLine: *s.Partition.BootConfiguration.CommandLine,
 	}
 
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
@@ -156,17 +156,17 @@ func (a *app) initConsumer() {
 			)
 			switch evt.Type {
 			case domain.Delete:
-				a.EventHandler().FreeMachine(evt.Old)
+				a.EventHandler().FreeMachine(*evt.Old.ID)
 			case domain.Command:
 				switch evt.Cmd.Command {
 				case domain.MachineOnCmd:
-					a.EventHandler().PowerOnMachine(evt.Cmd.Target, evt.Cmd.Params)
+					a.EventHandler().PowerOnMachine(*evt.Cmd.Target.ID, evt.Cmd.Params)
 				case domain.MachineOffCmd:
-					a.EventHandler().PowerOffMachine(evt.Cmd.Target, evt.Cmd.Params)
+					a.EventHandler().PowerOffMachine(*evt.Cmd.Target.ID, evt.Cmd.Params)
 				case domain.MachineResetCmd:
-					a.EventHandler().PowerResetMachine(evt.Cmd.Target, evt.Cmd.Params)
+					a.EventHandler().PowerResetMachine(*evt.Cmd.Target.ID, evt.Cmd.Params)
 				case domain.MachineBiosCmd:
-					a.EventHandler().BootBiosMachine(evt.Cmd.Target, evt.Cmd.Params)
+					a.EventHandler().BootBiosMachine(*evt.Cmd.Target.ID, evt.Cmd.Params)
 				}
 			}
 			return nil

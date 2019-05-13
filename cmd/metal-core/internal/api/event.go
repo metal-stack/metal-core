@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (c *apiClient) AddProvisioningEvent(machineID string, event *models.MetalProvisioningEvent) error {
+func (c *apiClient) AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error {
 	zapup.MustRootLogger().Info("event", zap.String("machineID", machineID))
 
 	params := machine.NewAddProvisioningEventParams()
