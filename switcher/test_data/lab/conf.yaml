@@ -1,0 +1,23 @@
+---
+name: leaf01
+loopback: 10.0.0.10
+asn: 4200000010
+devmode: true
+metalcorecidr: 10.255.255.2/24
+eth0:
+  addresscidr: 192.168.0.11
+  gateway: 192.168.0.254
+neighbors:
+  - swp31
+  - swp32
+  - swp3
+unprovisioned:
+  - swp4
+  - swp5
+tenants:
+  vrf104001:
+    vlanid: 4001
+    vni: 104001
+    neighbors:
+      - swp1
+      - swp2

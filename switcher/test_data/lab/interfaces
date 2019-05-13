@@ -1,0 +1,106 @@
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*.intf
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+    address 10.0.0.10/32
+
+# The primary network interface
+auto eth0
+iface eth0
+    address 192.168.0.11
+    gateway 192.168.0.254
+    vrf mgmt
+
+auto vagrant
+iface vagrant inet dhcp
+
+auto mgmt
+iface mgmt
+    address 127.0.0.1/8
+    vrf-table auto
+
+auto swp31
+iface swp31
+    mtu 9216
+
+auto swp32
+iface swp32
+    mtu 9216
+
+auto swp3
+iface swp3
+    mtu 9216
+
+auto bridge
+iface bridge
+    bridge-ports vni104000 swp4 swp5 vni104001
+    bridge-vids 4000 4001
+    bridge-vlan-aware yes
+
+# Tenants
+
+auto vrf104001
+iface vrf104001
+    vrf-table auto
+
+auto swp1
+iface swp1
+    mtu 9000
+    post-up sysctl -w net.ipv6.conf.swp1.disable_ipv6=0
+    vrf vrf104001
+
+auto swp2
+iface swp2
+    mtu 9000
+    post-up sysctl -w net.ipv6.conf.swp2.disable_ipv6=0
+    vrf vrf104001
+
+auto vlan4001
+iface vlan4001
+    mtu 9000
+    vlan-id 4001
+    vlan-raw-device bridge
+    vrf vrf104001
+
+auto vni104001
+iface vni104001
+    mtu 9000
+    bridge-access 4001
+    bridge-arp-nd-suppress on
+    bridge-learning off
+    mstpctl-bpduguard yes
+    mstpctl-portbpdufilter yes
+    vxlan-id 104001
+    vxlan-local-tunnelip 10.0.0.10
+
+# PXE-Config
+auto vlan4000
+iface vlan4000
+    mtu 9000
+    address 10.255.255.2/24
+    vlan-id 4000
+    vlan-raw-device bridge
+
+auto vni104000
+iface vni104000
+    mtu 9000
+    bridge-access 4000
+    bridge-learning off
+    mstpctl-bpduguard yes
+    mstpctl-portbpdufilter yes
+    vxlan-id 104000
+    vxlan-local-tunnelip 10.0.0.10
+
+auto swp4
+iface swp4
+    mtu 9000
+    bridge-access 4000
+
+auto swp5
+iface swp5
+    mtu 9000
+    bridge-access 4000

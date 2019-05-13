@@ -21,6 +21,10 @@ localbuild: bin/$(BINARY)
 spec:
 	bin/metal-core spec spec/metal-core.json
 
+.PHONY: test-switcher
+test-switcher:
+	cd ./switcher && ./validate.sh && cd -
+
 .PHONY: swagger-prepare
 swagger-prepare:
 	rm -rf client/*
