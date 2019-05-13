@@ -2253,6 +2253,7 @@
     "metal.MachineNetwork": {
       "required": [
         "NetworkID",
+        "Prefixes",
         "IPs",
         "Vrf",
         "Primary",
@@ -2275,6 +2276,12 @@
         },
         "NetworkID": {
           "type": "string"
+        },
+        "Prefixes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "Primary": {
           "type": "boolean"
@@ -2513,12 +2520,12 @@
     },
     "v1.FirewallCreateRequest": {
       "required": [
-        "projectid",
         "imageid",
         "ssh_pub_keys",
         "tenant",
         "partitionid",
         "sizeid",
+        "projectid",
         "networks"
       ],
       "properties": {
@@ -2591,18 +2598,18 @@
     },
     "v1.FirewallResponse": {
       "required": [
+        "id",
+        "liveliness",
         "size",
-        "partition",
-        "state",
-        "tags",
+        "allocation",
         "rackid",
+        "tags",
+        "state",
+        "hardware",
         "created",
         "changed",
-        "id",
-        "allocation",
-        "liveliness",
-        "events",
-        "hardware"
+        "partition",
+        "events"
       ],
       "properties": {
         "allocation": {
@@ -2676,8 +2683,8 @@
     },
     "v1.IPAllocateRequest": {
       "required": [
-        "projectid",
-        "networkid"
+        "networkid",
+        "projectid"
       ],
       "properties": {
         "description": {
@@ -2700,8 +2707,9 @@
     },
     "v1.IPResponse": {
       "required": [
-        "networkid",
         "projectid",
+        "networkid",
+        "machineid",
         "ipaddress",
         "created",
         "changed"
@@ -2728,6 +2736,10 @@
           "type": "string",
           "uniqueItems": true
         },
+        "machineid": {
+          "description": "the machine this ip address belongs to, empty if not strong coupled",
+          "type": "string"
+        },
         "name": {
           "description": "a readable name for this entity",
           "type": "string"
@@ -2744,7 +2756,8 @@
     },
     "v1.IPUpdateRequest": {
       "required": [
-        "ipaddress"
+        "ipaddress",
+        "machineid"
       ],
       "properties": {
         "description": {
@@ -2755,6 +2768,10 @@
           "description": "the address (ipv4 or ipv6) of this ip",
           "type": "string",
           "uniqueItems": true
+        },
+        "machineid": {
+          "description": "the machine this ip address belongs to, empty if not strong coupled",
+          "type": "string"
         },
         "name": {
           "description": "a readable name for this entity",
@@ -3167,6 +3184,7 @@
     "v1.MachineNetwork": {
       "required": [
         "networkid",
+        "prefixes",
         "ips",
         "vrf",
         "asn",
@@ -3193,6 +3211,13 @@
         "networkid": {
           "description": "the networkID of the allocated machine in this vrf",
           "type": "string"
+        },
+        "prefixes": {
+          "description": "the prefixes of this network",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "primary": {
           "description": "indicates whether this network is the primary project network",
@@ -3317,17 +3342,17 @@
     "v1.MachineResponse": {
       "required": [
         "id",
+        "tags",
+        "rackid",
+        "size",
         "hardware",
+        "allocation",
+        "state",
+        "partition",
         "liveliness",
         "events",
-        "tags",
-        "partition",
-        "rackid",
-        "state",
-        "size",
-        "allocation",
-        "created",
-        "changed"
+        "changed",
+        "created"
       ],
       "properties": {
         "allocation": {
@@ -3419,16 +3444,16 @@
       "required": [
         "id",
         "hardware",
+        "partition",
+        "tags",
+        "state",
+        "changed",
+        "rackid",
+        "allocation",
         "liveliness",
         "size",
-        "rackid",
-        "events",
-        "state",
-        "tags",
-        "partition",
-        "changed",
-        "allocation",
         "created",
+        "events",
         "phone_home_token"
       ],
       "properties": {
@@ -3506,9 +3531,9 @@
     },
     "v1.NetworkCreateRequest": {
       "required": [
+        "prefixes",
         "nat",
-        "primary",
-        "prefixes"
+        "primary"
       ],
       "properties": {
         "description": {
@@ -3541,15 +3566,20 @@
         "projectid": {
           "description": "the project this network belongs to, can be empty if globally available",
           "type": "string"
+        },
+        "vrf": {
+          "description": "the vrf this network is associated with",
+          "type": "integer",
+          "format": "integer"
         }
       }
     },
     "v1.NetworkResponse": {
       "required": [
         "id",
-        "nat",
         "primary",
         "prefixes",
+        "nat",
         "usage",
         "created",
         "changed"
@@ -3606,6 +3636,11 @@
         "usage": {
           "description": "usage of ips and prefixes in this network",
           "$ref": "#/definitions/v1.NetworkUsage"
+        },
+        "vrf": {
+          "description": "the vrf this network is associated with",
+          "type": "integer",
+          "format": "integer"
         }
       }
     },
@@ -3719,8 +3754,8 @@
       "required": [
         "id",
         "bootconfig",
-        "created",
-        "changed"
+        "changed",
+        "created"
       ],
       "properties": {
         "bootconfig": {
