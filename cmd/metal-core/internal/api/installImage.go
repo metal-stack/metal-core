@@ -10,7 +10,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (c *apiClient) InstallImage(machineID string) (int, *models.MetalMachineWithPhoneHomeToken) {
+func (c *apiClient) InstallImage(machineID string) (int, *models.V1MachineWaitResponse) {
 	params := machine.NewWaitForAllocationParams()
 	params.ID = machineID
 
@@ -34,7 +34,7 @@ func (c *apiClient) InstallImage(machineID string) (int, *models.MetalMachineWit
 
 	m := ok.Payload
 
-	if m == nil || m.Machine == nil || m.Machine.Allocation == nil || m.Machine.Allocation.Image == nil {
+	if m == nil || m.Allocation == nil || m.Allocation.Image == nil {
 		zapup.MustRootLogger().Error("Got unexpected response from Metal-APIs wait endpoint",
 			zap.String("machineID", machineID),
 			zap.Any("machineWithToken", m),

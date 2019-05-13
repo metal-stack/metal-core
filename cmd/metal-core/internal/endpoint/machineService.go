@@ -1,12 +1,13 @@
 package endpoint
 
 import (
-	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"net/http"
+
+	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"github.com/emicklei/go-restful"
-	"github.com/emicklei/go-restful-openapi"
+	restfulspec "github.com/emicklei/go-restful-openapi"
 )
 
 func (h *endpointHandler) NewMachineService() *restful.WebService {
@@ -23,8 +24,8 @@ func (h *endpointHandler) NewMachineService() *restful.WebService {
 		Param(ws.PathParameter("id", "identifier of the machine").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Reads(domain.MetalHammerRegisterMachineRequest{}).
-		Writes(models.MetalMachine{}).
-		Returns(http.StatusOK, "OK", models.MetalMachine{}).
+		Writes(models.V1MachineResponse{}).
+		Returns(http.StatusOK, "OK", models.V1MachineResponse{}).
 		Returns(http.StatusBadRequest, "Bad request", nil).
 		Returns(http.StatusInternalServerError, "Error", nil))
 
@@ -33,8 +34,8 @@ func (h *endpointHandler) NewMachineService() *restful.WebService {
 		Doc("install machine by ID").
 		Param(ws.PathParameter("id", "identifier of the machine").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Writes(models.MetalMachine{}).
-		Returns(http.StatusOK, "OK", models.MetalMachineWithPhoneHomeToken{}).
+		Writes(models.V1MachineResponse{}).
+		Returns(http.StatusOK, "OK", models.V1MachineWaitResponse{}).
 		Returns(http.StatusNotModified, "No allocation", nil).
 		Returns(http.StatusNotFound, "Not Found", nil).
 		Returns(http.StatusExpectationFailed, "Incomplete machine", nil).
@@ -47,7 +48,7 @@ func (h *endpointHandler) NewMachineService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Reads(domain.Report{}).
 		Writes(domain.BootResponse{}).
-		Returns(http.StatusOK, "OK", models.MetalMachine{}).
+		Returns(http.StatusOK, "OK", models.V1MachineResponse{}).
 		Returns(http.StatusNotAcceptable, "Not acceptable", nil).
 		Returns(http.StatusInternalServerError, "Error", nil))
 
@@ -56,7 +57,7 @@ func (h *endpointHandler) NewMachineService() *restful.WebService {
 		Doc("adds a machine provisioning event").
 		Param(ws.PathParameter("id", "identifier of the machine").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads(models.MetalProvisioningEvent{}).
+		Reads(models.V1MachineProvisioningEvent{}).
 		Returns(http.StatusOK, "OK", nil).
 		Returns(http.StatusNotFound, "Not Found", nil).
 		DefaultReturns("Unexpected Error", nil))

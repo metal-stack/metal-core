@@ -27,8 +27,8 @@ func TestLoggingMiddleware(t *testing.T) {
 	payload := &domain.MetalHammerRegisterMachineRequest{
 		UUID: machineID,
 	}
-	payload.Nics = []*models.MetalNic{}
-	payload.Disks = []*models.MetalBlockDevice{}
+	payload.Nics = []*models.V1MachineNic{}
+	payload.Disks = []*models.V1MachineBlockDevice{}
 
 	// when
 	sc := doPost(fmt.Sprintf("/machine/register/%v", machineID), payload)
@@ -42,24 +42,24 @@ func TestLoggingMiddleware(t *testing.T) {
 	require.NotContains(t, logs, "level=error")
 }
 
-func (a *apiHandlerCoreTest) FindMachines(mac string) (int, []*models.MetalMachine) {
+func (a *apiHandlerCoreTest) FindMachines(mac string) (int, []*models.V1MachineResponse) {
 	return -1, nil
 }
 
-func (a *apiHandlerCoreTest) RegisterMachine(machineId string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.MetalMachine) {
-	machine := models.MetalMachine{
+func (a *apiHandlerCoreTest) RegisterMachine(machineId string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse) {
+	machine := models.V1MachineResponse{
 		ID: &machineID,
 	}
 	return http.StatusOK, &machine
 }
 
-func (a *apiHandlerCoreTest) InstallImage(machineId string) (int, *models.MetalMachineWithPhoneHomeToken) {
+func (a *apiHandlerCoreTest) InstallImage(machineId string) (int, *models.V1MachineWaitResponse) {
 	return -1, nil
 }
 
 func (a *apiHandlerCoreTest) IPMIConfig(machineId string) (*domain.IPMIConfig, error) {
 	return nil, nil
 }
-func (a *apiHandlerCoreTest) AddProvisioningEvent(machineID string, event *models.MetalProvisioningEvent) error {
+func (a *apiHandlerCoreTest) AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error {
 	return nil
 }

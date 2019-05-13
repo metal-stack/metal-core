@@ -19,22 +19,22 @@ const (
 )
 
 type MachineExecCommand struct {
-	Target  *models.MetalMachine `json:"target,omitempty"`
-	Command MachineCommand       `json:"cmd,omitempty"`
-	Params  []string             `json:"params,omitempty"`
+	Target  *models.V1MachineResponse `json:"target,omitempty"`
+	Command MachineCommand            `json:"cmd,omitempty"`
+	Params  []string                  `json:"params,omitempty"`
 }
 
 type MachineEvent struct {
-	Type EventType            `json:"type,omitempty"`
-	Old  *models.MetalMachine `json:"old,omitempty"`
-	New  *models.MetalMachine `json:"new,omitempty"`
-	Cmd  *MachineExecCommand  `json:"cmd,omitempty"`
+	Type EventType                 `json:"type,omitempty"`
+	Old  *models.V1MachineResponse `json:"old,omitempty"`
+	New  *models.V1MachineResponse `json:"new,omitempty"`
+	Cmd  *MachineExecCommand       `json:"cmd,omitempty"`
 }
 
 type SwitchEvent struct {
-	Type     EventType            `json:"type"`
-	Machine  models.MetalMachine  `json:"machine"`
-	Switches []models.MetalSwitch `json:"switches"`
+	Type     EventType                `json:"type"`
+	Machine  models.V1MachineResponse `json:"machine"`
+	Switches []models.MetalSwitch     `json:"switches"`
 }
 
 // Some EventType enums.
@@ -46,11 +46,11 @@ const (
 )
 
 type APIClient interface {
-	FindMachines(mac string) (int, []*models.MetalMachine)
-	RegisterMachine(machineId string, request *MetalHammerRegisterMachineRequest) (int, *models.MetalMachine)
-	InstallImage(machineId string) (int, *models.MetalMachineWithPhoneHomeToken)
+	FindMachines(mac string) (int, []*models.V1MachineResponse)
+	RegisterMachine(machineId string, request *MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse)
+	InstallImage(machineId string) (int, *models.V1MachineWaitResponse)
 	IPMIConfig(machineId string) (*IPMIConfig, error)
-	AddProvisioningEvent(machineID string, event *models.MetalProvisioningEvent) error
+	AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error
 }
 
 type Server interface {
@@ -68,11 +68,11 @@ type EndpointHandler interface {
 }
 
 type EventHandler interface {
-	FreeMachine(machine *models.MetalMachine)
-	PowerOnMachine(machine *models.MetalMachine, params []string)
-	PowerOffMachine(machine *models.MetalMachine, params []string)
-	PowerResetMachine(machine *models.MetalMachine, params []string)
-	BootBiosMachine(machine *models.MetalMachine, params []string)
+	FreeMachine(machineID string)
+	PowerOnMachine(machineID string, params []string)
+	PowerOffMachine(machineID string, params []string)
+	PowerResetMachine(machineID string, params []string)
+	BootBiosMachine(machineID string, params []string)
 	ReconfigureSwitch(switchID string) error
 }
 
@@ -109,7 +109,7 @@ type BootConfig struct {
 type IPMIConfig struct {
 	Hostname string
 	Port     int
-	Ipmi     *models.MetalIPMI
+	Ipmi     *models.V1MachineIPMI
 }
 
 func (i *IPMIConfig) Address() string {

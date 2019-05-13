@@ -2,6 +2,7 @@ package ipmi
 
 import (
 	"fmt"
+
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	goipmi "github.com/vmware/goipmi"
