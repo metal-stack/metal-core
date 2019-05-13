@@ -9,6 +9,7 @@ import (
 type Applier interface {
 	Render(w io.Writer) error
 	Reload() error
+	Validate(f string) error
 }
 
 func render(t string, d interface{}, w io.Writer) error {

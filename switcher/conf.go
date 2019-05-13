@@ -2,17 +2,15 @@ package switcher
 
 import (
 	"bufio"
-	"bytes"
-	"fmt"
-	"io/ioutil"
-	"log"
 	"os"
-	"os/exec"
-	"path/filepath"
 
 	"git.f-i-ts.de/cloud-native/metallib/vlan"
-	"github.com/pkg/errors"
 )
+
+const FrrTmp = "/etc/frr/frr.tmp"
+const Frr = "/etc/frr/frr.conf"
+const IfacesTmp = "/etc/network/interfaces.tmp"
+const Ifaces = "/etc/network/interfaces"
 
 // FillVLANIDs fills the given configuration object with switch-local VLAN-IDs
 // if they are present in the given VLAN-Mapping
@@ -37,36 +35,8 @@ Tloop:
 	return nil
 }
 
-func (c *Conf) validate() error {
-	tmpfile, err := ioutil.TempFile("", "frr.conf")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.Remove(tmpfile.Name()) // clean up
-
-	frr := NewFrrApplier(c)
-	err = c._write(tmpfile, frr)
-	if err != nil {
-		return errors.Wrap(err, "could not write frr.conf for validation")
-	}
-
-	f, err := filepath.Abs(tmpfile.Name())
-	if err != nil {
-		return errors.Wrap(err, "could not find absolute path")
-	}
-	var outbuf, errbuf bytes.Buffer
-	cmd := exec.Command("vtysh", "-C", "-f", f)
-	cmd.Stdout = &outbuf
-	cmd.Stderr = &errbuf
-	err = cmd.Run()
-	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("validation returned error; stdout: %v, stderr: %v", outbuf.String(), errbuf.String()))
-	}
-	return nil
-}
-
-func (c *Conf) _write(f *os.File, a Applier) error {
-	w := bufio.NewWriter(f)
+func (c *Conf) apply(tmpFile *os.File, dest *os.File, a Applier) error {
+	w := bufio.NewWriter(tmpFile)
 	err := a.Render(w)
 	if err != nil {
 		return err
@@ -75,54 +45,60 @@ func (c *Conf) _write(f *os.File, a Applier) error {
 	if err != nil {
 		return err
 	}
+	err = a.Validate(tmpFile.Name())
+	if err != nil {
+		return err
+	}
+	err = os.Rename(tmpFile.Name(), dest.Name())
+	if err != nil {
+		return err
+	}
+	err = a.Reload()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func (c *Conf) applyFrr() error {
-	f, err := os.OpenFile("/etc/frr/frr.conf", os.O_WRONLY|os.O_TRUNC, 0644)
+	tmp, err := os.OpenFile(FrrTmp, os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		return err
+	}
+	defer tmp.Close()
+
+	f, err := os.OpenFile(Frr, os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
 	frr := NewFrrApplier(c)
-	err = c._write(f, frr)
+	err = c.apply(tmp, f, frr)
 	if err != nil {
 		return err
 	}
-
-	err = frr.Reload()
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
 func (c *Conf) applyInterfaces() error {
-	f, err := os.OpenFile("/etc/network/interfaces", os.O_WRONLY|os.O_TRUNC, 0644)
+	tmp, err := os.OpenFile(IfacesTmp, os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		return err
+	}
+	defer tmp.Close()
+
+	f, err := os.OpenFile(Ifaces, os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	w := bufio.NewWriter(f)
-	frr := NewInterfacesApplier(c)
-	err = frr.Render(w)
+	ifaces := NewInterfacesApplier(c)
+	err = c.apply(tmp, f, ifaces)
 	if err != nil {
 		return err
 	}
-
-	err = w.Flush()
-	if err != nil {
-		return err
-	}
-
-	err = frr.Reload()
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
