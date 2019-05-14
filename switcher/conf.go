@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"os"
 
-	"git.f-i-ts.de/cloud-native/metallib/vlan"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/vlan"
 )
 
 const FrrTmp = "/etc/frr/frr.tmp"

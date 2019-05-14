@@ -5,7 +5,7 @@ import (
 
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
-	"git.f-i-ts.de/cloud-native/metallib/switcher"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/switcher"
 	"github.com/stretchr/testify/require"
 )
 
