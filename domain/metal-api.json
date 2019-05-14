@@ -2531,11 +2531,11 @@
     },
     "v1.FirewallCreateRequest": {
       "required": [
+        "tenant",
         "projectid",
         "partitionid",
-        "sizeid",
         "imageid",
-        "tenant",
+        "sizeid",
         "ssh_pub_keys",
         "networks"
       ],
@@ -2609,18 +2609,18 @@
     },
     "v1.FirewallResponse": {
       "required": [
-        "allocation",
-        "events",
-        "id",
-        "partition",
-        "rackid",
-        "changed",
-        "liveliness",
-        "hardware",
         "state",
+        "liveliness",
+        "partition",
+        "size",
         "tags",
+        "id",
+        "rackid",
         "created",
-        "size"
+        "hardware",
+        "events",
+        "changed",
+        "allocation"
       ],
       "properties": {
         "allocation": {
@@ -2767,8 +2767,8 @@
     },
     "v1.IPUpdateRequest": {
       "required": [
-        "ipaddress",
-        "machineid"
+        "machineid",
+        "ipaddress"
       ],
       "properties": {
         "description": {
@@ -3193,6 +3193,7 @@
       }
     },
     "v1.MachineNetwork": {
+      "description": "prefixes that are reachable within this network",
       "required": [
         "networkid",
         "prefixes",
@@ -3200,13 +3201,22 @@
         "vrf",
         "asn",
         "primary",
-        "nat"
+        "nat",
+        "destinationprefixes",
+        "underlay"
       ],
       "properties": {
         "asn": {
           "description": "ASN number for this network in the bgp configuration",
           "type": "integer",
           "format": "int64"
+        },
+        "destinationprefixes": {
+          "description": "the destination prefixes of this network",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "ips": {
           "description": "the ip addresses of the allocated machine in this vrf",
@@ -3232,6 +3242,10 @@
         },
         "primary": {
           "description": "indicates whether this network is the primary project network",
+          "type": "boolean"
+        },
+        "underlay": {
+          "description": "if set to true, this network can be used for underlay communication",
           "type": "boolean"
         },
         "vrf": {
@@ -3353,15 +3367,15 @@
     "v1.MachineResponse": {
       "required": [
         "id",
-        "partition",
-        "rackid",
-        "hardware",
-        "state",
-        "tags",
-        "size",
-        "allocation",
-        "liveliness",
         "events",
+        "tags",
+        "rackid",
+        "size",
+        "hardware",
+        "allocation",
+        "state",
+        "liveliness",
+        "partition",
         "created",
         "changed"
       ],
@@ -3453,18 +3467,18 @@
     },
     "v1.MachineWaitResponse": {
       "required": [
-        "id",
-        "rackid",
-        "hardware",
-        "events",
-        "size",
-        "allocation",
-        "liveliness",
-        "tags",
-        "changed",
         "state",
-        "created",
+        "id",
+        "size",
+        "hardware",
+        "changed",
         "partition",
+        "allocation",
+        "tags",
+        "created",
+        "rackid",
+        "events",
+        "liveliness",
         "phone_home_token"
       ],
       "properties": {
@@ -3542,11 +3556,11 @@
     },
     "v1.NetworkCreateRequest": {
       "required": [
-        "underlay",
         "prefixes",
         "destinationprefixes",
         "nat",
-        "primary"
+        "primary",
+        "underlay"
       ],
       "properties": {
         "description": {
