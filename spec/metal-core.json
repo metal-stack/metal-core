@@ -311,10 +311,10 @@
     },
     "domain.MetalHammerRegisterMachineRequest": {
       "required": [
-        "nics",
         "cpu_cores",
         "disks",
         "memory",
+        "nics",
         "ipmi"
       ],
       "properties": {

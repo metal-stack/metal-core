@@ -2255,15 +2255,23 @@
         "NetworkID",
         "Prefixes",
         "IPs",
+        "DestinationPrefixes",
         "Vrf",
         "Primary",
         "ASN",
-        "Nat"
+        "Nat",
+        "Underlay"
       ],
       "properties": {
         "ASN": {
           "type": "integer",
           "format": "int64"
+        },
+        "DestinationPrefixes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "IPs": {
           "type": "array",
@@ -2284,6 +2292,9 @@
           }
         },
         "Primary": {
+          "type": "boolean"
+        },
+        "Underlay": {
           "type": "boolean"
         },
         "Vrf": {
@@ -2520,12 +2531,12 @@
     },
     "v1.FirewallCreateRequest": {
       "required": [
-        "imageid",
-        "ssh_pub_keys",
-        "tenant",
+        "projectid",
         "partitionid",
         "sizeid",
-        "projectid",
+        "imageid",
+        "tenant",
+        "ssh_pub_keys",
         "networks"
       ],
       "properties": {
@@ -2598,18 +2609,18 @@
     },
     "v1.FirewallResponse": {
       "required": [
-        "id",
-        "liveliness",
-        "size",
         "allocation",
-        "rackid",
-        "tags",
-        "state",
-        "hardware",
-        "created",
-        "changed",
+        "events",
+        "id",
         "partition",
-        "events"
+        "rackid",
+        "changed",
+        "liveliness",
+        "hardware",
+        "state",
+        "tags",
+        "created",
+        "size"
       ],
       "properties": {
         "allocation": {
@@ -2683,8 +2694,8 @@
     },
     "v1.IPAllocateRequest": {
       "required": [
-        "networkid",
-        "projectid"
+        "projectid",
+        "networkid"
       ],
       "properties": {
         "description": {
@@ -2709,8 +2720,8 @@
       "required": [
         "projectid",
         "networkid",
-        "machineid",
         "ipaddress",
+        "machineid",
         "created",
         "changed"
       ],
@@ -3342,17 +3353,17 @@
     "v1.MachineResponse": {
       "required": [
         "id",
-        "tags",
-        "rackid",
-        "size",
-        "hardware",
-        "allocation",
-        "state",
         "partition",
+        "rackid",
+        "hardware",
+        "state",
+        "tags",
+        "size",
+        "allocation",
         "liveliness",
         "events",
-        "changed",
-        "created"
+        "created",
+        "changed"
       ],
       "properties": {
         "allocation": {
@@ -3443,17 +3454,17 @@
     "v1.MachineWaitResponse": {
       "required": [
         "id",
-        "hardware",
-        "partition",
-        "tags",
-        "state",
-        "changed",
         "rackid",
+        "hardware",
+        "events",
+        "size",
         "allocation",
         "liveliness",
-        "size",
+        "tags",
+        "changed",
+        "state",
         "created",
-        "events",
+        "partition",
         "phone_home_token"
       ],
       "properties": {
@@ -3531,7 +3542,9 @@
     },
     "v1.NetworkCreateRequest": {
       "required": [
+        "underlay",
         "prefixes",
+        "destinationprefixes",
         "nat",
         "primary"
       ],
@@ -3539,6 +3552,13 @@
         "description": {
           "description": "a description for this entity",
           "type": "string"
+        },
+        "destinationprefixes": {
+          "description": "the destination prefixes of this network",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "name": {
           "description": "a readable name for this entity",
@@ -3567,6 +3587,10 @@
           "description": "the project this network belongs to, can be empty if globally available",
           "type": "string"
         },
+        "underlay": {
+          "description": "if set to true, this network can be used for underlay communication",
+          "type": "boolean"
+        },
         "vrf": {
           "description": "the vrf this network is associated with",
           "type": "integer",
@@ -3577,9 +3601,11 @@
     "v1.NetworkResponse": {
       "required": [
         "id",
-        "primary",
         "prefixes",
+        "destinationprefixes",
         "nat",
+        "primary",
+        "underlay",
         "usage",
         "created",
         "changed"
@@ -3600,6 +3626,13 @@
         "description": {
           "description": "a description for this entity",
           "type": "string"
+        },
+        "destinationprefixes": {
+          "description": "the destination prefixes of this network",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "id": {
           "description": "the unique ID of this entity",
@@ -3632,6 +3665,10 @@
         "projectid": {
           "description": "the project this network belongs to, can be empty if globally available",
           "type": "string"
+        },
+        "underlay": {
+          "description": "if set to true, this network can be used for underlay communication",
+          "type": "boolean"
         },
         "usage": {
           "description": "usage of ips and prefixes in this network",
