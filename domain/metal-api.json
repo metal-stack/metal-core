@@ -663,10 +663,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "$ref": "#/definitions/service.emptyBody"
             }
           }
         ],
@@ -999,10 +996,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "$ref": "#/definitions/service.emptyBody"
             }
           }
         ],
@@ -1048,10 +1042,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "$ref": "#/definitions/service.emptyBody"
             }
           }
         ],
@@ -1097,10 +1088,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "$ref": "#/definitions/service.emptyBody"
             }
           }
         ],
@@ -1146,10 +1134,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "$ref": "#/definitions/service.emptyBody"
             }
           }
         ],
@@ -2529,14 +2514,15 @@
         }
       }
     },
+    "service.emptyBody": {},
     "v1.FirewallCreateRequest": {
       "required": [
-        "tenant",
         "projectid",
-        "partitionid",
-        "imageid",
         "sizeid",
+        "imageid",
         "ssh_pub_keys",
+        "tenant",
+        "partitionid",
         "networks"
       ],
       "properties": {
@@ -2609,18 +2595,18 @@
     },
     "v1.FirewallResponse": {
       "required": [
-        "state",
-        "liveliness",
-        "partition",
-        "size",
-        "tags",
-        "id",
-        "rackid",
-        "created",
         "hardware",
         "events",
-        "changed",
-        "allocation"
+        "partition",
+        "created",
+        "state",
+        "liveliness",
+        "rackid",
+        "allocation",
+        "tags",
+        "id",
+        "size",
+        "changed"
       ],
       "properties": {
         "allocation": {
@@ -3367,15 +3353,15 @@
     "v1.MachineResponse": {
       "required": [
         "id",
-        "events",
-        "tags",
         "rackid",
         "size",
+        "liveliness",
+        "tags",
+        "partition",
         "hardware",
         "allocation",
         "state",
-        "liveliness",
-        "partition",
+        "events",
         "created",
         "changed"
       ],
@@ -3468,17 +3454,17 @@
     "v1.MachineWaitResponse": {
       "required": [
         "state",
-        "id",
-        "size",
-        "hardware",
-        "changed",
         "partition",
-        "allocation",
-        "tags",
+        "changed",
         "created",
-        "rackid",
-        "events",
+        "id",
         "liveliness",
+        "rackid",
+        "hardware",
+        "size",
+        "events",
+        "tags",
+        "allocation",
         "phone_home_token"
       ],
       "properties": {
@@ -3556,11 +3542,12 @@
     },
     "v1.NetworkCreateRequest": {
       "required": [
-        "prefixes",
+        "id",
         "destinationprefixes",
         "nat",
         "primary",
-        "underlay"
+        "underlay",
+        "prefixes"
       ],
       "properties": {
         "description": {
@@ -3573,6 +3560,11 @@
           "items": {
             "type": "string"
           }
+        },
+        "id": {
+          "description": "the unique ID of this entity, auto-generated if left empty",
+          "type": "string",
+          "uniqueItems": true
         },
         "name": {
           "description": "a readable name for this entity",
@@ -3615,11 +3607,11 @@
     "v1.NetworkResponse": {
       "required": [
         "id",
+        "primary",
+        "underlay",
         "prefixes",
         "destinationprefixes",
         "nat",
-        "primary",
-        "underlay",
         "usage",
         "created",
         "changed"
@@ -3805,8 +3797,8 @@
       "required": [
         "id",
         "bootconfig",
-        "changed",
-        "created"
+        "created",
+        "changed"
       ],
       "properties": {
         "bootconfig": {
@@ -3938,8 +3930,8 @@
       "required": [
         "id",
         "constraints",
-        "created",
-        "changed"
+        "changed",
+        "created"
       ],
       "properties": {
         "changed": {
