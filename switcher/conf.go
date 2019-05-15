@@ -61,7 +61,7 @@ func (c *Conf) apply(tmpFile *os.File, dest *os.File, a Applier) error {
 }
 
 func (c *Conf) applyFrr() error {
-	tmp, err := os.OpenFile(FrrTmp, os.O_WRONLY|os.O_TRUNC, 0644)
+	tmp, err := os.OpenFile(FrrTmp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func (c *Conf) applyFrr() error {
 }
 
 func (c *Conf) applyInterfaces() error {
-	tmp, err := os.OpenFile(IfacesTmp, os.O_WRONLY|os.O_TRUNC, 0644)
+	tmp, err := os.OpenFile(IfacesTmp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
