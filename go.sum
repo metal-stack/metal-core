@@ -1,5 +1,5 @@
-git.f-i-ts.de/cloud-native/metallib v0.0.0-20190509111849-ab859f7d560d h1:x1zml5bTiTaHOfljEWKAn5ep27bfmFSrcmCA1+VvskI=
-git.f-i-ts.de/cloud-native/metallib v0.0.0-20190509111849-ab859f7d560d/go.mod h1:vn93/0R0djiIlwy5ltglxlHi/e7EdQ5MdwG+Ur27X6I=
+git.f-i-ts.de/cloud-native/metallib v0.0.0-20190515075319-f3c8434a6c30 h1:nCf5TOxCLCBHsMHN5K5CZySNUuiEPy8W86Q3oFn5nIk=
+git.f-i-ts.de/cloud-native/metallib v0.0.0-20190515075319-f3c8434a6c30/go.mod h1:yuJJbXuQmM9s1OigNUqFAIUhwpsTt8tjx03EGzUuFLs=
 github.com/PuerkitoBio/purell v1.1.0 h1:rmGxhojJlM0tuKtfdvliR84CFHljx9ag64t2xmVkjK4=
 github.com/PuerkitoBio/purell v1.1.0/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/purell v1.1.1 h1:WEQqlqaGbrPkxLJWfBwQmfEAE1Z7ONdDLqrN38tNFfI=
@@ -10,8 +10,6 @@ github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf h1:eg0MeVzs
 github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf/go.mod h1:lB+ZfQJz7igIIfQNfa7Ml4HSf2uFQQRzpGGRXenZAgY=
 github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a h1:idn718Q4B6AGu/h5Sxe66HYVdqdGu2l9Iebqhi/AEoA=
 github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a/go.mod h1:lB+ZfQJz7igIIfQNfa7Ml4HSf2uFQQRzpGGRXenZAgY=
-github.com/coreos/go-systemd v0.0.0-20190212144455-93d5ec2c7f76 h1:FE783w8WFh+Rvg+7bZ5g8p7gP4SeVS4AoNwkvazlsBg=
-github.com/coreos/go-systemd v0.0.0-20190212144455-93d5ec2c7f76/go.mod h1:F5haX7vjVVG0kc13fIWeqUViNPyEJxv/OmvnBo0Yme4=
 github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e h1:Wf6HqHfScWJN9/ZjdUKyjop4mf3Qdd+1TvvltAvM3m8=
 github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e/go.mod h1:F5haX7vjVVG0kc13fIWeqUViNPyEJxv/OmvnBo0Yme4=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -93,8 +91,8 @@ github.com/go-openapi/validate v0.18.0 h1:PVXYcP1GkTl+XIAJnyJxOmK6CSG5Q1UcvoCvNO
 github.com/go-openapi/validate v0.18.0/go.mod h1:Uh4HdOzKt19xGIGm1qHf/ofbX1YQ4Y+MYsct2VUrAJ4=
 github.com/go-openapi/validate v0.19.0 h1:SF5vyj6PBFM6D1cw2NJIFrlS8Su2YKk6ADPPjAH70Bw=
 github.com/go-openapi/validate v0.19.0/go.mod h1:Uh4HdOzKt19xGIGm1qHf/ofbX1YQ4Y+MYsct2VUrAJ4=
-github.com/godbus/dbus v0.0.0-20181025153459-66d97aec3384 h1:xNwo3yd3PZYRDAr/Dz0sBfDWY6El2xPCKJrwJVfMFjY=
-github.com/godbus/dbus v0.0.0-20181025153459-66d97aec3384/go.mod h1:/YcGZj5zSblfDWMMoOzV4fas9FZnQYTkDnsGvmh2Grw=
+github.com/godbus/dbus v0.0.0-20181101234600-2ff6f7ffd60f h1:zlOR3rOlPAVvtfuxGKoghCmop5B0TRyu/ZieziZuGiM=
+github.com/godbus/dbus v0.0.0-20181101234600-2ff6f7ffd60f/go.mod h1:/YcGZj5zSblfDWMMoOzV4fas9FZnQYTkDnsGvmh2Grw=
 github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db h1:woRePGFeVFfLKN/pOkfl+p/TAqKOfFu+7KPlMVpok/w=
 github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db/go.mod h1:/XxbfmMg8lxefKM7IXC3fBNl/7bRcc72aCRzEWrmP2Q=
 github.com/golang/snappy v0.0.1 h1:Qgr9rKW7uDUkrbSmQeiDsGa8SjGyCOGtuasMWwvp2P4=
@@ -172,8 +170,6 @@ golang.org/x/net v0.0.0-20190324223953-e3b2ff56ed87/go.mod h1:t9HGtf8HONx5eT2rtn
 golang.org/x/net v0.0.0-20190509222800-a4d6f7feada5 h1:6M3SDHlHHDCx2PcQw3S4KsR170vGqDhJDOmpVd4Hjak=
 golang.org/x/net v0.0.0-20190509222800-a4d6f7feada5/go.mod h1:t9HGtf8HONx5eT2rtn7q6eTqICYqUVnKs3thJo3Qplg=
 golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
-golang.org/x/sys v0.0.0-20190228124157-a34e9553db1e h1:ZytStCyV048ZqDsWHiYDdoI2Vd4msMcrDECFxS+tL9c=
-golang.org/x/sys v0.0.0-20190228124157-a34e9553db1e/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20190321052220-f7bb7a8bee54/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20190509141414-a5b02f93d862 h1:rM0ROo5vb9AdYJi1110yjWGMej9ITfKddS89P3Fkhug=
 golang.org/x/sys v0.0.0-20190509141414-a5b02f93d862/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
