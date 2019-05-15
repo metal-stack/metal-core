@@ -83,6 +83,7 @@ func prepare() *app {
 		zap.String("API-IP", cfg.ApiIP),
 		zap.Int("API-Port", cfg.ApiPort),
 		zap.String("MQAddress", cfg.MQAddress),
+		zap.String("MQLogLevel", cfg.MQLogLevel),
 		zap.String("MachineTopic", cfg.MachineTopic),
 		zap.String("LoopbackIP", cfg.LoopbackIP),
 		zap.String("ASN", cfg.ASN),
@@ -145,11 +146,28 @@ func prepare() *app {
 	return app
 }
 
+func mapLogLevel(level string) bus.Level {
+
+	switch strings.ToLower(level) {
+	case "debug":
+		return bus.Debug
+	case "info":
+		return bus.Info
+	case "warn":
+		return bus.Warning
+	case "error":
+		return bus.Error
+	default:
+		return bus.Info
+	}
+}
+
 func (a *app) initConsumer() {
 	hostname, _ := os.Hostname()
 	_ = bus.NewConsumer(zapup.MustRootLogger(), a.Config.MQAddress).
+		With(bus.LogLevel(mapLogLevel(a.Config.MQLogLevel))).
 		MustRegister(a.Config.MachineTopic, "core").
-		ConsumeWithTimeout(domain.MachineEvent{}, func(message interface{}) error {
+		Consume(domain.MachineEvent{}, func(message interface{}) error {
 			evt := message.(*domain.MachineEvent)
 			zapup.MustRootLogger().Info("Got message",
 				zap.Any("event", evt),
@@ -170,15 +188,15 @@ func (a *app) initConsumer() {
 				}
 			}
 			return nil
-		},
-			receiverHandlerTimeout, timeoutHandler, 5)
+		}, 5, bus.Timeout(receiverHandlerTimeout, timeoutHandler))
 
 	_ = bus.NewConsumer(zapup.MustRootLogger(), a.Config.MQAddress).
+		With(bus.LogLevel(mapLogLevel(a.Config.MQLogLevel))).
 		// the hostname is used here as channel name
 		// this is intended so that messages in the switch topics get replicated
 		// to all channels leaf01, leaf02
 		MustRegister(a.Config.SwitchTopic, hostname).
-		ConsumeWithTimeout(domain.SwitchEvent{}, func(message interface{}) error {
+		Consume(domain.SwitchEvent{}, func(message interface{}) error {
 			evt := message.(*domain.SwitchEvent)
 			zapup.MustRootLogger().Info("Got message",
 				zap.Any("event", evt),
@@ -202,8 +220,7 @@ func (a *app) initConsumer() {
 				)
 			}
 			return nil
-		},
-			receiverHandlerTimeout, timeoutHandler, 1)
+		}, 1, bus.Timeout(receiverHandlerTimeout, timeoutHandler))
 }
 
 func timeoutHandler(err bus.TimeoutError) error {

@@ -89,6 +89,7 @@ type Config struct {
 	ApiIP                string   `required:"false" default:"localhost" desc:"set metal api address" envconfig:"metal_api_ip"`
 	ApiPort              int      `required:"false" default:"8080" desc:"set metal api port" envconfig:"metal_api_port"`
 	MQAddress            string   `required:"false" default:"localhost:4161" desc:"set the MQ server address" envconfig:"mq_address"`
+	MQLogLevel           string   `required:"false" default:"info" desc:"sets the MQ loglevel (debug, info, warn, error)" envconfig:"mq_loglevel"`
 	MachineTopic         string   `required:"false" default:"machine" desc:"set the machine topic name" split_words:"true"`
 	SwitchTopic          string   `required:"false" default:"switch" desc:"set the switch topic name" split_words:"true"`
 	LoopbackIP           string   `required:"false" default:"10.0.0.11" desc:"set the loopback ip address that is used with BGP unnumbered" split_words:"true"`

@@ -1,10 +1,9 @@
 package switcher
 
 import (
-	"testing"
-
-	"git.f-i-ts.de/cloud-native/metallib/vlan"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/vlan"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestFillVLANIDs(t *testing.T) {
