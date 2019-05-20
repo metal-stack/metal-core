@@ -27,14 +27,14 @@ func buildSwitcherConfig(conf *domain.Config, s *models.MetalSwitch) (*switcher.
 	}
 	c.ASN = asn
 	c.Loopback = conf.LoopbackIP
-	c.MetalCoreCIDR = fmt.Sprintf("%s/24", conf.IP)
+	c.MetalCoreCIDR = conf.CIDR
 	c.AdditionalBridgeVIDs = conf.AdditionalBridgeVIDs
 	c.Neighbors = strings.Split(conf.SpineUplinks, ",")
 	c.Tenants = make(map[string]*switcher.Tenant)
 	c.Unprovisioned = []string{}
-	c.BladePorts = conf.BladePorts
+	c.BladePorts = conf.AdditionalBridgePorts
 	for _, nic := range s.Nics {
-		if contains(conf.BladePorts, *nic.Name) {
+		if contains(conf.AdditionalBridgePorts, *nic.Name) {
 			continue
 		}
 		tenant := &switcher.Tenant{}
@@ -118,7 +118,8 @@ func fillEth0Info(c *switcher.Conf, gw string, devMode bool) error {
 	}
 
 	ip := addrs[0].IP
-	c.Eth0.AddressCIDR = ip.String() + "/24"
+	len, _ := addrs[0].IPNet.Mask.Size()
+	c.Eth0.AddressCIDR = fmt.Sprintf("%s/%d", ip.String(), len)
 	c.Eth0.Gateway = gw
 	c.DevMode = devMode
 	return nil
