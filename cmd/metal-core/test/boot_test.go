@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
 	"testing"
@@ -25,12 +26,13 @@ func TestPXEBoot(t *testing.T) {
 
 	restful.Add(e.NewBootService())
 
+	c, _, _ := net.ParseCIDR(cfg.CIDR)
 	expected := domain.BootResponse{
 		Kernel: "https://blobstore.fi-ts.io/metal/images/metal-hammer/metal-hammer-kernel",
 		InitRamDisk: []string{
 			"https://blobstore.fi-ts.io/metal/images/metal-hammer/metal-hammer-initrd.img.lz4",
 		},
-		CommandLine: fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d METAL_API_URL=http://%v:%d", cfg.IP, cfg.Port, cfg.ApiIP, cfg.ApiPort),
+		CommandLine: fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d METAL_API_URL=http://%v:%d", c.String(), cfg.Port, cfg.ApiIP, cfg.ApiPort),
 	}
 
 	// when

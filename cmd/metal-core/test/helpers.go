@@ -4,16 +4,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	ep "git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/endpoint"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
-	"git.f-i-ts.de/cloud-native/metallib/zapup"
-	"github.com/emicklei/go-restful"
-	"github.com/kelseyhightower/envconfig"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
+
+	ep "git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/endpoint"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
+	"git.f-i-ts.de/cloud-native/metallib/zapup"
+	"github.com/emicklei/go-restful"
+	"github.com/kelseyhightower/envconfig"
 )
 
 const logFilename = "output.log"
@@ -25,7 +26,7 @@ var (
 
 func mockAPIEndpoint(apiClient func(ctx *domain.AppContext) domain.APIClient) domain.EndpointHandler {
 	_ = os.Setenv(zapup.KeyOutput, logFilename)
-	_ = os.Setenv("METAL_CORE_IP", "test-host")
+	_ = os.Setenv("METAL_CORE_CIDR", "10.0.0.11/24")
 	_ = os.Setenv("METAL_CORE_PARTITION_ID", "FRA")
 	_ = os.Setenv("METAL_CORE_RACK_ID", "Vagrant Rack 1")
 
