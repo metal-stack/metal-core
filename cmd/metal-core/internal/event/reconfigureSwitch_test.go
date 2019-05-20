@@ -11,7 +11,7 @@ import (
 
 func TestBuildSwitcherConfig(t *testing.T) {
 	config := &domain.Config{
-		IP:                   "10.255.255.2",
+		CIDR:                 "10.255.255.2/24",
 		PartitionID:          "fra-equ01",
 		RackID:               "rack01",
 		ASN:                  "420000001",

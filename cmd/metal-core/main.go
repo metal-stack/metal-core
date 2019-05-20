@@ -72,7 +72,7 @@ func prepare() *app {
 	)
 
 	zapup.MustRootLogger().Info("Configuration",
-		zap.String("IP", cfg.IP),
+		zap.String("CIDR", cfg.CIDR),
 		zap.String("PartitionID", cfg.PartitionID),
 		zap.String("RackID", cfg.RackID),
 		zap.String("BindAddress", cfg.BindAddress),
@@ -89,6 +89,7 @@ func prepare() *app {
 		zap.String("ASN", cfg.ASN),
 		zap.String("SpineUplinks", cfg.SpineUplinks),
 		zap.Bool("ReconfigureSwitch", cfg.ReconfigureSwitch),
+		zap.String("ReconfigureSwitchInterval", cfg.ReconfigureSwitchInterval.String()),
 		zap.String("ManagementGateway", cfg.ManagementGateway),
 		zap.Any("AdditionalBridgeVIDs", cfg.AdditionalBridgeVIDs),
 		zap.Any("BladePorts", cfg.BladePorts),
@@ -268,6 +269,7 @@ func getNics(blacklist []string) ([]*models.MetalNic, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get all links")
 	}
+links:
 	for _, l := range links {
 		attrs := l.Attrs()
 		name := attrs.Name
@@ -278,7 +280,7 @@ func getNics(blacklist []string) ([]*models.MetalNic, error) {
 					zap.String("interface", name),
 					zap.Any("blacklist", blacklist),
 				)
-				break
+				break links
 			}
 		}
 		if !strings.HasPrefix(name, "swp") {
