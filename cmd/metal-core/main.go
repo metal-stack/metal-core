@@ -92,7 +92,7 @@ func prepare() *app {
 		zap.String("ReconfigureSwitchInterval", cfg.ReconfigureSwitchInterval.String()),
 		zap.String("ManagementGateway", cfg.ManagementGateway),
 		zap.Any("AdditionalBridgeVIDs", cfg.AdditionalBridgeVIDs),
-		zap.Any("BladePorts", cfg.BladePorts),
+		zap.Any("AdditionalBridgePorts", cfg.AdditionalBridgePorts),
 	)
 
 	transport := client.New(fmt.Sprintf("%v:%d", cfg.ApiIP, cfg.ApiPort), "", nil)
@@ -234,7 +234,7 @@ func (a *app) registerSwitch() (*models.MetalSwitch, error) {
 	var nics []*models.MetalNic
 	var hostname string
 
-	if nics, err = getNics(a.Config.BladePorts); err != nil {
+	if nics, err = getNics(a.Config.AdditionalBridgePorts); err != nil {
 		return nil, errors.Wrap(err, "unable to get nics")
 	}
 

@@ -2,6 +2,7 @@ package endpoint
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
 
@@ -50,7 +51,7 @@ func (e *endpointHandler) Boot(request *restful.Request, response *restful.Respo
 			zap.Int("statusCode", sc),
 			zap.String("MAC", mac),
 		)
-		// FIXME this should not happen, we should consider returning a recovery image for digging into to root cause.
+		// FIXME this should not happen, we should consider returning a rec	overy image for digging into to root cause.
 	} else {
 		zapup.MustRootLogger().Error("Request Metal-API for a machine", zap.String("MAC", mac), zap.String("StatusCode", string(sc)))
 	}
@@ -59,7 +60,8 @@ func (e *endpointHandler) Boot(request *restful.Request, response *restful.Respo
 func createBootDiscoveryImageResponse(e *endpointHandler) domain.BootResponse {
 	cfg := e.Config
 
-	metalCoreAddress := fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d", cfg.IP, cfg.Port)
+	cidr, _, _ := net.ParseCIDR(cfg.CIDR)
+	metalCoreAddress := fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d", cidr.String(), cfg.Port)
 	metalAPIURL := fmt.Sprintf("METAL_API_URL=%s://%s:%d", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort)
 
 	cmdline := []string{e.BootConfig.MetalHammerCommandLine, metalCoreAddress, metalAPIURL}
