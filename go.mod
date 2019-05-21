@@ -1,7 +1,7 @@
 module git.f-i-ts.de/cloud-native/metal/metal-core
 
 require (
-	git.f-i-ts.de/cloud-native/metallib v0.0.0-20190521124100-552e2c5e2469
+	git.f-i-ts.de/cloud-native/metallib v0.0.0-20190521125709-5e8d0056f3bc
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
 	github.com/emicklei/go-restful v2.9.3+incompatible
 	github.com/emicklei/go-restful-openapi v1.0.0
