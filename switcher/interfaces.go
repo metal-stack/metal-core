@@ -1,66 +1,43 @@
 package switcher
 
 import (
-	"fmt"
+	"git.f-i-ts.de/cloud-native/metallib/network"
 	"io"
-
-	"github.com/coreos/go-systemd/dbus"
+	"text/template"
 )
 
-const InterfacesValidationService = "interfaces-validation@"
+const (
+	IfacesTmp = "/etc/network/interfaces.tmp"
+	InterfacesValidationService = "interfaces-validation"
+)
+
 
 // InterfacesApplier is responsible for writing and
 // applying the network interfaces configuration
 type InterfacesApplier struct {
-	Conf *Conf
+	applier network.NetworkApplier
 }
 
 // NewInterfacesApplier creates a new InterfacesApplier
 func NewInterfacesApplier(c *Conf) Applier {
-	return InterfacesApplier{Conf: c}
+	a := network.NewNetworkApplier(c)
+	return InterfacesApplier{a}
 }
 
 // Render renders the network interfaces to the given writer
 func (a InterfacesApplier) Render(w io.Writer) error {
-	return render(interfacesTPL, *a.Conf, w)
+	tpl := template.Must(template.New(interfacesTPL).Parse(interfacesTPL))
+	return a.applier.Render(w, *tpl)
 }
 
-// Validate validates the network interfaces given
-func (a InterfacesApplier) Validate(f string) error {
-	dbc, err := dbus.New()
-	defer dbc.Close()
-	if err != nil {
-		return fmt.Errorf("unable to connect to dbus: %v", err)
-	}
-
-	c := make(chan string)
-	_, err = dbc.StartUnit(fmt.Sprintf("%s@'%s'.service", InterfacesValidationService, f), "replace", c)
-	if err != nil {
-		return err
-	}
-	job := <-c
-	if job != "done" {
-		return fmt.Errorf("interfaces-validation failed %s", job)
-	}
-	return nil
+func (a InterfacesApplier) Validate() error {
+	v := network.DBusTemplateValidator{InterfacesValidationService, IfacesTmp}
+	return a.applier.Validate(v)
 }
 
 // Reload reloads the necessary services
 // when the network interfaces configuration was changed
 func (a InterfacesApplier) Reload() error {
-	dbc, err := dbus.New()
-	defer dbc.Close()
-	if err != nil {
-		return fmt.Errorf("unable to connect to dbus: %v", err)
-	}
-	c := make(chan string)
-	_, err = dbc.StartUnit("ifreload.service", "replace", c)
-	if err != nil {
-		return err
-	}
-	job := <-c
-	if job != "done" {
-		return fmt.Errorf("ifreload job failed %s", job)
-	}
-	return nil
+	r := network.DBusStartReloader{"ifreload.service"}
+	return a.applier.Reload(r)
 }
