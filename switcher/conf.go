@@ -7,9 +7,7 @@ import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/vlan"
 )
 
-const FrrTmp = "/etc/frr/frr.tmp"
 const Frr = "/etc/frr/frr.conf"
-const IfacesTmp = "/etc/network/interfaces.tmp"
 const Ifaces = "/etc/network/interfaces"
 
 // FillVLANIDs fills the given configuration object with switch-local VLAN-IDs
@@ -45,14 +43,11 @@ func (c *Conf) apply(tmpFile *os.File, dest *os.File, a Applier) error {
 	if err != nil {
 		return err
 	}
-	//err = a.Validate(tmpFile.Name())
+	//err = a.Validate()
 	//if err != nil {
 	//	return err
 	//}
-	err = os.Rename(tmpFile.Name(), dest.Name())
-	if err != nil {
-		return err
-	}
+
 	err = a.Reload()
 	if err != nil {
 		return err
