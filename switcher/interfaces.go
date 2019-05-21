@@ -1,43 +1,45 @@
 package switcher
 
 import (
-	"git.f-i-ts.de/cloud-native/metallib/network"
 	"io"
 	"text/template"
+
+	"git.f-i-ts.de/cloud-native/metallib/network"
 )
 
 const (
-	IfacesTmp = "/etc/network/interfaces.tmp"
+	// Interfaces is the path to the network interfaces file
+	Interfaces = "/etc/network/interfaces"
+	// InterfacesTmp is the path to a temporary location of the interfaces file
+	InterfacesTmp = "/etc/network/interfaces.tmp"
+	// InterfacesReloadService is the systemd service to reload
+	InterfacesReloadService = "ifreload.service"
+	// InterfacesValidationService is the systemd unit that is used for validation
 	InterfacesValidationService = "interfaces-validation"
 )
-
 
 // InterfacesApplier is responsible for writing and
 // applying the network interfaces configuration
 type InterfacesApplier struct {
-	applier network.NetworkApplier
+	applier network.Applier
 }
 
 // NewInterfacesApplier creates a new InterfacesApplier
 func NewInterfacesApplier(c *Conf) Applier {
-	a := network.NewNetworkApplier(c)
+	v := network.DBusTemplateValidator{TemplateName: InterfacesValidationService, InstanceName: InterfacesTmp}
+	r := network.DBusStartReloader{ServiceFilename: InterfacesReloadService}
+	a := network.NewNetworkApplier(c, v, r)
 	return InterfacesApplier{a}
+}
+
+// Apply applies the configuration to the system
+func (a InterfacesApplier) Apply() error {
+	tpl := template.Must(template.New(interfacesTPL).Parse(interfacesTPL))
+	return a.applier.Apply(*tpl, InterfacesTmp, Interfaces)
 }
 
 // Render renders the network interfaces to the given writer
 func (a InterfacesApplier) Render(w io.Writer) error {
 	tpl := template.Must(template.New(interfacesTPL).Parse(interfacesTPL))
 	return a.applier.Render(w, *tpl)
-}
-
-func (a InterfacesApplier) Validate() error {
-	v := network.DBusTemplateValidator{InterfacesValidationService, IfacesTmp}
-	return a.applier.Validate(v)
-}
-
-// Reload reloads the necessary services
-// when the network interfaces configuration was changed
-func (a InterfacesApplier) Reload() error {
-	r := network.DBusStartReloader{"ifreload.service"}
-	return a.applier.Reload(r)
 }

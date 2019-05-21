@@ -1,14 +1,8 @@
 package switcher
 
 import (
-	"bufio"
-	"os"
-
 	"git.f-i-ts.de/cloud-native/metal/metal-core/vlan"
 )
-
-const Frr = "/etc/frr/frr.conf"
-const Ifaces = "/etc/network/interfaces"
 
 // FillVLANIDs fills the given configuration object with switch-local VLAN-IDs
 // if they are present in the given VLAN-Mapping
@@ -33,68 +27,14 @@ Tloop:
 	return nil
 }
 
-func (c *Conf) apply(tmpFile *os.File, dest *os.File, a Applier) error {
-	w := bufio.NewWriter(tmpFile)
-	err := a.Render(w)
-	if err != nil {
-		return err
-	}
-	err = w.Flush()
-	if err != nil {
-		return err
-	}
-	//err = a.Validate()
-	//if err != nil {
-	//	return err
-	//}
-
-	err = a.Reload()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (c *Conf) applyFrr() error {
-	tmp, err := os.OpenFile(FrrTmp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-	if err != nil {
-		return err
-	}
-	defer tmp.Close()
-
-	f, err := os.OpenFile(Frr, os.O_WRONLY|os.O_TRUNC, 0644)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	frr := NewFrrApplier(c)
-	err = c.apply(tmp, f, frr)
-	if err != nil {
-		return err
-	}
-	return nil
+	a := NewFrrApplier(c)
+	return a.Apply()
 }
 
 func (c *Conf) applyInterfaces() error {
-	tmp, err := os.OpenFile(IfacesTmp, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-	if err != nil {
-		return err
-	}
-	defer tmp.Close()
-
-	f, err := os.OpenFile(Ifaces, os.O_WRONLY|os.O_TRUNC, 0644)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	ifaces := NewInterfacesApplier(c)
-	err = c.apply(tmp, f, ifaces)
-	if err != nil {
-		return err
-	}
-	return nil
+	a := NewInterfacesApplier(c)
+	return a.Apply()
 }
 
 // Apply applies the configuration to the switch
