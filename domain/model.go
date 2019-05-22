@@ -187,7 +187,7 @@ func (a *AppContext) SetEventHandler(eventHandler func(*AppContext) EventHandler
 }
 
 func (a *AppContext) InitHMAC() {
-	a.hmac = security.NewHMACAuth("Metal-Admin", []byte(a.HMACKey))
+	a.hmac = security.NewHMACAuth("Metal-Edit", []byte(a.HMACKey))
 	a.Auth = runtime.ClientAuthInfoWriterFunc(a.auther)
 }
 
