@@ -6,7 +6,10 @@ import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	sw "git.f-i-ts.de/cloud-native/metal/metal-core/client/switch_operations"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
+	"git.f-i-ts.de/cloud-native/metallib/security"
 	"github.com/emicklei/go-restful"
+	"github.com/go-openapi/runtime"
+	"github.com/go-openapi/strfmt"
 )
 
 type EventType string
@@ -53,6 +56,7 @@ type APIClient interface {
 	InstallImage(machineId string) (int, *models.V1MachineWaitResponse)
 	IPMIConfig(machineId string) (*IPMIConfig, error)
 	AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error
+	FinalizeAllocation(machineID, consolepassword string) (*machine.FinalizeAllocationOK, error)
 }
 
 type Server interface {
@@ -102,6 +106,7 @@ type Config struct {
 	ReconfigureSwitchInterval time.Duration `required:"false" default:"10s" desc:"pull interval to fetch and apply switch configuration" split_words:"true"`
 	AdditionalBridgeVIDs      []string      `required:"false" desc:"additional vlan ids that should be configured at the vlan-aware bridge" envconfig:"additional_bridge_vids"`
 	AdditionalBridgePorts     []string      `required:"false" desc:"additional switch ports that should be configured at the vlan-aware bridge" envconfig:"additional_bridge_ports"`
+	HMACKey                   string        `required:"true" desc:"the preshared key for the hmac calculation" envconfig:"hmac_key"`
 }
 
 type BootConfig struct {
@@ -145,6 +150,8 @@ type AppContext struct {
 	eventHandler    func(*AppContext) EventHandler
 	MachineClient   *machine.Client
 	SwitchClient    *sw.Client
+	hmac            security.HMACAuth
+	Auth            runtime.ClientAuthInfoWriter
 }
 
 func (a *AppContext) APIClient() APIClient {
@@ -177,4 +184,14 @@ func (a *AppContext) EventHandler() EventHandler {
 
 func (a *AppContext) SetEventHandler(eventHandler func(*AppContext) EventHandler) {
 	a.eventHandler = eventHandler
+}
+
+func (a *AppContext) InitHMAC() {
+	a.hmac = security.NewHMACAuth("Metal-Admin", []byte(a.HMACKey))
+	a.Auth = runtime.ClientAuthInfoWriterFunc(a.auther)
+}
+
+func (a *AppContext) auther(rq runtime.ClientRequest, rg strfmt.Registry) error {
+	a.hmac.AddAuthToClientRequest(rq, time.Now())
+	return nil
 }

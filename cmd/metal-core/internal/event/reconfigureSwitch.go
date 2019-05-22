@@ -73,7 +73,7 @@ func (h *eventHandler) ReconfigureSwitch(switchID string) error {
 	defer mux.Unlock()
 	params := sw.NewFindSwitchParams()
 	params.ID = switchID
-	fsr, err := h.SwitchClient.FindSwitch(params)
+	fsr, err := h.SwitchClient.FindSwitch(params, h.Auth)
 	if err != nil {
 		return errors.Wrap(err, "could not fetch switch from metal-api")
 	}

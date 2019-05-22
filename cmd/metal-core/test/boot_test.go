@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"github.com/emicklei/go-restful"
@@ -70,4 +71,8 @@ func (a *apiHandlerBootTest) IPMIConfig(machineId string) (*domain.IPMIConfig, e
 
 func (a *apiHandlerBootTest) AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error {
 	return nil
+}
+
+func (a *apiHandlerBootTest) FinalizeAllocation(machineID, consolepassword string) (*machine.FinalizeAllocationOK, error) {
+	return nil, nil
 }

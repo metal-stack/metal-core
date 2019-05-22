@@ -13,7 +13,7 @@ func (c *apiClient) FindMachines(mac string) (int, []*models.V1MachineResponse) 
 	params := machine.NewSearchMachineParams()
 	params.Mac = &mac
 
-	ok, err := c.MachineClient.SearchMachine(params)
+	ok, err := c.MachineClient.SearchMachine(params, c.Auth)
 	if err != nil {
 		zapup.MustRootLogger().Error("Machine(s) not found",
 			zap.String("MAC", mac),

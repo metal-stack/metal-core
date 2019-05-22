@@ -108,6 +108,7 @@ func prepare() *app {
 	app.SetServer(core.NewServer)
 	app.SetEndpointHandler(endpoint.NewHandler)
 	app.SetEventHandler(event.NewHandler)
+	app.InitHMAC()
 
 	app.initConsumer()
 
@@ -251,7 +252,7 @@ func (a *app) registerSwitch() (*models.MetalSwitch, error) {
 	}
 
 	for {
-		ok, created, err := a.SwitchClient.RegisterSwitch(params)
+		ok, created, err := a.SwitchClient.RegisterSwitch(params, a.Auth)
 		if err == nil {
 			if ok != nil {
 				return ok.Payload, nil
