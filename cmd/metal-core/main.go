@@ -233,7 +233,7 @@ func timeoutHandler(err bus.TimeoutError) error {
 	return nil
 }
 
-// phoneHomeManagedMachines sends every 10 seconds a single phone-home
+// phoneHomeManagedMachines sends every minute a single phone-home
 // provisioning event to metal-api for each machine that sent at least one
 // phone-home LLDP package to any interface of the host machine
 // during this interval.
@@ -283,8 +283,8 @@ func (a *app) phoneHomeManagedMachines() {
 		}()
 	}
 
-	// send a provisioning event to metal-api every 10 seconds for each reported-back machine
-	t := time.NewTicker(10 * time.Second) //TODO make ticker interval configurable
+	// send a provisioning event to metal-api every minute for each reported-back machine
+	t := time.NewTicker(1 * time.Minute)
 	go func() {
 		for range t.C {
 			mtx.Lock()
