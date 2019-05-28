@@ -1,5 +1,7 @@
 module git.f-i-ts.de/cloud-native/metal/metal-core
 
+go 1.12
+
 require (
 	git.f-i-ts.de/cloud-native/metallib v0.0.0-20190521130445-55df038775a5
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect

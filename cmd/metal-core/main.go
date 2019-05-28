@@ -247,7 +247,7 @@ func (a *app) phoneHomeManagedMachines() {
 	}
 
 	frameFragmentChan := make(chan lldp.FrameFragment)
-	m := make(map[string]*lldp.PhoneHomeToken)
+	m := make(map[string]*lldp.PhoneHomeMessage)
 	mtx := sync.Mutex{}
 
 	for _, iface := range ifs {
@@ -263,34 +263,34 @@ func (a *app) phoneHomeManagedMachines() {
 		// constantly observe LLDP traffic on current machine on current interface
 		go lldpcli.CatchPackages(frameFragmentChan)
 
-		// extract phone-home tokens from fetched LLDP packages
+		// extract phone-home messages from fetched LLDP packages
 		go func() {
 			for phoneHome := range frameFragmentChan {
-				token, err := lldpcli.ExtractPhoneHomeToken(&phoneHome)
+				msg, err := lldpcli.ExtractPhoneHomeMessage(&phoneHome)
 				if err != nil {
 					break
 				}
 
 				mtx.Lock()
-				m[token.MachineID] = token
+				m[msg.MachineID] = msg
 				mtx.Unlock()
 			}
 		}()
 	}
 
-	// send a provisioning event to metal-api every minute for each reported back machine
+	// send a provisioning event to metal-api every minute for each reported-back machine
 	e := event.NewEmitter(a.AppContext)
 	t := time.NewTicker(1 * time.Minute) //TODO make ticker interval configurable
 	go func() {
 		for range t.C {
 			mtx.Lock()
-			for machineID, token := range m {
-				err = e.Emit(endpoint.ProvisioningEventPhonedHome, machineID, token.Payload)
+			for machineID, msg := range m {
+				err = e.Emit(endpoint.ProvisioningEventPhonedHome, machineID, msg.Payload)
 				if err != nil {
 					zapup.MustRootLogger().Error("Failed to phone home",
-						zap.String("eventType", string(token.EventType)),
+						zap.String("eventType", string(endpoint.ProvisioningEventPhonedHome)),
 						zap.String("machineID", machineID),
-						zap.String("payload", token.Payload),
+						zap.String("payload", msg.Payload),
 						zap.Error(err),
 					)
 				}

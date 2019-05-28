@@ -2,7 +2,6 @@ package lldp
 
 import (
 	"fmt"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/endpoint"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
@@ -29,9 +28,8 @@ type FrameFragment struct {
 	SysDescription string
 }
 
-// PhoneHomeToken contains a phone-home token.
-type PhoneHomeToken struct {
-	EventType endpoint.ProvisioningEventType
+// PhoneHomeMessage contains a phone-home message.
+type PhoneHomeMessage struct {
 	MachineID string
 	Payload   string
 }
@@ -101,23 +99,15 @@ func (l *Client) Close() {
 	l.Handle.Close()
 }
 
-// ExtractPhoneHomeToken extracts the machineID and payload of the given LLDP frame fragment.
-// An error will be returned if the frame fragment does not contain a phone-home token.
-func (l *Client) ExtractPhoneHomeToken(frameFragment *FrameFragment) (*PhoneHomeToken, error) {
-	token := &PhoneHomeToken{
-		MachineID: frameFragment.SysName,
-		Payload:   frameFragment.SysDescription,
+// ExtractPhoneHomeMessage extracts the machineID and payload of the given LLDP frame fragment.
+// An error will be returned if the frame fragment does not contain a phone-home message.
+func (l *Client) ExtractPhoneHomeMessage(frameFragment *FrameFragment) (*PhoneHomeMessage, error) {
+	if strings.Contains(frameFragment.SysDescription, "provisioned") {
+		return &PhoneHomeMessage{
+			MachineID: frameFragment.SysName,
+			Payload:   frameFragment.SysDescription,
+		}, nil
 	}
 
-	if strings.Contains(token.Payload, "provisioning") {
-		token.EventType = endpoint.ProvisioningEventPhonedHome
-		return token, nil
-	}
-
-	if strings.Contains(token.Payload, "metal-hammer") || strings.Contains(token.Payload, "waiting since") {
-		token.EventType = endpoint.ProvisioningEventWaiting
-		return token, nil
-	}
-
-	return nil, errors.New("LLDP package contains no phone-home token")
+	return nil, errors.New("LLDP package contains no phone-home message")
 }

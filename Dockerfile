@@ -9,9 +9,7 @@ WORKDIR /build/metal-core
 
 COPY . .
 RUN go mod download \
- && go get github.com/magefile/mage
-
-RUN mage build test
+ && CGO_ENABLED=1 make clean bin/metal-core test
 
 FROM alpine:3.9
 LABEL maintainer FI-TS Devops <devops@f-i-ts.de>
