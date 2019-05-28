@@ -1,11 +1,5 @@
 FROM registry.fi-ts.io/cloud-native/go-builder:latest as builder
 
-COPY --from=builder /common /common
-
-WORKDIR /work
-
-RUN COMMONDIR=/common make clean bin/metal-core test
-
 FROM alpine:3.9
 LABEL maintainer FI-TS Devops <devops@f-i-ts.de>
 
