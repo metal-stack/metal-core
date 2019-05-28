@@ -1,15 +1,15 @@
-FROM golang:1.12-stretch as builder
+FROM registry.fi-ts.io/cloud-native/go-builder:latest as builder
 
-ENV CGO_ENABLED=0 \
-    GO111MODULE=on \
-    GOOS=linux \
-    GOPROXY=https://gomods.fi-ts.io
+ENV CGO_ENABLED=1 \
+    COMMONDIR=/common
 
-WORKDIR /build/metal-core
+COPY --from=builder /common /common
+
+WORKDIR /work
 
 COPY . .
 RUN go mod download \
- && CGO_ENABLED=1 make clean bin/metal-core test
+ && make clean bin/metal-core test
 
 FROM alpine:3.9
 LABEL maintainer FI-TS Devops <devops@f-i-ts.de>
@@ -17,8 +17,9 @@ LABEL maintainer FI-TS Devops <devops@f-i-ts.de>
 RUN apk update \
  && apk add \
     ca-certificates \
-    ipmitool
+    ipmitool \
+    libpcap-dev
 
-COPY --from=builder /build/metal-core/bin/metal-core /
+COPY --from=builder /work/bin/metal-core /
 
 ENTRYPOINT ["/metal-core"]
