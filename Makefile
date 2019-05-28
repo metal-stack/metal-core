@@ -41,5 +41,5 @@ swagger-prepare:
 
 .PHONY: generate-client
 generate-client: SWAGGERSPEC="domain/metal-api.json"
-generate-client: swagger-prepare swaggergenerate
+generate-client: swagger-prepare
 	GO111MODULE=off swagger generate client -f domain/metal-api.json --skip-validation
