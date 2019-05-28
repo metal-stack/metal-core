@@ -39,7 +39,7 @@ swagger-prepare:
 	rm -rf client/*
 	cp ../metal-api/spec/metal-api.json domain/metal-api.json
 
-# 'swaggergenerate' generates swagger client with SWAGGERSPEC="swagger.json" SWAGGERTARET="./".
-.PHONY: swagger
+.PHONY: generate-client
 generate-client: SWAGGERSPEC="domain/metal-api.json"
 generate-client: swagger-prepare swaggergenerate
+	GO111MODULE=off swagger generate client -f domain/metal-api.json --skip-validation
