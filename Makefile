@@ -1,10 +1,9 @@
 BINARY := metal-core
 MAINMODULE := git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core
 COMMONDIR := $(or ${COMMONDIR},../common)
+CGO_ENABLED := 1
 
 include $(COMMONDIR)/Makefile.inc
-
-export GATEWAY := `docker inspect -f "{{ .NetworkSettings.Networks.metal.Gateway }}" metal-core`
 
 .PHONY: all
 all::
@@ -18,8 +17,11 @@ localbuild: bin/$(BINARY)
 	docker build -t registry.fi-ts.io/metal/metal-core -f Dockerfile.dev .
 
 .PHONY: spec
-spec:
+spec: all
 	bin/metal-core spec spec/metal-core.json
+
+.PHONY: localbuild
+localbuild: bin/$(BINARY)
 
 .PHONY: test-switcher
 test-switcher:
