@@ -249,6 +249,7 @@ func (a *app) phoneHomeManagedMachines() {
 	frameFragmentChan := make(chan lldp.FrameFragment)
 	m := make(map[string]*lldp.PhoneHomeMessage)
 	mtx := sync.Mutex{}
+	e := event.NewEmitter(a.AppContext)
 
 	for _, iface := range ifs {
 		lldpcli, err := lldp.NewClient(iface.Name)
@@ -272,28 +273,23 @@ func (a *app) phoneHomeManagedMachines() {
 				}
 
 				mtx.Lock()
-				m[msg.MachineID] = msg
+				_, ok := m[msg.MachineID]
+				if !ok {
+					m[msg.MachineID] = msg
+					e.SendPhoneHomeEvent(msg)
+				}
 				mtx.Unlock()
 			}
 		}()
 	}
 
 	// send a provisioning event to metal-api every 10 seconds for each reported-back machine
-	e := event.NewEmitter(a.AppContext)
 	t := time.NewTicker(10 * time.Second) //TODO make ticker interval configurable
 	go func() {
 		for range t.C {
 			mtx.Lock()
 			for machineID, msg := range m {
-				err = e.Emit(endpoint.ProvisioningEventPhonedHome, machineID, msg.Payload)
-				if err != nil {
-					zapup.MustRootLogger().Error("Failed to phone home",
-						zap.String("eventType", string(endpoint.ProvisioningEventPhonedHome)),
-						zap.String("machineID", machineID),
-						zap.String("payload", msg.Payload),
-						zap.Error(err),
-					)
-				}
+				e.SendPhoneHomeEvent(msg)
 				delete(m, machineID)
 			}
 			mtx.Unlock()

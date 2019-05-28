@@ -2,6 +2,7 @@ package event
 
 import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/endpoint"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/lldp"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
@@ -31,4 +32,16 @@ func (e *Emitter) Emit(eventType endpoint.ProvisioningEventType, machineID, mess
 	)
 
 	return e.APIClient().AddProvisioningEvent(machineID, event)
+}
+
+func (e *Emitter) SendPhoneHomeEvent(msg *lldp.PhoneHomeMessage) {
+	err := e.Emit(endpoint.ProvisioningEventPhonedHome, msg.MachineID, msg.Payload)
+	if err != nil {
+		zapup.MustRootLogger().Error("Failed to phone home",
+			zap.String("eventType", string(endpoint.ProvisioningEventPhonedHome)),
+			zap.String("machineID", msg.MachineID),
+			zap.String("payload", msg.Payload),
+			zap.Error(err),
+		)
+	}
 }
