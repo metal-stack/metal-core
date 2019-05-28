@@ -35,5 +35,5 @@ fmt:
 	GO111MODULE=off go fmt ./...
 
 .PHONY: generate-client
-generate-client: SWAGGERSPEC="domain/metal-api.json"
+generate-client:
 	GO111MODULE=off swagger generate client -f domain/metal-api.json --skip-validation
