@@ -16,6 +16,7 @@ require (
 	github.com/go-openapi/swag v0.19.0
 	github.com/go-openapi/validate v0.19.0
 	github.com/golang/snappy v0.0.1 // indirect
+	github.com/google/gopacket v1.1.17
 	github.com/json-iterator/go v1.1.6 // indirect
 	github.com/kelseyhightower/envconfig v1.3.0
 	github.com/magefile/mage v1.8.0
