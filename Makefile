@@ -1,5 +1,6 @@
 BINARY := metal-core
 COMMONDIR := $(or ${COMMONDIR},../common)
+MAINMODULE := git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core
 CGO_ENABLED := 1
 
 in-docker: generate-client fmt test all;
@@ -10,8 +11,6 @@ release:: generate-client fmt test all;
 
 .PHONY: all
 all::
-	go mod tidy
-	@bin/metal-core spec spec/metal-core.json
 
 release:: all ;
 
