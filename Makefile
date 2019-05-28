@@ -34,12 +34,6 @@ test-switcher:
 fmt:
 	GO111MODULE=off go fmt ./...
 
-.PHONY: swagger-prepare
-swagger-prepare:
-	rm -rf client/*
-	cp ../metal-api/spec/metal-api.json domain/metal-api.json
-
 .PHONY: generate-client
 generate-client: SWAGGERSPEC="domain/metal-api.json"
-generate-client: swagger-prepare
 	GO111MODULE=off swagger generate client -f domain/metal-api.json --skip-validation
