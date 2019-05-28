@@ -4,7 +4,8 @@ LABEL maintainer FI-TS Devops <devops@f-i-ts.de>
 RUN apk update \
  && apk add \
     ca-certificates \
-    ipmitool
+    ipmitool \
+    libpcap-dev
 
 COPY bin/metal-core /
 
