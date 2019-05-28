@@ -266,9 +266,9 @@ func (a *app) phoneHomeManagedMachines() {
 		// extract phone-home messages from fetched LLDP packages
 		go func() {
 			for phoneHome := range frameFragmentChan {
-				msg, err := lldpcli.ExtractPhoneHomeMessage(&phoneHome)
-				if err != nil {
-					break
+				msg := lldpcli.ExtractPhoneHomeMessage(&phoneHome)
+				if msg == nil {
+					continue
 				}
 
 				mtx.Lock()

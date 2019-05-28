@@ -101,13 +101,13 @@ func (l *Client) Close() {
 
 // ExtractPhoneHomeMessage extracts the machineID and payload of the given LLDP frame fragment.
 // An error will be returned if the frame fragment does not contain a phone-home message.
-func (l *Client) ExtractPhoneHomeMessage(frameFragment *FrameFragment) (*PhoneHomeMessage, error) {
+func (l *Client) ExtractPhoneHomeMessage(frameFragment *FrameFragment) *PhoneHomeMessage {
 	if strings.Contains(frameFragment.SysDescription, "provisioned") {
 		return &PhoneHomeMessage{
 			MachineID: frameFragment.SysName,
 			Payload:   frameFragment.SysDescription,
-		}, nil
+		}
 	}
 
-	return nil, errors.New("LLDP package contains no phone-home message")
+	return nil
 }
