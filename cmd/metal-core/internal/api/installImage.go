@@ -10,7 +10,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (c *apiClient) InstallImage(machineID string) (int, *models.V1MachineWaitResponse) {
+func (c *apiClient) InstallImage(machineID string) (int, *models.V1MachineResponse) {
 	params := machine.NewWaitForAllocationParams()
 	params.ID = machineID
 

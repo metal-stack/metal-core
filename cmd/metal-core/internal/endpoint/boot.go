@@ -66,11 +66,11 @@ func createBootDiscoveryImageResponse(e *endpointHandler) domain.BootResponse {
 
 	bc := e.BootConfig
 	// try to update boot config
-	s, err := e.APIClient().RegisterSwitch()
+	s, err := e.APIClient().FindPartition(cfg.PartitionID)
 	if err == nil {
-		bc.MetalHammerImageURL = *s.Partition.BootConfiguration.ImageURL
-		bc.MetalHammerKernelURL = *s.Partition.BootConfiguration.KernelURL
-		bc.MetalHammerCommandLine = *s.Partition.BootConfiguration.CommandLine
+		bc.MetalHammerImageURL = s.Bootconfig.Imageurl
+		bc.MetalHammerKernelURL = s.Bootconfig.Kernelurl
+		bc.MetalHammerCommandLine = s.Bootconfig.Commandline
 	}
 
 	cmdline := []string{bc.MetalHammerCommandLine, metalCoreAddress, metalAPIURL}

@@ -29,7 +29,7 @@ func TestLoggingMiddleware(t *testing.T) {
 	payload := &domain.MetalHammerRegisterMachineRequest{
 		UUID: machineID,
 	}
-	payload.Nics = []*models.V1MachineNic{}
+	payload.Nics = []*models.V1MachineNicExtended{}
 	payload.Disks = []*models.V1MachineBlockDevice{}
 
 	// when
@@ -55,11 +55,15 @@ func (a *apiHandlerCoreTest) RegisterMachine(machineId string, request *domain.M
 	return http.StatusOK, &machine
 }
 
-func (a *apiHandlerCoreTest) InstallImage(machineId string) (int, *models.V1MachineWaitResponse) {
+func (a *apiHandlerCoreTest) InstallImage(machineId string) (int, *models.V1MachineResponse) {
 	return -1, nil
 }
 
 func (a *apiHandlerCoreTest) IPMIConfig(machineId string) (*domain.IPMIConfig, error) {
+	return nil, nil
+}
+
+func (a *apiHandlerCoreTest) FindPartition(id string) (*models.V1PartitionResponse, error) {
 	return nil, nil
 }
 
@@ -71,7 +75,7 @@ func (a *apiHandlerCoreTest) FinalizeAllocation(machineID, consolepassword strin
 	return nil, nil
 }
 
-func (a *apiHandlerCoreTest) RegisterSwitch() (*models.MetalSwitch, error) {
+func (a *apiHandlerCoreTest) RegisterSwitch() (*models.V1SwitchResponse, error) {
 	return nil, errors.New("")
 }
 

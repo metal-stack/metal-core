@@ -1,21 +1,22 @@
 package api
 
 import (
+	"net"
+	"os"
+	"strings"
+	"time"
+
 	sw "git.f-i-ts.de/cloud-native/metal/metal-core/client/switch_operations"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/pkg/errors"
 	"github.com/vishvananda/netlink"
 	"go.uber.org/zap"
-	"net"
-	"os"
-	"strings"
-	"time"
 )
 
-func (c *apiClient) RegisterSwitch() (*models.MetalSwitch, error) {
+func (c *apiClient) RegisterSwitch() (*models.V1SwitchResponse, error) {
 	var err error
-	var nics []*models.MetalNic
+	var nics []*models.V1SwitchNic
 	var hostname string
 
 	if nics, err = getNics(c.AdditionalBridgePorts); err != nil {
@@ -27,7 +28,7 @@ func (c *apiClient) RegisterSwitch() (*models.MetalSwitch, error) {
 	}
 
 	params := sw.NewRegisterSwitchParams()
-	params.Body = &models.MetalRegisterSwitch{
+	params.Body = &models.V1SwitchRegisterRequest{
 		ID:          &hostname,
 		PartitionID: &c.PartitionID,
 		RackID:      &c.RackID,
@@ -47,8 +48,8 @@ func (c *apiClient) RegisterSwitch() (*models.MetalSwitch, error) {
 	}
 }
 
-func getNics(blacklist []string) ([]*models.MetalNic, error) {
-	var nics []*models.MetalNic
+func getNics(blacklist []string) ([]*models.V1SwitchNic, error) {
+	var nics []*models.V1SwitchNic
 	links, err := netlink.LinkList()
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get all links")
@@ -82,7 +83,7 @@ links:
 			)
 			continue
 		}
-		nic := &models.MetalNic{
+		nic := &models.V1SwitchNic{
 			Mac:  &mac,
 			Name: &name,
 		}

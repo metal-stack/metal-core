@@ -19,7 +19,7 @@ func (c *apiClient) RegisterMachine(machineID string, request *domain.MetalHamme
 		UUID:        &machineID,
 		Partitionid: &partitionId,
 		Rackid:      &rackId,
-		Hardware: &models.V1MachineHardware{
+		Hardware: &models.V1MachineHardwareExtended{
 			Memory:   request.Memory,
 			CPUCores: request.CPUCores,
 			Nics:     request.Nics,
