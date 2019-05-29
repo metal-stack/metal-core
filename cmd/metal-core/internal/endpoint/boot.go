@@ -65,6 +65,13 @@ func createBootDiscoveryImageResponse(e *endpointHandler) domain.BootResponse {
 	metalAPIURL := fmt.Sprintf("METAL_API_URL=%s://%s:%d", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort)
 
 	bc := e.BootConfig
+	// try to update boot config
+	s, err := e.APIClient().RegisterSwitch()
+	if err == nil {
+		bc.MetalHammerImageURL = *s.Partition.BootConfiguration.ImageURL
+		bc.MetalHammerKernelURL = *s.Partition.BootConfiguration.KernelURL
+		bc.MetalHammerCommandLine = *s.Partition.BootConfiguration.CommandLine
+	}
 
 	cmdline := []string{bc.MetalHammerCommandLine, metalCoreAddress, metalAPIURL}
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
