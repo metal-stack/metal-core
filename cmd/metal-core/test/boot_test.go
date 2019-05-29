@@ -1,6 +1,7 @@
 package test
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -70,4 +71,8 @@ func (a *apiHandlerBootTest) IPMIConfig(machineId string) (*domain.IPMIConfig, e
 
 func (a *apiHandlerBootTest) AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error {
 	return nil
+}
+
+func (a *apiHandlerBootTest) RegisterSwitch() (*models.MetalSwitch, error) {
+	return nil, errors.New("")
 }

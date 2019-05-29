@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/lldp"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/register"
 	"github.com/google/gopacket/pcap"
 	"io/ioutil"
 	"os"
@@ -109,7 +108,7 @@ func prepare() *app {
 
 	app.initConsumer()
 
-	s, err := register.Switch(app.Config, app.SwitchClient)
+	s, err := app.APIClient().RegisterSwitch()
 	if err != nil {
 		zapup.MustRootLogger().Fatal("unable to register",
 			zap.Error(err),

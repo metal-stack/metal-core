@@ -1,4 +1,4 @@
-package register
+package api
 
 import (
 	sw "git.f-i-ts.de/cloud-native/metal/metal-core/client/switch_operations"
@@ -14,7 +14,11 @@ import (
 	"time"
 )
 
-func Switch(cfg *domain.Config, switchClient *sw.Client) (*models.MetalSwitch, error) {
+func (c *apiClient) RegisterSwitch() (*models.MetalSwitch, error) {
+	return registerSwitch(c.Config, c.SwitchClient)
+}
+
+func registerSwitch(cfg *domain.Config, switchClient *sw.Client) (*models.MetalSwitch, error) {
 	var err error
 	var nics []*models.MetalNic
 	var hostname string

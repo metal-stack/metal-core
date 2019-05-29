@@ -1,6 +1,7 @@
 package test
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"testing"
@@ -60,6 +61,11 @@ func (a *apiHandlerCoreTest) InstallImage(machineId string) (int, *models.V1Mach
 func (a *apiHandlerCoreTest) IPMIConfig(machineId string) (*domain.IPMIConfig, error) {
 	return nil, nil
 }
+
 func (a *apiHandlerCoreTest) AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error {
 	return nil
+}
+
+func (a *apiHandlerCoreTest) RegisterSwitch() (*models.MetalSwitch, error) {
+	return nil, errors.New("")
 }

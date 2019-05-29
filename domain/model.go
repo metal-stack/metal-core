@@ -53,6 +53,7 @@ type APIClient interface {
 	InstallImage(machineId string) (int, *models.V1MachineWaitResponse)
 	IPMIConfig(machineId string) (*IPMIConfig, error)
 	AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error
+	RegisterSwitch() (*models.MetalSwitch, error)
 }
 
 type Server interface {
