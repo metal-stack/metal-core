@@ -4,15 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/lldp"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/register"
 	"github.com/google/gopacket/pcap"
 	"io/ioutil"
-	gonet "net"
 	"os"
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/pkg/errors"
 
 	restfulspec "github.com/emicklei/go-restful-openapi"
 
@@ -23,15 +21,12 @@ import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/endpoint"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/event"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"github.com/go-openapi/strfmt"
 
 	"git.f-i-ts.de/cloud-native/metallib/bus"
 	"git.f-i-ts.de/cloud-native/metallib/version"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/go-openapi/runtime/client"
-	"github.com/vishvananda/netlink"
-
 	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/zap"
 )
@@ -114,7 +109,7 @@ func prepare() *app {
 
 	app.initConsumer()
 
-	s, err := app.registerSwitch()
+	s, err := register.Switch(app.Config, app.SwitchClient)
 	if err != nil {
 		zapup.MustRootLogger().Fatal("unable to register",
 			zap.Error(err),
@@ -264,8 +259,8 @@ func (a *app) phoneHomeManagedMachines() {
 		// constantly observe LLDP traffic on current machine on current interface
 		go lldpcli.CatchPackages(frameFragmentChan)
 
-		// extract phone-home messages from fetched LLDP packages
-		go func() {
+		// extract phone-home messages from fetched LLDP packages after a short initial delay
+		time.AfterFunc(50*time.Second, func() {
 			for phoneHome := range frameFragmentChan {
 				msg := lldpcli.ExtractPhoneHomeMessage(&phoneHome)
 				if msg == nil {
@@ -276,11 +271,12 @@ func (a *app) phoneHomeManagedMachines() {
 				_, ok := m[msg.MachineID]
 				if !ok {
 					m[msg.MachineID] = msg
+					// send first incoming message per machine immediately
 					e.SendPhoneHomeEvent(msg)
 				}
 				mtx.Unlock()
 			}
-		}()
+		})
 	}
 
 	// send a provisioning event to metal-api every minute for each reported-back machine
@@ -295,84 +291,6 @@ func (a *app) phoneHomeManagedMachines() {
 			mtx.Unlock()
 		}
 	}()
-}
-
-func (a *app) registerSwitch() (*models.MetalSwitch, error) {
-	var err error
-	var nics []*models.MetalNic
-	var hostname string
-
-	if nics, err = getNics(a.Config.AdditionalBridgePorts); err != nil {
-		return nil, errors.Wrap(err, "unable to get nics")
-	}
-
-	if hostname, err = os.Hostname(); err != nil {
-		return nil, errors.Wrap(err, "unable to get hostname")
-	}
-
-	params := sw.NewRegisterSwitchParams()
-	params.Body = &models.MetalRegisterSwitch{
-		ID:          &hostname,
-		PartitionID: &a.Config.PartitionID,
-		RackID:      &a.Config.RackID,
-		Nics:        nics,
-	}
-
-	for {
-		ok, created, err := a.SwitchClient.RegisterSwitch(params)
-		if err == nil {
-			if ok != nil {
-				return ok.Payload, nil
-			}
-			return created.Payload, nil
-		}
-		zapup.MustRootLogger().Error("unable to register at metal-api", zap.Error(err))
-		time.Sleep(time.Second)
-	}
-}
-
-func getNics(blacklist []string) ([]*models.MetalNic, error) {
-	var nics []*models.MetalNic
-	links, err := netlink.LinkList()
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to get all links")
-	}
-links:
-	for _, l := range links {
-		attrs := l.Attrs()
-		name := attrs.Name
-		mac := attrs.HardwareAddr.String()
-		for _, b := range blacklist {
-			if b == name {
-				zapup.MustRootLogger().Info("skip interface, because it is contained in the blacklist",
-					zap.String("interface", name),
-					zap.Any("blacklist", blacklist),
-				)
-				break links
-			}
-		}
-		if !strings.HasPrefix(name, "swp") {
-			zapup.MustRootLogger().Info("skip interface, because only swp* switch ports are reported to metal-api",
-				zap.String("interface", name),
-				zap.String("MAC", mac),
-			)
-			continue
-		}
-		_, err := gonet.ParseMAC(mac)
-		if err != nil {
-			zapup.MustRootLogger().Info("skip interface with invalid mac",
-				zap.String("interface", name),
-				zap.String("MAC", mac),
-			)
-			continue
-		}
-		nic := &models.MetalNic{
-			Mac:  &mac,
-			Name: &name,
-		}
-		nics = append(nics, nic)
-	}
-	return nics, nil
 }
 
 func buildSpec(filename string) {

@@ -64,15 +64,17 @@ func createBootDiscoveryImageResponse(e *endpointHandler) domain.BootResponse {
 	metalCoreAddress := fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d", cidr.String(), cfg.Port)
 	metalAPIURL := fmt.Sprintf("METAL_API_URL=%s://%s:%d", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort)
 
-	cmdline := []string{e.BootConfig.MetalHammerCommandLine, metalCoreAddress, metalAPIURL}
+	bc := e.BootConfig
+
+	cmdline := []string{bc.MetalHammerCommandLine, metalCoreAddress, metalAPIURL}
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
 		cmdline = append(cmdline, "DEBUG=1")
 	}
 
 	return domain.BootResponse{
-		Kernel: e.BootConfig.MetalHammerKernelURL,
+		Kernel: bc.MetalHammerKernelURL,
 		InitRamDisk: []string{
-			e.BootConfig.MetalHammerImageURL,
+			bc.MetalHammerImageURL,
 		},
 		CommandLine: strings.Join(cmdline, " "),
 	}
