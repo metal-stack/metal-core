@@ -2,10 +2,8 @@ package api
 
 import (
 	sw "git.f-i-ts.de/cloud-native/metal/metal-core/client/switch_operations"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
-	"github.com/go-openapi/runtime"
 	"github.com/pkg/errors"
 	"github.com/vishvananda/netlink"
 	"go.uber.org/zap"
@@ -16,15 +14,11 @@ import (
 )
 
 func (c *apiClient) RegisterSwitch() (*models.MetalSwitch, error) {
-	return registerSwitch(c.Auth, c.Config, c.SwitchClient)
-}
-
-func registerSwitch(auth runtime.ClientAuthInfoWriter, cfg *domain.Config, switchClient *sw.Client) (*models.MetalSwitch, error) {
 	var err error
 	var nics []*models.MetalNic
 	var hostname string
 
-	if nics, err = getNics(cfg.AdditionalBridgePorts); err != nil {
+	if nics, err = getNics(c.AdditionalBridgePorts); err != nil {
 		return nil, errors.Wrap(err, "unable to get nics")
 	}
 
@@ -35,13 +29,13 @@ func registerSwitch(auth runtime.ClientAuthInfoWriter, cfg *domain.Config, switc
 	params := sw.NewRegisterSwitchParams()
 	params.Body = &models.MetalRegisterSwitch{
 		ID:          &hostname,
-		PartitionID: &cfg.PartitionID,
-		RackID:      &cfg.RackID,
+		PartitionID: &c.PartitionID,
+		RackID:      &c.RackID,
 		Nics:        nics,
 	}
 
 	for {
-		ok, created, err := switchClient.RegisterSwitch(params, auth)
+		ok, created, err := c.SwitchClient.RegisterSwitch(params, c.Auth)
 		if err == nil {
 			if ok != nil {
 				return ok.Payload, nil

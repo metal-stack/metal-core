@@ -58,6 +58,7 @@ type APIClient interface {
 	AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error
 	FinalizeAllocation(machineID, consolepassword string) (*machine.FinalizeAllocationOK, error)
 	RegisterSwitch() (*models.MetalSwitch, error)
+	ConstantlyPhoneHome()
 }
 
 type Server interface {

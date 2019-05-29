@@ -77,6 +77,10 @@ func (a *apiHandlerBootTest) AddProvisioningEvent(machineID string, event *model
 func (a *apiHandlerBootTest) FinalizeAllocation(machineID, consolepassword string) (*machine.FinalizeAllocationOK, error) {
 	return nil, nil
 }
+
 func (a *apiHandlerBootTest) RegisterSwitch() (*models.MetalSwitch, error) {
 	return nil, errors.New("")
+}
+
+func (a *apiHandlerBootTest) ConstantlyPhoneHome() {
 }

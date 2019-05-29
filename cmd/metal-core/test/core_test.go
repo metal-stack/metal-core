@@ -74,3 +74,6 @@ func (a *apiHandlerCoreTest) FinalizeAllocation(machineID, consolepassword strin
 func (a *apiHandlerCoreTest) RegisterSwitch() (*models.MetalSwitch, error) {
 	return nil, errors.New("")
 }
+
+func (a *apiHandlerCoreTest) ConstantlyPhoneHome() {
+}
