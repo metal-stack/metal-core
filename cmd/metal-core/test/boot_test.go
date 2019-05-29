@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"github.com/emicklei/go-restful"
@@ -73,6 +74,9 @@ func (a *apiHandlerBootTest) AddProvisioningEvent(machineID string, event *model
 	return nil
 }
 
+func (a *apiHandlerBootTest) FinalizeAllocation(machineID, consolepassword string) (*machine.FinalizeAllocationOK, error) {
+	return nil, nil
+}
 func (a *apiHandlerBootTest) RegisterSwitch() (*models.MetalSwitch, error) {
 	return nil, errors.New("")
 }

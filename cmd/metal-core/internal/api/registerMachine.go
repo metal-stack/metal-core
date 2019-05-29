@@ -28,7 +28,7 @@ func (c *apiClient) RegisterMachine(machineID string, request *domain.MetalHamme
 		IPMI: request.IPMI,
 	}
 
-	ok, created, err := c.MachineClient.RegisterMachine(params)
+	ok, created, err := c.MachineClient.RegisterMachine(params, c.Auth)
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to register machine at Metal-API",
 			zap.String("machineID", machineID),

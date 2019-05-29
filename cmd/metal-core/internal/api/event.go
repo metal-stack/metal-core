@@ -15,7 +15,7 @@ func (c *apiClient) AddProvisioningEvent(machineID string, event *models.V1Machi
 	params := machine.NewAddProvisioningEventParams()
 	params.ID = machineID
 	params.Body = event
-	_, err := c.MachineClient.AddProvisioningEvent(params)
+	_, err := c.MachineClient.AddProvisioningEvent(params, c.Auth)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to send machine event back to api.",
 			zap.String("machineID", machineID),

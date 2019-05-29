@@ -5,6 +5,7 @@ import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
+	"github.com/go-openapi/runtime"
 	"github.com/pkg/errors"
 	"github.com/vishvananda/netlink"
 	"go.uber.org/zap"
@@ -15,10 +16,10 @@ import (
 )
 
 func (c *apiClient) RegisterSwitch() (*models.MetalSwitch, error) {
-	return registerSwitch(c.Config, c.SwitchClient)
+	return registerSwitch(c.Auth, c.Config, c.SwitchClient)
 }
 
-func registerSwitch(cfg *domain.Config, switchClient *sw.Client) (*models.MetalSwitch, error) {
+func registerSwitch(auth runtime.ClientAuthInfoWriter, cfg *domain.Config, switchClient *sw.Client) (*models.MetalSwitch, error) {
 	var err error
 	var nics []*models.MetalNic
 	var hostname string
@@ -40,7 +41,7 @@ func registerSwitch(cfg *domain.Config, switchClient *sw.Client) (*models.MetalS
 	}
 
 	for {
-		ok, created, err := switchClient.RegisterSwitch(params)
+		ok, created, err := switchClient.RegisterSwitch(params, auth)
 		if err == nil {
 			if ok != nil {
 				return ok.Payload, nil

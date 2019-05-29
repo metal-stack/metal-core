@@ -14,7 +14,7 @@ func (c *apiClient) InstallImage(machineID string) (int, *models.V1MachineWaitRe
 	params := machine.NewWaitForAllocationParams()
 	params.ID = machineID
 
-	ok, err := c.MachineClient.WaitForAllocation(params)
+	ok, err := c.MachineClient.WaitForAllocation(params, c.Auth)
 	if err != nil {
 		// FIXME make this type safe, reuse error types from wait_responses.
 		if strings.Contains(err.Error(), "context deadline exceeded") {

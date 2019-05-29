@@ -15,7 +15,7 @@ func (c *apiClient) IPMIConfig(machineID string) (*domain.IPMIConfig, error) {
 	params := machine.NewIPMIDataParams()
 	params.ID = machineID
 
-	ok, err := c.MachineClient.IPMIData(params)
+	ok, err := c.MachineClient.IPMIData(params, c.Auth)
 	if err != nil {
 		zapup.MustRootLogger().Error("IPMI data for machine not found",
 			zap.String("machine", machineID),

@@ -3,13 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/lldp"
-	"github.com/google/gopacket/pcap"
 	"io/ioutil"
 	"os"
 	"strings"
 	"sync"
 	"time"
+
+	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/lldp"
+	"github.com/google/gopacket/pcap"
 
 	restfulspec "github.com/emicklei/go-restful-openapi"
 
@@ -105,6 +106,7 @@ func prepare() *app {
 	app.SetServer(core.NewServer)
 	app.SetEndpointHandler(endpoint.NewHandler)
 	app.SetEventHandler(event.NewHandler)
+	app.InitHMAC()
 
 	app.initConsumer()
 

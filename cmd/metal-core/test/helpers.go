@@ -29,6 +29,7 @@ func mockAPIEndpoint(apiClient func(ctx *domain.AppContext) domain.APIClient) do
 	_ = os.Setenv("METAL_CORE_CIDR", "10.0.0.11/24")
 	_ = os.Setenv("METAL_CORE_PARTITION_ID", "FRA")
 	_ = os.Setenv("METAL_CORE_RACK_ID", "Vagrant Rack 1")
+	_ = os.Setenv("METAL_CORE_HMAC_KEY", "blubber")
 
 	cfg = &domain.Config{}
 	if err := envconfig.Process("METAL_CORE", cfg); err != nil {
