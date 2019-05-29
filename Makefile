@@ -1,15 +1,16 @@
 BINARY := metal-core
-MAINMODULE := git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core
 COMMONDIR := $(or ${COMMONDIR},../common)
+MAINMODULE := git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core
+CGO_ENABLED := 1
+
+in-docker: generate-client fmt test all;
 
 include $(COMMONDIR)/Makefile.inc
 
-export GATEWAY := `docker inspect -f "{{ .NetworkSettings.Networks.metal.Gateway }}" metal-core`
+release:: generate-client fmt test all;
 
 .PHONY: all
 all::
-	@bin/metal-core spec spec/metal-core.json
-	go mod tidy
 
 release:: all ;
 
@@ -18,19 +19,20 @@ localbuild: bin/$(BINARY)
 	docker build -t registry.fi-ts.io/metal/metal-core -f Dockerfile.dev .
 
 .PHONY: spec
-spec:
+spec: all
 	bin/metal-core spec spec/metal-core.json
+
+.PHONY: localbuild
+localbuild: bin/$(BINARY)
 
 .PHONY: test-switcher
 test-switcher:
 	cd ./switcher && ./validate.sh && cd -
 
-.PHONY: swagger-prepare
-swagger-prepare:
-	rm -rf client/*
-	cp ../metal-api/spec/metal-api.json domain/metal-api.json
+.PHONY: fmt
+fmt:
+	GO111MODULE=off go fmt ./...
 
-# 'swaggergenerate' generates swagger client with SWAGGERSPEC="swagger.json" SWAGGERTARET="./".
-.PHONY: swagger
-generate-client: SWAGGERSPEC="domain/metal-api.json"
-generate-client: swagger-prepare swaggergenerate
+.PHONY: generate-client
+generate-client:
+	GO111MODULE=off swagger generate client -f domain/metal-api.json --skip-validation

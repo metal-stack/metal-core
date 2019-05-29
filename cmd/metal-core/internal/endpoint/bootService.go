@@ -34,5 +34,5 @@ func (h *endpointHandler) NewBootService() *restful.WebService {
 		Returns(http.StatusOK, "OK", domain.BootResponse{}).
 		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
 
-	return ws 
+	return ws
 }

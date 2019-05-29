@@ -1,5 +1,7 @@
 module git.f-i-ts.de/cloud-native/metal/metal-core
 
+go 1.12
+
 require (
 	git.f-i-ts.de/cloud-native/metallib v0.0.0-20190522071532-3f845d522c86
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
@@ -16,6 +18,7 @@ require (
 	github.com/go-openapi/swag v0.19.0
 	github.com/go-openapi/validate v0.19.0
 	github.com/golang/snappy v0.0.1 // indirect
+	github.com/google/gopacket v1.1.17
 	github.com/json-iterator/go v1.1.6 // indirect
 	github.com/kelseyhightower/envconfig v1.3.0
 	github.com/magefile/mage v1.8.0

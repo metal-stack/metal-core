@@ -118,8 +118,8 @@ func fillEth0Info(c *switcher.Conf, gw string, devMode bool) error {
 	}
 
 	ip := addrs[0].IP
-	len, _ := addrs[0].IPNet.Mask.Size()
-	c.Eth0.AddressCIDR = fmt.Sprintf("%s/%d", ip.String(), len)
+	s, _ := addrs[0].IPNet.Mask.Size()
+	c.Eth0.AddressCIDR = fmt.Sprintf("%s/%d", ip.String(), s)
 	c.Eth0.Gateway = gw
 	c.DevMode = devMode
 	return nil

@@ -3,10 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/lldp"
+	"github.com/google/gopacket/pcap"
 	"io/ioutil"
 	gonet "net"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -135,6 +138,8 @@ func prepare() *app {
 		os.Exit(1)
 	}
 
+	app.phoneHomeManagedMachines()
+
 	app.BootConfig = &domain.BootConfig{
 		MetalHammerImageURL:    *s.Partition.BootConfiguration.ImageURL,
 		MetalHammerKernelURL:   *s.Partition.BootConfiguration.KernelURL,
@@ -149,7 +154,6 @@ func prepare() *app {
 }
 
 func mapLogLevel(level string) bus.Level {
-
 	switch strings.ToLower(level) {
 	case "debug":
 		return bus.Debug
@@ -228,6 +232,70 @@ func (a *app) initConsumer() {
 func timeoutHandler(err bus.TimeoutError) error {
 	zapup.MustRootLogger().Error("Timeout processing event", zap.Any("event", err.Event()))
 	return nil
+}
+
+// phoneHomeManagedMachines sends every minute a single phone-home
+// provisioning event to metal-api for each machine that sent at least one
+// phone-home LLDP package to any interface of the host machine
+// during this interval.
+func (a *app) phoneHomeManagedMachines() {
+	ifs, err := pcap.FindAllDevs()
+	if err != nil {
+		zapup.MustRootLogger().Error("unable to find interfaces",
+			zap.Error(err),
+		)
+		os.Exit(1)
+	}
+
+	frameFragmentChan := make(chan lldp.FrameFragment)
+	m := make(map[string]*lldp.PhoneHomeMessage)
+	mtx := sync.Mutex{}
+	e := event.NewEmitter(a.AppContext)
+
+	for _, iface := range ifs {
+		lldpcli, err := lldp.NewClient(iface.Name)
+		if err != nil {
+			zapup.MustRootLogger().Error("unable to start LLDP client",
+				zap.String("interface", iface.Name),
+				zap.Error(err),
+			)
+			continue
+		}
+
+		// constantly observe LLDP traffic on current machine on current interface
+		go lldpcli.CatchPackages(frameFragmentChan)
+
+		// extract phone-home messages from fetched LLDP packages
+		go func() {
+			for phoneHome := range frameFragmentChan {
+				msg := lldpcli.ExtractPhoneHomeMessage(&phoneHome)
+				if msg == nil {
+					continue
+				}
+
+				mtx.Lock()
+				_, ok := m[msg.MachineID]
+				if !ok {
+					m[msg.MachineID] = msg
+					e.SendPhoneHomeEvent(msg)
+				}
+				mtx.Unlock()
+			}
+		}()
+	}
+
+	// send a provisioning event to metal-api every minute for each reported-back machine
+	t := time.NewTicker(1 * time.Minute)
+	go func() {
+		for range t.C {
+			mtx.Lock()
+			for machineID, msg := range m {
+				e.SendPhoneHomeEvent(msg)
+				delete(m, machineID)
+			}
+			mtx.Unlock()
+		}
+	}()
 }
 
 func (a *app) registerSwitch() (*models.MetalSwitch, error) {
