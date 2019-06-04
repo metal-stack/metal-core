@@ -1,6 +1,4 @@
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
-git.f-i-ts.de/cloud-native/metallib v0.0.0-20190522071532-3f845d522c86 h1:o2eYswJQh9QDOEz4b7nXDWTQocGwD46I78H13cUZKS8=
-git.f-i-ts.de/cloud-native/metallib v0.0.0-20190522071532-3f845d522c86/go.mod h1:kJFdU3TFD1II+oTDI9Ob0wPjlosF5yyLlFRAhHfR2eQ=
 git.f-i-ts.de/cloud-native/metallib v0.0.0-20190529124425-f20faa8286d0 h1:0FQral0mdseaDUTopgxC+cEMaTAljXbcTzII8nwxyds=
 git.f-i-ts.de/cloud-native/metallib v0.0.0-20190529124425-f20faa8286d0/go.mod h1:NUm3smlgw7+dGbIglu5VKe3bXre7/rwUXy4vybv2OZ0=
 github.com/PuerkitoBio/purell v1.1.0 h1:rmGxhojJlM0tuKtfdvliR84CFHljx9ag64t2xmVkjK4=
@@ -147,6 +145,8 @@ github.com/mailru/easyjson v0.0.0-20190312143242-1de009706dbe/go.mod h1:C1wdFJiN
 github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983 h1:wL11wNW7dhKIcRCHSm4sHKPWz0tt4mwBsVodG7+Xyqg=
 github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
+github.com/metal-pod/v v0.0.2 h1:iCHmbNqkX+aoOPxfictrJ8CQC0TWdCkRAf998NHFby4=
+github.com/metal-pod/v v0.0.2/go.mod h1:zfivn9g6ekhIur+pz78MLlOBqUqTk8sWJaFJNaz9OKk=
 github.com/mitchellh/mapstructure v1.1.2 h1:fmNYVwqnSfB9mZU6OS2O6GsXM+wcskZDuKQzvN1EDeE=
 github.com/mitchellh/mapstructure v1.1.2/go.mod h1:FVVH3fgwuzCH5S8UJGiWEs2h04kUh9fWfEaFds41c1Y=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w8PVh93nsPXa1VrQ6jlwL5oN8l14QlcNfg=

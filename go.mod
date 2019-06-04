@@ -23,6 +23,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.3.0
 	github.com/magefile/mage v1.8.0
 	github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983 // indirect
+	github.com/metal-pod/v v0.0.2
 	github.com/pkg/errors v0.8.1
 	github.com/stretchr/testify v1.3.0
 	github.com/vishvananda/netlink v1.0.0
@@ -30,7 +31,7 @@ require (
 	github.com/vmware/goipmi v0.0.0-20181114221114-2333cd82d702
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/zap v1.10.0
-	golang.org/x/net v0.0.0-20190509222800-a4d6f7feada5
+	golang.org/x/net v0.0.0-20190509222800-a4d6f7feada5 // indirect
 	golang.org/x/sys v0.0.0-20190509141414-a5b02f93d862 // indirect
 	golang.org/x/text v0.3.2 // indirect
 	gopkg.in/yaml.v2 v2.2.2

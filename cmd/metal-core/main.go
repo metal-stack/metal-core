@@ -19,8 +19,9 @@ import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	"github.com/go-openapi/strfmt"
 
+	"github.com/metal-pod/v"
+
 	"git.f-i-ts.de/cloud-native/metallib/bus"
-	"git.f-i-ts.de/cloud-native/metallib/version"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/go-openapi/runtime/client"
 	"github.com/kelseyhightower/envconfig"
@@ -62,7 +63,7 @@ func prepare() *app {
 	}
 
 	zapup.MustRootLogger().Info("Metal-Core Version",
-		zap.Any("version", version.V),
+		zap.Any("version", v.V),
 	)
 
 	zapup.MustRootLogger().Info("Configuration",
