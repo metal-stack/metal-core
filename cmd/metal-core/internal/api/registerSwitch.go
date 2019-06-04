@@ -30,6 +30,7 @@ func (c *apiClient) RegisterSwitch() (*models.V1SwitchResponse, error) {
 	params := sw.NewRegisterSwitchParams()
 	params.Body = &models.V1SwitchRegisterRequest{
 		ID:          &hostname,
+		Name:        hostname,
 		PartitionID: &c.PartitionID,
 		RackID:      &c.RackID,
 		Nics:        nics,
