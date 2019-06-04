@@ -11,6 +11,7 @@ import (
 	restfulspec "github.com/emicklei/go-restful-openapi"
 
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/client/partition"
 	sw "git.f-i-ts.de/cloud-native/metal/metal-core/client/switch_operations"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/api"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core/internal/core"
@@ -94,9 +95,10 @@ func prepare() *app {
 
 	app := &app{
 		AppContext: &domain.AppContext{
-			Config:        cfg,
-			MachineClient: machine.New(transport, strfmt.Default),
-			SwitchClient:  sw.New(transport, strfmt.Default),
+			Config:          cfg,
+			MachineClient:   machine.New(transport, strfmt.Default),
+			PartitionClient: partition.New(transport, strfmt.Default),
+			SwitchClient:    sw.New(transport, strfmt.Default),
 		},
 	}
 	app.SetAPIClient(api.NewClient)
@@ -133,9 +135,9 @@ func prepare() *app {
 	app.APIClient().ConstantlyPhoneHome()
 
 	app.BootConfig = &domain.BootConfig{
-		MetalHammerImageURL:    *s.Partition.BootConfiguration.ImageURL,
-		MetalHammerKernelURL:   *s.Partition.BootConfiguration.KernelURL,
-		MetalHammerCommandLine: *s.Partition.BootConfiguration.CommandLine,
+		MetalHammerImageURL:    s.Partition.Bootconfig.Imageurl,
+		MetalHammerKernelURL:   s.Partition.Bootconfig.Kernelurl,
+		MetalHammerCommandLine: s.Partition.Bootconfig.Commandline,
 	}
 
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {

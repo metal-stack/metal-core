@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
+	"git.f-i-ts.de/cloud-native/metal/metal-core/client/partition"
 	sw "git.f-i-ts.de/cloud-native/metal/metal-core/client/switch_operations"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"git.f-i-ts.de/cloud-native/metallib/security"
@@ -37,9 +38,9 @@ type MachineEvent struct {
 }
 
 type SwitchEvent struct {
-	Type     EventType                `json:"type"`
-	Machine  models.V1MachineResponse `json:"machine"`
-	Switches []models.MetalSwitch     `json:"switches"`
+	Type     EventType                 `json:"type"`
+	Machine  models.V1MachineResponse  `json:"machine"`
+	Switches []models.V1SwitchResponse `json:"switches"`
 }
 
 // Some EventType enums.
@@ -52,12 +53,13 @@ const (
 
 type APIClient interface {
 	FindMachines(mac string) (int, []*models.V1MachineResponse)
+	FindPartition(id string) (*models.V1PartitionResponse, error)
 	RegisterMachine(machineId string, request *MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse)
-	InstallImage(machineId string) (int, *models.V1MachineWaitResponse)
+	InstallImage(machineId string) (int, *models.V1MachineResponse)
 	IPMIConfig(machineId string) (*IPMIConfig, error)
 	AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error
 	FinalizeAllocation(machineID, consolepassword string) (*machine.FinalizeAllocationOK, error)
-	RegisterSwitch() (*models.MetalSwitch, error)
+	RegisterSwitch() (*models.V1SwitchResponse, error)
 	ConstantlyPhoneHome()
 }
 
@@ -152,6 +154,7 @@ type AppContext struct {
 	eventHandler    func(*AppContext) EventHandler
 	MachineClient   *machine.Client
 	SwitchClient    *sw.Client
+	PartitionClient *partition.Client
 	hmac            security.HMACAuth
 	Auth            runtime.ClientAuthInfoWriter
 }

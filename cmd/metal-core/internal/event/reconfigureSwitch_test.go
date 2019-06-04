@@ -21,19 +21,19 @@ func TestBuildSwitcherConfig(t *testing.T) {
 	}
 	n1 := "swp1"
 	m1 := "00:00:00:00:00:01"
-	swp1 := models.MetalNic{
+	swp1 := models.V1SwitchNic{
 		Name: &n1,
 		Mac:  &m1,
 	}
 	n2 := "swp2"
 	m2 := "00:00:00:00:00:02"
-	swp2 := models.MetalNic{
+	swp2 := models.V1SwitchNic{
 		Name: &n2,
 		Mac:  &m2,
 		Vrf:  "vrf104001",
 	}
-	s := &models.MetalSwitch{
-		Nics: []*models.MetalNic{
+	s := &models.V1SwitchResponse{
+		Nics: []*models.V1SwitchNic{
 			&swp1,
 			&swp2,
 		},

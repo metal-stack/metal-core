@@ -62,12 +62,20 @@ func (a *apiHandlerBootTest) RegisterMachine(machineId string, request *domain.M
 	return -1, nil
 }
 
-func (a *apiHandlerBootTest) InstallImage(machineId string) (int, *models.V1MachineWaitResponse) {
+func (a *apiHandlerBootTest) InstallImage(machineId string) (int, *models.V1MachineResponse) {
 	return -1, nil
 }
 
 func (a *apiHandlerBootTest) IPMIConfig(machineId string) (*domain.IPMIConfig, error) {
 	return nil, nil
+}
+
+func (a *apiHandlerBootTest) FindPartition(id string) (*models.V1PartitionResponse, error) {
+	return &models.V1PartitionResponse{Bootconfig: &models.V1PartitionBootConfiguration{
+		Kernelurl:   "https://blobstore.fi-ts.io/metal/images/metal-hammer/metal-hammer-kernel",
+		Imageurl:    "https://blobstore.fi-ts.io/metal/images/metal-hammer/metal-hammer-initrd.img.lz4",
+		Commandline: "",
+	}}, nil
 }
 
 func (a *apiHandlerBootTest) AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error {
@@ -78,7 +86,7 @@ func (a *apiHandlerBootTest) FinalizeAllocation(machineID, consolepassword strin
 	return nil, nil
 }
 
-func (a *apiHandlerBootTest) RegisterSwitch() (*models.MetalSwitch, error) {
+func (a *apiHandlerBootTest) RegisterSwitch() (*models.V1SwitchResponse, error) {
 	return nil, errors.New("")
 }
 

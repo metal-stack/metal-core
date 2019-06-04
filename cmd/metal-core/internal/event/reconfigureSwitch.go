@@ -17,7 +17,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func buildSwitcherConfig(conf *domain.Config, s *models.MetalSwitch) (*switcher.Conf, error) {
+func buildSwitcherConfig(conf *domain.Config, s *models.V1SwitchResponse) (*switcher.Conf, error) {
 	c := &switcher.Conf{}
 	c.Name = s.Name
 	asn64, err := strconv.ParseUint(conf.ASN, 10, 32)
