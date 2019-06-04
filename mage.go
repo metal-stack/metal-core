@@ -89,7 +89,7 @@ func (BUILD) Bin() {
 	gitVersion, _ := sh.Output("git", "describe", "--long", "--all")
 	gitsha, _ := sh.Output("git", "rev-parse", "--short=8", "HEAD")
 	buildDate, _ := sh.Output("date", "-Iseconds")
-	ldflags := fmt.Sprintf("-X 'git.f-i-ts.de/cloud-native/metallib/version.Version=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Revision=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Gitsha1=%v' -X 'git.f-i-ts.de/cloud-native/metallib/version.Builddate=%v'", version.V, gitVersion, gitsha, buildDate)
+	ldflags := fmt.Sprintf("-X 'github.com/metal-pod/v.Version=%v' -X 'github.com/metal-pod/v.Revision=%v' -X 'github.com/metal-pod/v.Gitsha1=%v' -X 'github.com/metal-pod/v.Builddate=%v'", version.V, gitVersion, gitsha, buildDate)
 	os.Chdir("cmd/metal-core")
 	defer os.Chdir("../..")
 	if err := sh.RunV("go", "build", "-tags", "netgo", "-ldflags", ldflags, "-o", "../../bin/metal-core"); err != nil {
