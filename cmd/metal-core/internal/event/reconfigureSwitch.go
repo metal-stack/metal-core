@@ -25,12 +25,14 @@ func buildSwitcherConfig(conf *domain.Config, s *models.V1SwitchResponse) (*swit
 	if err != nil {
 		return nil, err
 	}
+
 	c.ASN = asn
 	c.Loopback = conf.LoopbackIP
 	c.MetalCoreCIDR = conf.CIDR
 	c.AdditionalBridgeVIDs = conf.AdditionalBridgeVIDs
 	c.Neighbors = strings.Split(conf.SpineUplinks, ",")
 	c.Tenants = make(map[string]*switcher.Tenant)
+	c.Firewalls = []string{}
 	c.Unprovisioned = []string{}
 	c.BladePorts = conf.AdditionalBridgePorts
 	for _, nic := range s.Nics {
@@ -45,6 +47,10 @@ func buildSwitcherConfig(conf *domain.Config, s *models.V1SwitchResponse) (*swit
 			if !contains(c.Neighbors, *nic.Name) {
 				c.Unprovisioned = append(c.Unprovisioned, *nic.Name)
 			}
+			continue
+		}
+		if nic.Vrf == "default" {
+			c.Firewalls = append(c.Firewalls, *nic.Name)
 			continue
 		}
 		vni64, err := strconv.ParseUint(strings.TrimPrefix(nic.Vrf, "vrf"), 10, 32)

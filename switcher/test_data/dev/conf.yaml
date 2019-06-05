@@ -15,6 +15,7 @@ bladeports:
 neighbors:
   - swp31
   - swp32
+firewalls:
   - swp3
 unprovisioned:
   - swp4

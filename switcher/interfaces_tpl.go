@@ -35,6 +35,12 @@ iface {{ . }}
     mtu 9216
 {{- end }}
 {{- end }}
+{{- range .Firewalls }}
+
+auto {{ . }}
+iface {{ . }}
+    mtu 9216
+{{- end }}
 
 auto bridge
 iface bridge

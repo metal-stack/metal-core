@@ -5,13 +5,24 @@ frr defaults datacenter
 hostname {{ .Name }}
 username cumulus nopassword
 service integrated-vtysh-config
-log syslog informational
+!
+log syslog debugging
+debug bgp updates
+debug bgp nht
+debug bgp update-groups
+debug bgp zebra
 {{- range $vrf, $t := .Tenants }}
 !
 vrf vrf{{ $t.VNI }}
  vni {{ $t.VNI }}
 {{- end }}
 {{- range .Neighbors }}
+!
+interface {{ . }}
+ ipv6 nd ra-interval 6
+ no ipv6 nd suppress-ra
+{{- end }}
+{{- range .Firewalls }}
 !
 interface {{ . }}
  ipv6 nd ra-interval 6
@@ -32,17 +43,26 @@ router bgp {{ $ASN }}
  neighbor FABRIC peer-group
  neighbor FABRIC remote-as external
  neighbor FABRIC timers 1 3
+ {{- range .Firewalls }}
+ neighbor {{ . }} interface peer-group FABRIC
+ {{- end }}
  {{- range .Neighbors }}
  neighbor {{ . }} interface peer-group FABRIC
  {{- end }}
  !
  address-family ipv4 unicast
   redistribute connected route-map LOOPBACKS
+  {{- range .Firewalls }}
+  neighbor {{ . }} allowas-in 1
+  {{- end }}
  exit-address-family
  !
  address-family l2vpn evpn
   neighbor FABRIC activate
   advertise-all-vni
+  {{- range .Firewalls }}
+  neighbor {{ . }} allowas-in 1
+  {{- end }}
  exit-address-family
 !
 route-map LOOPBACKS permit 10

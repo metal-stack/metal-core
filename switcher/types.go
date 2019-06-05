@@ -8,6 +8,7 @@ type Conf struct {
 	Eth0                 Nic
 	Neighbors            []string
 	Tenants              map[string]*Tenant
+	Firewalls            []string
 	Unprovisioned        []string
 	DevMode              bool
 	MetalCoreCIDR        string
