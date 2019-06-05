@@ -3,7 +3,7 @@ module git.f-i-ts.de/cloud-native/metal/metal-core
 go 1.12
 
 require (
-	git.f-i-ts.de/cloud-native/metallib v0.0.0-20190529124425-f20faa8286d0
+	git.f-i-ts.de/cloud-native/metallib v0.0.0-20190605034929-e8cc1d344817
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/emicklei/go-restful v2.9.3+incompatible
@@ -25,6 +25,7 @@ require (
 	github.com/kr/pty v1.1.4 // indirect
 	github.com/magefile/mage v1.8.0
 	github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983 // indirect
+	github.com/metal-pod/v v0.0.2
 	github.com/pkg/errors v0.8.1
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.3.0
