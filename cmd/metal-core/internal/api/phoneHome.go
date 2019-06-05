@@ -7,6 +7,7 @@ import (
 	"github.com/google/gopacket/pcap"
 	"go.uber.org/zap"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -30,6 +31,10 @@ func (c *apiClient) ConstantlyPhoneHome() {
 	e := event.NewEmitter(c.AppContext)
 
 	for _, iface := range ifs {
+		// consider only switch port interfaces
+		if !strings.HasPrefix(iface.Name, "swp") {
+			continue
+		}
 		lldpcli, err := lldp.NewClient(iface.Name)
 		if err != nil {
 			zapup.MustRootLogger().Error("unable to start LLDP client",
