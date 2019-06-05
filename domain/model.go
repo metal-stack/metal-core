@@ -7,10 +7,10 @@ import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/partition"
 	sw "git.f-i-ts.de/cloud-native/metal/metal-core/client/switch_operations"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
-	"git.f-i-ts.de/cloud-native/metallib/security"
 	"github.com/emicklei/go-restful"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
+	"github.com/metal-pod/security"
 )
 
 type EventType string
