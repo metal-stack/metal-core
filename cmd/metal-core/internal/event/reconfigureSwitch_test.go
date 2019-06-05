@@ -32,10 +32,18 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		Mac:  &m2,
 		Vrf:  "vrf104001",
 	}
+	n3 := "swp3"
+	m3 := "00:00:00:00:00:03"
+	swp3 := models.V1SwitchNic{
+		Name: &n3,
+		Mac:  &m3,
+		Vrf:  "default",
+	}
 	s := &models.V1SwitchResponse{
 		Nics: []*models.V1SwitchNic{
 			&swp1,
 			&swp2,
+			&swp3,
 		},
 	}
 	actual, err := buildSwitcherConfig(config, s)
@@ -46,6 +54,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		MetalCoreCIDR: "10.255.255.2/24",
 		ASN:           420000001,
 		Neighbors:     []string{"swp31", "swp32"},
+		Firewalls:     []string{"swp3"},
 		Unprovisioned: []string{"swp1"},
 		Tenants: map[string]*switcher.Tenant{"vrf104001": {
 			VNI:       104001,

@@ -32,8 +32,8 @@ func buildSwitcherConfig(conf *domain.Config, s *models.V1SwitchResponse) (*swit
 	c.AdditionalBridgeVIDs = conf.AdditionalBridgeVIDs
 	c.Neighbors = strings.Split(conf.SpineUplinks, ",")
 	c.Tenants = make(map[string]*switcher.Tenant)
-	c.Firewalls = []string{}
-	c.Unprovisioned = []string{}
+	c.Firewalls = nil
+	c.Unprovisioned = nil
 	c.BladePorts = conf.AdditionalBridgePorts
 	for _, nic := range s.Nics {
 		if contains(conf.AdditionalBridgePorts, *nic.Name) {
