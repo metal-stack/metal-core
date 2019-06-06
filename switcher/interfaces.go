@@ -35,7 +35,7 @@ func NewInterfacesApplier(c *Conf) Applier {
 // Apply applies the configuration to the system
 func (a InterfacesApplier) Apply() error {
 	tpl := template.Must(template.New(interfacesTPL).Parse(interfacesTPL))
-	return a.applier.Apply(*tpl, InterfacesTmp, Interfaces)
+	return a.applier.Apply(*tpl, InterfacesTmp, Interfaces, true)
 }
 
 // Render renders the network interfaces to the given writer

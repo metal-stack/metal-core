@@ -35,7 +35,7 @@ func NewFrrApplier(c *Conf) Applier {
 // Apply applies the configuration to the system
 func (a FrrApplier) Apply() error {
 	tpl := template.Must(template.New(frrTPL).Parse(frrTPL))
-	return a.applier.Apply(*tpl, FrrTmp, Frr)
+	return a.applier.Apply(*tpl, FrrTmp, Frr, true)
 }
 
 // Render renders the frr configuration to the given writer
