@@ -66,7 +66,7 @@ links:
 					zap.String("interface", name),
 					zap.Any("blacklist", blacklist),
 				)
-				break links
+				continue links
 			}
 		}
 		if !strings.HasPrefix(name, "swp") {
