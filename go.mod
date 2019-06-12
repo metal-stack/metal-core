@@ -3,9 +3,9 @@ module git.f-i-ts.de/cloud-native/metal/metal-core
 go 1.12
 
 require (
-	git.f-i-ts.de/cloud-native/metallib v0.0.0-20190605135911-c56a47c81147
+	git.f-i-ts.de/cloud-native/metallib v0.0.0-20190612092240-20c90c56a2bc
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
-	github.com/emicklei/go-restful v2.9.3+incompatible
+	github.com/emicklei/go-restful v2.9.6+incompatible
 	github.com/emicklei/go-restful-openapi v1.0.0
 	github.com/go-openapi/analysis v0.19.0 // indirect
 	github.com/go-openapi/errors v0.19.0
@@ -23,7 +23,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.3.0
 	github.com/magefile/mage v1.8.0
 	github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983 // indirect
-	github.com/metal-pod/security v0.0.0-20190605085245-f3d2eb409950
+	github.com/metal-pod/security v0.0.0-20190605103437-319d1b2eca89
 	github.com/metal-pod/v v0.0.2
 	github.com/pkg/errors v0.8.1
 	github.com/stretchr/testify v1.3.0
@@ -32,7 +32,8 @@ require (
 	github.com/vmware/goipmi v0.0.0-20181114221114-2333cd82d702
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/zap v1.10.0
-	golang.org/x/sys v0.0.0-20190529085034-854af27f14a7 // indirect
+	golang.org/x/net v0.0.0-20190611141213-3f473d35a33a // indirect
+	golang.org/x/sys v0.0.0-20190610200419-93c9922d18ae // indirect
 	golang.org/x/text v0.3.2 // indirect
 	gopkg.in/yaml.v2 v2.2.2
 )
