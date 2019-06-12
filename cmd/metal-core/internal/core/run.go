@@ -21,7 +21,7 @@ func (s *coreServer) Run() {
 			zapup.MustRootLogger().Info("start periodic switch configuration update")
 			err := s.EventHandler().ReconfigureSwitch(host)
 			if err != nil {
-				zapup.MustRootLogger().Fatal("unable to fetch and apply switch configuration periodically",
+				zapup.MustRootLogger().Error("unable to fetch and apply switch configuration periodically",
 					zap.Error(err))
 			}
 		}
