@@ -13,16 +13,16 @@ import (
 
 type searchMachineMock struct {
 	simulateError bool
-	actualMAC     *string
+	actualMAC     string
 }
 
 func (m *searchMachineMock) Submit(o *runtime.ClientOperation) (interface{}, error) {
-	params := o.Params.(*machine.SearchMachineParams)
-	m.actualMAC = params.Mac
+	params := o.Params.(*machine.FindMachinesParams)
+	m.actualMAC = params.Body.NicsMacAddresses[0]
 	if m.simulateError {
 		return nil, errors.New("not found")
 	}
-	return &machine.SearchMachineOK{}, nil
+	return &machine.FindMachinesOK{}, nil
 }
 
 func TestFindMachines_OK(t *testing.T) {
@@ -43,7 +43,7 @@ func TestFindMachines_OK(t *testing.T) {
 
 	// THEN
 	require.Equal(t, http.StatusOK, sc)
-	require.Equal(t, &mac, m.actualMAC)
+	require.Equal(t, mac, m.actualMAC)
 }
 
 func TestFindMachines_Error(t *testing.T) {
@@ -64,5 +64,5 @@ func TestFindMachines_Error(t *testing.T) {
 
 	// THEN
 	require.Equal(t, http.StatusInternalServerError, sc)
-	require.Equal(t, &mac, m.actualMAC)
+	require.Equal(t, mac, m.actualMAC)
 }

@@ -86,6 +86,52 @@
         }
       }
     },
+    "/v1/firewall/find": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "firewall"
+        ],
+        "summary": "search firewalls",
+        "operationId": "searchFirewall",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "project that this firewall is allocated with",
+            "name": "project",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "the partition in which the firewall is located",
+            "name": "partition",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/v1.FirewallResponse"
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          }
+        }
+      }
+    },
     "/v1/firewall/{id}": {
       "get": {
         "consumes": [
@@ -459,6 +505,52 @@
         }
       }
     },
+    "/v1/ip/allocate/{ip}": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ip"
+        ],
+        "summary": "allocate an specific ip in the given network for a project.",
+        "operationId": "allocateSpecificIP",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "ip to try to allocate",
+            "name": "ip",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.IPAllocateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/v1.IPResponse"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          }
+        }
+      }
+    },
     "/v1/ip/{id}": {
       "get": {
         "consumes": [
@@ -605,7 +697,7 @@
       }
     },
     "/v1/machine/find": {
-      "get": {
+      "post": {
         "consumes": [
           "application/json"
         ],
@@ -616,13 +708,15 @@
           "machine"
         ],
         "summary": "search machines",
-        "operationId": "searchMachine",
+        "operationId": "findMachines",
         "parameters": [
           {
-            "type": "string",
-            "description": "one of the MAC address of the machine",
-            "name": "mac",
-            "in": "query"
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.FindMachinesRequest"
+            }
           }
         ],
         "responses": {
@@ -1362,6 +1456,48 @@
         }
       }
     },
+    "/v1/network/find": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "network"
+        ],
+        "summary": "get all networks that match given properties",
+        "operationId": "findNetworks",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.FindNetworksRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/v1.NetworkResponse"
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          }
+        }
+      }
+    },
     "/v1/network/{id}": {
       "get": {
         "consumes": [
@@ -1543,6 +1679,38 @@
             "description": "Conflict",
             "schema": {
               "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/v1/partition/capacity": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Partition"
+        ],
+        "summary": "get Partition capacity",
+        "operationId": "partitionCapacity",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/v1.PartitionCapacity"
+              }
             }
           },
           "default": {
@@ -2089,12 +2257,306 @@
       }
     },
     "v1.EmptyBody": {},
+    "v1.FindMachinesRequest": {
+      "required": [
+        "id",
+        "name",
+        "partition_id",
+        "sizeid",
+        "rackid",
+        "liveliness",
+        "tags",
+        "allocation_name",
+        "allocation_tenant",
+        "allocation_project",
+        "allocation_image_id",
+        "allocation_hostname",
+        "allocation_succeeded",
+        "network_ids",
+        "network_prefixes",
+        "network_ips",
+        "network_destination_prefixes",
+        "network_vrfs",
+        "network_primary",
+        "network_asns",
+        "network_nat",
+        "network_underlay",
+        "hardware_memory",
+        "hardware_cpu_cores",
+        "nics_mac_addresses",
+        "nics_names",
+        "nics_vrfs",
+        "nics_neighbor_mac_addresses",
+        "nics_neighbor_names",
+        "nics_neighbor_vrfs",
+        "disk_names",
+        "disk_sizes",
+        "state_value",
+        "ipmi_address",
+        "ipmi_mac_address",
+        "ipmi_user",
+        "ipmi_interface",
+        "fru_chassis_part_number",
+        "fru_chassis_part_serial",
+        "fru_board_mfg",
+        "fru_board_mfg_serial",
+        "fru_board_part_number",
+        "fru_product_manufacturer",
+        "fru_product_part_number",
+        "fru_product_serial"
+      ],
+      "properties": {
+        "allocation_hostname": {
+          "type": "string"
+        },
+        "allocation_image_id": {
+          "type": "string"
+        },
+        "allocation_name": {
+          "type": "string"
+        },
+        "allocation_project": {
+          "type": "string"
+        },
+        "allocation_succeeded": {
+          "type": "boolean"
+        },
+        "allocation_tenant": {
+          "type": "string"
+        },
+        "disk_names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "disk_sizes": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "fru_board_mfg": {
+          "type": "string"
+        },
+        "fru_board_mfg_serial": {
+          "type": "string"
+        },
+        "fru_board_part_number": {
+          "type": "string"
+        },
+        "fru_chassis_part_number": {
+          "type": "string"
+        },
+        "fru_chassis_part_serial": {
+          "type": "string"
+        },
+        "fru_product_manufacturer": {
+          "type": "string"
+        },
+        "fru_product_part_number": {
+          "type": "string"
+        },
+        "fru_product_serial": {
+          "type": "string"
+        },
+        "hardware_cpu_cores": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "hardware_memory": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "id": {
+          "type": "string"
+        },
+        "ipmi_address": {
+          "type": "string"
+        },
+        "ipmi_interface": {
+          "type": "string"
+        },
+        "ipmi_mac_address": {
+          "type": "string"
+        },
+        "ipmi_user": {
+          "type": "string"
+        },
+        "liveliness": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "network_asns": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "network_destination_prefixes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "network_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "network_ips": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "network_nat": {
+          "type": "boolean"
+        },
+        "network_prefixes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "network_primary": {
+          "type": "boolean"
+        },
+        "network_underlay": {
+          "type": "boolean"
+        },
+        "network_vrfs": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "nics_mac_addresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "nics_names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "nics_neighbor_mac_addresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "nics_neighbor_names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "nics_neighbor_vrfs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "nics_vrfs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "partition_id": {
+          "type": "string"
+        },
+        "rackid": {
+          "type": "string"
+        },
+        "sizeid": {
+          "type": "string"
+        },
+        "state_value": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "v1.FindNetworksRequest": {
+      "required": [
+        "id",
+        "name",
+        "partitionid",
+        "projectid",
+        "prefixes",
+        "destinationprefixes",
+        "nat",
+        "primary",
+        "underlay",
+        "vrf",
+        "parentnetworkid",
+        "tenantid"
+      ],
+      "properties": {
+        "destinationprefixes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "nat": {
+          "type": "boolean"
+        },
+        "parentnetworkid": {
+          "type": "string"
+        },
+        "partitionid": {
+          "type": "string"
+        },
+        "prefixes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "primary": {
+          "type": "boolean"
+        },
+        "projectid": {
+          "type": "string"
+        },
+        "tenantid": {
+          "type": "string"
+        },
+        "underlay": {
+          "type": "boolean"
+        },
+        "vrf": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
     "v1.FirewallCreateRequest": {
       "required": [
-        "partitionid",
-        "sizeid",
         "tenant",
         "projectid",
+        "partitionid",
+        "sizeid",
         "imageid",
         "ssh_pub_keys",
         "networks"
@@ -2169,18 +2631,18 @@
     },
     "v1.FirewallResponse": {
       "required": [
-        "id",
-        "allocation",
-        "created",
-        "rackid",
-        "changed",
-        "hardware",
         "tags",
-        "partition",
-        "state",
-        "liveliness",
         "size",
-        "events"
+        "allocation",
+        "rackid",
+        "hardware",
+        "events",
+        "liveliness",
+        "state",
+        "id",
+        "created",
+        "changed",
+        "partition"
       ],
       "properties": {
         "allocation": {
@@ -2280,8 +2742,8 @@
       "required": [
         "projectid",
         "networkid",
-        "ipaddress",
         "machineid",
+        "ipaddress",
         "created",
         "changed"
       ],
@@ -2660,9 +3122,9 @@
     },
     "v1.MachineHardware": {
       "required": [
+        "disks",
         "memory",
         "cpu_cores",
-        "disks",
         "nics"
       ],
       "properties": {
@@ -2860,8 +3322,8 @@
     },
     "v1.MachineNicExtended": {
       "required": [
-        "name",
         "mac",
+        "name",
         "neighbors"
       ],
       "properties": {
@@ -2970,15 +3432,15 @@
     "v1.MachineResponse": {
       "required": [
         "id",
-        "state",
-        "liveliness",
-        "partition",
-        "rackid",
         "hardware",
-        "tags",
+        "liveliness",
+        "rackid",
         "size",
-        "allocation",
+        "state",
         "events",
+        "tags",
+        "partition",
+        "allocation",
         "created",
         "changed"
       ],
@@ -3071,12 +3533,12 @@
     "v1.NetworkCreateRequest": {
       "required": [
         "id",
+        "parentnetworkid",
         "prefixes",
         "destinationprefixes",
         "nat",
         "primary",
-        "underlay",
-        "parentnetworkid"
+        "underlay"
       ],
       "properties": {
         "description": {
@@ -3140,12 +3602,12 @@
     "v1.NetworkResponse": {
       "required": [
         "id",
+        "underlay",
         "parentnetworkid",
         "prefixes",
         "destinationprefixes",
         "nat",
         "primary",
-        "underlay",
         "usage",
         "created",
         "changed"
@@ -3295,6 +3757,34 @@
         }
       }
     },
+    "v1.PartitionCapacity": {
+      "required": [
+        "id",
+        "servers"
+      ],
+      "properties": {
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "id": {
+          "description": "the unique ID of this entity",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "name": {
+          "description": "a readable name for this entity",
+          "type": "string"
+        },
+        "servers": {
+          "description": "servers available in this partition",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.ServerCapacity"
+          }
+        }
+      }
+    },
     "v1.PartitionCreateRequest": {
       "required": [
         "id",
@@ -3406,6 +3896,29 @@
         "name": {
           "description": "a readable name for this entity",
           "type": "string"
+        }
+      }
+    },
+    "v1.ServerCapacity": {
+      "required": [
+        "size",
+        "total",
+        "free"
+      ],
+      "properties": {
+        "free": {
+          "description": "free servers with this size",
+          "type": "integer",
+          "format": "int32"
+        },
+        "size": {
+          "description": "the size of the server",
+          "type": "string"
+        },
+        "total": {
+          "description": "total amount of servers with this size",
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
