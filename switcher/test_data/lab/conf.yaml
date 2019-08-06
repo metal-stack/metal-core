@@ -11,7 +11,15 @@ ports:
   underlay:
     - swp31
     - swp32
-    - swp3
+  firewalls:
+    swp3:
+      port: swp3
+      vnis:
+        - 104001
+        - 104009
+        - 104010
+      cidrs:
+        - "10.0.2.1/32"
   unprovisioned:
     - swp4
     - swp5
