@@ -30,37 +30,54 @@ func buildSwitcherConfig(conf *domain.Config, s *models.V1SwitchResponse) (*swit
 	c.Loopback = conf.LoopbackIP
 	c.MetalCoreCIDR = conf.CIDR
 	c.AdditionalBridgeVIDs = conf.AdditionalBridgeVIDs
-	c.Neighbors = strings.Split(conf.SpineUplinks, ",")
-	c.Tenants = make(map[string]*switcher.Tenant)
-	c.Firewalls = nil
-	c.Unprovisioned = nil
-	c.BladePorts = conf.AdditionalBridgePorts
+	p := switcher.Ports{
+		Underlay:      strings.Split(conf.SpineUplinks, ","),
+		Unprovisioned: []string{},
+		Vrfs:          map[string]*switcher.Vrf{},
+		Firewalls:     map[string]*switcher.Firewall{},
+	}
+	p.BladePorts = conf.AdditionalBridgePorts
 	for _, nic := range s.Nics {
-		if contains(conf.AdditionalBridgePorts, *nic.Name) {
+		port := *nic.Name
+		if contains(conf.AdditionalBridgePorts, port) {
 			continue
 		}
-		tenant := &switcher.Tenant{}
-		if t, has := c.Tenants[nic.Vrf]; has {
-			tenant = t
-		}
 		if nic.Vrf == "" {
-			if !contains(c.Neighbors, *nic.Name) {
-				c.Unprovisioned = append(c.Unprovisioned, *nic.Name)
+			if !contains(p.Unprovisioned, port) {
+				p.Unprovisioned = append(p.Unprovisioned, port)
 			}
 			continue
 		}
+		// Firewall-Port
 		if nic.Vrf == "default" {
-			c.Firewalls = append(c.Firewalls, *nic.Name)
+			fw := &switcher.Firewall{
+				Port: port,
+			}
+			if nic.Filter != nil {
+				fw.Vnis = nic.Filter.Vnis
+				fw.Cidrs = nic.Filter.Cidrs
+			}
+			p.Firewalls[port] = fw
 			continue
+		}
+		// Machine-Port
+		vrf := &switcher.Vrf{}
+		if v, has := p.Vrfs[nic.Vrf]; has {
+			vrf = v
 		}
 		vni64, err := strconv.ParseUint(strings.TrimPrefix(nic.Vrf, "vrf"), 10, 32)
 		if err != nil {
 			return nil, err
 		}
-		tenant.VNI = uint32(vni64)
-		tenant.Neighbors = append(tenant.Neighbors, *nic.Name)
-		c.Tenants[nic.Vrf] = tenant
+		vrf.VNI = uint32(vni64)
+		vrf.Neighbors = append(vrf.Neighbors, port)
+		if nic.Filter != nil {
+			vrf.Cidrs = nic.Filter.Cidrs
+		}
+		p.Vrfs[nic.Vrf] = vrf
 	}
+	c.Ports = p
+	c.FillRouteMapsAndIPPrefixLists()
 	m, err := vlan.ReadMapping()
 	if err != nil {
 		return nil, err
@@ -110,7 +127,7 @@ func (h *eventHandler) ReconfigureSwitch(switchID string) error {
 }
 
 func fillEth0Info(c *switcher.Conf, gw string, devMode bool) error {
-	c.Eth0 = switcher.Nic{}
+	c.Ports.Eth0 = switcher.Nic{}
 	eth0, err := netlink.LinkByName("eth0")
 	if err != nil {
 		return err
@@ -125,8 +142,8 @@ func fillEth0Info(c *switcher.Conf, gw string, devMode bool) error {
 
 	ip := addrs[0].IP
 	s, _ := addrs[0].IPNet.Mask.Size()
-	c.Eth0.AddressCIDR = fmt.Sprintf("%s/%d", ip.String(), s)
-	c.Eth0.Gateway = gw
+	c.Ports.Eth0.AddressCIDR = fmt.Sprintf("%s/%d", ip.String(), s)
+	c.Ports.Eth0.Gateway = gw
 	c.DevMode = devMode
 	return nil
 }

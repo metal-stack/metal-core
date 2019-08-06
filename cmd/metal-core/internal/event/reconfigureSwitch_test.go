@@ -53,14 +53,20 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		Loopback:      "10.0.0.1",
 		MetalCoreCIDR: "10.255.255.2/24",
 		ASN:           420000001,
-		Neighbors:     []string{"swp31", "swp32"},
-		Firewalls:     []string{"swp3"},
-		Unprovisioned: []string{"swp1"},
-		Tenants: map[string]*switcher.Tenant{"vrf104001": {
-			VNI:       104001,
-			VLANID:    1001,
-			Neighbors: []string{"swp2"},
-		}},
+		Ports: switcher.Ports{
+			Underlay:      []string{"swp31", "swp32"},
+			Unprovisioned: []string{"swp1"},
+			Firewalls: map[string]*switcher.Firewall{
+				"swp3": &switcher.Firewall{
+					Port: "swp3",
+				},
+			},
+			Vrfs: map[string]*switcher.Vrf{"vrf104001": {
+				VNI:       104001,
+				VLANID:    1001,
+				Neighbors: []string{"swp2"},
+			}},
+		},
 		AdditionalBridgeVIDs: []string{"201-256", "301-356"},
 	}
 	require.EqualValues(t, expected, actual)

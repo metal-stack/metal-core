@@ -14,8 +14,8 @@ iface lo inet loopback
 # The primary network interface
 auto eth0
 iface eth0
-    address {{ .Eth0.AddressCIDR }}
-    gateway {{ .Eth0.Gateway }}
+    address {{ .Ports.Eth0.AddressCIDR }}
+    gateway {{ .Ports.Eth0.Gateway }}
     vrf mgmt
 {{- if .DevMode  }}
 
@@ -27,29 +27,27 @@ auto mgmt
 iface mgmt
     address 127.0.0.1/8
     vrf-table auto
-{{- if .Neighbors }}
-{{- range .Neighbors }}
+{{- range .Ports.Underlay }}
 
 auto {{ . }}
 iface {{ . }}
     mtu 9216
 {{- end }}
-{{- end }}
-{{- range .Firewalls }}
+{{- range .Ports.Firewalls }}
 
-auto {{ . }}
-iface {{ . }}
+auto {{ .Port }}
+iface {{ .Port }}
     mtu 9216
 {{- end }}
 
 auto bridge
 iface bridge
-    bridge-ports vni104000{{ range .Unprovisioned }} {{ . }}{{ end }}{{ range .BladePorts }} {{ . }}{{ end }}{{ range $vrf, $t := .Tenants }} vni{{ $t.VNI }}{{ end }}
-    bridge-vids 4000{{ range $vrf, $t := .Tenants }} {{ $t.VLANID }}{{ end }}{{ range $vids := .AdditionalBridgeVIDs }} {{ $vids }}{{ end }}
+    bridge-ports vni104000{{ range .Ports.Unprovisioned }} {{ . }}{{ end }}{{ range .Ports.BladePorts }} {{ . }}{{ end }}{{ range $vrf, $t := .Ports.Vrfs }} vni{{ $t.VNI }}{{ end }}
+    bridge-vids 4000{{ range $vrf, $t := .Ports.Vrfs }} {{ $t.VLANID }}{{ end }}{{ range $vids := .AdditionalBridgeVIDs }} {{ $vids }}{{ end }}
     bridge-vlan-aware yes
 
 # Tenants
-{{- range $vrf, $t := .Tenants }}
+{{- range $vrf, $t := .Ports.Vrfs }}
 
 auto {{ $vrf }}
 iface {{ $vrf }}
@@ -101,7 +99,7 @@ iface vni104000
     vxlan-id 104000
     vxlan-local-tunnelip {{ $IPLoopback }}
 
-{{- range .Unprovisioned }}
+{{- range .Ports.Unprovisioned }}
 
 auto {{ . }}
 iface {{ . }}

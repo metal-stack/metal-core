@@ -551,6 +551,48 @@
         }
       }
     },
+    "/v1/ip/find": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "ip"
+        ],
+        "summary": "get all ips that match given properties",
+        "operationId": "findIPs",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.FindIPsRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/v1.IPResponse"
+              }
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          }
+        }
+      }
+    },
     "/v1/ip/{id}": {
       "get": {
         "consumes": [
@@ -2256,7 +2298,60 @@
         }
       }
     },
+    "v1.BGPFilter": {
+      "required": [
+        "cidrs"
+      ],
+      "properties": {
+        "cidrs": {
+          "description": "the cidr addresses that are allowed to be announced at this switch port",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "vnis": {
+          "description": "the virtual networks that are exposed at this switch port",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "v1.EmptyBody": {},
+    "v1.FindIPsRequest": {
+      "description": "an ip address that can be attached to a machine",
+      "required": [
+        "ipaddress",
+        "projectid",
+        "networkprefix",
+        "networkid",
+        "machineid"
+      ],
+      "properties": {
+        "ipaddress": {
+          "description": "the address (ipv4 or ipv6) of this ip",
+          "type": "string"
+        },
+        "machineid": {
+          "description": "the machine this ip address belongs to, empty if not strong coupled",
+          "type": "string"
+        },
+        "networkid": {
+          "description": "the network this ip allocate request address belongs to",
+          "type": "string"
+        },
+        "networkprefix": {
+          "description": "the prefix of the network this ip address belongs to",
+          "type": "string"
+        },
+        "projectid": {
+          "description": "the project this ip address belongs to",
+          "type": "string"
+        }
+      }
+    },
     "v1.FindMachinesRequest": {
       "required": [
         "id",
@@ -2556,10 +2651,9 @@
         "tenant",
         "projectid",
         "partitionid",
-        "sizeid",
-        "imageid",
         "ssh_pub_keys",
-        "networks"
+        "sizeid",
+        "imageid"
       ],
       "properties": {
         "description": {
@@ -2578,15 +2672,22 @@
           "description": "the image id to assign this machine to",
           "type": "string"
         },
+        "ips": {
+          "description": "the ips to attach to this machine additionally",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "name": {
           "description": "a readable name for this entity",
           "type": "string"
         },
         "networks": {
-          "description": "the networks of this firewall",
+          "description": "the networks that this machine will be placed in.",
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/v1.MachineAllocationNetwork"
           }
         },
         "partitionid": {
@@ -2631,18 +2732,18 @@
     },
     "v1.FirewallResponse": {
       "required": [
-        "tags",
-        "size",
-        "allocation",
-        "rackid",
-        "hardware",
-        "events",
-        "liveliness",
-        "state",
         "id",
-        "created",
+        "size",
+        "state",
+        "hardware",
         "changed",
-        "partition"
+        "partition",
+        "allocation",
+        "tags",
+        "rackid",
+        "liveliness",
+        "events",
+        "created"
       ],
       "properties": {
         "allocation": {
@@ -2740,10 +2841,10 @@
     },
     "v1.IPResponse": {
       "required": [
-        "projectid",
         "networkid",
-        "machineid",
+        "projectid",
         "ipaddress",
+        "machineid",
         "created",
         "changed"
       ],
@@ -2942,9 +3043,23 @@
           "description": "the image id to assign this machine to",
           "type": "string"
         },
+        "ips": {
+          "description": "the ips to attach to this machine additionally",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "name": {
           "description": "a readable name for this entity",
           "type": "string"
+        },
+        "networks": {
+          "description": "the networks that this machine will be placed in.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.MachineAllocationNetwork"
+          }
         },
         "partitionid": {
           "description": "the partition id to assign this machine to",
@@ -3056,6 +3171,22 @@
         }
       }
     },
+    "v1.MachineAllocationNetwork": {
+      "required": [
+        "networkid",
+        "autoacquire"
+      ],
+      "properties": {
+        "autoacquire": {
+          "description": "will automatically acquire an ip in this network if set to true, default is true",
+          "type": "boolean"
+        },
+        "networkid": {
+          "description": "the id of the network that this machine will be placed in",
+          "type": "string"
+        }
+      }
+    },
     "v1.MachineBlockDevice": {
       "required": [
         "name",
@@ -3122,9 +3253,9 @@
     },
     "v1.MachineHardware": {
       "required": [
-        "disks",
         "memory",
         "cpu_cores",
+        "disks",
         "nics"
       ],
       "properties": {
@@ -3432,15 +3563,15 @@
     "v1.MachineResponse": {
       "required": [
         "id",
-        "hardware",
-        "liveliness",
         "rackid",
-        "size",
-        "state",
-        "events",
-        "tags",
-        "partition",
+        "hardware",
         "allocation",
+        "liveliness",
+        "events",
+        "partition",
+        "state",
+        "tags",
+        "size",
         "created",
         "changed"
       ],
@@ -3533,12 +3664,12 @@
     "v1.NetworkCreateRequest": {
       "required": [
         "id",
-        "parentnetworkid",
-        "prefixes",
-        "destinationprefixes",
         "nat",
         "primary",
-        "underlay"
+        "underlay",
+        "parentnetworkid",
+        "prefixes",
+        "destinationprefixes"
       ],
       "properties": {
         "description": {
@@ -3602,12 +3733,12 @@
     "v1.NetworkResponse": {
       "required": [
         "id",
-        "underlay",
         "parentnetworkid",
         "prefixes",
         "destinationprefixes",
         "nat",
         "primary",
+        "underlay",
         "usage",
         "created",
         "changed"
@@ -4113,6 +4244,10 @@
         "name"
       ],
       "properties": {
+        "filter": {
+          "description": "configures the bgp filter applied at the switch port",
+          "$ref": "#/definitions/v1.BGPFilter"
+        },
         "mac": {
           "description": "the mac address of this network interface",
           "type": "string"
