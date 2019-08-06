@@ -43,27 +43,30 @@ router bgp {{ $ASN }}
  neighbor FABRIC peer-group
  neighbor FABRIC remote-as external
  neighbor FABRIC timers 1 3
- {{- range .Ports.Firewalls }}
- neighbor {{ .Port }} interface peer-group FABRIC
- {{- end }}
  {{- range .Ports.Underlay }}
  neighbor {{ . }} interface peer-group FABRIC
+ {{- end }}
+ neighbor FIREWALL peer-group
+ neighbor FIREWALL remote-as external
+ neighbor FIREWALL timers 1 3
+ {{- range .Ports.Firewalls }}
+ neighbor {{ .Port }} interface peer-group FIREWALL
  {{- end }}
  !
  address-family ipv4 unicast
   redistribute connected route-map LOOPBACKS
+  neighbor FIREWALL allowas-in 1
   {{- range $k, $f := .Ports.Firewalls }}
-  neighbor {{ $f.Port }} allowas-in 1
   neighbor {{ $f.Port }} route-map fw-{{ $k }}-in in
   {{- end }}
  exit-address-family
  !
  address-family l2vpn evpn
-  neighbor FABRIC activate
   advertise-all-vni
+  neighbor FABRIC activate
+  neighbor FIREWALL activate
+  neighbor FIREWALL allowas-in 1
   {{- range $k, $f := .Ports.Firewalls }}
-  neighbor {{ $f.Port }} allowas-in 1
-  # neighbor {{ $f.Port }} route-map fw-{{ $k }}-vni in # currently not supported, PR https://github.com/FRRouting/frr/pull/4078/files needs to be merged into Cumulus FRR
   neighbor {{ $f.Port }} route-map fw-{{ $k }}-vni out
   {{- end }}
  exit-address-family
