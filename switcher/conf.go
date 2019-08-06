@@ -8,12 +8,12 @@ import (
 // if they are present in the given VLAN-Mapping
 // otherwise: new available VLAN-IDs will be used
 func (c *Conf) FillVLANIDs(m vlan.Mapping) error {
-Tloop:
-	for _, t := range c.Tenants {
+outer_loop:
+	for _, t := range c.Ports.Vrfs {
 		for vlan, vni := range m {
 			if vni == t.VNI {
 				t.VLANID = vlan
-				continue Tloop
+				continue outer_loop
 			}
 		}
 		vlanids, err := m.ReserveVlanIDs(1)
@@ -25,6 +25,15 @@ Tloop:
 		m[vlan] = t.VNI
 	}
 	return nil
+}
+
+func (c *Conf) FillRouteMapsAndIPPrefixLists() {
+	for port, f := range c.Ports.Firewalls {
+		f.Assemble("fw-"+port, f.Vnis, f.Cidrs)
+	}
+	for vrf, t := range c.Ports.Vrfs {
+		t.Assemble(vrf, []string{}, t.Cidrs)
+	}
 }
 
 func (c *Conf) applyFrr() error {

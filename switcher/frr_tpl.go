@@ -11,24 +11,24 @@ debug bgp updates
 debug bgp nht
 debug bgp update-groups
 debug bgp zebra
-{{- range $vrf, $t := .Tenants }}
+{{- range $vrf, $t := .Ports.Vrfs }}
 !
 vrf vrf{{ $t.VNI }}
  vni {{ $t.VNI }}
 {{- end }}
-{{- range .Neighbors }}
+{{- range .Ports.Underlay }}
 !
 interface {{ . }}
  ipv6 nd ra-interval 6
  no ipv6 nd suppress-ra
 {{- end }}
-{{- range .Firewalls }}
+{{- range .Ports.Firewalls }}
 !
-interface {{ . }}
+interface {{ .Port }}
  ipv6 nd ra-interval 6
  no ipv6 nd suppress-ra
 {{- end }}
-{{- range $vrf, $t := .Tenants }}
+{{- range $vrf, $t := .Ports.Vrfs }}
 {{- range $t.Neighbors }}
 !
 interface {{ . }}
@@ -43,34 +43,50 @@ router bgp {{ $ASN }}
  neighbor FABRIC peer-group
  neighbor FABRIC remote-as external
  neighbor FABRIC timers 1 3
- {{- range .Firewalls }}
- neighbor {{ . }} interface peer-group FABRIC
+ {{- range .Ports.Firewalls }}
+ neighbor {{ .Port }} interface peer-group FABRIC
  {{- end }}
- {{- range .Neighbors }}
+ {{- range .Ports.Underlay }}
  neighbor {{ . }} interface peer-group FABRIC
  {{- end }}
  !
  address-family ipv4 unicast
   redistribute connected route-map LOOPBACKS
-  {{- range .Firewalls }}
-  neighbor {{ . }} allowas-in 1
+  {{- range $k, $f := .Ports.Firewalls }}
+  neighbor {{ $f.Port }} allowas-in 1
+  neighbor {{ $f.Port }} route-map fw-{{ $k }}-in in
   {{- end }}
  exit-address-family
  !
  address-family l2vpn evpn
   neighbor FABRIC activate
   advertise-all-vni
-  {{- range .Firewalls }}
-  neighbor {{ . }} allowas-in 1
+  {{- range $k, $f := .Ports.Firewalls }}
+  neighbor {{ $f.Port }} allowas-in 1
+  # neighbor {{ $f.Port }} route-map fw-{{ $k }}-vni in # currently not supported, PR https://github.com/FRRouting/frr/pull/4078/files needs to be merged into Cumulus FRR
+  neighbor {{ $f.Port }} route-map fw-{{ $k }}-vni out
   {{- end }}
  exit-address-family
 !
 route-map LOOPBACKS permit 10
  match interface lo
 !
-ip route 0.0.0.0/0 {{ .Eth0.Gateway }} nexthop-vrf mgmt
+{{- range $k, $f := .Ports.Firewalls }}
+# route-maps for firewall@{{ $k }}
+        {{- range $f.IPPrefixLists }}
+ip prefix-list {{ .Name }} {{ .Spec }}
+        {{- end}}
+        {{- range $f.RouteMaps }}
+route-map {{ .Name }} {{ .Policy }} {{ .Order }}
+                {{- range .Entries }}
+ {{ . }}
+                {{- end }}
+        {{- end }}
 !
-{{- range $vrf, $t := .Tenants }}
+{{- end }}
+ip route 0.0.0.0/0 {{ .Ports.Eth0.Gateway }} nexthop-vrf mgmt
+!
+{{- range $vrf, $t := .Ports.Vrfs }}
 router bgp {{ $ASN }} vrf {{ $vrf }}
  bgp router-id {{ $RouterId }}
  bgp bestpath as-path multipath-relax
@@ -84,11 +100,26 @@ router bgp {{ $ASN }} vrf {{ $vrf }}
  address-family ipv4 unicast
   redistribute connected
   neighbor MACHINE maximum-prefix 100
+  {{- if (len $t.IPPrefixLists) gt 0 }}
+  neighbor MACHINE route-map {{ $vrf }}-in in
+  {{- end }}
  exit-address-family
  !
  address-family l2vpn evpn
   advertise ipv4 unicast
  exit-address-family
-!{{- end }}
+!
+{{- if (len $t.IPPrefixLists) gt 0 }}
+# route-maps for {{ $vrf }}
+        {{- range $t.IPPrefixLists }}
+ip prefix-list {{ .Name }} {{ .Spec }}
+        {{- end}}
+        {{- range $t.RouteMaps }}
+route-map {{ .Name }} {{ .Policy }} {{ .Order }}
+                {{- range .Entries }}
+ {{ . }}
+                {{- end }}
+        {{- end }}
+!{{- end }}{{- end }}
 line vty
 !`
