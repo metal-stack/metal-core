@@ -39,6 +39,9 @@ func buildSwitcherConfig(conf *domain.Config, s *models.V1SwitchResponse) (*swit
 	p.BladePorts = conf.AdditionalBridgePorts
 	for _, nic := range s.Nics {
 		port := *nic.Name
+		if contains(p.Underlay, port) {
+			continue
+		}
 		if contains(conf.AdditionalBridgePorts, port) {
 			continue
 		}
