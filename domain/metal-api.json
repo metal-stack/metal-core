@@ -1152,6 +1152,98 @@
         }
       }
     },
+    "/v1/machine/{id}/power/led-off": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "machine"
+        ],
+        "summary": "sends a power-off to the machine LED",
+        "operationId": "machineLedOff",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "identifier of the machine",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.EmptyBody"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/v1.MachineResponse"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/v1/machine/{id}/power/led-on": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "machine"
+        ],
+        "summary": "sends a power-on to the machine LED",
+        "operationId": "machineLedOn",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "identifier of the machine",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.EmptyBody"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/v1.MachineResponse"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          }
+        }
+      }
+    },
     "/v1/machine/{id}/power/off": {
       "post": {
         "consumes": [
@@ -2648,12 +2740,12 @@
     },
     "v1.FirewallCreateRequest": {
       "required": [
-        "tenant",
+        "imageid",
+        "sizeid",
         "projectid",
         "partitionid",
-        "ssh_pub_keys",
-        "sizeid",
-        "imageid"
+        "tenant",
+        "ssh_pub_keys"
       ],
       "properties": {
         "description": {
@@ -2733,17 +2825,17 @@
     "v1.FirewallResponse": {
       "required": [
         "id",
-        "size",
-        "state",
         "hardware",
-        "changed",
+        "state",
         "partition",
-        "allocation",
-        "tags",
-        "rackid",
         "liveliness",
+        "created",
+        "changed",
+        "rackid",
         "events",
-        "created"
+        "size",
+        "allocation",
+        "tags"
       ],
       "properties": {
         "allocation": {
@@ -2841,12 +2933,12 @@
     },
     "v1.IPResponse": {
       "required": [
-        "networkid",
         "projectid",
+        "networkid",
         "ipaddress",
         "machineid",
-        "created",
-        "changed"
+        "changed",
+        "created"
       ],
       "properties": {
         "changed": {
@@ -3253,9 +3345,9 @@
     },
     "v1.MachineHardware": {
       "required": [
+        "disks",
         "memory",
         "cpu_cores",
-        "disks",
         "nics"
       ],
       "properties": {
@@ -3564,14 +3656,14 @@
       "required": [
         "id",
         "rackid",
+        "state",
+        "events",
+        "tags",
+        "partition",
+        "size",
         "hardware",
         "allocation",
         "liveliness",
-        "events",
-        "partition",
-        "state",
-        "tags",
-        "size",
         "created",
         "changed"
       ],
@@ -3664,12 +3756,12 @@
     "v1.NetworkCreateRequest": {
       "required": [
         "id",
-        "nat",
         "primary",
         "underlay",
         "parentnetworkid",
         "prefixes",
-        "destinationprefixes"
+        "destinationprefixes",
+        "nat"
       ],
       "properties": {
         "description": {
@@ -3733,12 +3825,12 @@
     "v1.NetworkResponse": {
       "required": [
         "id",
-        "parentnetworkid",
         "prefixes",
         "destinationprefixes",
         "nat",
         "primary",
         "underlay",
+        "parentnetworkid",
         "usage",
         "created",
         "changed"
@@ -3956,8 +4048,8 @@
       "required": [
         "id",
         "bootconfig",
-        "created",
-        "changed"
+        "changed",
+        "created"
       ],
       "properties": {
         "bootconfig": {

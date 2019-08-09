@@ -18,10 +18,12 @@ type EventType string
 type MachineCommand string
 
 const (
-	MachineOnCmd    MachineCommand = "ON"
-	MachineOffCmd   MachineCommand = "OFF"
-	MachineResetCmd MachineCommand = "RESET"
-	MachineBiosCmd  MachineCommand = "BIOS"
+	MachineOnCmd     MachineCommand = "ON"
+	MachineOffCmd    MachineCommand = "OFF"
+	MachineResetCmd  MachineCommand = "RESET"
+	MachineBiosCmd   MachineCommand = "BIOS"
+	MachineLedOnCmd  MachineCommand = "LED-ON"
+	MachineLedOffCmd MachineCommand = "LED-OFF"
 )
 
 type MachineExecCommand struct {
@@ -83,6 +85,10 @@ type EventHandler interface {
 	PowerOffMachine(machineID string, params []string)
 	PowerResetMachine(machineID string, params []string)
 	BootBiosMachine(machineID string, params []string)
+
+	PowerOnMachineLED(machineID string, params []string)
+	PowerOffMachineLED(machineID string, params []string)
+
 	ReconfigureSwitch(switchID string) error
 }
 

@@ -25,7 +25,7 @@ func (h *eventHandler) BootBiosMachine(machineID string, params []string) {
 		return
 	}
 
-	err = ipmi.PowerReset(ipmiCfg)
+	err = ipmi.PowerResetMachine(ipmiCfg)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to power reset machine",
 			zap.Any("machine", machineID),

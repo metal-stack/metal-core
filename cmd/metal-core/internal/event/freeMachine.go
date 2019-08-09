@@ -29,7 +29,7 @@ func (h *eventHandler) FreeMachine(machineID string) {
 		zap.Any("machine", machineID),
 	)
 
-	err = ipmi.PowerCycle(ipmiCfg)
+	err = ipmi.PowerCycleMachine(ipmiCfg)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to power cycle machine",
 			zap.Any("machine", machineID),
