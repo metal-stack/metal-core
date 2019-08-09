@@ -185,6 +185,10 @@ func (a *app) initConsumer() {
 					a.EventHandler().PowerResetMachine(*evt.Cmd.Target.ID, evt.Cmd.Params)
 				case domain.MachineBiosCmd:
 					a.EventHandler().BootBiosMachine(*evt.Cmd.Target.ID, evt.Cmd.Params)
+				case domain.MachineLedOnCmd:
+					a.EventHandler().PowerOnMachineLED(*evt.Cmd.Target.ID, evt.Cmd.Params)
+				case domain.MachineLedOffCmd:
+					a.EventHandler().PowerOffMachineLED(*evt.Cmd.Target.ID, evt.Cmd.Params)
 				}
 			}
 			return nil

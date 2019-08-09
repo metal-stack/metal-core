@@ -9,6 +9,13 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	BootDevPersistentEfiQualifier = 0xe0
+	HardDiskQualifier             = 0x08
+	BiosQualifier                 = 0x24
+	PxeQualifier                  = 0x04
+)
+
 var bootFuncMap = map[string]func(*domain.IPMIConfig, goipmi.BootDevice) error{
 	"SYS-2029BT-HNTR":     setBootMachineRaw,
 	"SYS-2029BT-HNR":      setBootMachineRaw,
@@ -41,7 +48,6 @@ func fetchBootFunc(cfg *domain.IPMIConfig) func(cfg *domain.IPMIConfig, dev goip
 	}
 
 	return bootFunc
-
 }
 
 func setBootMachineIPMI(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
@@ -59,9 +65,9 @@ func setBootMachineIPMI(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
 	return client.SetBootDevice(dev)
 }
 
-// SetBootMachine is a modified wrapper around
-// SetSystemBootOptionsRequest to configure the BootDevice
-// per section 28.12 - table 28
+// setBootMachineRaw is a modified wrapper around
+// goipmi.SetSystemBootOptionsRequest to configure the BootDevice per section 28.12:
+// https://www.intel.com/content/dam/www/public/us/en/documents/product-briefs/ipmi-second-gen-interface-spec-v2-rev1-1.pdf
 // We send modified raw parameters according to:
 // https://www.supermicro.com/support/faqs/faq.cfm?faq=25559
 func setBootMachineRaw(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
@@ -71,22 +77,24 @@ func setBootMachineRaw(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
 	}
 
 	/*
-		Set 1st boot device to uefi hard drive persistently:
-		raw 0x0 0x8 0x05 0xe0 0x24 0x0 0x0 0x0
+		Set 1st boot device to efi hard drive persistently:
+		raw 0x00 0x08 0x05 0xe0 0x08 0x00 0x00 0x00
 
-		Set 1st boot device to uefi pxe persistently:
-		raw 0x0 0x8 0x05 0xe0 0x04 0x0 0x0 0x0
+		Set 1st boot device to efi BIOS persistently:
+		raw 0x00 0x08 0x05 0xe0 0x24 0x00 0x00 0x00
+
+		Set 1st boot device to efi PXE persistently:
+		raw 0x00 0x08 0x05 0xe0 0x04 0x00 0x00 0x00
 	*/
 
-	const SupermicroBootDevQualifier = 0xe0
-	const SuperMicroBootDiskQualifier = 0x24
-	const SuperMicroBootPxeQualifier = 0x04
-	var superMicroBootDevice uint8
+	var bootDev uint8
 	switch dev {
 	case goipmi.BootDeviceDisk:
-		superMicroBootDevice = SuperMicroBootDiskQualifier
+		bootDev = HardDiskQualifier
+	case goipmi.BootDeviceBios:
+		bootDev = BiosQualifier
 	case goipmi.BootDevicePxe:
-		superMicroBootDevice = SuperMicroBootPxeQualifier
+		bootDev = PxeQualifier
 	default:
 		return fmt.Errorf("unsupported boot device:%s", dev.String())
 	}
@@ -99,45 +107,33 @@ func setBootMachineRaw(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
 
 	useProgress := true
 	// set set-in-progress flag
-	err = setBootParam(client, goipmi.BootParamSetInProgress, 0x01)
+	err = sendSystemBootRaw(client, goipmi.BootParamSetInProgress, 0x01)
 	if err != nil {
 		useProgress = false
 	}
 
-	err = setBootParam(client, goipmi.BootParamInfoAck, 0x01, 0x01)
+	err = sendSystemBootRaw(client, goipmi.BootParamInfoAck, 0x01, 0x01)
 	if err != nil {
 		if useProgress {
 			// set-in-progress = set-complete
-			_ = setBootParam(client, goipmi.BootParamSetInProgress, 0x00)
+			_ = sendSystemBootRaw(client, goipmi.BootParamSetInProgress, 0x00)
 		}
 		return err
 	}
 
-	// 0x00 0x08 0x05
-	err = setBootParam(client, goipmi.BootParamBootFlags, SupermicroBootDevQualifier, superMicroBootDevice, 0x00, 0x00, 0x00)
+	// 0x00 0x08 0x05 0xe0 [0x08|0x024|0x04] 0x00 0x00 0x00
+	err = sendSystemBootRaw(client, goipmi.BootParamBootFlags, BootDevPersistentEfiQualifier, bootDev, 0x00, 0x00, 0x00)
 	if err == nil {
 		if useProgress {
 			// set-in-progress = commit-write
-			_ = setBootParam(client, goipmi.BootParamSetInProgress, 0x02)
+			_ = sendSystemBootRaw(client, goipmi.BootParamSetInProgress, 0x02)
 		}
 	}
 
 	if useProgress {
 		// set-in-progress = set-complete
-		_ = setBootParam(client, goipmi.BootParamSetInProgress, 0x00)
+		_ = sendSystemBootRaw(client, goipmi.BootParamSetInProgress, 0x00)
 	}
 
 	return err
-}
-
-func setBootParam(client *goipmi.Client, param uint8, data ...uint8) error {
-	r := &goipmi.Request{
-		NetworkFunction: goipmi.NetworkFunctionChassis,      // 0x00
-		Command:         goipmi.CommandSetSystemBootOptions, // 0x08
-		Data: &goipmi.SetSystemBootOptionsRequest{
-			Param: param,
-			Data:  data,
-		},
-	}
-	return client.Send(r, &goipmi.SetSystemBootOptionsResponse{})
 }

@@ -7,14 +7,14 @@ import (
 	"go.uber.org/zap"
 )
 
-// PowerOn sets power to on of the machine
-func PowerOn(cfg *domain.IPMIConfig) error {
+// PowerOnMachine sets the power of the machine to ON
+func PowerOnMachine(cfg *domain.IPMIConfig) error {
 	client, err := openClientConnection(cfg)
 	if err != nil {
 		return err
 	}
 
-	zapup.MustRootLogger().Info("Power ON",
+	zapup.MustRootLogger().Info("Machine Power ON",
 		zap.String("hostname", cfg.Hostname),
 		zap.String("MAC", cfg.Mac()),
 	)
@@ -27,14 +27,14 @@ func PowerOn(cfg *domain.IPMIConfig) error {
 	return nil
 }
 
-// PowerOff sets power to off of the machine
-func PowerOff(cfg *domain.IPMIConfig) error {
+// PowerOffMachine sets the power of the machine to OFF
+func PowerOffMachine(cfg *domain.IPMIConfig) error {
 	client, err := openClientConnection(cfg)
 	if err != nil {
 		return err
 	}
 
-	zapup.MustRootLogger().Info("Power OFF",
+	zapup.MustRootLogger().Info("Machine Power OFF",
 		zap.String("hostname", cfg.Hostname),
 		zap.String("MAC", cfg.Mac()),
 	)
@@ -47,14 +47,14 @@ func PowerOff(cfg *domain.IPMIConfig) error {
 	return nil
 }
 
-// PowerReset resets power of the machine
-func PowerReset(cfg *domain.IPMIConfig) error {
+// PowerResetMachine resets the power of the machine
+func PowerResetMachine(cfg *domain.IPMIConfig) error {
 	client, err := openClientConnection(cfg)
 	if err != nil {
 		return err
 	}
 
-	zapup.MustRootLogger().Info("Power RESET",
+	zapup.MustRootLogger().Info("Machine Power RESET",
 		zap.String("hostname", cfg.Hostname),
 		zap.String("MAC", cfg.Mac()),
 	)
@@ -67,19 +67,59 @@ func PowerReset(cfg *domain.IPMIConfig) error {
 	return nil
 }
 
-// PowerCycle cycles power of the machine
-func PowerCycle(cfg *domain.IPMIConfig) error {
+// PowerCycleMachine cycles the power of the machine
+func PowerCycleMachine(cfg *domain.IPMIConfig) error {
 	client, err := openClientConnection(cfg)
 	if err != nil {
 		return err
 	}
 
-	zapup.MustRootLogger().Info("Power RESET",
+	zapup.MustRootLogger().Info("Machine Power CYCLE",
 		zap.String("hostname", cfg.Hostname),
 		zap.String("MAC", cfg.Mac()),
 	)
 
 	err = client.Control(goipmi.ControlPowerCycle)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// PowerOnMachineLED powers the machine chassis identify LED on indefinitely (raw 0x00 0x04 0x00 0x01)
+func PowerOnMachineLED(cfg *domain.IPMIConfig) error {
+	client, err := openClientConnection(cfg)
+	if err != nil {
+		return err
+	}
+
+	zapup.MustRootLogger().Info("Machine chassis identify LED Power ON",
+		zap.String("hostname", cfg.Hostname),
+		zap.String("MAC", cfg.Mac()),
+	)
+
+	err = sendChassisIdentifyRaw(client, 0x00, 0x01)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// PowerOffMachineLED powers the machine chassis identify LED off (raw 0x00 0x04 0x00)
+func PowerOffMachineLED(cfg *domain.IPMIConfig) error {
+	client, err := openClientConnection(cfg)
+	if err != nil {
+		return err
+	}
+
+	zapup.MustRootLogger().Info("Machine chassis identify LED Power OFF",
+		zap.String("hostname", cfg.Hostname),
+		zap.String("MAC", cfg.Mac()),
+	)
+
+	err = sendChassisIdentifyRaw(client, 0x00)
 	if err != nil {
 		return err
 	}
