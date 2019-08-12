@@ -24,7 +24,7 @@ func (c *apiClient) setMachineLEDState(machineID, description, state string) err
 	}
 	params.SetBody(req)
 
-	_, err := c.MachineClient.SetMachineLEDState(params, c.Auth)
+	ok, err := c.MachineClient.SetMachineLEDState(params, c.Auth)
 	if err != nil {
 		zapup.MustRootLogger().Error("Cannot set machine chassis identify LED state",
 			zap.String("machineID", machineID),
@@ -33,5 +33,13 @@ func (c *apiClient) setMachineLEDState(machineID, description, state string) err
 		)
 		return err
 	}
+
+	zapup.MustRootLogger().Info("Set machine chassis identify LED state",
+		zap.String("machineID", machineID),
+		zap.String("state", *ok.Payload.Ledstate.Value),
+		zap.String("description", *ok.Payload.Ledstate.Description),
+		zap.Error(err),
+	)
+
 	return nil
 }
