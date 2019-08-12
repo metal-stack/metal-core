@@ -38,7 +38,6 @@ func (c *apiClient) setMachineLEDState(machineID, description, state string) err
 		zap.String("machineID", machineID),
 		zap.String("state", *ok.Payload.Ledstate.Value),
 		zap.String("description", *ok.Payload.Ledstate.Description),
-		zap.Error(err),
 	)
 
 	return nil

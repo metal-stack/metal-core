@@ -1,6 +1,8 @@
 package ipmi
 
 import (
+	"errors"
+	"fmt"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/domain"
 	goipmi "github.com/vmware/goipmi"
 )
@@ -62,5 +64,20 @@ func sendChassisIdentifyRaw(client *goipmi.Client, data ...uint8) error {
 			Data: data,
 		},
 	}
-	return client.Send(r, &SetChassisIdentifyOptionsResponse{})
+	var resp SetChassisIdentifyOptionsResponse
+	err := client.Send(r, &SetChassisIdentifyOptionsResponse{})
+	if err != nil {
+		return err
+	}
+	if len(resp.Error()) > 0 {
+		return errors.New(resp.Error())
+	}
+	if len(resp.CompletionCode.Error()) > 0 {
+		return errors.New(resp.CompletionCode.Error())
+	}
+	if goipmi.CompletionCode(resp.CompletionCode.Code()) != goipmi.CommandCompleted {
+		return errors.New(fmt.Sprintf("%d", resp.CompletionCode.Code()))
+	}
+
+	return nil
 }
