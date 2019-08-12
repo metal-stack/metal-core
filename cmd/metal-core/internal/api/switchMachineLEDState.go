@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
@@ -34,11 +35,23 @@ func (c *apiClient) setMachineLEDState(machineID, description, state string) err
 		return err
 	}
 
-	zapup.MustRootLogger().Info("Set machine chassis identify LED state",
-		zap.String("machineID", machineID),
-		zap.String("state", *ok.Payload.Ledstate.Value),
-		zap.String("description", *ok.Payload.Ledstate.Description),
-	)
+	if len(ok.Error()) > 0 {
+		err = errors.New(ok.Error())
+		zapup.MustRootLogger().Error("Cannot set machine chassis identify LED state",
+			zap.String("machineID", machineID),
+			zap.String("state", state),
+			zap.Error(err),
+		)
+		return err
+	}
+
+	if ok.Payload != nil && ok.Payload.Ledstate != nil {
+		zapup.MustRootLogger().Info("Set machine chassis identify LED state",
+			zap.String("machineID", machineID),
+			zap.String("state", *ok.Payload.Ledstate.Value),
+			zap.String("description", *ok.Payload.Ledstate.Description),
+		)
+	}
 
 	return nil
 }

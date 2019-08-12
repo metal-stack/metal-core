@@ -163,7 +163,6 @@ func mapLogLevel(level string) bus.Level {
 }
 
 func (a *app) initConsumer() {
-	hostname, _ := os.Hostname()
 	_ = bus.NewConsumer(zapup.MustRootLogger(), a.Config.MQAddress).
 		With(bus.LogLevel(mapLogLevel(a.Config.MQLogLevel))).
 		MustRegister(a.Config.MachineTopic, "core").
@@ -207,6 +206,8 @@ func (a *app) initConsumer() {
 			}
 			return nil
 		}, 5, bus.Timeout(receiverHandlerTimeout, timeoutHandler))
+
+	hostname, _ := os.Hostname()
 
 	_ = bus.NewConsumer(zapup.MustRootLogger(), a.Config.MQAddress).
 		With(bus.LogLevel(mapLogLevel(a.Config.MQLogLevel))).

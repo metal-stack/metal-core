@@ -21,7 +21,6 @@ require (
 	github.com/google/gopacket v1.1.17
 	github.com/json-iterator/go v1.1.6 // indirect
 	github.com/kelseyhightower/envconfig v1.3.0
-	github.com/magefile/mage v1.8.0
 	github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983 // indirect
 	github.com/metal-pod/security v0.0.0-20190605103437-319d1b2eca89
 	github.com/metal-pod/v v0.0.2
