@@ -82,7 +82,7 @@ func (h *eventHandler) PowerOnMachineLED(machineID string) {
 		return
 	}
 
-	err = h.APIClient().SetMachineLEDStateOn(machineID)
+	err = h.APIClient().SetMachineLEDStateOn(machineID, "Triggered by metalctl")
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to set machine chassis identify LED state to On",
 			zap.String("machine", machineID),
@@ -110,7 +110,7 @@ func (h *eventHandler) PowerOffMachineLED(machineID string) {
 		return
 	}
 
-	err = h.APIClient().SetMachineLEDStateOff(machineID)
+	err = h.APIClient().SetMachineLEDStateOff(machineID, "Triggered by metalctl")
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to set machine chassis identify LED state to Off",
 			zap.String("machine", machineID),

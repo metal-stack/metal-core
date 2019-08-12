@@ -93,10 +93,10 @@ func (a *apiHandlerBootTest) RegisterSwitch() (*models.V1SwitchResponse, error) 
 func (a *apiHandlerBootTest) ConstantlyPhoneHome() {
 }
 
-func (a *apiHandlerBootTest) SetMachineLEDStateOn(machineID string) error {
+func (a *apiHandlerBootTest) SetMachineLEDStateOn(machineID, description string) error {
 	return nil
 }
 
-func (a *apiHandlerBootTest) SetMachineLEDStateOff(machineID string) error {
+func (a *apiHandlerBootTest) SetMachineLEDStateOff(machineID, description string) error {
 	return nil
 }

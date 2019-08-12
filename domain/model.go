@@ -63,8 +63,8 @@ type APIClient interface {
 	FinalizeAllocation(machineID, consolepassword string) (*machine.FinalizeAllocationOK, error)
 	RegisterSwitch() (*models.V1SwitchResponse, error)
 	ConstantlyPhoneHome()
-	SetMachineLEDStateOn(machineID string) error
-	SetMachineLEDStateOff(machineID string) error
+	SetMachineLEDStateOn(machineID, description string) error
+	SetMachineLEDStateOff(machineID, description string) error
 }
 
 type Server interface {
