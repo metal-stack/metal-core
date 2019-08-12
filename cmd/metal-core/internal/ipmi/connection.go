@@ -64,8 +64,8 @@ func sendChassisIdentifyRaw(client *goipmi.Client, data ...uint8) error {
 			Data: data,
 		},
 	}
-	var resp SetChassisIdentifyOptionsResponse
-	err := client.Send(r, &SetChassisIdentifyOptionsResponse{})
+	resp := SetChassisIdentifyOptionsResponse{}
+	err := client.Send(r, &resp)
 	if err != nil {
 		return err
 	}
