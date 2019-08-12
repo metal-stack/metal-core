@@ -178,17 +178,17 @@ func (a *app) initConsumer() {
 			case domain.Command:
 				switch evt.Cmd.Command {
 				case domain.MachineOnCmd:
-					a.EventHandler().PowerOnMachine(*evt.Cmd.Target.ID, evt.Cmd.Params)
+					a.EventHandler().PowerOnMachine(*evt.Cmd.Target.ID)
 				case domain.MachineOffCmd:
-					a.EventHandler().PowerOffMachine(*evt.Cmd.Target.ID, evt.Cmd.Params)
+					a.EventHandler().PowerOffMachine(*evt.Cmd.Target.ID)
 				case domain.MachineResetCmd:
-					a.EventHandler().PowerResetMachine(*evt.Cmd.Target.ID, evt.Cmd.Params)
+					a.EventHandler().PowerResetMachine(*evt.Cmd.Target.ID)
 				case domain.MachineBiosCmd:
-					a.EventHandler().BootBiosMachine(*evt.Cmd.Target.ID, evt.Cmd.Params)
+					a.EventHandler().BootBiosMachine(*evt.Cmd.Target.ID)
 				case domain.MachineLedOnCmd:
-					a.EventHandler().PowerOnMachineLED(*evt.Cmd.Target.ID, evt.Cmd.Params)
+					a.EventHandler().PowerOnMachineLED(*evt.Cmd.Target.ID)
 				case domain.MachineLedOffCmd:
-					a.EventHandler().PowerOffMachineLED(*evt.Cmd.Target.ID, evt.Cmd.Params)
+					a.EventHandler().PowerOffMachineLED(*evt.Cmd.Target.ID)
 				}
 			}
 			return nil

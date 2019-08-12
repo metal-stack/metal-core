@@ -56,13 +56,15 @@ const (
 type APIClient interface {
 	FindMachines(mac string) (int, []*models.V1MachineResponse)
 	FindPartition(id string) (*models.V1PartitionResponse, error)
-	RegisterMachine(machineId string, request *MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse)
-	InstallImage(machineId string) (int, *models.V1MachineResponse)
-	IPMIConfig(machineId string) (*IPMIConfig, error)
+	RegisterMachine(machineID string, request *MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse)
+	InstallImage(machineID string) (int, *models.V1MachineResponse)
+	IPMIConfig(machineID string) (*IPMIConfig, error)
 	AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error
 	FinalizeAllocation(machineID, consolepassword string) (*machine.FinalizeAllocationOK, error)
 	RegisterSwitch() (*models.V1SwitchResponse, error)
 	ConstantlyPhoneHome()
+	SetMachineLEDStateOn(machineID string) error
+	SetMachineLEDStateOff(machineID string) error
 }
 
 type Server interface {
@@ -81,13 +83,13 @@ type EndpointHandler interface {
 
 type EventHandler interface {
 	FreeMachine(machineID string)
-	PowerOnMachine(machineID string, params []string)
-	PowerOffMachine(machineID string, params []string)
-	PowerResetMachine(machineID string, params []string)
-	BootBiosMachine(machineID string, params []string)
+	PowerOnMachine(machineID string)
+	PowerOffMachine(machineID string)
+	PowerResetMachine(machineID string)
+	BootBiosMachine(machineID string)
 
-	PowerOnMachineLED(machineID string, params []string)
-	PowerOffMachineLED(machineID string, params []string)
+	PowerOnMachineLED(machineID string)
+	PowerOffMachineLED(machineID string)
 
 	ReconfigureSwitch(switchID string) error
 }

@@ -6,11 +6,11 @@ import (
 	"go.uber.org/zap"
 )
 
-func (h *eventHandler) PowerOnMachine(machineID string, params []string) {
+func (h *eventHandler) PowerOnMachine(machineID string) {
 	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to read IPMI connection details",
-			zap.Any("machine", machineID),
+			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 		return
@@ -19,18 +19,17 @@ func (h *eventHandler) PowerOnMachine(machineID string, params []string) {
 	err = ipmi.PowerOnMachine(ipmiCfg)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to power on machine",
-			zap.Any("machine", machineID),
-			zap.Strings("params", params),
+			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 	}
 }
 
-func (h *eventHandler) PowerOffMachine(machineID string, params []string) {
+func (h *eventHandler) PowerOffMachine(machineID string) {
 	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to read IPMI connection details",
-			zap.Any("machine", machineID),
+			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 		return
@@ -39,18 +38,17 @@ func (h *eventHandler) PowerOffMachine(machineID string, params []string) {
 	err = ipmi.PowerOffMachine(ipmiCfg)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to power off machine",
-			zap.Any("machine", machineID),
-			zap.Strings("params", params),
+			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 	}
 }
 
-func (h *eventHandler) PowerResetMachine(machineID string, params []string) {
+func (h *eventHandler) PowerResetMachine(machineID string) {
 	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to read IPMI connection details",
-			zap.Any("machine", machineID),
+			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 		return
@@ -59,18 +57,17 @@ func (h *eventHandler) PowerResetMachine(machineID string, params []string) {
 	err = ipmi.PowerResetMachine(ipmiCfg)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to power reset machine",
-			zap.Any("machine", machineID),
-			zap.Strings("params", params),
+			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 	}
 }
 
-func (h *eventHandler) PowerOnMachineLED(machineID string, params []string) {
+func (h *eventHandler) PowerOnMachineLED(machineID string) {
 	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to read IPMI connection details",
-			zap.Any("machine", machineID),
+			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 		return
@@ -78,19 +75,27 @@ func (h *eventHandler) PowerOnMachineLED(machineID string, params []string) {
 
 	err = ipmi.PowerOnMachineLED(ipmiCfg)
 	if err != nil {
-		zapup.MustRootLogger().Error("Unable to power on machine LED",
-			zap.Any("machine", machineID),
-			zap.Strings("params", params),
+		zapup.MustRootLogger().Error("Unable to power on machine chassis identify LED",
+			zap.String("machine", machineID),
+			zap.Error(err),
+		)
+		return
+	}
+
+	err = h.APIClient().SetMachineLEDStateOn(machineID)
+	if err != nil {
+		zapup.MustRootLogger().Error("Unable to set machine chassis identify LED state to On",
+			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 	}
 }
 
-func (h *eventHandler) PowerOffMachineLED(machineID string, params []string) {
+func (h *eventHandler) PowerOffMachineLED(machineID string) {
 	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to read IPMI connection details",
-			zap.Any("machine", machineID),
+			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 		return
@@ -98,9 +103,17 @@ func (h *eventHandler) PowerOffMachineLED(machineID string, params []string) {
 
 	err = ipmi.PowerOffMachineLED(ipmiCfg)
 	if err != nil {
-		zapup.MustRootLogger().Error("Unable to power off machine LED",
-			zap.Any("machine", machineID),
-			zap.Strings("params", params),
+		zapup.MustRootLogger().Error("Unable to power off machine chassis identify LED",
+			zap.String("machine", machineID),
+			zap.Error(err),
+		)
+		return
+	}
+
+	err = h.APIClient().SetMachineLEDStateOff(machineID)
+	if err != nil {
+		zapup.MustRootLogger().Error("Unable to set machine chassis identify LED state to Off",
+			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 	}

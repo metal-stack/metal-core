@@ -48,18 +48,18 @@ func (a *apiHandlerCoreTest) FindMachines(mac string) (int, []*models.V1MachineR
 	return -1, nil
 }
 
-func (a *apiHandlerCoreTest) RegisterMachine(machineId string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse) {
+func (a *apiHandlerCoreTest) RegisterMachine(machineID string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse) {
 	machine := models.V1MachineResponse{
 		ID: &machineID,
 	}
 	return http.StatusOK, &machine
 }
 
-func (a *apiHandlerCoreTest) InstallImage(machineId string) (int, *models.V1MachineResponse) {
+func (a *apiHandlerCoreTest) InstallImage(machineID string) (int, *models.V1MachineResponse) {
 	return -1, nil
 }
 
-func (a *apiHandlerCoreTest) IPMIConfig(machineId string) (*domain.IPMIConfig, error) {
+func (a *apiHandlerCoreTest) IPMIConfig(machineID string) (*domain.IPMIConfig, error) {
 	return nil, nil
 }
 
@@ -80,4 +80,12 @@ func (a *apiHandlerCoreTest) RegisterSwitch() (*models.V1SwitchResponse, error) 
 }
 
 func (a *apiHandlerCoreTest) ConstantlyPhoneHome() {
+}
+
+func (a *apiHandlerCoreTest) SetMachineLEDStateOn(machineID string) error {
+	return nil
+}
+
+func (a *apiHandlerCoreTest) SetMachineLEDStateOff(machineID string) error {
+	return nil
 }

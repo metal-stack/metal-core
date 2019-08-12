@@ -6,11 +6,11 @@ import (
 	"go.uber.org/zap"
 )
 
-func (h *eventHandler) BootBiosMachine(machineID string, params []string) {
+func (h *eventHandler) BootBiosMachine(machineID string) {
 	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to read IPMI connection details",
-			zap.Any("machine", machineID),
+			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 		return
@@ -19,7 +19,7 @@ func (h *eventHandler) BootBiosMachine(machineID string, params []string) {
 	err = ipmi.SetBootMachineBios(ipmiCfg)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to set boot order of machine to BIOS",
-			zap.Any("machine", machineID),
+			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 		return
@@ -28,8 +28,7 @@ func (h *eventHandler) BootBiosMachine(machineID string, params []string) {
 	err = ipmi.PowerResetMachine(ipmiCfg)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to power reset machine",
-			zap.Any("machine", machineID),
-			zap.Strings("params", params),
+			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 	}
