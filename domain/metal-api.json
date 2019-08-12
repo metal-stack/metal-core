@@ -1163,8 +1163,8 @@
         "tags": [
           "machine"
         ],
-        "summary": "sends a power-off to the machine LED",
-        "operationId": "machineLedOff",
+        "summary": "sends a power-off to the machine chassis identify LED",
+        "operationId": "machineLEDOff",
         "parameters": [
           {
             "type": "string",
@@ -1209,8 +1209,8 @@
         "tags": [
           "machine"
         ],
-        "summary": "sends a power-on to the machine LED",
-        "operationId": "machineLedOn",
+        "summary": "sends a power-on to the machine chassis identify LED",
+        "operationId": "machineLEDOn",
         "parameters": [
           {
             "type": "string",
@@ -2741,11 +2741,11 @@
     "v1.FirewallCreateRequest": {
       "required": [
         "imageid",
-        "sizeid",
         "projectid",
-        "partitionid",
+        "sizeid",
+        "ssh_pub_keys",
         "tenant",
-        "ssh_pub_keys"
+        "partitionid"
       ],
       "properties": {
         "description": {
@@ -2824,18 +2824,19 @@
     },
     "v1.FirewallResponse": {
       "required": [
-        "id",
-        "hardware",
         "state",
         "partition",
-        "liveliness",
-        "created",
-        "changed",
         "rackid",
-        "events",
+        "changed",
         "size",
+        "hardware",
+        "tags",
+        "events",
+        "created",
+        "id",
         "allocation",
-        "tags"
+        "ledstate",
+        "liveliness"
       ],
       "properties": {
         "allocation": {
@@ -2870,6 +2871,10 @@
           "description": "the unique ID of this entity",
           "type": "string",
           "uniqueItems": true
+        },
+        "ledstate": {
+          "description": "the state of this machine chassis identify LED",
+          "$ref": "#/definitions/v1.MachineLEDState"
         },
         "liveliness": {
           "description": "the liveliness of this machine",
@@ -2937,8 +2942,8 @@
         "networkid",
         "ipaddress",
         "machineid",
-        "changed",
-        "created"
+        "created",
+        "changed"
       ],
       "properties": {
         "changed": {
@@ -3345,9 +3350,9 @@
     },
     "v1.MachineHardware": {
       "required": [
-        "disks",
         "memory",
         "cpu_cores",
+        "disks",
         "nics"
       ],
       "properties": {
@@ -3436,6 +3441,22 @@
           "type": "string"
         },
         "user": {
+          "type": "string"
+        }
+      }
+    },
+    "v1.MachineLEDState": {
+      "required": [
+        "value",
+        "description"
+      ],
+      "properties": {
+        "description": {
+          "description": "a description why this machine chassis identify LED is in the given state",
+          "type": "string"
+        },
+        "value": {
+          "description": "the state of this machine chassis identify LED. empty means On",
           "type": "string"
         }
       }
@@ -3655,15 +3676,16 @@
     "v1.MachineResponse": {
       "required": [
         "id",
-        "rackid",
         "state",
-        "events",
+        "ledstate",
+        "liveliness",
         "tags",
         "partition",
+        "rackid",
         "size",
         "hardware",
         "allocation",
-        "liveliness",
+        "events",
         "created",
         "changed"
       ],
@@ -3700,6 +3722,10 @@
           "description": "the unique ID of this entity",
           "type": "string",
           "uniqueItems": true
+        },
+        "ledstate": {
+          "description": "the state of this machine chassis identify LED",
+          "$ref": "#/definitions/v1.MachineLEDState"
         },
         "liveliness": {
           "description": "the liveliness of this machine",
@@ -3756,12 +3782,12 @@
     "v1.NetworkCreateRequest": {
       "required": [
         "id",
-        "primary",
-        "underlay",
         "parentnetworkid",
         "prefixes",
         "destinationprefixes",
-        "nat"
+        "nat",
+        "primary",
+        "underlay"
       ],
       "properties": {
         "description": {
@@ -3825,12 +3851,12 @@
     "v1.NetworkResponse": {
       "required": [
         "id",
-        "prefixes",
         "destinationprefixes",
         "nat",
         "primary",
         "underlay",
         "parentnetworkid",
+        "prefixes",
         "usage",
         "created",
         "changed"
@@ -4048,8 +4074,8 @@
       "required": [
         "id",
         "bootconfig",
-        "changed",
-        "created"
+        "created",
+        "changed"
       ],
       "properties": {
         "bootconfig": {

@@ -29,10 +29,6 @@ localbuild: bin/$(BINARY)
 test-switcher:
 	cd ./switcher && ./validate.sh && cd -
 
-.PHONY: gofmt
-gofmt:
-	GO111MODULE=off go fmt ./...
-
 .PHONY: generate-client
 generate-client:
 	rm -rf models client
