@@ -44,27 +44,29 @@ const (
 	CommandChassisIdentifyOptions = goipmi.Command(0x04)
 )
 
-// SetChassisIdentifyOptionsRequest per section 28.5:
+// SetChassisIdentifyRequest per section 28.5:
 // https://www.intel.com/content/dam/www/public/us/en/documents/product-briefs/ipmi-second-gen-interface-spec-v2-rev1-1.pdf
-type SetChassisIdentifyOptionsRequest struct {
+type SetChassisIdentifyRequest struct {
+	Param uint8
 	Data []uint8
 }
 
-// SetChassisIdentifyOptionsResponse per section 28.5:
+// SetChassisIdentifyResponse per section 28.5:
 // https://www.intel.com/content/dam/www/public/us/en/documents/product-briefs/ipmi-second-gen-interface-spec-v2-rev1-1.pdf
-type SetChassisIdentifyOptionsResponse struct {
+type SetChassisIdentifyResponse struct {
 	goipmi.CompletionCode
 }
 
-func sendChassisIdentifyRaw(client *goipmi.Client, data ...uint8) error {
+func sendChassisIdentifyRaw(client *goipmi.Client, param uint8, data ...uint8) error {
 	r := &goipmi.Request{
 		NetworkFunction: goipmi.NetworkFunctionChassis, // 0x00
 		Command:         CommandChassisIdentifyOptions, // 0x04
-		Data: &SetChassisIdentifyOptionsRequest{
+		Data: &SetChassisIdentifyRequest{
+			Param: param,
 			Data: data,
 		},
 	}
-	resp := SetChassisIdentifyOptionsResponse{}
+	resp := SetChassisIdentifyResponse{}
 	err := client.Send(r, &resp)
 	if err != nil {
 		return err
