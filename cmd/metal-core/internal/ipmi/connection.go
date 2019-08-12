@@ -18,12 +18,12 @@ func openClientConnection(connection *domain.IPMIConfig) (*goipmi.Client, error)
 
 	client, err := goipmi.NewClient(conn)
 	if err != nil {
-		return client, err
+		return nil, err
 	}
 
 	err = client.Open()
 	if err != nil {
-		return client, err
+		return nil, err
 	}
 	return client, nil
 }

@@ -177,34 +177,34 @@ func (a *app) initConsumer() {
 			switch evt.Type {
 			case domain.Delete:
 				a.EventHandler().FreeMachine(*evt.Old.ID)
-				return nil
 			case domain.Command:
 				switch evt.Cmd.Command {
 				case domain.MachineOnCmd:
 					a.EventHandler().PowerOnMachine(*evt.Cmd.Target.ID)
-					return nil
 				case domain.MachineOffCmd:
 					a.EventHandler().PowerOffMachine(*evt.Cmd.Target.ID)
-					return nil
 				case domain.MachineResetCmd:
 					a.EventHandler().PowerResetMachine(*evt.Cmd.Target.ID)
-					return nil
 				case domain.MachineBiosCmd:
 					a.EventHandler().BootBiosMachine(*evt.Cmd.Target.ID)
-					return nil
 				case domain.MachineLedOnCmd:
 					a.EventHandler().PowerOnMachineLED(*evt.Cmd.Target.ID)
-					return nil
 				case domain.MachineLedOffCmd:
 					a.EventHandler().PowerOffMachineLED(*evt.Cmd.Target.ID)
-					return nil
+				default:
+					zapup.MustRootLogger().Warn("Unhandled command",
+						zap.String("topic", a.Config.MachineTopic),
+						zap.String("channel", "core"),
+						zap.Any("event", evt),
+					)
 				}
+			default:
+				zapup.MustRootLogger().Warn("Unhandled event",
+					zap.String("topic", a.Config.MachineTopic),
+					zap.String("channel", "core"),
+					zap.Any("event", evt),
+				)
 			}
-			zapup.MustRootLogger().Warn("Unhandled event",
-				zap.String("topic", a.Config.MachineTopic),
-				zap.String("channel", "core"),
-				zap.Any("event", evt),
-			)
 			return nil
 		}, 5, bus.Timeout(receiverHandlerTimeout, timeoutHandler))
 
@@ -238,13 +238,13 @@ func (a *app) initConsumer() {
 					zap.Any("Switches", evt.Switches),
 					zap.String("Hostname", hostname),
 				)
-				return nil
+			default:
+				zapup.MustRootLogger().Warn("Unhandled event",
+					zap.String("topic", a.Config.SwitchTopic),
+					zap.String("channel", hostname),
+					zap.Any("event", evt),
+				)
 			}
-			zapup.MustRootLogger().Warn("Unhandled event",
-				zap.String("topic", a.Config.SwitchTopic),
-				zap.String("channel", hostname),
-				zap.Any("event", evt),
-			)
 			return nil
 		}, 1, bus.Timeout(receiverHandlerTimeout, timeoutHandler))
 }
