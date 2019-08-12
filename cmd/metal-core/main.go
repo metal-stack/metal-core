@@ -191,6 +191,9 @@ func (a *app) initConsumer() {
 					a.EventHandler().PowerOffMachineLED(*evt.Cmd.Target.ID)
 				}
 			}
+			zapup.MustRootLogger().Warn("Unhandled event",
+				zap.Any("event", evt),
+			)
 			return nil
 		}, 5, bus.Timeout(receiverHandlerTimeout, timeoutHandler))
 
