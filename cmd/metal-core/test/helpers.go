@@ -24,6 +24,32 @@ var (
 	appContext *domain.AppContext
 )
 
+type noopEventHandler struct {
+	*domain.AppContext
+}
+
+func newNoopEventHandler(ctx *domain.AppContext) domain.EventHandler {
+	return &noopEventHandler{ctx}
+}
+
+func (h *noopEventHandler) FreeMachine(machineID string) {}
+
+func (h *noopEventHandler) PowerOnMachine(machineID string) {}
+
+func (h *noopEventHandler) PowerOffMachine(machineID string) {}
+
+func (h *noopEventHandler) PowerResetMachine(machineID string) {}
+
+func (h *noopEventHandler) BootBiosMachine(machineID string) {}
+
+func (h *noopEventHandler) PowerOnChassisIdentifyLED(machineID string) {}
+
+func (h *noopEventHandler) PowerOffChassisIdentifyLED(machineID, description string) {}
+
+func (h *noopEventHandler) ReconfigureSwitch(switchID string) error {
+	return nil
+}
+
 func mockAPIEndpoint(apiClient func(ctx *domain.AppContext) domain.APIClient) domain.EndpointHandler {
 	_ = os.Setenv(zapup.KeyOutput, logFilename)
 	_ = os.Setenv("METAL_CORE_CIDR", "10.0.0.11/24")
@@ -48,6 +74,7 @@ func mockAPIEndpoint(apiClient func(ctx *domain.AppContext) domain.APIClient) do
 	}
 	appContext.SetAPIClient(apiClient)
 	appContext.SetEndpointHandler(ep.NewHandler)
+	appContext.SetEventHandler(newNoopEventHandler)
 
 	return appContext.EndpointHandler()
 }

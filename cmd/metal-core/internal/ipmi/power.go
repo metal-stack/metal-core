@@ -87,8 +87,8 @@ func PowerCycleMachine(cfg *domain.IPMIConfig) error {
 	return nil
 }
 
-// PowerOnMachineLED powers the machine chassis identify LED on indefinitely (raw 0x00 0x04 0x00 0x01)
-func PowerOnMachineLED(cfg *domain.IPMIConfig) error {
+// PowerOnChassisIdentifyLED powers the machine chassis identify LED on indefinitely (raw 0x00 0x04 0x00 0x01)
+func PowerOnChassisIdentifyLED(cfg *domain.IPMIConfig) error {
 	client, err := openClientConnection(cfg)
 	if err != nil {
 		return err
@@ -107,8 +107,8 @@ func PowerOnMachineLED(cfg *domain.IPMIConfig) error {
 	return nil
 }
 
-// PowerOffMachineLED powers the machine chassis identify LED off (raw 0x00 0x04 0x00)
-func PowerOffMachineLED(cfg *domain.IPMIConfig) error {
+// PowerOffChassisIdentifyLED powers the machine chassis identify LED off (raw 0x00 0x04 0x00)
+func PowerOffChassisIdentifyLED(cfg *domain.IPMIConfig) error {
 	client, err := openClientConnection(cfg)
 	if err != nil {
 		return err

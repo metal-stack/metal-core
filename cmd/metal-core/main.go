@@ -186,14 +186,14 @@ func (a *app) initConsumer() {
 					a.EventHandler().PowerResetMachine(*evt.Cmd.Target.ID)
 				case domain.MachineBiosCmd:
 					a.EventHandler().BootBiosMachine(*evt.Cmd.Target.ID)
-				case domain.MachineLedOnCmd:
-					a.EventHandler().PowerOnMachineLED(*evt.Cmd.Target.ID)
-				case domain.MachineLedOffCmd:
+				case domain.ChassisIdentifyLEDOnCmd:
+					a.EventHandler().PowerOnChassisIdentifyLED(*evt.Cmd.Target.ID)
+				case domain.ChassisIdentifyLEDOffCmd:
 					description := strings.TrimSpace(strings.Join(evt.Cmd.Params, " "))
 					if len(description) == 0 {
 						description = "unknown"
 					}
-					a.EventHandler().PowerOffMachineLED(*evt.Cmd.Target.ID, description)
+					a.EventHandler().PowerOffChassisIdentifyLED(*evt.Cmd.Target.ID, description)
 				default:
 					zapup.MustRootLogger().Warn("Unhandled command",
 						zap.String("topic", a.Config.MachineTopic),

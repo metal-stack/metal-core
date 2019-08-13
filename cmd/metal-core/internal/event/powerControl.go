@@ -63,7 +63,7 @@ func (h *eventHandler) PowerResetMachine(machineID string) {
 	}
 }
 
-func (h *eventHandler) PowerOnMachineLED(machineID string) {
+func (h *eventHandler) PowerOnChassisIdentifyLED(machineID string) {
 	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to read IPMI connection details",
@@ -73,7 +73,7 @@ func (h *eventHandler) PowerOnMachineLED(machineID string) {
 		return
 	}
 
-	err = ipmi.PowerOnMachineLED(ipmiCfg)
+	err = ipmi.PowerOnChassisIdentifyLED(ipmiCfg)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to power on machine chassis identify LED",
 			zap.String("machine", machineID),
@@ -91,7 +91,7 @@ func (h *eventHandler) PowerOnMachineLED(machineID string) {
 	}
 }
 
-func (h *eventHandler) PowerOffMachineLED(machineID, description string) {
+func (h *eventHandler) PowerOffChassisIdentifyLED(machineID, description string) {
 	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to read IPMI connection details",
@@ -101,7 +101,7 @@ func (h *eventHandler) PowerOffMachineLED(machineID, description string) {
 		return
 	}
 
-	err = ipmi.PowerOffMachineLED(ipmiCfg)
+	err = ipmi.PowerOffChassisIdentifyLED(ipmiCfg)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to power off machine chassis identify LED",
 			zap.String("machine", machineID),
