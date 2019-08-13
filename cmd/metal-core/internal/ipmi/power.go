@@ -119,7 +119,7 @@ func PowerOffMachineLED(cfg *domain.IPMIConfig) error {
 		zap.String("MAC", cfg.Mac()),
 	)
 
-	err = sendChassisIdentifyRaw(client, 0x00)
+	err = sendChassisIdentifyRaw(client, 0x00, 0x00)
 	if err != nil {
 		return err
 	}
