@@ -63,8 +63,8 @@ type APIClient interface {
 	FinalizeAllocation(machineID, consolepassword string) (*machine.FinalizeAllocationOK, error)
 	RegisterSwitch() (*models.V1SwitchResponse, error)
 	ConstantlyPhoneHome()
-	SetMachineLEDStateOn(machineID, description string) error
-	SetMachineLEDStateOff(machineID, description string) error
+	SetChassisIdentifyLEDStateOn(machineID, description string) error
+	SetChassisIdentifyLEDStateOff(machineID, description string) error
 }
 
 type Server interface {
@@ -88,8 +88,8 @@ type EventHandler interface {
 	PowerResetMachine(machineID string)
 	BootBiosMachine(machineID string)
 
-	PowerOnMachineLED(machineID string)
-	PowerOffMachineLED(machineID string)
+	PowerOnMachineLED(machineID, description string)
+	PowerOffMachineLED(machineID, description string)
 
 	ReconfigureSwitch(switchID string) error
 }
