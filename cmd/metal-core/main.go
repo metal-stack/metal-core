@@ -187,15 +187,11 @@ func (a *app) initConsumer() {
 				case domain.MachineBiosCmd:
 					a.EventHandler().BootBiosMachine(*evt.Cmd.Target.ID)
 				case domain.MachineLedOnCmd:
-					description := "unknown"
-					if len(evt.Cmd.Params) > 0 {
-						description = strings.Join(evt.Cmd.Params, " ")
-					}
-					a.EventHandler().PowerOnMachineLED(*evt.Cmd.Target.ID, description)
+					a.EventHandler().PowerOnMachineLED(*evt.Cmd.Target.ID)
 				case domain.MachineLedOffCmd:
-					description := "unknown"
-					if len(evt.Cmd.Params) > 0 {
-						description = strings.Join(evt.Cmd.Params, " ")
+					description := strings.TrimSpace(strings.Join(evt.Cmd.Params, " "))
+					if len(description) == 0 {
+						description = "unknown"
 					}
 					a.EventHandler().PowerOffMachineLED(*evt.Cmd.Target.ID, description)
 				default:
