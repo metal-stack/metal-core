@@ -187,7 +187,11 @@ func (a *app) initConsumer() {
 				case domain.MachineBiosCmd:
 					a.EventHandler().BootBiosMachine(*evt.Cmd.Target.ID)
 				case domain.ChassisIdentifyLEDOnCmd:
-					a.EventHandler().PowerOnChassisIdentifyLED(*evt.Cmd.Target.ID)
+					description := strings.TrimSpace(strings.Join(evt.Cmd.Params, " "))
+					if len(description) == 0 {
+						description = "unknown"
+					}
+					a.EventHandler().PowerOnChassisIdentifyLED(*evt.Cmd.Target.ID, description)
 				case domain.ChassisIdentifyLEDOffCmd:
 					description := strings.TrimSpace(strings.Join(evt.Cmd.Params, " "))
 					if len(description) == 0 {

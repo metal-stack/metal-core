@@ -12,8 +12,8 @@ const (
 	ledStateOff = "LED-OFF"
 )
 
-func (c *apiClient) SetChassisIdentifyLEDStateOn(machineID string) error {
-	return c.setChassisIdentifyLEDState(machineID, "", ledStateOn)
+func (c *apiClient) SetChassisIdentifyLEDStateOn(machineID, description string) error {
+	return c.setChassisIdentifyLEDState(machineID, description, ledStateOn)
 }
 
 func (c *apiClient) SetChassisIdentifyLEDStateOff(machineID, description string) error {

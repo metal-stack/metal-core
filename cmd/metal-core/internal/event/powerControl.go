@@ -63,7 +63,7 @@ func (h *eventHandler) PowerResetMachine(machineID string) {
 	}
 }
 
-func (h *eventHandler) PowerOnChassisIdentifyLED(machineID string) {
+func (h *eventHandler) PowerOnChassisIdentifyLED(machineID, description string) {
 	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to read IPMI connection details",
@@ -82,7 +82,7 @@ func (h *eventHandler) PowerOnChassisIdentifyLED(machineID string) {
 		return
 	}
 
-	err = h.APIClient().SetChassisIdentifyLEDStateOn(machineID)
+	err = h.APIClient().SetChassisIdentifyLEDStateOn(machineID, description)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to set machine chassis identify LED state to LED-ON",
 			zap.String("machine", machineID),
