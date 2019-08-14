@@ -91,7 +91,7 @@ func prepare() *app {
 		zap.Any("AdditionalBridgePorts", cfg.AdditionalBridgePorts),
 	)
 
-	transport := client.New(fmt.Sprintf("%v:%d", cfg.ApiIP, cfg.ApiPort), "", nil)
+	transport := client.New(fmt.Sprintf("%v:%d", cfg.ApiIP, cfg.ApiPort), "", []string{cfg.ApiProtocol})
 
 	app := &app{
 		AppContext: &domain.AppContext{
