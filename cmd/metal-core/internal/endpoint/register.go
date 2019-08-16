@@ -53,7 +53,7 @@ func (h *endpointHandler) Register(request *restful.Request, response *restful.R
 		zap.Any("machine", machine),
 	)
 
-	h.EventHandler().PowerOnChassisIdentifyLED(machineID, "Machine has been registered")
+	h.EventHandler().PowerOffChassisIdentifyLED(machineID, "Machine registered")
 
 	rest.Respond(response, http.StatusOK, machine)
 }
