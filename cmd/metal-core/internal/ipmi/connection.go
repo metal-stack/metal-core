@@ -31,7 +31,7 @@ func sendSystemBootRaw(client *goipmi.Client, param uint8, data ...uint8) error 
 	r := &goipmi.Request{
 		NetworkFunction: goipmi.NetworkFunctionChassis,      // 0x00
 		Command:         goipmi.CommandSetSystemBootOptions, // 0x08
-		Data: goipmi.SetSystemBootOptionsRequest{
+		Data: &goipmi.SetSystemBootOptionsRequest{
 			Param: param,
 			Data:  data,
 		},
@@ -58,7 +58,7 @@ func sendChassisIdentifyRaw(client *goipmi.Client, intervalOrOff, forceOn uint8)
 	r := &goipmi.Request{
 		NetworkFunction: goipmi.NetworkFunctionChassis, // 0x00
 		Command:         CommandChassisIdentifyOptions, // 0x04
-		Data: ChassisIdentifyRequest{
+		Data: &ChassisIdentifyRequest{
 			IntervalOrOff: intervalOrOff,
 			ForceOn:       forceOn,
 		},
