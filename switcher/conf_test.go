@@ -17,7 +17,8 @@ func TestFillVLANIDs(t *testing.T) {
 			Vrfs: vrfs,
 		},
 	}
-	c.FillVLANIDs(m)
+	err := c.FillVLANIDs(m)
+	require.Nil(t, err)
 	require.Equal(t, uint16(1001), c.Ports.Vrfs["101001"].VLANID)
 	require.Equal(t, uint16(1002), c.Ports.Vrfs["101002"].VLANID)
 	require.Equal(t, uint16(1003), c.Ports.Vrfs["101003"].VLANID)
