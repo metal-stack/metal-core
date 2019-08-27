@@ -24,7 +24,7 @@ func renderToString(t *testing.T, a Applier) string {
 	require.NoError(t, err, "Couldn't render configuration")
 	err = w.Flush()
 	require.NoError(t, err, "Couldn't flush writer")
-	return b.String()
+	return string(b.Bytes())
 }
 
 func readConf(t *testing.T, i string) Conf {
