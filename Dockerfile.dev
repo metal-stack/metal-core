@@ -1,4 +1,4 @@
-FROM alpine:3.8
+FROM alpine:3.10
 LABEL maintainer FI-TS Devops <devops@f-i-ts.de>
 
 RUN apk update \

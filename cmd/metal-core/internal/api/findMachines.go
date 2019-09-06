@@ -11,7 +11,7 @@ import (
 
 func (c *apiClient) FindMachines(mac string) (int, []*models.V1MachineResponse) {
 	findMachines := machine.NewFindMachinesParams()
-	req := &models.V1FindMachinesRequest{
+	req := &models.V1MachineFindRequest{
 		NicsMacAddresses: []string{mac},
 	}
 	findMachines.SetBody(req)

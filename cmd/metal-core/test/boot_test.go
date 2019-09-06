@@ -34,7 +34,7 @@ func TestPXEBoot(t *testing.T) {
 		InitRamDisk: []string{
 			"https://blobstore.fi-ts.io/metal/images/metal-hammer/metal-hammer-initrd.img.lz4",
 		},
-		CommandLine: fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d METAL_API_URL=http://%v:%d", c.String(), cfg.Port, cfg.ApiIP, cfg.ApiPort),
+		CommandLine: fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d METAL_API_URL=http://%v:%d%s", c.String(), cfg.Port, cfg.ApiIP, cfg.ApiPort, cfg.ApiBasePath),
 	}
 
 	// when

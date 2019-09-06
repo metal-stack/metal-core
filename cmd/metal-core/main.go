@@ -78,6 +78,7 @@ func prepare() *app {
 		zap.String("API-Protocol", cfg.ApiProtocol),
 		zap.String("API-IP", cfg.ApiIP),
 		zap.Int("API-Port", cfg.ApiPort),
+		zap.String("API-BasePath", cfg.ApiBasePath),
 		zap.String("MQAddress", cfg.MQAddress),
 		zap.String("MQLogLevel", cfg.MQLogLevel),
 		zap.String("MachineTopic", cfg.MachineTopic),
@@ -91,7 +92,7 @@ func prepare() *app {
 		zap.Any("AdditionalBridgePorts", cfg.AdditionalBridgePorts),
 	)
 
-	transport := client.New(fmt.Sprintf("%v:%d", cfg.ApiIP, cfg.ApiPort), "", []string{cfg.ApiProtocol})
+	transport := client.New(fmt.Sprintf("%v:%d", cfg.ApiIP, cfg.ApiPort), cfg.ApiBasePath, []string{cfg.ApiProtocol})
 
 	app := &app{
 		AppContext: &domain.AppContext{
