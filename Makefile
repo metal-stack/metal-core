@@ -3,11 +3,11 @@ COMMONDIR := $(or ${COMMONDIR},../common)
 MAINMODULE := git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core
 CGO_ENABLED := 1
 
-in-docker: generate-client gofmt test all;
+in-docker: generate-client gofmt test check all;
 
 include $(COMMONDIR)/Makefile.inc
 
-release:: generate-client gofmt test all;
+release:: generate-client gofmt test check all;
 
 .PHONY: all
 all::

@@ -106,6 +106,7 @@ type Config struct {
 	ApiProtocol               string        `required:"false" default:"http" desc:"set metal api protocol" envconfig:"metal_api_protocol"`
 	ApiIP                     string        `required:"false" default:"localhost" desc:"set metal api address" envconfig:"metal_api_ip"`
 	ApiPort                   int           `required:"false" default:"8080" desc:"set metal api port" envconfig:"metal_api_port"`
+	ApiBasePath               string        `required:"false" default:"" desc:"set metal api basepath" envconfig:"metal_api_basepath"`
 	MQAddress                 string        `required:"false" default:"localhost:4161" desc:"set the MQ server address" envconfig:"mq_address"`
 	MQLogLevel                string        `required:"false" default:"info" desc:"sets the MQ loglevel (debug, info, warn, error)" envconfig:"mq_loglevel"`
 	MachineTopic              string        `required:"false" default:"machine" desc:"set the machine topic name" split_words:"true"`
