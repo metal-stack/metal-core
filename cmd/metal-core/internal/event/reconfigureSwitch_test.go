@@ -65,6 +65,23 @@ func TestBuildSwitcherConfig(t *testing.T) {
 				VNI:       104001,
 				VLANID:    1001,
 				Neighbors: []string{"swp2"},
+				Filter: switcher.Filter{
+					IPPrefixLists: []switcher.IPPrefixList{
+						{
+							Name: "vrf104001-in-prefixes",
+							Spec: "seq 10 permit 10.244.0.0/16 le 32",
+						},
+					},
+					RouteMaps: []switcher.RouteMap{
+						{
+							Name:    "vrf104001-in",
+							Entries: []string{"match ip address prefix-list vrf104001-in-prefixes"},
+							Policy:  "permit",
+							Order:   10,
+						},
+					},
+				},
+				Cidrs: []string{"10.244.0.0/16"},
 			}},
 		},
 		AdditionalBridgeVIDs: []string{"201-256", "301-356"},
