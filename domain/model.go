@@ -108,6 +108,8 @@ type Config struct {
 	ApiPort                   int           `required:"false" default:"8080" desc:"set metal api port" envconfig:"metal_api_port"`
 	ApiBasePath               string        `required:"false" default:"" desc:"set metal api basepath" envconfig:"metal_api_basepath"`
 	MQAddress                 string        `required:"false" default:"localhost:4161" desc:"set the MQ server address" envconfig:"mq_address"`
+	MQCACertFile              string        `required:"false" default:"" desc:"the CA certificate file for verifying MQ certificate" envconfig:"mq_ca_cert_file"`
+	MQClientCertFile          string        `required:"false" default:"" desc:"the client certificate file for accessing MQ" envconfig:"mq_client_cert_file"`
 	MQLogLevel                string        `required:"false" default:"info" desc:"sets the MQ loglevel (debug, info, warn, error)" envconfig:"mq_loglevel"`
 	MachineTopic              string        `required:"false" default:"machine" desc:"set the machine topic name" split_words:"true"`
 	SwitchTopic               string        `required:"false" default:"switch" desc:"set the switch topic name" split_words:"true"`
@@ -120,8 +122,6 @@ type Config struct {
 	AdditionalBridgeVIDs      []string      `required:"false" desc:"additional vlan ids that should be configured at the vlan-aware bridge" envconfig:"additional_bridge_vids"`
 	AdditionalBridgePorts     []string      `required:"false" desc:"additional switch ports that should be configured at the vlan-aware bridge" envconfig:"additional_bridge_ports"`
 	HMACKey                   string        `required:"true" desc:"the preshared key for the hmac calculation" envconfig:"hmac_key"`
-	CACertFile                string        `required:"false" default:"" desc:"the CA certificate file for verifying NSQD certificate" envconfig:"ca_cert_file"`
-	ClientCertFile            string        `required:"false" default:"" desc:"the client certificate file for accessing NSQ" split_words:"true"`
 }
 
 type BootConfig struct {
