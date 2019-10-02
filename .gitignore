@@ -5,3 +5,4 @@ bin
 models
 client
 switcher/frr
+coverage.out
