@@ -120,6 +120,8 @@ type Config struct {
 	AdditionalBridgeVIDs      []string      `required:"false" desc:"additional vlan ids that should be configured at the vlan-aware bridge" envconfig:"additional_bridge_vids"`
 	AdditionalBridgePorts     []string      `required:"false" desc:"additional switch ports that should be configured at the vlan-aware bridge" envconfig:"additional_bridge_ports"`
 	HMACKey                   string        `required:"true" desc:"the preshared key for the hmac calculation" envconfig:"hmac_key"`
+	CACertFile                string        `required:"false" default:"" desc:"the CA certificate file for verifying NSQD certificate" envconfig:"ca_cert_file"`
+	ClientCertFile            string        `required:"false" default:"" desc:"the client certificate file for accessing NSQ" split_words:"true"`
 }
 
 type BootConfig struct {
