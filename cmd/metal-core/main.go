@@ -80,6 +80,8 @@ func prepare() *app {
 		zap.Int("API-Port", cfg.ApiPort),
 		zap.String("API-BasePath", cfg.ApiBasePath),
 		zap.String("MQAddress", cfg.MQAddress),
+		zap.String("MQCACertFile", cfg.MQCACertFile),
+		zap.String("MQClientCertFile", cfg.MQClientCertFile),
 		zap.String("MQLogLevel", cfg.MQLogLevel),
 		zap.String("MachineTopic", cfg.MachineTopic),
 		zap.String("LoopbackIP", cfg.LoopbackIP),
