@@ -166,7 +166,11 @@ func mapLogLevel(level string) bus.Level {
 }
 
 func (a *app) initConsumer() {
-	_ = bus.NewTLSConsumer(zapup.MustRootLogger(), a.Config.MQCACertFile, a.Config.MQClientCertFile, a.Config.MQAddress).
+	tlsCfg := &bus.TLSConfig{
+		CACertFile:     a.Config.MQCACertFile,
+		ClientCertFile: a.Config.MQClientCertFile,
+	}
+	_ = bus.NewConsumer(zapup.MustRootLogger(), tlsCfg, a.Config.MQAddress).
 		With(bus.LogLevel(mapLogLevel(a.Config.MQLogLevel))).
 		MustRegister(a.Config.MachineTopic, "core").
 		Consume(domain.MachineEvent{}, func(message interface{}) error {
@@ -220,7 +224,7 @@ func (a *app) initConsumer() {
 
 	hostname, _ := os.Hostname()
 
-	_ = bus.NewTLSConsumer(zapup.MustRootLogger(), a.Config.MQCACertFile, a.Config.MQClientCertFile, a.Config.MQAddress).
+	_ = bus.NewConsumer(zapup.MustRootLogger(), tlsCfg, a.Config.MQAddress).
 		With(bus.LogLevel(mapLogLevel(a.Config.MQLogLevel))).
 		// the hostname is used here as channel name
 		// this is intended so that messages in the switch topics get replicated

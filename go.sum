@@ -1,6 +1,6 @@
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
-git.f-i-ts.de/cloud-native/metallib v0.0.0-20191002152054-f8c8a9320bf4 h1:8KdmfgtfwECNeQSJanfkUQTWrv9NBAS71tHs5whAoHE=
-git.f-i-ts.de/cloud-native/metallib v0.0.0-20191002152054-f8c8a9320bf4/go.mod h1:CZxU8vAF4MVyB0HGKfc+G/uSqFDdy9atlJIwLbnF8hk=
+git.f-i-ts.de/cloud-native/metallib v0.0.0-20191009113407-cdc1cf2bd880 h1:vLEeIVqPCy+1+BOYRxpaNYDgC+lMEjIkDURA+3Lv0TA=
+git.f-i-ts.de/cloud-native/metallib v0.0.0-20191009113407-cdc1cf2bd880/go.mod h1:CZxU8vAF4MVyB0HGKfc+G/uSqFDdy9atlJIwLbnF8hk=
 github.com/PuerkitoBio/purell v1.1.0/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/purell v1.1.1 h1:WEQqlqaGbrPkxLJWfBwQmfEAE1Z7ONdDLqrN38tNFfI=
 github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
