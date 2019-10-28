@@ -10,47 +10,69 @@ import (
 )
 
 const (
-	BootDevPersistentEfiQualifier = 0xe0
-	HardDiskQualifier             = 0x08
-	BiosQualifier                 = 0x24
-	PxeQualifier                  = 0x04
+	BootDevPersistentEfiQualifier = uint8(0xe0)
+	HardDiskQualifier             = uint8(0x08)
+	BiosQualifier                 = uint8(0x24)
+	PXEQualifier                  = uint8(0x04)
 )
 
-var bootFuncMap = map[string]func(*domain.IPMIConfig, goipmi.BootDevice) error{
-	"SYS-2029BT-HNTR":     setBootMachineRaw,
-	"SYS-2029BT-HNR":      setBootMachineRaw,
-	"SSG-5049P-E1CR45H":   setBootMachineRaw,
-	"MBI-6418A-T5H":       setBootMachineRaw,
-	"MBI-6219G-T7LX-PACK": setBootMachineRaw,
-	"vagrant":             setBootMachineIPMI,
+var diskQualifiers = map[string]uint8{
+	"SYS-2029BT-HNTR":     HardDiskQualifier,
+	"SYS-2029BT-HNR":      BiosQualifier,
+	"SSG-5049P-E1CR45H":   HardDiskQualifier,
+	"MBI-6418A-T5H":       HardDiskQualifier,
+	"MBI-6219G-T7LX-PACK": HardDiskQualifier,
+	"vagrant":             HardDiskQualifier,
 }
 
-func SetBootMachinePXE(cfg *domain.IPMIConfig) error {
-	return fetchBootFunc(cfg)(cfg, goipmi.BootDevicePxe)
-}
-
-func SetBootMachineDisk(cfg *domain.IPMIConfig) error {
-	return fetchBootFunc(cfg)(cfg, goipmi.BootDeviceDisk)
-}
-
-func SetBootMachineBios(cfg *domain.IPMIConfig) error {
-	return fetchBootFunc(cfg)(cfg, goipmi.BootDeviceBios)
-}
-
-func fetchBootFunc(cfg *domain.IPMIConfig) func(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
+func diskQualifier(cfg *domain.IPMIConfig) uint8 {
 	if cfg.Ipmi.Fru == nil {
-		return setBootMachineIPMI
+		return HardDiskQualifier
 	}
 
-	bootFunc, ok := bootFuncMap[cfg.Ipmi.Fru.ProductPartNumber]
+	diskQualifier, ok := diskQualifiers[cfg.Ipmi.Fru.ProductPartNumber]
 	if !ok {
-		return setBootMachineIPMI
+		return HardDiskQualifier
 	}
 
-	return bootFunc
+	return diskQualifier
 }
 
-func setBootMachineIPMI(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
+var bootMethods = map[string]func(*domain.IPMIConfig, goipmi.BootDevice) error{
+	"SYS-2029BT-HNTR":     viaIPMIRaw,
+	"SYS-2029BT-HNR":      viaIPMIRaw,
+	"SSG-5049P-E1CR45H":   viaIPMIRaw,
+	"MBI-6418A-T5H":       viaIPMIRaw,
+	"MBI-6219G-T7LX-PACK": viaIPMIRaw,
+	"vagrant":             viaIPMI,
+}
+
+func SetBootPXE(cfg *domain.IPMIConfig) error {
+	return boot(cfg)(cfg, goipmi.BootDevicePxe)
+}
+
+func SetBootDisk(cfg *domain.IPMIConfig) error {
+	return boot(cfg)(cfg, goipmi.BootDeviceDisk)
+}
+
+func SetBootBios(cfg *domain.IPMIConfig) error {
+	return boot(cfg)(cfg, goipmi.BootDeviceBios)
+}
+
+func boot(cfg *domain.IPMIConfig) func(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
+	if cfg.Ipmi.Fru == nil {
+		return viaIPMI
+	}
+
+	bootMethod, ok := bootMethods[cfg.Ipmi.Fru.ProductPartNumber]
+	if !ok {
+		return viaIPMI
+	}
+
+	return bootMethod
+}
+
+func viaIPMI(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
 	client, err := openClientConnection(cfg)
 	if err != nil {
 		return err
@@ -65,12 +87,12 @@ func setBootMachineIPMI(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
 	return client.SetBootDevice(dev)
 }
 
-// setBootMachineRaw is a modified wrapper around
+// viaIPMIRaw is a modified wrapper around
 // goipmi.SetSystemBootOptionsRequest to configure the BootDevice per section 28.12:
 // https://www.intel.com/content/dam/www/public/us/en/documents/product-briefs/ipmi-second-gen-interface-spec-v2-rev1-1.pdf
 // We send modified raw parameters according to:
 // https://www.supermicro.com/support/faqs/faq.cfm?faq=25559
-func setBootMachineRaw(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
+func viaIPMIRaw(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
 	client, err := openClientConnection(cfg)
 	if err != nil {
 		return err
@@ -87,14 +109,14 @@ func setBootMachineRaw(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
 		raw 0x00 0x08 0x05 0xe0 0x04 0x00 0x00 0x00
 	*/
 
-	var bootDev uint8
+	var bootDevQualifier uint8
 	switch dev {
 	case goipmi.BootDeviceDisk:
-		bootDev = HardDiskQualifier
+		bootDevQualifier = diskQualifier(cfg)
 	case goipmi.BootDeviceBios:
-		bootDev = BiosQualifier
+		bootDevQualifier = BiosQualifier
 	case goipmi.BootDevicePxe:
-		bootDev = PxeQualifier
+		bootDevQualifier = PXEQualifier
 	default:
 		return fmt.Errorf("unsupported boot device:%s", dev.String())
 	}
@@ -122,7 +144,7 @@ func setBootMachineRaw(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
 	}
 
 	// 0x00 0x08 0x05 0xe0 [0x08|0x024|0x04] 0x00 0x00 0x00
-	err = sendSystemBootRaw(client, goipmi.BootParamBootFlags, BootDevPersistentEfiQualifier, bootDev, 0x00, 0x00, 0x00)
+	err = sendSystemBootRaw(client, goipmi.BootParamBootFlags, BootDevPersistentEfiQualifier, bootDevQualifier, 0x00, 0x00, 0x00)
 	if err == nil {
 		if useProgress {
 			// set-in-progress = commit-write
