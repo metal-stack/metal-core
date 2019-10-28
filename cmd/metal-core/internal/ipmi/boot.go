@@ -75,7 +75,7 @@ func viaIPMI(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
 // goipmi.SetSystemBootOptionsRequest to configure the BootDevice per section 28.12:
 // https://www.intel.com/content/dam/www/public/us/en/documents/product-briefs/ipmi-second-gen-interface-spec-v2-rev1-1.pdf
 // We send modified raw parameters according to:
-// https://www.supermicro.com/support/faqs/faq.cfm?faq=25559
+// https://git.f-i-ts.de/cloud-native/metal/smcipmitool/blob/master/com/supermicro/ipmi/IPMIChassisCommand.java#L265
 func viaIPMIRaw(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
 	client, err := openClientConnection(cfg)
 	if err != nil {
