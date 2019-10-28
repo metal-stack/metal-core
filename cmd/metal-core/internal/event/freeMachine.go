@@ -16,7 +16,7 @@ func (h *eventHandler) FreeMachine(machineID string) {
 		return
 	}
 
-	err = ipmi.SetBootMachinePXE(ipmiCfg)
+	err = ipmi.SetBootPXE(ipmiCfg)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to set boot order of machine to HD",
 			zap.String("machine", machineID),
