@@ -4,5 +4,5 @@ bin
 .vscode
 models
 client
-switcher/frr
+internal/switcher/frr
 coverage.out

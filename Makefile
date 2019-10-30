@@ -1,6 +1,6 @@
 BINARY := metal-core
 COMMONDIR := $(or ${COMMONDIR},../common)
-MAINMODULE := git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metal-core
+MAINMODULE := git.f-i-ts.de/cloud-native/metal/metal-core
 CGO_ENABLED := 1
 
 in-docker: generate-client gofmt check all;
@@ -32,4 +32,4 @@ test-switcher:
 .PHONY: generate-client
 generate-client:
 	rm -rf models client
-	GO111MODULE=off swagger generate client -f domain/metal-api.json --skip-validation
+	GO111MODULE=off swagger generate client -f metal-api.json --skip-validation
