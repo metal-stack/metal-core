@@ -2,8 +2,9 @@ package ipmi
 
 import (
 	"fmt"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/pkg/domain"
+	"strings"
 
+	"git.f-i-ts.de/cloud-native/metal/metal-core/pkg/domain"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	goipmi "github.com/vmware/goipmi"
 	"go.uber.org/zap"
@@ -22,15 +23,6 @@ const (
 	UEFIHDDQualifier = uint8(0x24)
 )
 
-var bootMethods = map[string]func(*domain.IPMIConfig, goipmi.BootDevice) error{
-	"SYS-2029BT-HNTR":     viaIPMIRaw,
-	"SYS-2029BT-HNR":      viaIPMIRaw,
-	"SSG-5049P-E1CR45H":   viaIPMIRaw,
-	"MBI-6418A-T5H":       viaIPMIRaw,
-	"MBI-6219G-T7LX-PACK": viaIPMIRaw,
-	"vagrant":             viaIPMI,
-}
-
 func SetBootPXE(cfg *domain.IPMIConfig) error {
 	return boot(cfg)(cfg, goipmi.BootDevicePxe)
 }
@@ -48,12 +40,12 @@ func boot(cfg *domain.IPMIConfig) func(cfg *domain.IPMIConfig, dev goipmi.BootDe
 		return viaIPMI
 	}
 
-	bootMethod, ok := bootMethods[cfg.Ipmi.Fru.ProductPartNumber]
-	if !ok {
-		return viaIPMI
+	manufacturer := strings.ToLower(strings.TrimSpace(cfg.Ipmi.Fru.ProductManufacturer))
+	if strings.Contains(manufacturer, "supermicro") {
+		return viaIPMIRaw
 	}
 
-	return bootMethod
+	return viaIPMI
 }
 
 func viaIPMI(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
@@ -83,14 +75,14 @@ func viaIPMIRaw(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
 	}
 
 	/*
-		Set 1st boot device to UEFI PXE persistently:
-		raw 0x00 0x08 0x05 0xe0 0x04 0x00 0x00 0x00
+	   Set 1st boot device to UEFI PXE persistently:
+	   raw 0x00 0x08 0x05 0xe0 0x04 0x00 0x00 0x00
 
-		Set 1st boot device to UEFI HDD persistently:
-		raw 0x00 0x08 0x05 0xe0 0x24 0x00 0x00 0x00
+	   Set 1st boot device to UEFI HDD persistently:
+	   raw 0x00 0x08 0x05 0xe0 0x24 0x00 0x00 0x00
 
-		Set 1st boot device to BIOS persistently:
-		raw 0x00 0x08 0x05 0xff 0x18 0x00 0x00 0x00
+	   Set 1st boot device to BIOS persistently:
+	   raw 0x00 0x08 0x05 0xff 0x18 0x00 0x00 0x00
 	*/
 
 	var uefiQualifier, bootDevQualifier uint8
