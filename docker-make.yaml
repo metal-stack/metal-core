@@ -14,6 +14,6 @@ builds:
   - name: "metal-core"
     tags:
       - latest
-  - name: "metal-core-merge-request"
+  - name: "metal-core-merge-request-and-tags"
     tags:
       - ${CI_COMMIT_REF_SLUG}

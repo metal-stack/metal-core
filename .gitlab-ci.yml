@@ -1,11 +1,12 @@
 ---
 image: registry.cloud.fits/fits/buildtools:dev
 
-merge-request:
+merge-request-and-tags:
   script: 
-    - docker-make -x rule2,rule3 --summary --build-only metal-core-merge-request
+    - docker-make -x rule2,rule3 --summary --build-only metal-core-merge-request-and-tags
   only:
     - merge_requests
+    - tags
 
 master:
   script:
