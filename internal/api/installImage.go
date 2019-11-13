@@ -18,7 +18,7 @@ func (c *apiClient) InstallImage(machineID string) (int, *models.V1MachineRespon
 	if err != nil {
 		// FIXME make this type safe, reuse error types from wait_responses.
 		if strings.Contains(err.Error(), "context deadline exceeded") {
-			zapup.MustRootLogger().Info("Long polling timeout while GET from Metal-APIs wait endpoint",
+			zapup.MustRootLogger().Debug("Long polling timeout while GET from Metal-APIs wait endpoint",
 				zap.String("machineID", machineID),
 				zap.String("response", err.Error()),
 			)
