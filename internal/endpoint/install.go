@@ -12,7 +12,7 @@ import (
 func (h *endpointHandler) Install(request *restful.Request, response *restful.Response) {
 	machineID := request.PathParameter("id")
 
-	zapup.MustRootLogger().Info("Request Metal-API for an image to install",
+	zapup.MustRootLogger().Debug("Request Metal-API for an image to install",
 		zap.String("machineID", machineID),
 	)
 
@@ -26,7 +26,7 @@ func (h *endpointHandler) Install(request *restful.Request, response *restful.Re
 		)
 		rest.Respond(response, http.StatusOK, machineWithToken)
 	case http.StatusNotModified:
-		zapup.MustRootLogger().Info("Not allocated yet",
+		zapup.MustRootLogger().Debug("Not allocated yet",
 			zap.Int("statusCode", sc),
 			zap.String("machineID", machineID),
 		)
@@ -39,7 +39,7 @@ func (h *endpointHandler) Install(request *restful.Request, response *restful.Re
 		rest.Respond(response, http.StatusExpectationFailed, nil)
 	default:
 		errMsg := "No installation image found"
-		zapup.MustRootLogger().Error(errMsg,
+		zapup.MustRootLogger().Debug(errMsg,
 			zap.Int("statusCode", sc),
 			zap.String("machineID", machineID),
 		)

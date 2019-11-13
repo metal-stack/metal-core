@@ -35,7 +35,7 @@ func Respond(response *restful.Response, statusCode int, body interface{}) {
 
 	response.Flush()
 
-	zapup.MustRootLogger().Info("Sent response",
+	zapup.MustRootLogger().Debug("Sent response",
 		zap.Int("statusCode", statusCode),
 		zap.Any("body", body),
 	)
