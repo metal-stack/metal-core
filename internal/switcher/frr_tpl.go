@@ -102,7 +102,7 @@ router bgp {{ $ASN }} vrf {{ $vrf }}
  !
  address-family ipv4 unicast
   redistribute connected
-  neighbor MACHINE maximum-prefix 100
+  neighbor MACHINE maximum-prefix 24000
   {{- if (len $t.IPPrefixLists) gt 0 }}
   neighbor MACHINE route-map {{ $vrf }}-in in
   {{- end }}
