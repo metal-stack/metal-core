@@ -33,13 +33,17 @@ func timeoutHandler(err bus.TimeoutError) error {
 	return nil
 }
 
-func (s *Server) initConsumer() {
+func (s *Server) initConsumer() error {
 	tlsCfg := &bus.TLSConfig{
 		CACertFile:     s.Config.MQCACertFile,
 		ClientCertFile: s.Config.MQClientCertFile,
 	}
-	_ = bus.NewConsumer(zapup.MustRootLogger(), tlsCfg, s.Config.MQAddress).
-		With(bus.LogLevel(mapLogLevel(s.Config.MQLogLevel))).
+	c, err := bus.NewConsumer(zapup.MustRootLogger(), tlsCfg, s.Config.MQAddress)
+	if err != nil {
+		return err
+	}
+
+	err = c.With(bus.LogLevel(mapLogLevel(s.Config.MQLogLevel))).
 		MustRegister(s.Config.MachineTopic, "core").
 		Consume(domain.MachineEvent{}, func(message interface{}) error {
 			evt := message.(*domain.MachineEvent)
@@ -90,10 +94,18 @@ func (s *Server) initConsumer() {
 			return nil
 		}, 5, bus.Timeout(receiverHandlerTimeout, timeoutHandler))
 
+	if err != nil {
+		return err
+	}
+
 	hostname, _ := os.Hostname()
 
-	_ = bus.NewConsumer(zapup.MustRootLogger(), tlsCfg, s.Config.MQAddress).
-		With(bus.LogLevel(mapLogLevel(s.Config.MQLogLevel))).
+	c, err = bus.NewConsumer(zapup.MustRootLogger(), tlsCfg, s.Config.MQAddress)
+	if err != nil {
+		return nil
+	}
+
+	err = c.With(bus.LogLevel(mapLogLevel(s.Config.MQLogLevel))).
 		// the hostname is used here as channel name
 		// this is intended so that messages in the switch topics get replicated
 		// to all channels leaf01, leaf02
@@ -131,4 +143,6 @@ func (s *Server) initConsumer() {
 			}
 			return nil
 		}, 1, bus.Timeout(receiverHandlerTimeout, timeoutHandler))
+
+	return err
 }
