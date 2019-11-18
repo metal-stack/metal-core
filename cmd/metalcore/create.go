@@ -81,11 +81,17 @@ func Create() *Server {
 	app.SetEventHandler(event.NewHandler)
 	app.InitHMAC()
 
-	app.initConsumer()
+	err := app.initConsumer()
+	if err != nil {
+		zapup.MustRootLogger().Fatal("failed to init NSQ consumer",
+			zap.Error(err),
+		)
+		os.Exit(1)
+	}
 
 	s, err := app.APIClient().RegisterSwitch()
 	if err != nil {
-		zapup.MustRootLogger().Fatal("unable to register",
+		zapup.MustRootLogger().Fatal("failed to register switch",
 			zap.Error(err),
 		)
 		os.Exit(1)
@@ -93,14 +99,14 @@ func Create() *Server {
 
 	host, err := os.Hostname()
 	if err != nil {
-		zapup.MustRootLogger().Fatal("unable to detect hostname",
+		zapup.MustRootLogger().Fatal("failed to detect hostname",
 			zap.Error(err),
 		)
 		os.Exit(1)
 	}
 	err = app.EventHandler().ReconfigureSwitch(host)
 	if err != nil {
-		zapup.MustRootLogger().Fatal("unable to fetch and apply current switch configuration",
+		zapup.MustRootLogger().Fatal("failed to fetch and apply current switch configuration",
 			zap.Error(err),
 		)
 		os.Exit(1)
