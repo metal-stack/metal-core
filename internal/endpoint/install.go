@@ -43,6 +43,6 @@ func (h *endpointHandler) Install(request *restful.Request, response *restful.Re
 			zap.Int("statusCode", sc),
 			zap.String("machineID", machineID),
 		)
-		rest.Respond(response, http.StatusNotFound, errMsg)
+		rest.RespondError(response, http.StatusNotFound, errMsg)
 	}
 }

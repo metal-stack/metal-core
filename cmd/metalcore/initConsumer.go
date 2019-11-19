@@ -19,12 +19,12 @@ func mapLogLevel(level string) bus.Level {
 		return bus.Debug
 	case "info":
 		return bus.Info
-	case "warn", "warning":
+	case "warn":
 		return bus.Warning
 	case "error":
 		return bus.Error
 	default:
-		return bus.Warning
+		return bus.Info
 	}
 }
 

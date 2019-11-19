@@ -8,17 +8,31 @@ import (
 )
 
 func RespondError(response *restful.Response, statusCode int, errMsg string) {
-	_ = response.WriteError(statusCode, errors.New(errMsg))
+	err := response.WriteError(statusCode, errors.New(errMsg))
+	if err != nil {
+		zapup.MustRootLogger().Error(err.Error())
+		response.WriteHeader(statusCode)
+	}
+
 	response.Flush()
 
 	zapup.MustRootLogger().Error("Sent error response",
 		zap.Int("statusCode", statusCode),
-		zap.Error(errors.New(errMsg)),
+		zap.String("error", errMsg),
+		zap.Error(err),
 	)
 }
 
 func Respond(response *restful.Response, statusCode int, body interface{}) {
-	_ = response.WriteHeaderAndEntity(statusCode, body)
+	err := response.WriteHeaderAndEntity(statusCode, body)
+	if err != nil {
+		zapup.MustRootLogger().Error("Cannot write body",
+			zap.Any("body", body),
+			zap.Error(err),
+		)
+		response.WriteHeader(statusCode)
+	}
+
 	response.Flush()
 
 	zapup.MustRootLogger().Debug("Sent response",
