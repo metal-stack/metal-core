@@ -1,5 +1,4 @@
 .dockerignore
 .gitignore
 Dockerfile
-Dockerfile.dev
 *.md

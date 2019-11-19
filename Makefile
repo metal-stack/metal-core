@@ -14,16 +14,9 @@ all::
 
 release:: all ;
 
-.PHONY: localbuild
-localbuild: bin/$(BINARY)
-	docker build -t registry.fi-ts.io/metal/metal-core -f Dockerfile.dev .
-
 .PHONY: spec
 spec: all
 	bin/metal-core spec spec/metal-core.json
-
-.PHONY: localbuild
-localbuild: bin/$(BINARY)
 
 .PHONY: test-switcher
 test-switcher:
