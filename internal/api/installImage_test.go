@@ -67,6 +67,6 @@ func TestInstallImage_Error(t *testing.T) {
 	sc, _ := ctx.APIClient().InstallImage(machineID)
 
 	// THEN
-	require.Equal(t, http.StatusInternalServerError, sc)
+	require.Equal(t, http.StatusNotModified, sc)
 	require.Equal(t, machineID, m.actualmachineID)
 }
