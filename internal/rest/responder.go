@@ -8,7 +8,8 @@ import (
 )
 
 func RespondError(response *restful.Response, statusCode int, errMsg string) {
-	_ = response.WriteError(statusCode, errors.New(errMsg))
+	//nolint:errcheck
+	response.WriteError(statusCode, errors.New(errMsg))
 	response.Flush()
 
 	zapup.MustRootLogger().Error("Sent error response",
@@ -18,7 +19,8 @@ func RespondError(response *restful.Response, statusCode int, errMsg string) {
 }
 
 func Respond(response *restful.Response, statusCode int, body interface{}) {
-	_ = response.WriteHeaderAndEntity(statusCode, body)
+	//nolint:errcheck
+	response.WriteHeaderAndEntity(statusCode, body)
 	response.Flush()
 
 	zapup.MustRootLogger().Debug("Sent response",
