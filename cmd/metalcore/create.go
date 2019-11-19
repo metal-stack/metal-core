@@ -25,11 +25,10 @@ func Create() *Server {
 	if err := envconfig.Process("METAL_CORE", cfg); err != nil {
 		panic(fmt.Errorf("Bad configuration:\n%+v", cfg))
 	}
-	//nolint:errcheck
 	os.Setenv(zapup.KeyFieldApp, "Metal-Core")
 	os.Setenv(zapup.KeyLogLevel, cfg.LogLevel)
 	if cfg.ConsoleLogging {
-		_ = os.Setenv(zapup.KeyLogEncoding, "console")
+		os.Setenv(zapup.KeyLogEncoding, "console")
 	}
 
 	zapup.MustRootLogger().Info("Metal-Core Version",
