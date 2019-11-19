@@ -26,7 +26,7 @@ func (h *endpointHandler) Register(request *restful.Request, response *restful.R
 
 	machineID := request.PathParameter("id")
 
-	zapup.MustRootLogger().Info("Register machine at Metal-API",
+	zapup.MustRootLogger().Debug("Register machine at Metal-API",
 		zap.String("machineID", machineID),
 		zap.String("IPMI-Address", req.IPMIAddress()),
 		zap.String("IPMI-Interface", req.IPMIInterface()),

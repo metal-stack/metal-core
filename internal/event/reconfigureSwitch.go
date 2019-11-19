@@ -119,7 +119,7 @@ func (h *eventHandler) ReconfigureSwitch(switchID string) error {
 	zapup.MustRootLogger().Info("Assembled new config for switch",
 		zap.Any("config", c))
 	if !h.Config.ReconfigureSwitch {
-		zapup.MustRootLogger().Info("Skip config application because of environment setting")
+		zapup.MustRootLogger().Debug("Skip config application because of environment setting")
 		return nil
 	}
 	err = c.Apply()

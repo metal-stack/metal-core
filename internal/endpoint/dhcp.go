@@ -16,7 +16,7 @@ type emptyBootRepsonse struct{}
 func (e *endpointHandler) Dhcp(request *restful.Request, response *restful.Response) {
 	guid := request.PathParameter("id")
 
-	zapup.MustRootLogger().Info("emit pxe boot event from machine",
+	zapup.MustRootLogger().Debug("emit pxe boot event from machine",
 		zap.String("guid", guid),
 	)
 

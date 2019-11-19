@@ -38,10 +38,9 @@ func TestLoggingMiddleware(t *testing.T) {
 	// then
 	require.Equal(t, http.StatusOK, sc)
 	logs := getLogs()
-	require.Contains(t, logs, "Register machine at Metal-API")
 	require.Contains(t, logs, "Machine registered")
 	require.Contains(t, logs, fmt.Sprintf("%q:%q", "id", machineID))
-	require.NotContains(t, logs, "level=error")
+	require.NotContains(t, logs, "error")
 }
 
 func (a *apiHandlerCoreTest) FindMachines(mac string) (int, []*models.V1MachineResponse) {
