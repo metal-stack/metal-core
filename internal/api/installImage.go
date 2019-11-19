@@ -23,17 +23,17 @@ func (c *apiClient) InstallImage(machineID string) (int, *models.V1MachineRespon
 			)
 			return http.StatusNotModified, nil
 		case *machine.WaitForAllocationDefault:
-			zapup.MustRootLogger().Debug("Failed to GET installation image from Metal-APIs wait endpoint",
+			zapup.MustRootLogger().Error("Failed to GET installation image from Metal-APIs wait endpoint",
 				zap.String("machineID", machineID),
-				zap.String("response", e.Error()),
+				zap.Error(e),
 			)
 			return http.StatusInternalServerError, nil
 		default:
-			zapup.MustRootLogger().Error("Failed to GET installation image from Metal-APIs wait endpoint",
+			zapup.MustRootLogger().Debug("Metal-APIs wait for installation image timeout",
 				zap.String("machineID", machineID),
-				zap.Error(err),
+				zap.String("response", e.Error()),
 			)
-			return http.StatusInternalServerError, nil
+			return http.StatusNotModified, nil
 		}
 	}
 
