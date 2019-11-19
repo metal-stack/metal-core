@@ -3,6 +3,7 @@ image: registry.cloud.fits/fits/buildtools:1
 
 before_script:
   - curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b /bin v1.21.0
+  - gopath.sh
 
 merge-request-and-tags:
   script: 
