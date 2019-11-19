@@ -1,14 +1,15 @@
 ---
 image: registry.cloud.fits/fits/buildtools:1
 
+variables:
+  GOPATH: /root/go
+
 before_script:
-  - curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b /bin v1.21.0
+  - curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.21.0
 
 merge-request-and-tags:
-  variables:
-    GOPATH: /go
   script: 
-    - /bin/golangci-lint run
+    - $(go env GOPATH)/bin/golangci-lint run
     - docker-make -x rule2,rule3 --summary --build-only metal-core-merge-request-and-tags
   only:
     - merge_requests
