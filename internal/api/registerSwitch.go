@@ -62,7 +62,7 @@ links:
 		mac := attrs.HardwareAddr.String()
 		for _, b := range blacklist {
 			if b == name {
-				zapup.MustRootLogger().Info("skip interface, because it is contained in the blacklist",
+				zapup.MustRootLogger().Debug("skip interface, because it is contained in the blacklist",
 					zap.String("interface", name),
 					zap.Any("blacklist", blacklist),
 				)
@@ -70,7 +70,7 @@ links:
 			}
 		}
 		if !strings.HasPrefix(name, "swp") {
-			zapup.MustRootLogger().Info("skip interface, because only swp* switch ports are reported to metal-api",
+			zapup.MustRootLogger().Debug("skip interface, because only swp* switch ports are reported to metal-api",
 				zap.String("interface", name),
 				zap.String("MAC", mac),
 			)
@@ -78,7 +78,7 @@ links:
 		}
 		_, err := net.ParseMAC(mac)
 		if err != nil {
-			zapup.MustRootLogger().Info("skip interface with invalid mac",
+			zapup.MustRootLogger().Debug("skip interface with invalid mac",
 				zap.String("interface", name),
 				zap.String("MAC", mac),
 			)

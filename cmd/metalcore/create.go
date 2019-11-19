@@ -23,13 +23,11 @@ import (
 func Create() *Server {
 	cfg := &domain.Config{}
 	if err := envconfig.Process("METAL_CORE", cfg); err != nil {
-		zapup.MustRootLogger().Fatal("Bad configuration",
-			zap.Error(err),
-		)
-		os.Exit(1)
+		panic(fmt.Errorf("Bad configuration:\n%+v", cfg))
 	}
-
-	_ = os.Setenv(zapup.KeyFieldApp, "Metal-Core")
+	//nolint:errcheck
+	os.Setenv(zapup.KeyFieldApp, "Metal-Core")
+	os.Setenv(zapup.KeyLogLevel, cfg.LogLevel)
 	if cfg.ConsoleLogging {
 		_ = os.Setenv(zapup.KeyLogEncoding, "console")
 	}

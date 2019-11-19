@@ -51,6 +51,7 @@ func (h *noopEventHandler) ReconfigureSwitch(switchID string) error {
 }
 
 func mockAPIEndpoint(apiClient func(ctx *domain.AppContext) domain.APIClient) domain.EndpointHandler {
+	_ = os.Setenv(zapup.KeyLogLevel, "info")
 	_ = os.Setenv(zapup.KeyOutput, logFilename)
 	_ = os.Setenv("METAL_CORE_CIDR", "10.0.0.11/24")
 	_ = os.Setenv("METAL_CORE_PARTITION_ID", "FRA")

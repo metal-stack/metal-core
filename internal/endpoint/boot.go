@@ -17,7 +17,7 @@ import (
 func (e *endpointHandler) Boot(request *restful.Request, response *restful.Response) {
 	mac := request.PathParameter("mac")
 
-	zapup.MustRootLogger().Info("Request Metal-API for a machine",
+	zapup.MustRootLogger().Debug("Request Metal-API for a machine",
 		zap.String("MAC", mac),
 	)
 

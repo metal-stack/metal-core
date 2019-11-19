@@ -3,7 +3,7 @@ module git.f-i-ts.de/cloud-native/metal/metal-core
 go 1.13
 
 require (
-	git.f-i-ts.de/cloud-native/metallib v0.2.3
+	git.f-i-ts.de/cloud-native/metallib v0.2.4
 	github.com/emicklei/go-restful v2.9.6+incompatible
 	github.com/emicklei/go-restful-openapi v1.0.0
 	github.com/go-openapi/errors v0.19.2

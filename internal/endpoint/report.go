@@ -24,7 +24,7 @@ func (h *endpointHandler) Report(request *restful.Request, response *restful.Res
 
 	machineID := request.PathParameter("id")
 
-	zapup.MustRootLogger().Info("Got report for machine",
+	zapup.MustRootLogger().Debug("Got report for machine",
 		zap.String("machineID", machineID),
 		zap.Any("report", report),
 	)

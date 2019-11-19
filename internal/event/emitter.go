@@ -26,7 +26,7 @@ func (e *Emitter) Emit(eventType endpoint.ProvisioningEventType, machineID, mess
 		Message: message,
 	}
 
-	zapup.MustRootLogger().Info("Emit event",
+	zapup.MustRootLogger().Debug("Emit event",
 		zap.String("type", t),
 		zap.String("message", message),
 	)

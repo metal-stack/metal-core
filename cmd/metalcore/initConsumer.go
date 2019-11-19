@@ -47,7 +47,7 @@ func (s *Server) initConsumer() error {
 		MustRegister(s.Config.MachineTopic, "core").
 		Consume(domain.MachineEvent{}, func(message interface{}) error {
 			evt := message.(*domain.MachineEvent)
-			zapup.MustRootLogger().Info("Got message",
+			zapup.MustRootLogger().Debug("Got message",
 				zap.String("topic", s.Config.MachineTopic),
 				zap.String("channel", "core"),
 				zap.Any("event", evt),
@@ -112,7 +112,7 @@ func (s *Server) initConsumer() error {
 		MustRegister(s.Config.SwitchTopic, hostname).
 		Consume(domain.SwitchEvent{}, func(message interface{}) error {
 			evt := message.(*domain.SwitchEvent)
-			zapup.MustRootLogger().Info("Got message",
+			zapup.MustRootLogger().Debug("Got message",
 				zap.String("topic", s.Config.SwitchTopic),
 				zap.String("channel", hostname),
 				zap.Any("event", evt),
@@ -129,7 +129,7 @@ func (s *Server) initConsumer() error {
 						return nil
 					}
 				}
-				zapup.MustRootLogger().Info("Skip event because it is not intended for this switch",
+				zapup.MustRootLogger().Debug("Skip event because it is not intended for this switch",
 					zap.Any("Machine", evt.Machine),
 					zap.Any("Switches", evt.Switches),
 					zap.String("Hostname", hostname),
