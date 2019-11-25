@@ -13,14 +13,14 @@ import (
 const (
 	LegacyQualifier = uint8(0xff)
 
-	PXEQualifier        = uint8(0x04)
-	DefaultHDDQualifier = uint8(0x08)
-	BIOSQualifier       = uint8(0x18)
+	PXEQualifier       = uint8(0x04)
+	DefaultHDQualifier = uint8(0x08)
+	BIOSQualifier      = uint8(0x18)
 
 	UEFIQualifier = uint8(0xe0)
 
 	UEFIPXEQualifier = uint8(0x04)
-	UEFIHDDQualifier = uint8(0x24)
+	UEFIHDQualifier  = uint8(0x24)
 )
 
 func SetBootPXE(cfg *domain.IPMIConfig) error {
@@ -75,27 +75,32 @@ func viaIPMIRaw(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
 	}
 
 	/*
-	   Set 1st boot device to UEFI PXE persistently:
-	   raw 0x00 0x08 0x05 0xe0 0x04 0x00 0x00 0x00
+	   Set boot order to UEFI PXE persistently:
+	   raw 0x00 0x08 0x05 0xe0 0x04 0x00 0x00 0x00  (conforms to IPMI 2.0 as well as SMCIPMITool)
 
-	   Set 1st boot device to UEFI HDD persistently:
-	   raw 0x00 0x08 0x05 0xe0 0x24 0x00 0x00 0x00
+	   Set boot order to UEFI HD persistently:
+	   raw 0x00 0x08 0x05 0xe0 0x08 0x00 0x00 0x00  (IPMI 2.0)
+	   raw 0x00 0x08 0x05 0xe0 0x24 0x00 0x00 0x00  (SMCIPMITool)
 
-	   Set 1st boot device to BIOS persistently:
-	   raw 0x00 0x08 0x05 0xff 0x18 0x00 0x00 0x00
+	   Set boot order to (UEFI) BIOS persistently:
+	   raw 0x00 0x08 0x05 0xe0 0x18 0x00 0x00 0x00  (IPMI 2.0   , UEFI BIOS)
+	   raw 0x00 0x08 0x05 0xff 0x18 0x00 0x00 0x00  (SMCIPMITool, legacy BIOS)
+
+	   See https://git.f-i-ts.de/cloud-native/metal/metal/issues/73#note_151375
 	*/
 
 	var uefiQualifier, bootDevQualifier uint8
+	// Conforms to SMCIPMITool
 	switch dev {
-	case goipmi.BootDeviceBios:
-		uefiQualifier = LegacyQualifier
-		bootDevQualifier = BIOSQualifier
-	case goipmi.BootDeviceDisk:
-		uefiQualifier = UEFIQualifier
-		bootDevQualifier = UEFIHDDQualifier
 	case goipmi.BootDevicePxe:
 		uefiQualifier = UEFIQualifier
 		bootDevQualifier = UEFIPXEQualifier
+	case goipmi.BootDeviceDisk:
+		uefiQualifier = UEFIQualifier
+		bootDevQualifier = UEFIHDQualifier // use DefaultHDQualifier for IPMI 2.0 compatibility
+	case goipmi.BootDeviceBios:
+		uefiQualifier = LegacyQualifier // use UEFIQualifier for IPMI 2.0 compatibility
+		bootDevQualifier = BIOSQualifier
 	default:
 		return fmt.Errorf("unsupported boot device:%s", dev.String())
 	}
