@@ -92,7 +92,7 @@ func (s *Server) initConsumer() error {
 				)
 			}
 			return nil
-		}, 5, bus.Timeout(receiverHandlerTimeout, timeoutHandler))
+		}, 5, bus.Timeout(receiverHandlerTimeout, timeoutHandler), bus.TTL(time.Duration(s.Config.MachineTopicTTL)*time.Millisecond))
 
 	if err != nil {
 		return err
@@ -142,7 +142,7 @@ func (s *Server) initConsumer() error {
 				)
 			}
 			return nil
-		}, 1, bus.Timeout(receiverHandlerTimeout, timeoutHandler))
+		}, 1, bus.Timeout(receiverHandlerTimeout, timeoutHandler), bus.TTL(time.Duration(s.Config.SwitchTopicTTL)*time.Millisecond))
 
 	return err
 }
