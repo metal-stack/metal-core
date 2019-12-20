@@ -315,9 +315,14 @@
         "disks",
         "memory",
         "nics",
-        "ipmi"
+        "ipmi",
+        "bios"
       ],
       "properties": {
+        "bios": {
+          "description": "the Bios configuration",
+          "$ref": "#/definitions/models.V1MachineBIOS"
+        },
         "cpu_cores": {
           "type": "integer",
           "format": "int32"
