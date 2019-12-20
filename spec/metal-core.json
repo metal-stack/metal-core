@@ -468,6 +468,24 @@
         }
       }
     },
+    "models.V1MachineBIOS": {
+      "required": [
+        "date",
+        "vendor",
+        "version"
+      ],
+      "properties": {
+        "date": {
+          "type": "string"
+        },
+        "vendor": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
     "models.V1MachineBlockDevice": {
       "required": [
         "name",
@@ -544,6 +562,7 @@
     "models.V1MachineIPMI": {
       "required": [
         "address",
+        "bmcversion",
         "fru",
         "interface",
         "mac",
@@ -552,6 +571,9 @@
       ],
       "properties": {
         "address": {
+          "type": "string"
+        },
+        "bmcversion": {
           "type": "string"
         },
         "fru": {
@@ -699,6 +721,7 @@
     "models.V1MachineResponse": {
       "required": [
         "allocation",
+        "bios",
         "changed",
         "created",
         "events",
@@ -715,6 +738,9 @@
       "properties": {
         "allocation": {
           "$ref": "#/definitions/models.V1MachineAllocation"
+        },
+        "bios": {
+          "$ref": "#/definitions/models.V1MachineBIOS"
         },
         "changed": {
           "type": "string"
