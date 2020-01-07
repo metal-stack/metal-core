@@ -2,7 +2,6 @@ package ipmi
 
 import (
 	"fmt"
-	"strings"
 
 	"git.f-i-ts.de/cloud-native/metal/metal-core/pkg/domain"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
@@ -24,51 +23,23 @@ const (
 )
 
 func SetBootPXE(cfg *domain.IPMIConfig) error {
-	return boot(cfg)(cfg, goipmi.BootDevicePxe)
+	return boot(cfg, goipmi.BootDevicePxe)
 }
 
 func SetBootDisk(cfg *domain.IPMIConfig) error {
-	return boot(cfg)(cfg, goipmi.BootDeviceDisk)
+	return boot(cfg, goipmi.BootDeviceDisk)
 }
 
 func SetBootBios(cfg *domain.IPMIConfig) error {
-	return boot(cfg)(cfg, goipmi.BootDeviceBios)
+	return boot(cfg, goipmi.BootDeviceBios)
 }
 
-func boot(cfg *domain.IPMIConfig) func(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
-	if cfg.Ipmi.Fru == nil {
-		return viaIPMI
-	}
-
-	manufacturer := strings.ToLower(strings.TrimSpace(cfg.Ipmi.Fru.ProductManufacturer))
-	if strings.Contains(manufacturer, "supermicro") {
-		return viaIPMIRaw
-	}
-
-	return viaIPMI
-}
-
-func viaIPMI(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
-	client, err := openClientConnection(cfg)
-	if err != nil {
-		return err
-	}
-
-	zapup.MustRootLogger().Info("Setting boot machine",
-		zap.String("device", dev.String()),
-		zap.String("hostname", cfg.Hostname),
-		zap.String("MAC", cfg.Mac()),
-	)
-
-	return client.SetBootDevice(dev)
-}
-
-// viaIPMIRaw is a modified wrapper around
+// boot is a modified wrapper around
 // goipmi.SetSystemBootOptionsRequest to configure the BootDevice per section 28.12:
 // https://www.intel.com/content/dam/www/public/us/en/documents/product-briefs/ipmi-second-gen-interface-spec-v2-rev1-1.pdf
 // We send modified raw parameters according to:
 // https://git.f-i-ts.de/cloud-native/metal/smcipmitool/blob/master/com/supermicro/ipmi/IPMIChassisCommand.java#L265
-func viaIPMIRaw(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
+func boot(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
 	client, err := openClientConnection(cfg)
 	if err != nil {
 		return err
