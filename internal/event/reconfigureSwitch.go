@@ -110,8 +110,7 @@ func (h *eventHandler) ReconfigureSwitch(switchID string) error {
 		return errors.Wrap(err, "could not build switcher config")
 	}
 
-	devMode := h.Config.PartitionID == "vagrant-lab"
-	err = fillEth0Info(c, h.Config.ManagementGateway, devMode)
+	err = fillEth0Info(c, h.Config.ManagementGateway, h.DevMode)
 	if err != nil {
 		return errors.Wrap(err, "could not gather information about eth0 nic")
 	}

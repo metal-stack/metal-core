@@ -172,6 +172,7 @@ type AppContext struct {
 	PartitionClient *partition.Client
 	hmac            security.HMACAuth
 	Auth            runtime.ClientAuthInfoWriter
+	DevMode         bool
 }
 
 func (a *AppContext) APIClient() APIClient {
