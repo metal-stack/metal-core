@@ -26,6 +26,9 @@ func (c *apiClient) IPMIConfig(machineID string) (*domain.IPMIConfig, error) {
 
 	ipmi := ok.Payload
 	if ipmi.IPMI == nil {
+		zapup.MustRootLogger().Error("IPMI data for machine is nil",
+			zap.String("machine", machineID),
+		)
 		return nil, errors.Wrapf(err, "IPMI data for machine %s is nil", machineID)
 	}
 

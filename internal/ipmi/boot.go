@@ -30,8 +30,8 @@ func SetBootDisk(cfg *domain.IPMIConfig, devMode bool) error {
 	return boot(cfg, goipmi.BootDeviceDisk, devMode)
 }
 
-func SetBootBios(cfg *domain.IPMIConfig) error {
-	return boot(cfg, goipmi.BootDeviceBios, false)
+func SetBootBios(cfg *domain.IPMIConfig, devMode bool) error {
+	return boot(cfg, goipmi.BootDeviceBios, devMode)
 }
 
 // boot is a modified wrapper around

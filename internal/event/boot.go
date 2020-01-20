@@ -16,7 +16,7 @@ func (h *eventHandler) BootBiosMachine(machineID string) {
 		return
 	}
 
-	err = ipmi.SetBootBios(ipmiCfg)
+	err = ipmi.SetBootBios(ipmiCfg, h.DevMode)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to set boot order of machine to BIOS",
 			zap.String("machine", machineID),
