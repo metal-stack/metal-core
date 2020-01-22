@@ -60,17 +60,17 @@ func boot(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
 	   See https://git.f-i-ts.de/cloud-native/metal/metal/issues/73#note_151375
 	*/
 
+	// Conforms to IPMI 2.0
 	var uefiQualifier, bootDevQualifier uint8
-	// Conforms to SMCIPMITool
 	switch dev {
 	case goipmi.BootDevicePxe:
 		uefiQualifier = UEFIQualifier
 		bootDevQualifier = UEFIPXEQualifier
 	case goipmi.BootDeviceDisk:
 		uefiQualifier = UEFIQualifier
-		bootDevQualifier = UEFIHDQualifier // use DefaultHDQualifier for IPMI 2.0 compatibility
+		bootDevQualifier = DefaultHDQualifier // Conforms to IPMI 2.0
 	case goipmi.BootDeviceBios:
-		uefiQualifier = LegacyQualifier // use UEFIQualifier for IPMI 2.0 compatibility
+		uefiQualifier = UEFIQualifier // Conforms to IPMI 2.0
 		bootDevQualifier = BIOSQualifier
 	default:
 		return fmt.Errorf("unsupported boot device:%s", dev.String())
