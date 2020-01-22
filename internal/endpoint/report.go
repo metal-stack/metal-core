@@ -34,20 +34,22 @@ func (h *endpointHandler) Report(request *restful.Request, response *restful.Res
 		return
 	}
 
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
-	if err != nil {
-		rest.Respond(response, http.StatusInternalServerError, nil)
-		return
-	}
+	if h.Config.ChangeBootOrder {
+		ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+		if err != nil {
+			rest.Respond(response, http.StatusInternalServerError, nil)
+			return
+		}
 
-	err = ipmi.SetBootDisk(ipmiCfg, h.DevMode)
-	if err != nil {
-		zapup.MustRootLogger().Error("Unable to set boot order of machine to HD",
-			zap.String("machineID", machineID),
-			zap.Error(err),
-		)
-		rest.Respond(response, http.StatusInternalServerError, nil)
-		return
+		err = ipmi.SetBootDisk(ipmiCfg, h.DevMode)
+		if err != nil {
+			zapup.MustRootLogger().Error("Unable to set boot order of machine to HD",
+				zap.String("machineID", machineID),
+				zap.Error(err),
+			)
+			rest.Respond(response, http.StatusInternalServerError, nil)
+			return
+		}
 	}
 
 	_, err = h.APIClient().FinalizeAllocation(machineID, report.ConsolePassword)

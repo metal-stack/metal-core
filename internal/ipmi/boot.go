@@ -61,7 +61,6 @@ func boot(cfg *domain.IPMIConfig, dev goipmi.BootDevice, devMode bool) error {
 	*/
 
 	var uefiQualifier, bootDevQualifier uint8
-	// Conforms to SMCIPMITool
 	switch dev {
 	case goipmi.BootDevicePxe:
 		uefiQualifier = UEFIQualifier
@@ -69,15 +68,15 @@ func boot(cfg *domain.IPMIConfig, dev goipmi.BootDevice, devMode bool) error {
 	case goipmi.BootDeviceDisk:
 		uefiQualifier = UEFIQualifier
 		if devMode {
-			bootDevQualifier = DefaultHDQualifier
+			bootDevQualifier = DefaultHDQualifier // Conforms to IPMI 2.0
 		} else {
-			bootDevQualifier = UEFIHDQualifier
+			bootDevQualifier = UEFIHDQualifier // Conforms to SMCIPMITool
 		}
 	case goipmi.BootDeviceBios:
 		if devMode {
-			uefiQualifier = UEFIQualifier
+			uefiQualifier = UEFIQualifier // Conforms to IPMI 2.0
 		} else {
-			uefiQualifier = LegacyQualifier
+			uefiQualifier = LegacyQualifier // Conforms to SMCIPMITool
 		}
 		bootDevQualifier = BIOSQualifier
 	default:

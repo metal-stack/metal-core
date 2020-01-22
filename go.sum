@@ -1,7 +1,5 @@
 bitbucket.org/liamstask/goose v0.0.0-20150115234039-8488cc47d90c/go.mod h1:hSVuE3qU7grINVSwrmzHfpg9k87ALBk+XaualNyUzI4=
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
-git.f-i-ts.de/cloud-native/metallib v0.2.4 h1:hIzk+NKHQ+EuobtQ0fXUcaR4d4ItlesL73tYBa6QvRs=
-git.f-i-ts.de/cloud-native/metallib v0.2.4/go.mod h1:+0B2B4+nVW+U9o9VsqE0JCo271Fhih8taqCm/SFwg1c=
 git.f-i-ts.de/cloud-native/metallib v0.2.5 h1:idBFjOypj7F4QfeXWEROPzSGG+z+SUkkYYN8WRjBs00=
 git.f-i-ts.de/cloud-native/metallib v0.2.5/go.mod h1:+0B2B4+nVW+U9o9VsqE0JCo271Fhih8taqCm/SFwg1c=
 github.com/GeertJohan/go.incremental v1.0.0/go.mod h1:6fAjUhbVuX1KcMD3c8TEgVUqmo4seqhv0i0kdATSkM0=
