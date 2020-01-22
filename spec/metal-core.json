@@ -1,921 +1,921 @@
 {
-  "swagger": "2.0",
-  "info": {
-    "description": "Resource for managing PXE clients",
-    "title": "metal-core",
-    "contact": {
-      "name": "Devops Team",
-      "url": "http://www.f-i-ts.de",
-      "email": "devops@f-i-ts.de"
-    },
-    "license": {
-      "name": "MIT",
-      "url": "http://mit.org"
-    },
-    "version": "1.0.0"
-  },
-  "paths": {
-    "/machine/install/{id}": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "tags": [
-          "machine"
-        ],
-        "summary": "install machine by ID",
-        "operationId": "Install",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "identifier of the machine",
-            "name": "id",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/models.V1MachineResponse"
+    "definitions": {
+        "domain.BootResponse": {
+            "properties": {
+                "cmdline": {
+                    "type": "string"
+                }, 
+                "initrd": {
+                    "items": {
+                        "type": "string"
+                    }, 
+                    "type": "array"
+                }, 
+                "kernel": {
+                    "type": "string"
+                }
+            }, 
+            "required": [
+                "initrd"
+            ]
+        }, 
+        "domain.MetalHammerRegisterMachineRequest": {
+            "properties": {
+                "bios": {
+                    "$ref": "#/definitions/models.V1MachineBIOS", 
+                    "description": "the Bios configuration"
+                }, 
+                "cpu_cores": {
+                    "format": "int32", 
+                    "type": "integer"
+                }, 
+                "disks": {
+                    "items": {
+                        "$ref": "#/definitions/models.V1MachineBlockDevice"
+                    }, 
+                    "type": "array"
+                }, 
+                "ipmi": {
+                    "$ref": "#/definitions/models.V1MachineIPMI", 
+                    "description": "the IPMI connection configuration"
+                }, 
+                "memory": {
+                    "format": "int64", 
+                    "type": "integer"
+                }, 
+                "nics": {
+                    "items": {
+                        "$ref": "#/definitions/models.V1MachineNicExtended"
+                    }, 
+                    "type": "array"
+                }, 
+                "uuid": {
+                    "description": "the uuid of the machine to register", 
+                    "type": "string"
+                }
+            }, 
+            "required": [
+                "bios", 
+                "cpu_cores", 
+                "disks", 
+                "ipmi", 
+                "memory", 
+                "nics"
+            ]
+        }, 
+        "domain.Report": {
+            "properties": {
+                "console_password": {
+                    "description": "the console password which was generated while provisioning", 
+                    "type": "string"
+                }, 
+                "message": {
+                    "description": "if installation failed, the error message", 
+                    "type": "string"
+                }, 
+                "success": {
+                    "description": "true if installation succeeded", 
+                    "type": "boolean"
+                }
+            }, 
+            "required": [
+                "console_password", 
+                "message"
+            ]
+        }, 
+        "models.V1ChassisIdentifyLEDState": {
+            "properties": {
+                "description": {
+                    "type": "string"
+                }, 
+                "value": {
+                    "type": "string"
+                }
+            }, 
+            "required": [
+                "description", 
+                "value"
+            ]
+        }, 
+        "models.V1ImageResponse": {
+            "properties": {
+                "changed": {
+                    "type": "string"
+                }, 
+                "created": {
+                    "type": "string"
+                }, 
+                "description": {
+                    "type": "string"
+                }, 
+                "features": {
+                    "items": {
+                        "type": "string"
+                    }, 
+                    "type": "array"
+                }, 
+                "id": {
+                    "type": "string"
+                }, 
+                "name": {
+                    "type": "string"
+                }, 
+                "url": {
+                    "type": "string"
+                }
+            }, 
+            "required": [
+                "changed", 
+                "created", 
+                "features", 
+                "id"
+            ]
+        }, 
+        "models.V1MachineAllocation": {
+            "properties": {
+                "console_password": {
+                    "type": "string"
+                }, 
+                "created": {
+                    "type": "string"
+                }, 
+                "description": {
+                    "type": "string"
+                }, 
+                "hostname": {
+                    "type": "string"
+                }, 
+                "image": {
+                    "$ref": "#/definitions/models.V1ImageResponse"
+                }, 
+                "name": {
+                    "type": "string"
+                }, 
+                "networks": {
+                    "items": {
+                        "$ref": "#/definitions/models.V1MachineNetwork"
+                    }, 
+                    "type": "array"
+                }, 
+                "project": {
+                    "type": "string"
+                }, 
+                "ssh_pub_keys": {
+                    "items": {
+                        "type": "string"
+                    }, 
+                    "type": "array"
+                }, 
+                "succeeded": {
+                    "type": "boolean"
+                }, 
+                "user_data": {
+                    "type": "string"
+                }
+            }, 
+            "required": [
+                "created", 
+                "hostname", 
+                "name", 
+                "networks", 
+                "project", 
+                "ssh_pub_keys", 
+                "succeeded"
+            ]
+        }, 
+        "models.V1MachineBIOS": {
+            "properties": {
+                "date": {
+                    "type": "string"
+                }, 
+                "vendor": {
+                    "type": "string"
+                }, 
+                "version": {
+                    "type": "string"
+                }
+            }, 
+            "required": [
+                "date", 
+                "vendor", 
+                "version"
+            ]
+        }, 
+        "models.V1MachineBlockDevice": {
+            "properties": {
+                "name": {
+                    "type": "string"
+                }, 
+                "size": {
+                    "format": "int64", 
+                    "type": "integer"
+                }
+            }, 
+            "required": [
+                "name", 
+                "size"
+            ]
+        }, 
+        "models.V1MachineFru": {
+            "properties": {
+                "board_mfg": {
+                    "type": "string"
+                }, 
+                "board_mfg_serial": {
+                    "type": "string"
+                }, 
+                "board_part_number": {
+                    "type": "string"
+                }, 
+                "chassis_part_number": {
+                    "type": "string"
+                }, 
+                "chassis_part_serial": {
+                    "type": "string"
+                }, 
+                "product_manufacturer": {
+                    "type": "string"
+                }, 
+                "product_part_number": {
+                    "type": "string"
+                }, 
+                "product_serial": {
+                    "type": "string"
+                }
             }
-          },
-          "304": {
-            "description": "No allocation"
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "417": {
-            "description": "Incomplete machine"
-          },
-          "500": {
-            "description": "Error"
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/models.V1MachineResponse"
+        }, 
+        "models.V1MachineHardware": {
+            "properties": {
+                "cpu_cores": {
+                    "format": "int32", 
+                    "type": "integer"
+                }, 
+                "disks": {
+                    "items": {
+                        "$ref": "#/definitions/models.V1MachineBlockDevice"
+                    }, 
+                    "type": "array"
+                }, 
+                "memory": {
+                    "format": "int64", 
+                    "type": "integer"
+                }, 
+                "nics": {
+                    "items": {
+                        "$ref": "#/definitions/models.V1MachineNic"
+                    }, 
+                    "type": "array"
+                }
+            }, 
+            "required": [
+                "cpu_cores", 
+                "disks", 
+                "memory", 
+                "nics"
+            ]
+        }, 
+        "models.V1MachineIPMI": {
+            "properties": {
+                "address": {
+                    "type": "string"
+                }, 
+                "bmcversion": {
+                    "type": "string"
+                }, 
+                "fru": {
+                    "$ref": "#/definitions/models.V1MachineFru"
+                }, 
+                "interface": {
+                    "type": "string"
+                }, 
+                "mac": {
+                    "type": "string"
+                }, 
+                "password": {
+                    "type": "string"
+                }, 
+                "user": {
+                    "type": "string"
+                }
+            }, 
+            "required": [
+                "address", 
+                "bmcversion", 
+                "fru", 
+                "interface", 
+                "mac", 
+                "password", 
+                "user"
+            ]
+        }, 
+        "models.V1MachineNetwork": {
+            "properties": {
+                "asn": {
+                    "format": "int64", 
+                    "type": "integer"
+                }, 
+                "destinationprefixes": {
+                    "items": {
+                        "type": "string"
+                    }, 
+                    "type": "array"
+                }, 
+                "ips": {
+                    "items": {
+                        "type": "string"
+                    }, 
+                    "type": "array"
+                }, 
+                "nat": {
+                    "type": "boolean"
+                }, 
+                "networkid": {
+                    "type": "string"
+                }, 
+                "prefixes": {
+                    "items": {
+                        "type": "string"
+                    }, 
+                    "type": "array"
+                }, 
+                "private": {
+                    "type": "boolean"
+                }, 
+                "underlay": {
+                    "type": "boolean"
+                }, 
+                "vrf": {
+                    "format": "int64", 
+                    "type": "integer"
+                }
+            }, 
+            "required": [
+                "asn", 
+                "destinationprefixes", 
+                "ips", 
+                "nat", 
+                "networkid", 
+                "prefixes", 
+                "private", 
+                "underlay", 
+                "vrf"
+            ]
+        }, 
+        "models.V1MachineNic": {
+            "properties": {
+                "mac": {
+                    "type": "string"
+                }, 
+                "name": {
+                    "type": "string"
+                }
+            }, 
+            "required": [
+                "mac", 
+                "name"
+            ]
+        }, 
+        "models.V1MachineNicExtended": {
+            "properties": {
+                "mac": {
+                    "type": "string"
+                }, 
+                "name": {
+                    "type": "string"
+                }, 
+                "neighbors": {
+                    "items": {
+                        "$ref": "#/definitions/models.V1MachineNicExtended"
+                    }, 
+                    "type": "array"
+                }
+            }, 
+            "required": [
+                "mac", 
+                "name", 
+                "neighbors"
+            ]
+        }, 
+        "models.V1MachineProvisioningEvent": {
+            "properties": {
+                "event": {
+                    "type": "string"
+                }, 
+                "message": {
+                    "type": "string"
+                }, 
+                "time": {
+                    "type": "string"
+                }
+            }, 
+            "required": [
+                "event"
+            ]
+        }, 
+        "models.V1MachineRecentProvisioningEvents": {
+            "properties": {
+                "incomplete_provisioning_cycles": {
+                    "type": "string"
+                }, 
+                "last_event_time": {
+                    "type": "string"
+                }, 
+                "log": {
+                    "items": {
+                        "$ref": "#/definitions/models.V1MachineProvisioningEvent"
+                    }, 
+                    "type": "array"
+                }
+            }, 
+            "required": [
+                "incomplete_provisioning_cycles", 
+                "last_event_time", 
+                "log"
+            ]
+        }, 
+        "models.V1MachineResponse": {
+            "properties": {
+                "allocation": {
+                    "$ref": "#/definitions/models.V1MachineAllocation"
+                }, 
+                "bios": {
+                    "$ref": "#/definitions/models.V1MachineBIOS"
+                }, 
+                "changed": {
+                    "type": "string"
+                }, 
+                "created": {
+                    "type": "string"
+                }, 
+                "description": {
+                    "type": "string"
+                }, 
+                "events": {
+                    "$ref": "#/definitions/models.V1MachineRecentProvisioningEvents"
+                }, 
+                "hardware": {
+                    "$ref": "#/definitions/models.V1MachineHardware"
+                }, 
+                "id": {
+                    "type": "string"
+                }, 
+                "ledstate": {
+                    "$ref": "#/definitions/models.V1ChassisIdentifyLEDState"
+                }, 
+                "liveliness": {
+                    "type": "string"
+                }, 
+                "name": {
+                    "type": "string"
+                }, 
+                "partition": {
+                    "$ref": "#/definitions/models.V1PartitionResponse"
+                }, 
+                "rackid": {
+                    "type": "string"
+                }, 
+                "size": {
+                    "$ref": "#/definitions/models.V1SizeResponse"
+                }, 
+                "state": {
+                    "$ref": "#/definitions/models.V1MachineState"
+                }, 
+                "tags": {
+                    "items": {
+                        "type": "string"
+                    }, 
+                    "type": "array"
+                }
+            }, 
+            "required": [
+                "allocation", 
+                "bios", 
+                "changed", 
+                "created", 
+                "events", 
+                "hardware", 
+                "id", 
+                "ledstate", 
+                "liveliness", 
+                "partition", 
+                "rackid", 
+                "size", 
+                "state", 
+                "tags"
+            ]
+        }, 
+        "models.V1MachineState": {
+            "properties": {
+                "description": {
+                    "type": "string"
+                }, 
+                "value": {
+                    "type": "string"
+                }
+            }, 
+            "required": [
+                "description", 
+                "value"
+            ]
+        }, 
+        "models.V1PartitionBootConfiguration": {
+            "properties": {
+                "commandline": {
+                    "type": "string"
+                }, 
+                "imageurl": {
+                    "type": "string"
+                }, 
+                "kernelurl": {
+                    "type": "string"
+                }
             }
-          }
+        }, 
+        "models.V1PartitionResponse": {
+            "properties": {
+                "bootconfig": {
+                    "$ref": "#/definitions/models.V1PartitionBootConfiguration"
+                }, 
+                "changed": {
+                    "type": "string"
+                }, 
+                "created": {
+                    "type": "string"
+                }, 
+                "description": {
+                    "type": "string"
+                }, 
+                "id": {
+                    "type": "string"
+                }, 
+                "mgmtserviceaddress": {
+                    "type": "string"
+                }, 
+                "name": {
+                    "type": "string"
+                }, 
+                "privatenetworkprefixlength": {
+                    "format": "int32", 
+                    "type": "integer"
+                }
+            }, 
+            "required": [
+                "bootconfig", 
+                "changed", 
+                "created", 
+                "id"
+            ]
+        }, 
+        "models.V1SizeConstraint": {
+            "properties": {
+                "max": {
+                    "format": "int64", 
+                    "type": "integer"
+                }, 
+                "min": {
+                    "format": "int64", 
+                    "type": "integer"
+                }, 
+                "type": {
+                    "type": "string"
+                }
+            }, 
+            "required": [
+                "max", 
+                "min", 
+                "type"
+            ]
+        }, 
+        "models.V1SizeResponse": {
+            "properties": {
+                "changed": {
+                    "type": "string"
+                }, 
+                "constraints": {
+                    "items": {
+                        "$ref": "#/definitions/models.V1SizeConstraint"
+                    }, 
+                    "type": "array"
+                }, 
+                "created": {
+                    "type": "string"
+                }, 
+                "description": {
+                    "type": "string"
+                }, 
+                "id": {
+                    "type": "string"
+                }, 
+                "name": {
+                    "type": "string"
+                }
+            }, 
+            "required": [
+                "changed", 
+                "constraints", 
+                "created", 
+                "id"
+            ]
         }
-      }
-    },
-    "/machine/register/{id}": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "tags": [
-          "machine"
-        ],
-        "summary": "register machine by ID",
-        "operationId": "Register",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "identifier of the machine",
-            "name": "id",
-            "in": "path",
-            "required": true
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/domain.MetalHammerRegisterMachineRequest"
+    }, 
+    "info": {
+        "contact": {
+            "email": "devops@f-i-ts.de", 
+            "name": "Devops Team", 
+            "url": "http://www.f-i-ts.de"
+        }, 
+        "description": "Resource for managing PXE clients", 
+        "license": {
+            "name": "MIT", 
+            "url": "http://mit.org"
+        }, 
+        "title": "metal-core", 
+        "version": "1.0.0"
+    }, 
+    "paths": {
+        "/machine/install/{id}": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ], 
+                "operationId": "Install", 
+                "parameters": [
+                    {
+                        "description": "identifier of the machine", 
+                        "in": "path", 
+                        "name": "id", 
+                        "required": true, 
+                        "type": "string"
+                    }
+                ], 
+                "produces": [
+                    "application/json"
+                ], 
+                "responses": {
+                    "200": {
+                        "description": "OK", 
+                        "schema": {
+                            "$ref": "#/definitions/models.V1MachineResponse"
+                        }
+                    }, 
+                    "304": {
+                        "description": "No allocation"
+                    }, 
+                    "404": {
+                        "description": "Not Found"
+                    }, 
+                    "417": {
+                        "description": "Incomplete machine"
+                    }, 
+                    "500": {
+                        "description": "Error"
+                    }, 
+                    "default": {
+                        "description": "OK", 
+                        "schema": {
+                            "$ref": "#/definitions/models.V1MachineResponse"
+                        }
+                    }
+                }, 
+                "summary": "install machine by ID", 
+                "tags": [
+                    "machine"
+                ]
             }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/models.V1MachineResponse"
+        }, 
+        "/machine/register/{id}": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ], 
+                "operationId": "Register", 
+                "parameters": [
+                    {
+                        "description": "identifier of the machine", 
+                        "in": "path", 
+                        "name": "id", 
+                        "required": true, 
+                        "type": "string"
+                    }, 
+                    {
+                        "in": "body", 
+                        "name": "body", 
+                        "required": true, 
+                        "schema": {
+                            "$ref": "#/definitions/domain.MetalHammerRegisterMachineRequest"
+                        }
+                    }
+                ], 
+                "produces": [
+                    "application/json"
+                ], 
+                "responses": {
+                    "200": {
+                        "description": "OK", 
+                        "schema": {
+                            "$ref": "#/definitions/models.V1MachineResponse"
+                        }
+                    }, 
+                    "400": {
+                        "description": "Bad request"
+                    }, 
+                    "500": {
+                        "description": "Error"
+                    }, 
+                    "default": {
+                        "description": "OK", 
+                        "schema": {
+                            "$ref": "#/definitions/models.V1MachineResponse"
+                        }
+                    }
+                }, 
+                "summary": "register machine by ID", 
+                "tags": [
+                    "machine"
+                ]
             }
-          },
-          "400": {
-            "description": "Bad request"
-          },
-          "500": {
-            "description": "Error"
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/models.V1MachineResponse"
+        }, 
+        "/machine/report/{id}": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ], 
+                "operationId": "Report", 
+                "parameters": [
+                    {
+                        "description": "identifier of the machine", 
+                        "in": "path", 
+                        "name": "id", 
+                        "required": true, 
+                        "type": "string"
+                    }, 
+                    {
+                        "in": "body", 
+                        "name": "body", 
+                        "required": true, 
+                        "schema": {
+                            "$ref": "#/definitions/domain.Report"
+                        }
+                    }
+                ], 
+                "produces": [
+                    "application/json"
+                ], 
+                "responses": {
+                    "200": {
+                        "description": "OK", 
+                        "schema": {
+                            "$ref": "#/definitions/models.V1MachineResponse"
+                        }
+                    }, 
+                    "406": {
+                        "description": "Not acceptable"
+                    }, 
+                    "500": {
+                        "description": "Error"
+                    }, 
+                    "default": {
+                        "description": "OK", 
+                        "schema": {
+                            "$ref": "#/definitions/models.V1MachineResponse"
+                        }
+                    }
+                }, 
+                "summary": "report machine by ID", 
+                "tags": [
+                    "machine"
+                ]
             }
-          }
-        }
-      }
-    },
-    "/machine/report/{id}": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "tags": [
-          "machine"
-        ],
-        "summary": "report machine by ID",
-        "operationId": "Report",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "identifier of the machine",
-            "name": "id",
-            "in": "path",
-            "required": true
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/domain.Report"
+        }, 
+        "/machine/{id}/event": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ], 
+                "operationId": "AddProvisioningEvent", 
+                "parameters": [
+                    {
+                        "description": "identifier of the machine", 
+                        "in": "path", 
+                        "name": "id", 
+                        "required": true, 
+                        "type": "string"
+                    }, 
+                    {
+                        "in": "body", 
+                        "name": "body", 
+                        "required": true, 
+                        "schema": {
+                            "$ref": "#/definitions/models.V1MachineProvisioningEvent"
+                        }
+                    }
+                ], 
+                "produces": [
+                    "application/json"
+                ], 
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }, 
+                    "404": {
+                        "description": "Not Found"
+                    }, 
+                    "default": {
+                        "description": "OK"
+                    }
+                }, 
+                "summary": "adds a machine provisioning event", 
+                "tags": [
+                    "machine"
+                ]
             }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/models.V1MachineResponse"
+        }, 
+        "/v1/boot/{mac}": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ], 
+                "operationId": "Boot", 
+                "parameters": [
+                    {
+                        "description": "mac of a network interface of the machine", 
+                        "in": "path", 
+                        "name": "mac", 
+                        "required": true, 
+                        "type": "string"
+                    }
+                ], 
+                "produces": [
+                    "application/json"
+                ], 
+                "responses": {
+                    "200": {
+                        "description": "OK", 
+                        "schema": {
+                            "$ref": "#/definitions/domain.BootResponse"
+                        }
+                    }, 
+                    "default": {
+                        "description": "OK", 
+                        "schema": {
+                            "$ref": "#/definitions/domain.BootResponse"
+                        }
+                    }
+                }, 
+                "summary": "boot machine by mac", 
+                "tags": [
+                    "boot"
+                ]
             }
-          },
-          "406": {
-            "description": "Not acceptable"
-          },
-          "500": {
-            "description": "Error"
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/models.V1MachineResponse"
+        }, 
+        "/v1/dhcp/{id}": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ], 
+                "operationId": "Dhcp", 
+                "parameters": [
+                    {
+                        "description": "the guid of the machine", 
+                        "in": "path", 
+                        "name": "id", 
+                        "required": true, 
+                        "type": "string"
+                    }
+                ], 
+                "produces": [
+                    "application/json"
+                ], 
+                "responses": {
+                    "200": {
+                        "description": "OK", 
+                        "schema": {
+                            "$ref": "#/definitions/domain.BootResponse"
+                        }
+                    }, 
+                    "default": {
+                        "description": "OK", 
+                        "schema": {
+                            "$ref": "#/definitions/domain.BootResponse"
+                        }
+                    }
+                }, 
+                "summary": "extended dhcp pxeboot request from a machine with guid", 
+                "tags": [
+                    "boot"
+                ]
             }
-          }
         }
-      }
-    },
-    "/machine/{id}/event": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "tags": [
-          "machine"
-        ],
-        "summary": "adds a machine provisioning event",
-        "operationId": "AddProvisioningEvent",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "identifier of the machine",
-            "name": "id",
-            "in": "path",
-            "required": true
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/models.V1MachineProvisioningEvent"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "default": {
-            "description": "OK"
-          }
+    }, 
+    "swagger": "2.0", 
+    "tags": [
+        {
+            "description": "Booting PXE clients", 
+            "name": "boot"
+        }, 
+        {
+            "description": "Managing PXE boot clients", 
+            "name": "machine"
         }
-      }
-    },
-    "/v1/boot/{mac}": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "tags": [
-          "boot"
-        ],
-        "summary": "boot machine by mac",
-        "operationId": "Boot",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "mac of a network interface of the machine",
-            "name": "mac",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/domain.BootResponse"
-            }
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/domain.BootResponse"
-            }
-          }
-        }
-      }
-    },
-    "/v1/dhcp/{id}": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "tags": [
-          "boot"
-        ],
-        "summary": "extended dhcp pxeboot request from a machine with guid",
-        "operationId": "Dhcp",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "the guid of the machine",
-            "name": "id",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/domain.BootResponse"
-            }
-          },
-          "default": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/domain.BootResponse"
-            }
-          }
-        }
-      }
-    }
-  },
-  "definitions": {
-    "domain.BootResponse": {
-      "required": [
-        "initrd"
-      ],
-      "properties": {
-        "cmdline": {
-          "type": "string"
-        },
-        "initrd": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "kernel": {
-          "type": "string"
-        }
-      }
-    },
-    "domain.MetalHammerRegisterMachineRequest": {
-      "required": [
-        "cpu_cores",
-        "disks",
-        "memory",
-        "nics",
-        "ipmi",
-        "bios"
-      ],
-      "properties": {
-        "bios": {
-          "description": "the Bios configuration",
-          "$ref": "#/definitions/models.V1MachineBIOS"
-        },
-        "cpu_cores": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "disks": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/models.V1MachineBlockDevice"
-          }
-        },
-        "ipmi": {
-          "description": "the IPMI connection configuration",
-          "$ref": "#/definitions/models.V1MachineIPMI"
-        },
-        "memory": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "nics": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/models.V1MachineNicExtended"
-          }
-        },
-        "uuid": {
-          "description": "the uuid of the machine to register",
-          "type": "string"
-        }
-      }
-    },
-    "domain.Report": {
-      "required": [
-        "message",
-        "console_password"
-      ],
-      "properties": {
-        "console_password": {
-          "description": "the console password which was generated while provisioning",
-          "type": "string"
-        },
-        "message": {
-          "description": "if installation failed, the error message",
-          "type": "string"
-        },
-        "success": {
-          "description": "true if installation succeeded",
-          "type": "boolean"
-        }
-      }
-    },
-    "models.V1ChassisIdentifyLEDState": {
-      "required": [
-        "description",
-        "value"
-      ],
-      "properties": {
-        "description": {
-          "type": "string"
-        },
-        "value": {
-          "type": "string"
-        }
-      }
-    },
-    "models.V1ImageResponse": {
-      "required": [
-        "changed",
-        "created",
-        "features",
-        "id"
-      ],
-      "properties": {
-        "changed": {
-          "type": "string"
-        },
-        "created": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "features": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "url": {
-          "type": "string"
-        }
-      }
-    },
-    "models.V1MachineAllocation": {
-      "required": [
-        "created",
-        "hostname",
-        "name",
-        "networks",
-        "project",
-        "ssh_pub_keys",
-        "succeeded"
-      ],
-      "properties": {
-        "console_password": {
-          "type": "string"
-        },
-        "created": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "hostname": {
-          "type": "string"
-        },
-        "image": {
-          "$ref": "#/definitions/models.V1ImageResponse"
-        },
-        "name": {
-          "type": "string"
-        },
-        "networks": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/models.V1MachineNetwork"
-          }
-        },
-        "project": {
-          "type": "string"
-        },
-        "ssh_pub_keys": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "succeeded": {
-          "type": "boolean"
-        },
-        "user_data": {
-          "type": "string"
-        }
-      }
-    },
-    "models.V1MachineBIOS": {
-      "required": [
-        "date",
-        "vendor",
-        "version"
-      ],
-      "properties": {
-        "date": {
-          "type": "string"
-        },
-        "vendor": {
-          "type": "string"
-        },
-        "version": {
-          "type": "string"
-        }
-      }
-    },
-    "models.V1MachineBlockDevice": {
-      "required": [
-        "name",
-        "size"
-      ],
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "size": {
-          "type": "integer",
-          "format": "int64"
-        }
-      }
-    },
-    "models.V1MachineFru": {
-      "properties": {
-        "board_mfg": {
-          "type": "string"
-        },
-        "board_mfg_serial": {
-          "type": "string"
-        },
-        "board_part_number": {
-          "type": "string"
-        },
-        "chassis_part_number": {
-          "type": "string"
-        },
-        "chassis_part_serial": {
-          "type": "string"
-        },
-        "product_manufacturer": {
-          "type": "string"
-        },
-        "product_part_number": {
-          "type": "string"
-        },
-        "product_serial": {
-          "type": "string"
-        }
-      }
-    },
-    "models.V1MachineHardware": {
-      "required": [
-        "cpu_cores",
-        "disks",
-        "memory",
-        "nics"
-      ],
-      "properties": {
-        "cpu_cores": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "disks": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/models.V1MachineBlockDevice"
-          }
-        },
-        "memory": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "nics": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/models.V1MachineNic"
-          }
-        }
-      }
-    },
-    "models.V1MachineIPMI": {
-      "required": [
-        "address",
-        "bmcversion",
-        "fru",
-        "interface",
-        "mac",
-        "password",
-        "user"
-      ],
-      "properties": {
-        "address": {
-          "type": "string"
-        },
-        "bmcversion": {
-          "type": "string"
-        },
-        "fru": {
-          "$ref": "#/definitions/models.V1MachineFru"
-        },
-        "interface": {
-          "type": "string"
-        },
-        "mac": {
-          "type": "string"
-        },
-        "password": {
-          "type": "string"
-        },
-        "user": {
-          "type": "string"
-        }
-      }
-    },
-    "models.V1MachineNetwork": {
-      "required": [
-        "asn",
-        "destinationprefixes",
-        "ips",
-        "nat",
-        "networkid",
-        "prefixes",
-        "private",
-        "underlay",
-        "vrf"
-      ],
-      "properties": {
-        "asn": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "destinationprefixes": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "ips": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "nat": {
-          "type": "boolean"
-        },
-        "networkid": {
-          "type": "string"
-        },
-        "prefixes": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "private": {
-          "type": "boolean"
-        },
-        "underlay": {
-          "type": "boolean"
-        },
-        "vrf": {
-          "type": "integer",
-          "format": "int64"
-        }
-      }
-    },
-    "models.V1MachineNic": {
-      "required": [
-        "mac",
-        "name"
-      ],
-      "properties": {
-        "mac": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        }
-      }
-    },
-    "models.V1MachineNicExtended": {
-      "required": [
-        "mac",
-        "name",
-        "neighbors"
-      ],
-      "properties": {
-        "mac": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "neighbors": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/models.V1MachineNicExtended"
-          }
-        }
-      }
-    },
-    "models.V1MachineProvisioningEvent": {
-      "required": [
-        "event"
-      ],
-      "properties": {
-        "event": {
-          "type": "string"
-        },
-        "message": {
-          "type": "string"
-        },
-        "time": {
-          "type": "string"
-        }
-      }
-    },
-    "models.V1MachineRecentProvisioningEvents": {
-      "required": [
-        "incomplete_provisioning_cycles",
-        "last_event_time",
-        "log"
-      ],
-      "properties": {
-        "incomplete_provisioning_cycles": {
-          "type": "string"
-        },
-        "last_event_time": {
-          "type": "string"
-        },
-        "log": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/models.V1MachineProvisioningEvent"
-          }
-        }
-      }
-    },
-    "models.V1MachineResponse": {
-      "required": [
-        "allocation",
-        "bios",
-        "changed",
-        "created",
-        "events",
-        "hardware",
-        "id",
-        "ledstate",
-        "liveliness",
-        "partition",
-        "rackid",
-        "size",
-        "state",
-        "tags"
-      ],
-      "properties": {
-        "allocation": {
-          "$ref": "#/definitions/models.V1MachineAllocation"
-        },
-        "bios": {
-          "$ref": "#/definitions/models.V1MachineBIOS"
-        },
-        "changed": {
-          "type": "string"
-        },
-        "created": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "events": {
-          "$ref": "#/definitions/models.V1MachineRecentProvisioningEvents"
-        },
-        "hardware": {
-          "$ref": "#/definitions/models.V1MachineHardware"
-        },
-        "id": {
-          "type": "string"
-        },
-        "ledstate": {
-          "$ref": "#/definitions/models.V1ChassisIdentifyLEDState"
-        },
-        "liveliness": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "partition": {
-          "$ref": "#/definitions/models.V1PartitionResponse"
-        },
-        "rackid": {
-          "type": "string"
-        },
-        "size": {
-          "$ref": "#/definitions/models.V1SizeResponse"
-        },
-        "state": {
-          "$ref": "#/definitions/models.V1MachineState"
-        },
-        "tags": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "models.V1MachineState": {
-      "required": [
-        "description",
-        "value"
-      ],
-      "properties": {
-        "description": {
-          "type": "string"
-        },
-        "value": {
-          "type": "string"
-        }
-      }
-    },
-    "models.V1PartitionBootConfiguration": {
-      "properties": {
-        "commandline": {
-          "type": "string"
-        },
-        "imageurl": {
-          "type": "string"
-        },
-        "kernelurl": {
-          "type": "string"
-        }
-      }
-    },
-    "models.V1PartitionResponse": {
-      "required": [
-        "bootconfig",
-        "changed",
-        "created",
-        "id"
-      ],
-      "properties": {
-        "bootconfig": {
-          "$ref": "#/definitions/models.V1PartitionBootConfiguration"
-        },
-        "changed": {
-          "type": "string"
-        },
-        "created": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "id": {
-          "type": "string"
-        },
-        "mgmtserviceaddress": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "privatenetworkprefixlength": {
-          "type": "integer",
-          "format": "int32"
-        }
-      }
-    },
-    "models.V1SizeConstraint": {
-      "required": [
-        "max",
-        "min",
-        "type"
-      ],
-      "properties": {
-        "max": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "min": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "type": {
-          "type": "string"
-        }
-      }
-    },
-    "models.V1SizeResponse": {
-      "required": [
-        "changed",
-        "constraints",
-        "created",
-        "id"
-      ],
-      "properties": {
-        "changed": {
-          "type": "string"
-        },
-        "constraints": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/models.V1SizeConstraint"
-          }
-        },
-        "created": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        }
-      }
-    }
-  },
-  "tags": [
-    {
-      "description": "Booting PXE clients",
-      "name": "boot"
-    },
-    {
-      "description": "Managing PXE boot clients",
-      "name": "machine"
-    }
-  ]
+    ]
 }
