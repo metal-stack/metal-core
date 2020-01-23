@@ -13,7 +13,6 @@ import (
 
 func (h *endpointHandler) Register(request *restful.Request, response *restful.Response) {
 	req := &domain.MetalHammerRegisterMachineRequest{}
-
 	err := request.ReadEntity(req)
 	if err != nil {
 		errMsg := "Unable to read body"

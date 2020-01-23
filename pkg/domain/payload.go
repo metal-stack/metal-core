@@ -10,7 +10,13 @@ type BootResponse struct {
 	CommandLine string   `json:"cmdline,omitempty"`
 }
 
-// Report is send back to metal-core after installation finished
+type Reboot struct {
+	HD   bool   `json:"hd,omitempty" description:"whether to boot from Disk"`
+	PXE  bool   `json:"pxe,omitempty" description:"whether to boot from PXE"`
+	BIOS bool   `json:"bios,omitempty" description:"whether to boot into BIOS"`
+}
+
+// Report is sent by metal-hammer to metal-core after installation finished
 type Report struct {
 	Success         bool   `json:"success,omitempty" description:"true if installation succeeded"`
 	Message         string `json:"message" description:"if installation failed, the error message"`

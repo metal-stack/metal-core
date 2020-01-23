@@ -14,8 +14,8 @@ import (
 
 func (h *endpointHandler) Report(request *restful.Request, response *restful.Response) {
 	var err error
-	report := &domain.Report{}
 
+	report := &domain.Report{}
 	err = request.ReadEntity(report)
 	if err != nil {
 		rest.Respond(response, http.StatusInternalServerError, nil)

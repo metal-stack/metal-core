@@ -20,7 +20,7 @@ func (h *endpointHandler) NewMachineService() *restful.WebService {
 
 	ws.Route(ws.GET("/{id}").
 		To(h.FindMachine).
-		Doc("find machine by ID").
+		Doc("find machine").
 		Param(ws.PathParameter("id", "identifier of the machine").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(models.V1MachineResponse{}).
@@ -29,7 +29,7 @@ func (h *endpointHandler) NewMachineService() *restful.WebService {
 
 	ws.Route(ws.POST("/register/{id}").
 		To(h.Register).
-		Doc("register machine by ID").
+		Doc("register machine").
 		Param(ws.PathParameter("id", "identifier of the machine").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Reads(domain.MetalHammerRegisterMachineRequest{}).
@@ -40,7 +40,7 @@ func (h *endpointHandler) NewMachineService() *restful.WebService {
 
 	ws.Route(ws.GET("/install/{id}").
 		To(h.Install).
-		Doc("install machine by ID").
+		Doc("install machine").
 		Param(ws.PathParameter("id", "identifier of the machine").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(models.V1MachineResponse{}).
@@ -52,13 +52,21 @@ func (h *endpointHandler) NewMachineService() *restful.WebService {
 
 	ws.Route(ws.POST("/report/{id}").
 		To(h.Report).
-		Doc("report machine by ID").
+		Doc("report machine").
 		Param(ws.PathParameter("id", "identifier of the machine").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Reads(domain.Report{}).
-		Writes(domain.BootResponse{}).
-		Returns(http.StatusOK, "OK", models.V1MachineResponse{}).
+		Returns(http.StatusOK, "OK", nil).
 		Returns(http.StatusNotAcceptable, "Not acceptable", nil).
+		Returns(http.StatusInternalServerError, "Error", nil))
+
+	ws.Route(ws.POST("/reboot/{id}").
+		To(h.Reboot).
+		Doc("reboot machine").
+		Param(ws.PathParameter("id", "identifier of the machine").DataType("string")).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Reads(domain.Reboot{}).
+		Returns(http.StatusOK, "OK", nil).
 		Returns(http.StatusInternalServerError, "Error", nil))
 
 	ws.Route(ws.POST("/{id}/event").

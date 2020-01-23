@@ -58,6 +58,22 @@
                 "nics"
             ]
         }, 
+        "domain.Reboot": {
+            "properties": {
+                "bios": {
+                    "description": "whether to boot into BIOS", 
+                    "type": "boolean"
+                }, 
+                "hd": {
+                    "description": "whether to boot from Disk", 
+                    "type": "boolean"
+                }, 
+                "pxe": {
+                    "description": "whether to boot from PXE", 
+                    "type": "boolean"
+                }
+            }
+        }, 
         "domain.Report": {
             "properties": {
                 "console_password": {
@@ -676,7 +692,50 @@
                         }
                     }
                 }, 
-                "summary": "install machine by ID", 
+                "summary": "install machine", 
+                "tags": [
+                    "machine"
+                ]
+            }
+        }, 
+        "/machine/reboot/{id}": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ], 
+                "operationId": "Reboot", 
+                "parameters": [
+                    {
+                        "description": "identifier of the machine", 
+                        "in": "path", 
+                        "name": "id", 
+                        "required": true, 
+                        "type": "string"
+                    }, 
+                    {
+                        "in": "body", 
+                        "name": "body", 
+                        "required": true, 
+                        "schema": {
+                            "$ref": "#/definitions/domain.Reboot"
+                        }
+                    }
+                ], 
+                "produces": [
+                    "application/json"
+                ], 
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }, 
+                    "500": {
+                        "description": "Error"
+                    }, 
+                    "default": {
+                        "description": "OK"
+                    }
+                }, 
+                "summary": "reboot machine", 
                 "tags": [
                     "machine"
                 ]
@@ -728,7 +787,7 @@
                         }
                     }
                 }, 
-                "summary": "register machine by ID", 
+                "summary": "register machine", 
                 "tags": [
                     "machine"
                 ]
@@ -762,10 +821,7 @@
                 ], 
                 "responses": {
                     "200": {
-                        "description": "OK", 
-                        "schema": {
-                            "$ref": "#/definitions/models.V1MachineResponse"
-                        }
+                        "description": "OK"
                     }, 
                     "406": {
                         "description": "Not acceptable"
@@ -774,13 +830,10 @@
                         "description": "Error"
                     }, 
                     "default": {
-                        "description": "OK", 
-                        "schema": {
-                            "$ref": "#/definitions/models.V1MachineResponse"
-                        }
+                        "description": "OK"
                     }
                 }, 
-                "summary": "report machine by ID", 
+                "summary": "report machine", 
                 "tags": [
                     "machine"
                 ]
@@ -821,7 +874,7 @@
                         }
                     }
                 }, 
-                "summary": "find machine by ID", 
+                "summary": "find machine", 
                 "tags": [
                     "machine"
                 ]
