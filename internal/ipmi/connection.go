@@ -8,6 +8,8 @@ import (
 
 const (
 	defaultInterface = "lanplus"
+	defaultUser      = "ADMIN"
+	defaultPassword  = "ADMIN"
 )
 
 func openClientConnection(connection *domain.IPMIConfig) (*goipmi.Client, error) {
@@ -21,6 +23,12 @@ func openClientConnection(connection *domain.IPMIConfig) (*goipmi.Client, error)
 
 	if conn.Interface == "" {
 		conn.Interface = defaultInterface
+	}
+	if conn.Username == "" {
+		conn.Username = defaultUser
+	}
+	if conn.Password == "" {
+		conn.Password = defaultPassword
 	}
 
 	client, err := goipmi.NewClient(conn)
