@@ -6,6 +6,10 @@ import (
 	goipmi "github.com/vmware/goipmi"
 )
 
+const (
+	defaultInterface = "lanplus"
+)
+
 func openClientConnection(connection *domain.IPMIConfig) (*goipmi.Client, error) {
 	conn := &goipmi.Connection{
 		Hostname:  connection.Hostname,
@@ -13,6 +17,10 @@ func openClientConnection(connection *domain.IPMIConfig) (*goipmi.Client, error)
 		Username:  *connection.Ipmi.User,
 		Password:  *connection.Ipmi.Password,
 		Interface: *connection.Ipmi.Interface,
+	}
+
+	if conn.Interface == "" {
+		conn.Interface = defaultInterface
 	}
 
 	client, err := goipmi.NewClient(conn)
