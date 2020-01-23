@@ -13,7 +13,7 @@ import (
 
 type emptyBootRepsonse struct{}
 
-func (e *endpointHandler) Dhcp(request *restful.Request, response *restful.Response) {
+func (h *endpointHandler) Dhcp(request *restful.Request, response *restful.Response) {
 	guid := request.PathParameter("id")
 
 	zapup.MustRootLogger().Debug("emit pxe boot event from machine",
@@ -25,7 +25,7 @@ func (e *endpointHandler) Dhcp(request *restful.Request, response *restful.Respo
 		Event:   &eventType,
 		Message: "machine sent extended dhcp request",
 	}
-	err := e.APIClient().AddProvisioningEvent(guid, event)
+	err := h.APIClient().AddProvisioningEvent(guid, event)
 	if err != nil {
 		zapup.MustRootLogger().Error("request metal-api event endpoint for machine", zap.String("guid", guid), zap.String("error", err.Error()))
 	}

@@ -18,6 +18,15 @@ func (h *endpointHandler) NewMachineService() *restful.WebService {
 
 	tags := []string{"machine"}
 
+	ws.Route(ws.GET("/{id}").
+		To(h.FindMachine).
+		Doc("find machine by ID").
+		Param(ws.PathParameter("id", "identifier of the machine").DataType("string")).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Writes(models.V1MachineResponse{}).
+		Returns(http.StatusOK, "OK", models.V1MachineResponse{}).
+		Returns(http.StatusInternalServerError, "Error", nil))
+
 	ws.Route(ws.POST("/register/{id}").
 		To(h.Register).
 		Doc("register machine by ID").

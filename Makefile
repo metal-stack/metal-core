@@ -16,7 +16,7 @@ release:: all ;
 
 .PHONY: spec
 spec: all
-	bin/metal-core spec spec/metal-core.json
+	bin/metal-core spec | python -c "$$PYTHON_DEEP_SORT" > spec/metal-core.json
 
 .PHONY: test-switcher
 test-switcher:

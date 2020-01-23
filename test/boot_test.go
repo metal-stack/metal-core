@@ -58,6 +58,10 @@ func (a *apiHandlerBootTest) FindMachines(mac string) (int, []*models.V1MachineR
 	}
 }
 
+func (a *apiHandlerBootTest) FindMachine(machineID string) (*models.V1MachineResponse, error) {
+	return nil, nil
+}
+
 func (a *apiHandlerBootTest) RegisterMachine(machineID string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse) {
 	return -1, nil
 }
@@ -82,7 +86,7 @@ func (a *apiHandlerBootTest) AddProvisioningEvent(machineID string, event *model
 	return nil
 }
 
-func (a *apiHandlerBootTest) FinalizeAllocation(machineID, consolepassword string) (*machine.FinalizeAllocationOK, error) {
+func (a *apiHandlerBootTest) FinalizeAllocation(machineID, consolePassword string) (*machine.FinalizeAllocationOK, error) {
 	return nil, nil
 }
 

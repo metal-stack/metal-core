@@ -43,6 +43,10 @@ func TestLoggingMiddleware(t *testing.T) {
 	require.NotContains(t, logs, "error")
 }
 
+func (a *apiHandlerCoreTest) FindMachine(machineID string) (*models.V1MachineResponse, error) {
+	return nil, nil
+}
+
 func (a *apiHandlerCoreTest) FindMachines(mac string) (int, []*models.V1MachineResponse) {
 	return -1, nil
 }
@@ -70,7 +74,7 @@ func (a *apiHandlerCoreTest) AddProvisioningEvent(machineID string, event *model
 	return nil
 }
 
-func (a *apiHandlerCoreTest) FinalizeAllocation(machineID, consolepassword string) (*machine.FinalizeAllocationOK, error) {
+func (a *apiHandlerCoreTest) FinalizeAllocation(machineID, consolePassword string) (*machine.FinalizeAllocationOK, error) {
 	return nil, nil
 }
 

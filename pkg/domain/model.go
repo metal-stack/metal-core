@@ -54,13 +54,14 @@ const (
 )
 
 type APIClient interface {
+	FindMachine(id string) (*models.V1MachineResponse, error)
 	FindMachines(mac string) (int, []*models.V1MachineResponse)
 	FindPartition(id string) (*models.V1PartitionResponse, error)
 	RegisterMachine(machineID string, request *MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse)
 	InstallImage(machineID string) (int, *models.V1MachineResponse)
 	IPMIConfig(machineID string) (*IPMIConfig, error)
 	AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error
-	FinalizeAllocation(machineID, consolepassword string) (*machine.FinalizeAllocationOK, error)
+	FinalizeAllocation(machineID, consolePassword string) (*machine.FinalizeAllocationOK, error)
 	RegisterSwitch() (*models.V1SwitchResponse, error)
 	ConstantlyPhoneHome()
 	SetChassisIdentifyLEDStateOn(machineID, description string) error
@@ -75,6 +76,7 @@ type EndpointHandler interface {
 	NewBootService() *restful.WebService
 	NewMachineService() *restful.WebService
 
+	FindMachine(request *restful.Request, response *restful.Response)
 	Boot(request *restful.Request, response *restful.Response)
 	Install(request *restful.Request, response *restful.Response)
 	Register(request *restful.Request, response *restful.Response)

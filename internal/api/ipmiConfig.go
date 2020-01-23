@@ -12,11 +12,11 @@ import (
 )
 
 func (c *apiClient) IPMIConfig(machineID string) (*domain.IPMIConfig, error) {
-	params := machine.NewIPMIDataParams()
+	params := machine.NewFindIPMIMachineParams()
 	params.ID = machineID
 
-	ok, err := c.MachineClient.IPMIData(params, c.Auth)
-	if err != nil {
+	ok, err := c.MachineClient.FindIPMIMachine(params, c.Auth)
+	if err != nil || ok.Payload == nil || ok.Payload.IPMI == nil {
 		zapup.MustRootLogger().Error("IPMI data for machine not found",
 			zap.String("machine", machineID),
 			zap.Error(err),
@@ -24,7 +24,7 @@ func (c *apiClient) IPMIConfig(machineID string) (*domain.IPMIConfig, error) {
 		return nil, errors.Wrapf(err, "IPMI data for machine %s not found", machineID)
 	}
 
-	ipmiData := ok.Payload
+	ipmiData := ok.Payload.IPMI
 
 	hostAndPort := strings.Split(*ipmiData.Address, ":")
 	port := 632
