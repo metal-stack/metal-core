@@ -11,9 +11,9 @@ type BootResponse struct {
 }
 
 type Reboot struct {
-	HD   bool   `json:"hd,omitempty" description:"whether to boot from Disk"`
-	PXE  bool   `json:"pxe,omitempty" description:"whether to boot from PXE"`
-	BIOS bool   `json:"bios,omitempty" description:"whether to boot into BIOS"`
+	HD   bool `json:"hd,omitempty" description:"whether to boot from Disk"`
+	PXE  bool `json:"pxe,omitempty" description:"whether to boot from PXE"`
+	BIOS bool `json:"bios,omitempty" description:"whether to boot into BIOS"`
 }
 
 // Report is sent by metal-hammer to metal-core after installation finished

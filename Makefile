@@ -15,7 +15,7 @@ all::
 release:: all ;
 
 .PHONY: spec
-spec: all
+spec: generate-client gofmt all
 	bin/metal-core spec | python -c "$$PYTHON_DEEP_SORT" > spec/metal-core.json
 
 .PHONY: test-switcher
