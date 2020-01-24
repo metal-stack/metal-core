@@ -171,8 +171,8 @@
                 "project": {
                     "type": "string"
                 }, 
-                "reinstall": {
-                    "type": "boolean"
+                "reinstallation": {
+                    "$ref": "#/definitions/models.V1MachineReinstallation"
                 }, 
                 "ssh_pub_keys": {
                     "items": {
@@ -193,7 +193,7 @@
                 "name", 
                 "networks", 
                 "project", 
-                "reinstall", 
+                "reinstallation", 
                 "ssh_pub_keys", 
                 "succeeded"
             ]
@@ -515,6 +515,20 @@
                 "incomplete_provisioning_cycles", 
                 "last_event_time", 
                 "log"
+            ]
+        }, 
+        "models.V1MachineReinstallation": {
+            "properties": {
+                "os_partition": {
+                    "type": "string"
+                }, 
+                "primary_disk": {
+                    "type": "string"
+                }
+            }, 
+            "required": [
+                "os_partition", 
+                "primary_disk"
             ]
         }, 
         "models.V1MachineResponse": {

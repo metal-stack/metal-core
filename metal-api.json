@@ -923,9 +923,9 @@
           "description": "the project id that this machine is assigned to",
           "type": "string"
         },
-        "reinstall": {
-          "description": "indicates whether to reinstall the machine or not",
-          "type": "boolean"
+        "reinstallation": {
+          "$ref": "#/definitions/v1.MachineReinstallation",
+          "description": "indicates whether to reinstall the machine (if not nil)"
         },
         "ssh_pub_keys": {
           "description": "the public ssh keys to access the machine with",
@@ -949,7 +949,7 @@
         "name",
         "networks",
         "project",
-        "reinstall",
+        "reinstallation",
         "ssh_pub_keys",
         "succeeded"
       ]
@@ -1102,11 +1102,21 @@
             "$ref": "#/definitions/v1.MachineBlockDevice"
           },
           "type": "array"
+        },
+        "ospartition": {
+          "description": "the partition that has the OS installed",
+          "type": "string"
+        },
+        "primarydisk": {
+          "description": "the device name of the primary disk",
+          "type": "string"
         }
       },
       "required": [
         "console_password",
-        "disks"
+        "disks",
+        "ospartition",
+        "primarydisk"
       ]
     },
     "v1.MachineFindRequest": {
@@ -1857,6 +1867,22 @@
       "required": [
         "id",
         "imageid"
+      ]
+    },
+    "v1.MachineReinstallation": {
+      "properties": {
+        "os_partition": {
+          "description": "device name of disk partition that has the OS installed",
+          "type": "string"
+        },
+        "primary_disk": {
+          "description": "device name of the disk that contains the partition on which the OS is installed",
+          "type": "string"
+        }
+      },
+      "required": [
+        "os_partition",
+        "primary_disk"
       ]
     },
     "v1.MachineResponse": {
