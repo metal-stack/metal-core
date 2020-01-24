@@ -74,7 +74,7 @@ func (a *apiHandlerCoreTest) AddProvisioningEvent(machineID string, event *model
 	return nil
 }
 
-func (a *apiHandlerCoreTest) FinalizeAllocation(machineID, consolePassword string) (*machine.FinalizeAllocationOK, error) {
+func (a *apiHandlerCoreTest) FinalizeAllocation(machineID, consolePassword, primaryDisk, osPartition string) (*machine.FinalizeAllocationOK, error) {
 	return nil, nil
 }
 

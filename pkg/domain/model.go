@@ -61,7 +61,7 @@ type APIClient interface {
 	InstallImage(machineID string) (int, *models.V1MachineResponse)
 	IPMIConfig(machineID string) (*IPMIConfig, error)
 	AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error
-	FinalizeAllocation(machineID, consolePassword string) (*machine.FinalizeAllocationOK, error)
+	FinalizeAllocation(machineID, consolePassword, primaryDisk, osPartition string) (*machine.FinalizeAllocationOK, error)
 	RegisterSwitch() (*models.V1SwitchResponse, error)
 	ConstantlyPhoneHome()
 	SetChassisIdentifyLEDStateOn(machineID, description string) error

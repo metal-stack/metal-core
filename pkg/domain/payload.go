@@ -21,6 +21,8 @@ type Report struct {
 	Success         bool   `json:"success,omitempty" description:"true if installation succeeded"`
 	Message         string `json:"message" description:"if installation failed, the error message"`
 	ConsolePassword string `json:"console_password" description:"the console password which was generated while provisioning"`
+	PrimaryDisk     string `json:"primary_disk" description:"the disk having a partition on which the OS is installed"`
+	OSPartition     string `json:"os_partition" description:"the partition on which the OS is installed"`
 }
 
 type MetalHammerRegisterMachineRequest struct {

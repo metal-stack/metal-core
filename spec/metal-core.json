@@ -84,6 +84,14 @@
                     "description": "if installation failed, the error message", 
                     "type": "string"
                 }, 
+                "os_partition": {
+                    "description": "the partition on which the OS is installed", 
+                    "type": "string"
+                }, 
+                "primary_disk": {
+                    "description": "the disk having a partition on which the OS is installed", 
+                    "type": "string"
+                }, 
                 "success": {
                     "description": "true if installation succeeded", 
                     "type": "boolean"
@@ -91,7 +99,9 @@
             }, 
             "required": [
                 "console_password", 
-                "message"
+                "message", 
+                "os_partition", 
+                "primary_disk"
             ]
         }, 
         "models.V1ChassisIdentifyLEDState": {

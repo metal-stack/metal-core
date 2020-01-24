@@ -86,7 +86,7 @@ func (a *apiHandlerBootTest) AddProvisioningEvent(machineID string, event *model
 	return nil
 }
 
-func (a *apiHandlerBootTest) FinalizeAllocation(machineID, consolePassword string) (*machine.FinalizeAllocationOK, error) {
+func (a *apiHandlerBootTest) FinalizeAllocation(machineID, consolePassword, primaryDisk, osPartition string) (*machine.FinalizeAllocationOK, error) {
 	return nil, nil
 }
 

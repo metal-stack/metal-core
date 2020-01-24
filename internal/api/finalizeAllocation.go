@@ -7,9 +7,11 @@ import (
 	"go.uber.org/zap"
 )
 
-func (c *apiClient) FinalizeAllocation(machineid, consolePassword string) (*machine.FinalizeAllocationOK, error) {
+func (c *apiClient) FinalizeAllocation(machineid, consolePassword, primaryDisk, osPartition string) (*machine.FinalizeAllocationOK, error) {
 	body := &models.V1MachineFinalizeAllocationRequest{
 		ConsolePassword: &consolePassword,
+		Primarydisk:     &primaryDisk,
+		Ospartition:     &osPartition,
 	}
 	params := machine.NewFinalizeAllocationParams()
 	params.ID = machineid
