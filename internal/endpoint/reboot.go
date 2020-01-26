@@ -42,13 +42,13 @@ func (h *endpointHandler) Reboot(request *restful.Request, response *restful.Res
 	var boot string
 	if reboot.HD {
 		boot = "HD"
-		err = ipmi.SetBootDisk(ipmiCfg)
+		err = ipmi.SetBootDisk(ipmiCfg, h.DevMode)
 	} else if reboot.PXE {
 		boot = "PXE"
 		err = ipmi.SetBootPXE(ipmiCfg)
 	} else {
 		boot = "BIOS"
-		err = ipmi.SetBootBios(ipmiCfg)
+		err = ipmi.SetBootBios(ipmiCfg, h.DevMode)
 	}
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to change boot order of machine",

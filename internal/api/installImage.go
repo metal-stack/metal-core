@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 
 	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
@@ -15,17 +16,29 @@ func (c *apiClient) InstallImage(machineID string) (int, *models.V1MachineRespon
 
 	ok, err := c.MachineClient.WaitForAllocation(params, c.Auth)
 	if err != nil {
+		response := ""
+		statusCode := int32(0)
 		switch e := err.(type) {
 		case *machine.WaitForAllocationGatewayTimeout:
+			if e.Payload != nil && e.Payload.Statuscode != nil {
+				response = *e.Payload.Message
+				statusCode = *e.Payload.Statuscode
+			}
 			zapup.MustRootLogger().Debug("Long polling timeout while GET from Metal-APIs wait endpoint",
 				zap.String("machineID", machineID),
-				zap.String("response", e.Error()),
+				zap.Int32("statusCode", statusCode),
+				zap.String("response", response),
 			)
 			return http.StatusNotModified, nil
 		case *machine.WaitForAllocationDefault:
+			if e.Payload != nil && e.Payload.Statuscode != nil {
+				response = *e.Payload.Message
+				statusCode = *e.Payload.Statuscode
+			}
 			zapup.MustRootLogger().Error("Failed to GET installation image from Metal-APIs wait endpoint",
 				zap.String("machineID", machineID),
-				zap.Error(e),
+				zap.Int32("statusCode", statusCode),
+				zap.Error(fmt.Errorf(response)),
 			)
 			return http.StatusInternalServerError, nil
 		default:

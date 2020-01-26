@@ -103,6 +103,8 @@ type Config struct {
 	PartitionID               string        `required:"true" desc:"set the partition ID" envconfig:"partition_id"`
 	RackID                    string        `required:"true" desc:"set the rack ID" envconfig:"rack_id"`
 	BindAddress               string        `required:"false" default:"0.0.0.0" desc:"set server bind address" split_words:"true"`
+	MetricsServerPort         int           `required:"false" default:"2112" desc:"the port of the metrics server" split_words:"true"`
+	MetricsServerBindAddress  string        `required:"false" default:"0.0.0.0" desc:"the bind addr of the metrics server" split_words:"true"`
 	Port                      int           `required:"false" default:"4242" desc:"set server port"`
 	LogLevel                  string        `required:"false" default:"info" desc:"set log level" split_words:"true"`
 	ConsoleLogging            bool          `required:"false" default:"true" desc:"enable/disable console logging" split_words:"true"`
@@ -174,6 +176,7 @@ type AppContext struct {
 	PartitionClient *partition.Client
 	hmac            security.HMACAuth
 	Auth            runtime.ClientAuthInfoWriter
+	DevMode         bool
 }
 
 func (a *AppContext) APIClient() APIClient {

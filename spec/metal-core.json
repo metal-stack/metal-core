@@ -21,6 +21,10 @@
         }, 
         "domain.MetalHammerRegisterMachineRequest": {
             "properties": {
+                "bios": {
+                    "$ref": "#/definitions/models.V1MachineBIOS", 
+                    "description": "the Bios configuration"
+                }, 
                 "cpu_cores": {
                     "format": "int32", 
                     "type": "integer"
@@ -51,6 +55,7 @@
                 }
             }, 
             "required": [
+                "bios", 
                 "cpu_cores", 
                 "disks", 
                 "ipmi", 

@@ -13,25 +13,25 @@ const (
 	LegacyQualifier = uint8(0xff)
 
 	PXEQualifier       = uint8(0x04)
-	DefaultHDQualifier = uint8(0x08)
+	DefaultHDQualifier = uint8(0x08) // IPMI 2.0 compatible
 	BIOSQualifier      = uint8(0x18)
 
 	UEFIQualifier = uint8(0xe0)
 
 	UEFIPXEQualifier = uint8(0x04)
-	UEFIHDQualifier  = uint8(0x24)
+	UEFIHDQualifier  = uint8(0x24) // SMCIPMITool compatible
 )
 
 func SetBootPXE(cfg *domain.IPMIConfig) error {
-	return boot(cfg, goipmi.BootDevicePxe)
+	return boot(cfg, goipmi.BootDevicePxe, false)
 }
 
-func SetBootDisk(cfg *domain.IPMIConfig) error {
-	return boot(cfg, goipmi.BootDeviceDisk)
+func SetBootDisk(cfg *domain.IPMIConfig, devMode bool) error {
+	return boot(cfg, goipmi.BootDeviceDisk, devMode)
 }
 
-func SetBootBios(cfg *domain.IPMIConfig) error {
-	return boot(cfg, goipmi.BootDeviceBios)
+func SetBootBios(cfg *domain.IPMIConfig, devMode bool) error {
+	return boot(cfg, goipmi.BootDeviceBios, devMode)
 }
 
 // boot is a modified wrapper around
@@ -39,7 +39,7 @@ func SetBootBios(cfg *domain.IPMIConfig) error {
 // https://www.intel.com/content/dam/www/public/us/en/documents/product-briefs/ipmi-second-gen-interface-spec-v2-rev1-1.pdf
 // We send modified raw parameters according to:
 // https://git.f-i-ts.de/cloud-native/metal/smcipmitool/blob/master/com/supermicro/ipmi/IPMIChassisCommand.java#L265
-func boot(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
+func boot(cfg *domain.IPMIConfig, dev goipmi.BootDevice, devMode bool) error {
 	client, err := openClientConnection(cfg)
 	if err != nil {
 		return err
@@ -60,7 +60,6 @@ func boot(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
 	   See https://git.f-i-ts.de/cloud-native/metal/metal/issues/73#note_151375
 	*/
 
-	// Conforms to IPMI 2.0
 	var uefiQualifier, bootDevQualifier uint8
 	switch dev {
 	case goipmi.BootDevicePxe:
@@ -68,9 +67,17 @@ func boot(cfg *domain.IPMIConfig, dev goipmi.BootDevice) error {
 		bootDevQualifier = UEFIPXEQualifier
 	case goipmi.BootDeviceDisk:
 		uefiQualifier = UEFIQualifier
-		bootDevQualifier = DefaultHDQualifier // Conforms to IPMI 2.0
+		if devMode {
+			bootDevQualifier = DefaultHDQualifier // Conforms to IPMI 2.0
+		} else {
+			bootDevQualifier = UEFIHDQualifier // Conforms to SMCIPMITool
+		}
 	case goipmi.BootDeviceBios:
-		uefiQualifier = UEFIQualifier // Conforms to IPMI 2.0
+		if devMode {
+			uefiQualifier = UEFIQualifier // Conforms to IPMI 2.0
+		} else {
+			uefiQualifier = LegacyQualifier // Conforms to SMCIPMITool
+		}
 		bootDevQualifier = BIOSQualifier
 	default:
 		return fmt.Errorf("unsupported boot device:%s", dev.String())
