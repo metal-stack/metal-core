@@ -70,6 +70,7 @@ func Create() *Server {
 			MachineClient:   machine.New(transport, strfmt.Default),
 			PartitionClient: partition.New(transport, strfmt.Default),
 			SwitchClient:    sw.New(transport, strfmt.Default),
+			DevMode:         cfg.PartitionID == "vagrant-lab",
 		},
 	}
 	app.SetAPIClient(api.NewClient)

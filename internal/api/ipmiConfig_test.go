@@ -21,18 +21,20 @@ type ipmiDataMock struct {
 }
 
 func (m *ipmiDataMock) Submit(o *runtime.ClientOperation) (interface{}, error) {
-	params := o.Params.(*machine.IPMIDataParams)
+	params := o.Params.(*machine.FindIPMIMachineParams)
 	m.actualmachineID = params.ID
 	if m.simulateError {
 		return nil, errors.New("not found")
 	}
 	address := fmt.Sprintf("%v:%v", m.host, m.port)
-	return &machine.IPMIDataOK{
-		Payload: &models.V1MachineIPMI{
-			Address:   &address,
-			Interface: &m.iface,
-			User:      &m.user,
-			Password:  &m.password,
+	return &machine.FindIPMIMachineOK{
+		Payload: &models.V1MachineIPMIResponse{
+			IPMI: &models.V1MachineIPMI{
+				Address:   &address,
+				Interface: &m.iface,
+				User:      &m.user,
+				Password:  &m.password,
+			},
 		},
 	}, nil
 }
