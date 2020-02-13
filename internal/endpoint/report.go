@@ -41,7 +41,7 @@ func (h *endpointHandler) Report(request *restful.Request, response *restful.Res
 			return
 		}
 
-		err = ipmi.SetBootDisk(ipmiCfg)
+		err = ipmi.SetBootDisk(ipmiCfg, h.DevMode)
 		if err != nil {
 			zapup.MustRootLogger().Error("Unable to set boot order of machine to HD",
 				zap.String("machineID", machineID),

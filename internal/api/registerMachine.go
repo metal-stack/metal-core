@@ -26,6 +26,7 @@ func (c *apiClient) RegisterMachine(machineID string, request *domain.MetalHamme
 			Disks:    request.Disks,
 		},
 		IPMI: request.IPMI,
+		Bios: request.BIOS,
 	}
 
 	ok, created, err := c.MachineClient.RegisterMachine(params, c.Auth)
