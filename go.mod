@@ -25,5 +25,6 @@ require (
 	github.com/vmware/goipmi v0.0.0-20181114221114-2333cd82d702
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/zap v1.10.0
+	golang.org/x/sys v0.0.0-20200212091648-12a6c2dcc1e4 // indirect
 	gopkg.in/yaml.v2 v2.2.2
 )

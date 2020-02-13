@@ -23,9 +23,15 @@ func (c *apiClient) IPMIConfig(machineID string) (*domain.IPMIConfig, error) {
 		)
 		return nil, errors.Wrapf(err, "IPMI data for machine %s not found", machineID)
 	}
-
 	ipmiData := ok.Payload.IPMI
 
+	if ipmiData.Address == nil {
+		zapup.MustRootLogger().Error("IPMI address for machine not found",
+			zap.String("machine", machineID),
+			zap.Error(err),
+		)
+		return nil, errors.Wrapf(err, "IPMI address for machine %s not found", machineID)
+	}
 	hostAndPort := strings.Split(*ipmiData.Address, ":")
 	port := 632
 	if len(hostAndPort) == 2 {
