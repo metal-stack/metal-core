@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/metal-pod/v"
+	"github.com/metal-stack/v"
 	"go.uber.org/zap"
 	"os"
 	"strings"

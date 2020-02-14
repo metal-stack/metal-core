@@ -10,7 +10,7 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-	"github.com/metal-pod/security"
+	"github.com/metal-stack/security"
 )
 
 type EventType string

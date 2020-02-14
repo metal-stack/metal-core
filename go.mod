@@ -3,7 +3,7 @@ module git.f-i-ts.de/cloud-native/metal/metal-core
 go 1.13
 
 require (
-	git.f-i-ts.de/cloud-native/metallib v0.2.5
+	git.f-i-ts.de/cloud-native/metallib v0.2.7
 	github.com/emicklei/go-restful v2.9.6+incompatible
 	github.com/emicklei/go-restful-openapi v1.0.0
 	github.com/go-openapi/errors v0.19.2
@@ -15,8 +15,8 @@ require (
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/gopacket v1.1.17
 	github.com/kelseyhightower/envconfig v1.3.0
-	github.com/metal-pod/security v0.0.0-20190920091500-ed81ae92725b
-	github.com/metal-pod/v v0.0.2
+	github.com/metal-stack/security v0.0.0-20200213101721-0aed751953ac
+	github.com/metal-stack/v v1.0.1
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v1.3.0
 	github.com/stretchr/testify v1.4.0
