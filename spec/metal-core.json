@@ -293,10 +293,7 @@
     },
     "domain.MetalHammerRegisterMachineRequest": {
       "required": [
-        "cpu_cores",
-        "disks",
-        "memory",
-        "nics",
+        "hardware",
         "ipmi",
         "bios"
       ],
@@ -305,29 +302,13 @@
           "description": "the Bios configuration",
           "$ref": "#/definitions/models.V1MachineBIOS"
         },
-        "cpu_cores": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "disks": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/models.V1MachineBlockDevice"
-          }
+        "hardware": {
+          "description": "the hardware of the machine",
+          "$ref": "#/definitions/models.V1MachineHardwareExtended"
         },
         "ipmi": {
           "description": "the IPMI connection configuration",
           "$ref": "#/definitions/models.V1MachineIPMI"
-        },
-        "memory": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "nics": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/models.V1MachineNicExtended"
-          }
         },
         "uuid": {
           "description": "the uuid of the machine to register",
@@ -542,6 +523,36 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/models.V1MachineNic"
+          }
+        }
+      }
+    },
+    "models.V1MachineHardwareExtended": {
+      "required": [
+        "cpu_cores",
+        "disks",
+        "memory",
+        "nics"
+      ],
+      "properties": {
+        "cpu_cores": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "disks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/models.V1MachineBlockDevice"
+          }
+        },
+        "memory": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "nics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/models.V1MachineNicExtended"
           }
         }
       }
