@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	sw "git.f-i-ts.de/cloud-native/metal/metal-core/client/switch_operations"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
-	"git.f-i-ts.de/cloud-native/metallib/zapup"
+	sw "github.com/metal-stack/metal-core/client/switch_operations"
+	"github.com/metal-stack/metal-core/models"
+	"github.com/metal-stack/metal-lib/zapup"
 	"github.com/pkg/errors"
 	"github.com/vishvananda/netlink"
 	"go.uber.org/zap"

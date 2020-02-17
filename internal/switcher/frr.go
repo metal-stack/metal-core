@@ -4,7 +4,7 @@ import (
 	"io"
 	"text/template"
 
-	"git.f-i-ts.de/cloud-native/metallib/network"
+	"github.com/metal-stack/metal-networker/pkg/net"
 )
 
 const (
@@ -21,14 +21,14 @@ const (
 // FrrApplier is responsible for writing and
 // applying the FRR configuration
 type FrrApplier struct {
-	applier network.Applier
+	applier net.Applier
 }
 
 // NewFrrApplier creates a new FrrApplier
 func NewFrrApplier(c *Conf) Applier {
-	v := network.DBusTemplateValidator{TemplateName: FrrValidationService, InstanceName: FrrTmp}
-	r := network.DBusReloader{ServiceFilename: FrrReloadService}
-	a := network.NewNetworkApplier(c, v, r)
+	v := net.DBusTemplateValidator{TemplateName: FrrValidationService, InstanceName: FrrTmp}
+	r := net.DBusReloader{ServiceFilename: FrrReloadService}
+	a := net.NewNetworkApplier(c, v, r)
 	return FrrApplier{a}
 }
 

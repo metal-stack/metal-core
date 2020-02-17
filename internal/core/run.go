@@ -6,9 +6,9 @@ import (
 	"os"
 	"time"
 
-	"git.f-i-ts.de/cloud-native/metal/metal-core/internal/endpoint"
-	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
+	"github.com/metal-stack/metal-core/internal/endpoint"
+	"github.com/metal-stack/metal-lib/zapup"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httppprof "net/http/pprof"
 

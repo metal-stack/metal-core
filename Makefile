@@ -1,6 +1,6 @@
 BINARY := metal-core
-COMMONDIR := $(or ${COMMONDIR},../common)
-MAINMODULE := git.f-i-ts.de/cloud-native/metal/metal-core
+COMMONDIR := $(or ${COMMONDIR},../builder)
+MAINMODULE := github.com/metal-stack/metal-core
 CGO_ENABLED := 1
 
 in-docker: generate-client gofmt check all;

@@ -4,9 +4,9 @@ import (
 	"strconv"
 	"strings"
 
-	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/pkg/domain"
-	"git.f-i-ts.de/cloud-native/metallib/zapup"
+	"github.com/metal-stack/metal-core/client/machine"
+	"github.com/metal-stack/metal-core/pkg/domain"
+	"github.com/metal-stack/metal-lib/zapup"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )

@@ -2,10 +2,10 @@ package api
 
 import (
 	"errors"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/pkg/domain"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
+	"github.com/metal-stack/metal-core/client/machine"
+	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"testing"

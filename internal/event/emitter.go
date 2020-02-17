@@ -1,11 +1,11 @@
 package event
 
 import (
-	"git.f-i-ts.de/cloud-native/metal/metal-core/internal/endpoint"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/internal/lldp"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/pkg/domain"
-	"git.f-i-ts.de/cloud-native/metallib/zapup"
+	"github.com/metal-stack/metal-core/internal/endpoint"
+	"github.com/metal-stack/metal-core/internal/lldp"
+	"github.com/metal-stack/metal-core/models"
+	"github.com/metal-stack/metal-core/pkg/domain"
+	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 )
 
