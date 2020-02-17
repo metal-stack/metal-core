@@ -2,8 +2,8 @@ package rest
 
 import (
 	"errors"
-	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
+	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 )
 

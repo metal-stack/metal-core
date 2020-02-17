@@ -4,8 +4,8 @@ import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/pkg/domain"
 	"net/http"
 
-	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
+	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 
 	"git.f-i-ts.de/cloud-native/metal/metal-core/internal/rest"

@@ -3,8 +3,8 @@ package api
 import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/internal/event"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/internal/lldp"
-	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/google/gopacket/pcap"
+	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"os"
 	"strings"

@@ -4,7 +4,7 @@ import (
 	"io"
 	"text/template"
 
-	"git.f-i-ts.de/cloud-native/metallib/network"
+	"github.com/metal-stack/metal-networker/pkg/net"
 )
 
 const (
@@ -21,14 +21,14 @@ const (
 // InterfacesApplier is responsible for writing and
 // applying the network interfaces configuration
 type InterfacesApplier struct {
-	applier network.Applier
+	applier net.Applier
 }
 
 // NewInterfacesApplier creates a new InterfacesApplier
 func NewInterfacesApplier(c *Conf) Applier {
-	v := network.DBusTemplateValidator{TemplateName: InterfacesValidationService, InstanceName: InterfacesTmp}
-	r := network.DBusStartReloader{ServiceFilename: InterfacesReloadService}
-	a := network.NewNetworkApplier(c, v, r)
+	v := net.DBusTemplateValidator{TemplateName: InterfacesValidationService, InstanceName: InterfacesTmp}
+	r := net.DBusStartReloader{ServiceFilename: InterfacesReloadService}
+	a := net.NewNetworkApplier(c, v, r)
 	return InterfacesApplier{a}
 }
 

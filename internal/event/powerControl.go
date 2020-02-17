@@ -2,7 +2,7 @@ package event
 
 import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/internal/ipmi"
-	"git.f-i-ts.de/cloud-native/metallib/zapup"
+	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 )
 

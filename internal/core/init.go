@@ -26,13 +26,17 @@ func enrichSwaggerObject(swo *spec.Swagger) {
 			Title:       "metal-core",
 			Description: "Resource for managing PXE clients",
 			Contact: &spec.ContactInfo{
-				Name:  "Devops Team",
-				Email: "devops@f-i-ts.de",
-				URL:   "http://www.f-i-ts.de",
+				ContactInfoProps: spec.ContactInfoProps{
+					Name:  "Devops Team",
+					Email: "devops@f-i-ts.de",
+					URL:   "http://www.f-i-ts.de",
+				},
 			},
 			License: &spec.License{
-				Name: "MIT",
-				URL:  "http://mit.org",
+				LicenseProps: spec.LicenseProps{
+					Name: "MIT",
+					URL:  "http://mit.org",
+				},
 			},
 			Version: "1.0.0",
 		},

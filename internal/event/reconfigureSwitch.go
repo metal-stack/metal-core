@@ -11,7 +11,7 @@ import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/internal/vlan"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/pkg/domain"
-	"git.f-i-ts.de/cloud-native/metallib/zapup"
+	"github.com/metal-stack/metal-lib/zapup"
 	"github.com/pkg/errors"
 	"github.com/vishvananda/netlink"
 	"go.uber.org/zap"

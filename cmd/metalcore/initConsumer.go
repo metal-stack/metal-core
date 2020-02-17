@@ -2,8 +2,8 @@ package metalcore
 
 import (
 	"git.f-i-ts.de/cloud-native/metal/metal-core/pkg/domain"
-	"git.f-i-ts.de/cloud-native/metallib/bus"
-	"git.f-i-ts.de/cloud-native/metallib/zapup"
+	"github.com/metal-stack/metal-lib/bus"
+	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 	"os"
 	"strings"

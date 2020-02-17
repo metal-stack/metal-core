@@ -12,9 +12,9 @@ import (
 
 	ep "git.f-i-ts.de/cloud-native/metal/metal-core/internal/endpoint"
 	"git.f-i-ts.de/cloud-native/metal/metal-core/pkg/domain"
-	"git.f-i-ts.de/cloud-native/metallib/zapup"
 	"github.com/emicklei/go-restful"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/metal-stack/metal-lib/zapup"
 )
 
 const logFilename = "output.log"
