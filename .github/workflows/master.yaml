@@ -14,7 +14,9 @@ jobs:
     - name: Lint
       uses: actions-contrib/golangci-lint@master
       with:
-        args: run
+        args:
+        - run
+        - ./...
     - name: Docker Image
       run: |
         docker login -u metalstackci -p ${{ secrets.DOCKER_HUB_TOKEN }}
