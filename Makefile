@@ -1,6 +1,6 @@
 BINARY := metal-core
 MAINMODULE := github.com/metal-stack/metal-core
-COMMONDIR := $(or ${COMMONDIR},../builder)
+COMMONDIR := $(or ${COMMONDIR},~/src/github.com/metal-stack/builder)
 CGO_ENABLED := 1
 
 include $(COMMONDIR)/Makefile.inc
@@ -9,7 +9,7 @@ release:: generate-client tidy gofmt all;
 
 .PHONY: spec
 spec: release
-	bin/metal-core spec | python -c "$$PYTHON_DEEP_SORT" > spec/metal-core.json
+	bin/metal-core spec > spec/metal-core.json
 
 .PHONY: test-switcher
 test-switcher:
