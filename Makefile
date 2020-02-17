@@ -1,5 +1,5 @@
 BINARY := metal-core
-COMMONDIR := $(or ${COMMONDIR},../common)
+COMMONDIR := $(or ${COMMONDIR},../builder)
 MAINMODULE := github.com/metal-stack/metal-core
 CGO_ENABLED := 1
 
