@@ -3,19 +3,12 @@ COMMONDIR := $(or ${COMMONDIR},../builder)
 MAINMODULE := github.com/metal-stack/metal-core
 CGO_ENABLED := 1
 
-in-docker: generate-client gofmt check all;
-
 include $(COMMONDIR)/Makefile.inc
 
-release:: generate-client gofmt check all;
-
-.PHONY: all
-all::
-
-release:: all ;
+release:: generate-client tidy gofmt check all;
 
 .PHONY: spec
-spec: all
+spec: release
 	bin/metal-core spec | python -c "$$PYTHON_DEEP_SORT" > spec/metal-core.json
 
 .PHONY: test-switcher
