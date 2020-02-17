@@ -38,7 +38,7 @@ func SetBootBios(cfg *domain.IPMIConfig, devMode bool) error {
 // goipmi.SetSystemBootOptionsRequest to configure the BootDevice per section 28.12:
 // https://www.intel.com/content/dam/www/public/us/en/documents/product-briefs/ipmi-second-gen-interface-spec-v2-rev1-1.pdf
 // We send modified raw parameters according to:
-// https://git.f-i-ts.de/cloud-native/metal/smcipmitool/blob/master/com/supermicro/ipmi/IPMIChassisCommand.java#L265
+// https://github.com/metal-stack/smcipmitool/blob/master/com/supermicro/ipmi/IPMIChassisCommand.java#L265
 func boot(cfg *domain.IPMIConfig, dev goipmi.BootDevice, devMode bool) error {
 	client, err := openClientConnection(cfg)
 	if err != nil {
@@ -57,7 +57,7 @@ func boot(cfg *domain.IPMIConfig, dev goipmi.BootDevice, devMode bool) error {
 	   raw 0x00 0x08 0x05 0xe0 0x18 0x00 0x00 0x00  (IPMI 2.0   , UEFI BIOS)
 	   raw 0x00 0x08 0x05 0xff 0x18 0x00 0x00 0x00  (SMCIPMITool, legacy BIOS)
 
-	   See https://git.f-i-ts.de/cloud-native/metal/metal/issues/73#note_151375
+	   See https://github.com/metal-stack/metal/issues/73#note_151375
 	*/
 
 	var uefiQualifier, bootDevQualifier uint8

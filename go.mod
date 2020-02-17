@@ -15,7 +15,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.3.0
 	github.com/metal-stack/metal-lib v0.3.0
 	github.com/metal-stack/metal-networker v0.1.1
-	github.com/metal-stack/security v0.0.0-20200213101721-0aed751953ac
+	github.com/metal-stack/security v0.3.0
 	github.com/metal-stack/v v1.0.1
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.3.0
