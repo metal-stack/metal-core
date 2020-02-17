@@ -1,22 +1,15 @@
 BINARY := metal-core
-COMMONDIR := $(or ${COMMONDIR},../builder)
 MAINMODULE := github.com/metal-stack/metal-core
+COMMONDIR := $(or ${COMMONDIR},../builder)
 CGO_ENABLED := 1
-
-in-docker: generate-client gofmt check all;
 
 include $(COMMONDIR)/Makefile.inc
 
-release:: generate-client gofmt check all;
-
-.PHONY: all
-all::
-
-release:: all ;
+release:: generate-client tidy gofmt all;
 
 .PHONY: spec
-spec: generate-client gofmt all
-	bin/metal-core spec | python -c "$$PYTHON_DEEP_SORT" > spec/metal-core.json
+spec: release
+	bin/metal-core spec > spec/metal-core.json
 
 .PHONY: test-switcher
 test-switcher:
@@ -26,3 +19,8 @@ test-switcher:
 generate-client:
 	rm -rf models client
 	GO111MODULE=off swagger generate client -f metal-api.json --skip-validation
+
+.PHONY: redoc
+redoc:
+	docker run -it --rm -v $(PWD):/work -w /work letsdeal/redoc-cli bundle -o generate/index.html /work/spec/metal-core.json
+	xdg-open generate/index.html
