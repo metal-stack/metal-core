@@ -782,12 +782,6 @@
                     }, 
                     "500": {
                         "description": "Error"
-                    }, 
-                    "default": {
-                        "description": "OK", 
-                        "schema": {
-                            "$ref": "#/definitions/models.V1MachineResponse"
-                        }
                     }
                 }, 
                 "summary": "install machine", 
@@ -828,9 +822,6 @@
                     }, 
                     "500": {
                         "description": "Error"
-                    }, 
-                    "default": {
-                        "description": "OK"
                     }
                 }, 
                 "summary": "reboot machine", 
@@ -877,12 +868,6 @@
                     }, 
                     "500": {
                         "description": "Error"
-                    }, 
-                    "default": {
-                        "description": "OK", 
-                        "schema": {
-                            "$ref": "#/definitions/models.V1MachineResponse"
-                        }
                     }
                 }, 
                 "summary": "register machine", 
@@ -926,9 +911,6 @@
                     }, 
                     "500": {
                         "description": "Error"
-                    }, 
-                    "default": {
-                        "description": "OK"
                     }
                 }, 
                 "summary": "report machine", 
@@ -964,12 +946,6 @@
                     }, 
                     "500": {
                         "description": "Error"
-                    }, 
-                    "default": {
-                        "description": "OK", 
-                        "schema": {
-                            "$ref": "#/definitions/models.V1MachineResponse"
-                        }
                     }
                 }, 
                 "summary": "find machine", 
@@ -1012,7 +988,7 @@
                         "description": "Not Found"
                     }, 
                     "default": {
-                        "description": "OK"
+                        "description": "Unexpected Error"
                     }
                 }, 
                 "summary": "adds a machine provisioning event", 
@@ -1047,9 +1023,9 @@
                         }
                     }, 
                     "default": {
-                        "description": "OK", 
+                        "description": "Error", 
                         "schema": {
-                            "$ref": "#/definitions/domain.BootResponse"
+                            "$ref": "#/definitions/httperrors.HTTPErrorResponse"
                         }
                     }
                 }, 
@@ -1085,9 +1061,9 @@
                         }
                     }, 
                     "default": {
-                        "description": "OK", 
+                        "description": "Error", 
                         "schema": {
-                            "$ref": "#/definitions/domain.BootResponse"
+                            "$ref": "#/definitions/httperrors.HTTPErrorResponse"
                         }
                     }
                 }, 
