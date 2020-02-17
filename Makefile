@@ -1,6 +1,6 @@
 BINARY := metal-core
 MAINMODULE := github.com/metal-stack/metal-core
-COMMONDIR := $(or ${COMMONDIR},~/src/github.com/metal-stack/builder)
+COMMONDIR := $(or ${COMMONDIR},../builder)
 CGO_ENABLED := 1
 
 include $(COMMONDIR)/Makefile.inc
