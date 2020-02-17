@@ -1,8 +1,8 @@
 package endpoint
 
 import (
-	"git.f-i-ts.de/cloud-native/metal/metal-core/pkg/domain"
-	"git.f-i-ts.de/cloud-native/metallib/httperrors"
+	"github.com/metal-stack/metal-core/pkg/domain"
+	"github.com/metal-stack/metal-lib/httperrors"
 
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"

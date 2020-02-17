@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
+	"github.com/metal-stack/metal-core/models"
 )
 
 type BootResponse struct {

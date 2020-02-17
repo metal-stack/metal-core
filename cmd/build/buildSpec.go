@@ -3,9 +3,9 @@ package build
 import (
 	"encoding/json"
 	"fmt"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/internal/core"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/internal/endpoint"
 	restfulspec "github.com/emicklei/go-restful-openapi"
+	"github.com/metal-stack/metal-core/internal/core"
+	"github.com/metal-stack/metal-core/internal/endpoint"
 )
 
 func Spec() {

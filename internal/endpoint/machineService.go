@@ -3,11 +3,11 @@ package endpoint
 import (
 	"net/http"
 
-	"git.f-i-ts.de/cloud-native/metal/metal-core/pkg/domain"
+	"github.com/metal-stack/metal-core/pkg/domain"
 
-	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
+	"github.com/metal-stack/metal-core/models"
 )
 
 func (h *endpointHandler) NewMachineService() *restful.WebService {
