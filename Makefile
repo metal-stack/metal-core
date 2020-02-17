@@ -5,7 +5,7 @@ CGO_ENABLED := 1
 
 include $(COMMONDIR)/Makefile.inc
 
-release:: generate-client tidy gofmt check all;
+release:: generate-client tidy gofmt all;
 
 .PHONY: spec
 spec: release
