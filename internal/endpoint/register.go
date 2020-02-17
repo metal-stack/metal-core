@@ -1,14 +1,14 @@
 package endpoint
 
 import (
-	"git.f-i-ts.de/cloud-native/metal/metal-core/pkg/domain"
+	"github.com/metal-stack/metal-core/pkg/domain"
 	"net/http"
 
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 
-	"git.f-i-ts.de/cloud-native/metal/metal-core/internal/rest"
+	"github.com/metal-stack/metal-core/internal/rest"
 )
 
 func (h *endpointHandler) Register(request *restful.Request, response *restful.Response) {

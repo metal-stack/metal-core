@@ -1,8 +1,8 @@
 package api
 
 import (
-	"git.f-i-ts.de/cloud-native/metal/metal-core/client/partition"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
+	"github.com/metal-stack/metal-core/client/partition"
+	"github.com/metal-stack/metal-core/models"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 )

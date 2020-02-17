@@ -3,9 +3,9 @@ package event
 import (
 	"testing"
 
-	"git.f-i-ts.de/cloud-native/metal/metal-core/internal/switcher"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/pkg/domain"
+	"github.com/metal-stack/metal-core/internal/switcher"
+	"github.com/metal-stack/metal-core/models"
+	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/stretchr/testify/require"
 )
 

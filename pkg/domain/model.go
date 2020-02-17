@@ -3,13 +3,13 @@ package domain
 import (
 	"time"
 
-	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/client/partition"
-	sw "git.f-i-ts.de/cloud-native/metal/metal-core/client/switch_operations"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
 	"github.com/emicklei/go-restful"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
+	"github.com/metal-stack/metal-core/client/machine"
+	"github.com/metal-stack/metal-core/client/partition"
+	sw "github.com/metal-stack/metal-core/client/switch_operations"
+	"github.com/metal-stack/metal-core/models"
 	"github.com/metal-stack/security"
 )
 

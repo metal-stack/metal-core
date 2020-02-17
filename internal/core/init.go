@@ -1,10 +1,10 @@
 package core
 
 import (
-	"git.f-i-ts.de/cloud-native/metal/metal-core/pkg/domain"
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
 	"github.com/go-openapi/spec"
+	"github.com/metal-stack/metal-core/pkg/domain"
 )
 
 func Init(endpointHandler domain.EndpointHandler) *restfulspec.Config {

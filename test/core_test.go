@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"testing"
 
-	"git.f-i-ts.de/cloud-native/metal/metal-core/client/machine"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/models"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/pkg/domain"
 	"github.com/emicklei/go-restful"
+	"github.com/metal-stack/metal-core/client/machine"
+	"github.com/metal-stack/metal-core/models"
+	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/stretchr/testify/require"
 )
 

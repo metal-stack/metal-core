@@ -10,10 +10,10 @@ import (
 	"os"
 	"strings"
 
-	ep "git.f-i-ts.de/cloud-native/metal/metal-core/internal/endpoint"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/pkg/domain"
 	"github.com/emicklei/go-restful"
 	"github.com/kelseyhightower/envconfig"
+	ep "github.com/metal-stack/metal-core/internal/endpoint"
+	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-lib/zapup"
 )
 

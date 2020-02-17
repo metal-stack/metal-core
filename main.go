@@ -1,8 +1,8 @@
 package main
 
 import (
-	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/build"
-	"git.f-i-ts.de/cloud-native/metal/metal-core/cmd/metalcore"
+	"github.com/metal-stack/metal-core/cmd/build"
+	"github.com/metal-stack/metal-core/cmd/metalcore"
 	"os"
 )
 

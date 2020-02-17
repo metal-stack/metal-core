@@ -1,4 +1,4 @@
-module git.f-i-ts.de/cloud-native/metal/metal-core
+module github.com/metal-stack/metal-core
 
 go 1.13
 
@@ -21,7 +21,7 @@ require (
 	github.com/prometheus/client_golang v1.3.0
 	github.com/stretchr/testify v1.4.0
 	github.com/vishvananda/netlink v1.0.0
-	github.com/vishvananda/netns v0.0.0-20180720170159-13995c7128cc // indirect
+	github.com/vishvananda/netns v0.0.0-20191106174202-0a2b9b5464df // indirect
 	github.com/vmware/goipmi v0.0.0-20181114221114-2333cd82d702
 	go.uber.org/zap v1.13.0
 	golang.org/x/sys v0.0.0-20200212091648-12a6c2dcc1e4 // indirect

@@ -1,7 +1,7 @@
 package core
 
 import (
-	"git.f-i-ts.de/cloud-native/metal/metal-core/pkg/domain"
+	"github.com/metal-stack/metal-core/pkg/domain"
 )
 
 type coreServer struct {

@@ -3,7 +3,7 @@ package ipmi
 import (
 	"fmt"
 
-	"git.f-i-ts.de/cloud-native/metal/metal-core/pkg/domain"
+	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-lib/zapup"
 	goipmi "github.com/vmware/goipmi"
 	"go.uber.org/zap"
