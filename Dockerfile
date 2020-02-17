@@ -1,8 +1,9 @@
 FROM metalstack/builder:latest as builder
 
 FROM letsdeal/redoc-cli:latest as docbuilder
+COPY --from=builder /work/metal-api.json /spec/metal-api.json
 COPY --from=builder /work/spec/metal-core.json /spec/metal-core.json
-RUN redoc-cli bundle -o /generate/index.html /spec/metal-core.json
+RUN redoc-cli bundle -o /generate/index.html /spec/metal-api.json /spec/metal-core.json
 
 FROM alpine:3.10
 
