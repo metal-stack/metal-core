@@ -10,7 +10,7 @@ release:: generate-client tidy gofmt all;
 .PHONY: spec
 spec: release
 	@$(info spec=$$(bin/metal-core spec | jq -S 'walk(if type == "array" then sort_by(strings) else . end)' 2>/dev/null) && echo "$${spec}" > spec/metal-core.json)
-	@spec=`bin/metal-core spec | jq -S 'walk(if type == "array" then sort_by(strings) else . end)' 2>/dev/null` && echo "$${spec}" > spec/metal-core.json || echo "jq >1.6 required"
+	@spec=`bin/metal-core spec | jq -S 'walk(if type == "array" then sort_by(strings) else . end)' 2>/dev/null` && echo "$${spec}" > spec/metal-core.json || { echo "jq >1.6 required"; exit 1; }
 
 .PHONY: test-switcher
 test-switcher:
