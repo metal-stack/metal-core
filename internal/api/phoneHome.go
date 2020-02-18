@@ -2,7 +2,6 @@ package api
 
 import (
 	"github.com/google/gopacket/pcap"
-	"github.com/metal-stack/metal-core/internal/event"
 	"github.com/metal-stack/metal-core/internal/lldp"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
@@ -28,7 +27,6 @@ func (c *apiClient) ConstantlyPhoneHome() {
 	frameFragmentChan := make(chan lldp.FrameFragment)
 	m := make(map[string]*lldp.PhoneHomeMessage)
 	mtx := sync.Mutex{}
-	e := event.NewEmitter(c.AppContext)
 
 	for _, iface := range ifs {
 		// consider only switch port interfaces
@@ -60,7 +58,7 @@ func (c *apiClient) ConstantlyPhoneHome() {
 				if !ok {
 					m[msg.MachineID] = msg
 					// send first incoming message per machine immediately
-					e.SendPhoneHomeEvent(msg)
+					c.PhoneHome(msg)
 				}
 				mtx.Unlock()
 			}
@@ -73,7 +71,7 @@ func (c *apiClient) ConstantlyPhoneHome() {
 		for range t.C {
 			mtx.Lock()
 			for machineID, msg := range m {
-				e.SendPhoneHomeEvent(msg)
+				c.PhoneHome(msg)
 				delete(m, machineID)
 			}
 			mtx.Unlock()

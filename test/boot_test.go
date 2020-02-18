@@ -58,6 +58,14 @@ func (a *apiHandlerBootTest) FindMachines(mac string) (int, []*models.V1MachineR
 	}
 }
 
+func (a *apiHandlerBootTest) Emit(eventType domain.ProvisioningEventType, machineID, message string) error {
+	return nil
+}
+
+func (a *apiHandlerBootTest) AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error {
+	return nil
+}
+
 func (a *apiHandlerBootTest) FindMachine(machineID string) (*models.V1MachineResponse, error) {
 	return nil, nil
 }
@@ -80,10 +88,6 @@ func (a *apiHandlerBootTest) FindPartition(id string) (*models.V1PartitionRespon
 		Imageurl:    "https://blobstore.fi-ts.io/metal/images/metal-hammer/metal-hammer-initrd.img.lz4",
 		Commandline: "",
 	}}, nil
-}
-
-func (a *apiHandlerBootTest) AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error {
-	return nil
 }
 
 func (a *apiHandlerBootTest) FinalizeAllocation(machineID, consolePassword, primaryDisk, osPartition string) (*machine.FinalizeAllocationOK, error) {

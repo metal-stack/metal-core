@@ -54,13 +54,14 @@ const (
 )
 
 type APIClient interface {
+	Emit(eventType ProvisioningEventType, machineID, message string) error
+	AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error
 	FindMachine(id string) (*models.V1MachineResponse, error)
 	FindMachines(mac string) (int, []*models.V1MachineResponse)
 	FindPartition(id string) (*models.V1PartitionResponse, error)
 	RegisterMachine(machineID string, request *MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse)
 	InstallImage(machineID string) (int, *models.V1MachineResponse)
 	IPMIConfig(machineID string) (*IPMIConfig, error)
-	AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error
 	FinalizeAllocation(machineID, consolePassword, primaryDisk, osPartition string) (*machine.FinalizeAllocationOK, error)
 	RegisterSwitch() (*models.V1SwitchResponse, error)
 	ConstantlyPhoneHome()

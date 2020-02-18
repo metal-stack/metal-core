@@ -43,6 +43,14 @@ func TestLoggingMiddleware(t *testing.T) {
 	require.NotContains(t, logs, "error")
 }
 
+func (a *apiHandlerCoreTest) Emit(eventType domain.ProvisioningEventType, machineID, message string) error {
+	return nil
+}
+
+func (a *apiHandlerCoreTest) AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error {
+	return nil
+}
+
 func (a *apiHandlerCoreTest) FindMachine(machineID string) (*models.V1MachineResponse, error) {
 	return nil, nil
 }
@@ -68,10 +76,6 @@ func (a *apiHandlerCoreTest) IPMIConfig(machineID string) (*domain.IPMIConfig, e
 
 func (a *apiHandlerCoreTest) FindPartition(id string) (*models.V1PartitionResponse, error) {
 	return nil, nil
-}
-
-func (a *apiHandlerCoreTest) AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error {
-	return nil
 }
 
 func (a *apiHandlerCoreTest) FinalizeAllocation(machineID, consolePassword, primaryDisk, osPartition string) (*machine.FinalizeAllocationOK, error) {
