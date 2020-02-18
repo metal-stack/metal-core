@@ -1,11 +1,9 @@
 package endpoint
 
 import (
-	"github.com/metal-stack/metal-core/pkg/domain"
-	"github.com/metal-stack/metal-lib/httperrors"
-
 	"github.com/emicklei/go-restful"
 	"github.com/emicklei/go-restful-openapi"
+	"github.com/metal-stack/metal-core/pkg/domain"
 	"net/http"
 )
 
@@ -23,7 +21,7 @@ func (h *endpointHandler) NewBootService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(domain.BootResponse{}).
 		Returns(http.StatusOK, "OK", domain.BootResponse{}).
-		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
+		DefaultReturns("Error", nil))
 
 	ws.Route(ws.GET("/v1/dhcp/{id}").
 		To(h.Dhcp).
@@ -32,7 +30,7 @@ func (h *endpointHandler) NewBootService() *restful.WebService {
 		Metadata(restfulspec.KeyOpenAPITags, tags).
 		Writes(domain.BootResponse{}).
 		Returns(http.StatusOK, "OK", domain.BootResponse{}).
-		DefaultReturns("Error", httperrors.HTTPErrorResponse{}))
+		DefaultReturns("Error", nil))
 
 	return ws
 }
