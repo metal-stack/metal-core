@@ -60,12 +60,12 @@ func (h *endpointHandler) NewMachineService() *restful.WebService {
 		Returns(http.StatusNotAcceptable, "Not acceptable", nil).
 		Returns(http.StatusInternalServerError, "Error", nil))
 
-	ws.Route(ws.POST("/reboot/{id}").
-		To(h.Reboot).
-		Doc("reboot machine").
+	ws.Route(ws.POST("/abort-reinstall/{id}").
+		To(h.AbortReinstall).
+		Doc("abort reinstall").
 		Param(ws.PathParameter("id", "identifier of the machine").DataType("string")).
 		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Reads(domain.Reboot{}).
+		Reads(domain.ChangeBootOrder{}).
 		Returns(http.StatusOK, "OK", nil).
 		Returns(http.StatusInternalServerError, "Error", nil))
 

@@ -77,7 +77,7 @@ type EndpointHandler interface {
 	NewMachineService() *restful.WebService
 
 	FindMachine(request *restful.Request, response *restful.Response)
-	Reboot(request *restful.Request, response *restful.Response)
+	AbortReinstall(request *restful.Request, response *restful.Response)
 	Boot(request *restful.Request, response *restful.Response)
 	Install(request *restful.Request, response *restful.Response)
 	Register(request *restful.Request, response *restful.Response)

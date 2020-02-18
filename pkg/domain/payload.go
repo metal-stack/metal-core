@@ -10,7 +10,7 @@ type BootResponse struct {
 	CommandLine string   `json:"cmdline,omitempty"`
 }
 
-type Reboot struct {
+type ChangeBootOrder struct {
 	HD   bool `json:"hd,omitempty" description:"whether to boot from Disk"`
 	PXE  bool `json:"pxe,omitempty" description:"whether to boot from PXE"`
 	BIOS bool `json:"bios,omitempty" description:"whether to boot into BIOS"`

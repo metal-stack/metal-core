@@ -19,6 +19,22 @@
         "initrd"
       ]
     },
+    "domain.ChangeBootOrder": {
+      "properties": {
+        "bios": {
+          "description": "whether to boot into BIOS",
+          "type": "boolean"
+        },
+        "hd": {
+          "description": "whether to boot from Disk",
+          "type": "boolean"
+        },
+        "pxe": {
+          "description": "whether to boot from PXE",
+          "type": "boolean"
+        }
+      }
+    },
     "domain.MetalHammerRegisterMachineRequest": {
       "properties": {
         "bios": {
@@ -62,22 +78,6 @@
         "memory",
         "nics"
       ]
-    },
-    "domain.Reboot": {
-      "properties": {
-        "bios": {
-          "description": "whether to boot into BIOS",
-          "type": "boolean"
-        },
-        "hd": {
-          "description": "whether to boot from Disk",
-          "type": "boolean"
-        },
-        "pxe": {
-          "description": "whether to boot from PXE",
-          "type": "boolean"
-        }
-      }
     },
     "domain.Report": {
       "properties": {
@@ -746,6 +746,46 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/machine/abort-reinstall/{id}": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "AbortReinstall",
+        "parameters": [
+          {
+            "description": "identifier of the machine",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/domain.ChangeBootOrder"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Error"
+          }
+        },
+        "summary": "abort reinstall",
+        "tags": [
+          "machine"
+        ]
+      }
+    },
     "/machine/install/{id}": {
       "get": {
         "consumes": [
@@ -785,46 +825,6 @@
           }
         },
         "summary": "install machine",
-        "tags": [
-          "machine"
-        ]
-      }
-    },
-    "/machine/reboot/{id}": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "operationId": "Reboot",
-        "parameters": [
-          {
-            "description": "identifier of the machine",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/domain.Reboot"
-            }
-          }
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "500": {
-            "description": "Error"
-          }
-        },
-        "summary": "reboot machine",
         "tags": [
           "machine"
         ]
