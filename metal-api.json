@@ -2558,6 +2558,9 @@
         },
         "machine": {
           "$ref": "#/definitions/v1.Quota"
+        },
+        "project": {
+          "$ref": "#/definitions/v1.Quota"
         }
       }
     },
@@ -2921,9 +2924,8 @@
   },
   "info": {
     "contact": {
-      "email": "devops@f-i-ts.de",
-      "name": "Devops Team",
-      "url": "http://www.f-i-ts.de"
+      "name": "Metal Stack",
+      "url": "https://metal-stack.io"
     },
     "description": "Resource for managing pure metal",
     "license": {
@@ -5722,16 +5724,20 @@
       "name": "image"
     },
     {
+      "description": "Managing network entities",
+      "name": "network"
+    },
+    {
       "description": "Managing ip entities",
       "name": "ip"
     },
     {
-      "description": "Managing machine entities",
-      "name": "machine"
+      "description": "Managing size entities",
+      "name": "size"
     },
     {
-      "description": "Managing network entities",
-      "name": "network"
+      "description": "Managing machine entities",
+      "name": "machine"
     },
     {
       "description": "Managing partition entities",
@@ -5740,10 +5746,6 @@
     {
       "description": "Managing project entities",
       "name": "project"
-    },
-    {
-      "description": "Managing size entities",
-      "name": "size"
     },
     {
       "description": "Managing switch entities",
