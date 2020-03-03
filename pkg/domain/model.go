@@ -22,6 +22,7 @@ const (
 	MachineOffCmd            MachineCommand = "OFF"
 	MachineResetCmd          MachineCommand = "RESET"
 	MachineBiosCmd           MachineCommand = "BIOS"
+	MachineAbortReinstall    MachineCommand = "ABORT-REINSTALL"
 	ChassisIdentifyLEDOnCmd  MachineCommand = "LED-ON"
 	ChassisIdentifyLEDOffCmd MachineCommand = "LED-OFF"
 )
@@ -62,7 +63,7 @@ type APIClient interface {
 	RegisterMachine(machineID string, request *MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse)
 	InstallImage(machineID string) (int, *models.V1MachineResponse)
 	IPMIConfig(machineID string) (*IPMIConfig, error)
-	FinalizeAllocation(machineID, consolePassword, primaryDisk, osPartition string) (*machine.FinalizeAllocationOK, error)
+	FinalizeAllocation(machineID, consolePassword string, report *Report) (*machine.FinalizeAllocationOK, error)
 	RegisterSwitch() (*models.V1SwitchResponse, error)
 	ConstantlyPhoneHome()
 	SetChassisIdentifyLEDStateOn(machineID, description string) error
@@ -78,7 +79,6 @@ type EndpointHandler interface {
 	NewMachineService() *restful.WebService
 
 	FindMachine(request *restful.Request, response *restful.Response)
-	AbortReinstall(request *restful.Request, response *restful.Response)
 	Boot(request *restful.Request, response *restful.Response)
 	Install(request *restful.Request, response *restful.Response)
 	Register(request *restful.Request, response *restful.Response)
@@ -91,6 +91,7 @@ type EventHandler interface {
 	PowerOffMachine(machineID string)
 	PowerResetMachine(machineID string)
 	BootBiosMachine(machineID string)
+	AbortReinstallMachine(machineID string)
 
 	PowerOnChassisIdentifyLED(machineID, description string)
 	PowerOffChassisIdentifyLED(machineID, description string)

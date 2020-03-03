@@ -78,7 +78,7 @@ func (a *apiHandlerCoreTest) FindPartition(id string) (*models.V1PartitionRespon
 	return nil, nil
 }
 
-func (a *apiHandlerCoreTest) FinalizeAllocation(machineID, consolePassword, primaryDisk, osPartition string) (*machine.FinalizeAllocationOK, error) {
+func (a *apiHandlerCoreTest) FinalizeAllocation(machineID, consolePassword string, report *domain.Report) (*machine.FinalizeAllocationOK, error) {
 	return nil, nil
 }
 

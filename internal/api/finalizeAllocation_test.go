@@ -65,18 +65,25 @@ func TestFinalizeAllocation_OK(t *testing.T) {
 
 	machineID := "fakemachineID"
 	passwd := "password"
-	primaryDisk := "primaryDisk"
-	osPartition := "osPartition"
 
 	// WHEN
-	ok, err := ctx.APIClient().FinalizeAllocation(machineID, passwd, primaryDisk, osPartition)
+	ok, err := ctx.APIClient().FinalizeAllocation(machineID, passwd, &domain.Report{
+		Success:         false,
+		Message:         "",
+		ConsolePassword: "",
+		Disks:           nil,
+		PrimaryDisk:     "",
+		OSPartition:     "",
+		Initrd:          "",
+		Cmdline:         "",
+		Kernel:          "",
+		BootloaderID:    "",
+	})
 
 	// THEN
 	require.Nil(t, err)
 	require.Equal(t, machineID, *ok.Payload.ID)
 	require.Equal(t, passwd, ok.Payload.Allocation.ConsolePassword)
-	require.Equal(t, primaryDisk, *ok.Payload.Hardware.Disks[0].Name)
-	require.Equal(t, osPartition, *ok.Payload.Hardware.Disks[0].Partitions[0].Device)
 }
 
 func TestFinalizeAllocation_NOK(t *testing.T) {
@@ -94,7 +101,18 @@ func TestFinalizeAllocation_NOK(t *testing.T) {
 	passwd := "password"
 
 	// WHEN
-	_, err := ctx.APIClient().FinalizeAllocation(machineID, passwd, "", "")
+	_, err := ctx.APIClient().FinalizeAllocation(machineID, passwd, &domain.Report{
+		Success:         false,
+		Message:         "",
+		ConsolePassword: "",
+		Disks:           nil,
+		PrimaryDisk:     "",
+		OSPartition:     "",
+		Initrd:          "",
+		Cmdline:         "",
+		Kernel:          "",
+		BootloaderID:    "",
+	})
 
 	// THEN
 	require.Error(t, err)

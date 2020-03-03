@@ -3,15 +3,20 @@ package api
 import (
 	"github.com/metal-stack/metal-core/client/machine"
 	"github.com/metal-stack/metal-core/models"
+	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 )
 
-func (c *apiClient) FinalizeAllocation(machineID, consolePassword, primaryDisk, osPartition string) (*machine.FinalizeAllocationOK, error) {
+func (c *apiClient) FinalizeAllocation(machineID, consolePassword string, report *domain.Report) (*machine.FinalizeAllocationOK, error) {
 	body := &models.V1MachineFinalizeAllocationRequest{
 		ConsolePassword: &consolePassword,
-		Primarydisk:     &primaryDisk,
-		Ospartition:     &osPartition,
+		Primarydisk:     &report.PrimaryDisk,
+		Ospartition:     &report.OSPartition,
+		Initrd:          &report.Initrd,
+		Cmdline:         &report.Cmdline,
+		Kernel:          &report.Kernel,
+		Bootloaderid:    &report.BootloaderID,
 	}
 	params := machine.NewFinalizeAllocationParams()
 	params.ID = machineID

@@ -35,7 +35,11 @@ func Create() *Server {
 		zap.Any("version", v.V),
 	)
 
+	devMode := strings.Contains(cfg.PartitionID, "vagrant")
+	devMode = false //TODO
+
 	zapup.MustRootLogger().Info("Configuration",
+		zap.Bool("DevMode", devMode),
 		zap.String("CIDR", cfg.CIDR),
 		zap.String("PartitionID", cfg.PartitionID),
 		zap.String("RackID", cfg.RackID),
@@ -70,7 +74,7 @@ func Create() *Server {
 			MachineClient:   machine.New(transport, strfmt.Default),
 			PartitionClient: partition.New(transport, strfmt.Default),
 			SwitchClient:    sw.New(transport, strfmt.Default),
-			DevMode:         cfg.PartitionID == "vagrant-lab",
+			DevMode:         devMode,
 		},
 	}
 	app.SetAPIClient(api.NewClient)
