@@ -6,7 +6,7 @@ hostname {{ .Name }}
 username cumulus nopassword
 service integrated-vtysh-config
 !
-log syslog debugging
+log syslog {{ .LogLevel }}
 debug bgp updates
 debug bgp nht
 debug bgp update-groups
