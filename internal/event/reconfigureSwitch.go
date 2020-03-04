@@ -20,6 +20,7 @@ import (
 func buildSwitcherConfig(conf *domain.Config, s *models.V1SwitchResponse) (*switcher.Conf, error) {
 	c := &switcher.Conf{}
 	c.Name = s.Name
+	c.LogLevel = mapLogLevel(conf.LogLevel)
 	asn64, err := strconv.ParseUint(conf.ASN, 10, 32)
 	asn := uint32(asn64)
 	if err != nil {
@@ -90,6 +91,23 @@ func buildSwitcherConfig(conf *domain.Config, s *models.V1SwitchResponse) (*swit
 		return nil, err
 	}
 	return c, nil
+}
+
+// mapLogLevel maps the metal-core log level to an appropriate FRR log level
+// http://docs.frrouting.org/en/latest/basic.html#clicmd-[no]logsyslog[LEVEL]
+func mapLogLevel(level string) string {
+	switch strings.ToLower(level) {
+	case "debug":
+		return "debugging"
+	case "info":
+		return "informational"
+	case "warn":
+		return "warnings"
+	case "error":
+		return "errors"
+	default:
+		return "warnings"
+	}
 }
 
 var mux sync.Mutex

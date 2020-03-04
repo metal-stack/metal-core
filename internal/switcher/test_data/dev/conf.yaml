@@ -1,5 +1,6 @@
 ---
 name: leaf01
+loglevel: warnings
 loopback: 10.0.0.10
 asn: 4200000010
 metalcorecidr: 10.255.255.2/24

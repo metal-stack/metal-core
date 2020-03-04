@@ -1,5 +1,6 @@
 ---
 name: leaf01
+loglevel: warnings
 loopback: 10.0.0.10
 asn: 4200000010
 devmode: true

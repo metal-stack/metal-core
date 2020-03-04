@@ -5,6 +5,7 @@ import "fmt"
 // Conf holds the switch configuration
 type Conf struct {
 	Name                 string
+	LogLevel             string
 	Loopback             string
 	ASN                  uint32
 	Ports                Ports
