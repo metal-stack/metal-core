@@ -36,7 +36,6 @@ func Create() *Server {
 	)
 
 	devMode := strings.Contains(cfg.PartitionID, "vagrant")
-	devMode = false //TODO
 
 	zapup.MustRootLogger().Info("Configuration",
 		zap.Bool("DevMode", devMode),

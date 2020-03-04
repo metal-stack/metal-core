@@ -54,31 +54,31 @@ func (s *Server) initConsumer() error {
 			)
 			switch evt.Type {
 			case domain.Delete:
-				s.EventHandler().FreeMachine(*evt.Old.ID)
+				s.EventHandler().FreeMachine(evt.Old.ID)
 			case domain.Command:
 				switch evt.Cmd.Command {
 				case domain.MachineOnCmd:
-					s.EventHandler().PowerOnMachine(*evt.Cmd.Target.ID)
+					s.EventHandler().PowerOnMachine(evt.Cmd.Target.ID)
 				case domain.MachineOffCmd:
-					s.EventHandler().PowerOffMachine(*evt.Cmd.Target.ID)
+					s.EventHandler().PowerOffMachine(evt.Cmd.Target.ID)
 				case domain.MachineResetCmd:
-					s.EventHandler().PowerResetMachine(*evt.Cmd.Target.ID)
+					s.EventHandler().PowerResetMachine(evt.Cmd.Target.ID)
 				case domain.MachineBiosCmd:
-					s.EventHandler().BootBiosMachine(*evt.Cmd.Target.ID)
+					s.EventHandler().BootBiosMachine(evt.Cmd.Target.ID)
 				case domain.MachineAbortReinstall:
-					s.EventHandler().AbortReinstallMachine(*evt.Cmd.Target.ID)
+					s.EventHandler().AbortReinstallMachine(evt.Cmd.Target.ID)
 				case domain.ChassisIdentifyLEDOnCmd:
 					description := strings.TrimSpace(strings.Join(evt.Cmd.Params, " "))
 					if len(description) == 0 {
 						description = "unknown"
 					}
-					s.EventHandler().PowerOnChassisIdentifyLED(*evt.Cmd.Target.ID, description)
+					s.EventHandler().PowerOnChassisIdentifyLED(evt.Cmd.Target.ID, description)
 				case domain.ChassisIdentifyLEDOffCmd:
 					description := strings.TrimSpace(strings.Join(evt.Cmd.Params, " "))
 					if len(description) == 0 {
 						description = "unknown"
 					}
-					s.EventHandler().PowerOffChassisIdentifyLED(*evt.Cmd.Target.ID, description)
+					s.EventHandler().PowerOffChassisIdentifyLED(evt.Cmd.Target.ID, description)
 				default:
 					zapup.MustRootLogger().Warn("Unhandled command",
 						zap.String("topic", s.Config.MachineTopic),
@@ -122,7 +122,7 @@ func (s *Server) initConsumer() error {
 			switch evt.Type {
 			case domain.Update:
 				for _, sw := range evt.Switches {
-					sid := *sw.ID
+					sid := sw.ID
 					if sid == hostname {
 						err := s.EventHandler().ReconfigureSwitch(sid)
 						if err != nil {
