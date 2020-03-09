@@ -1,13 +1,14 @@
 package metalcore
 
 import (
+	"os"
+	"strings"
+	"time"
+
 	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-lib/bus"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
-	"os"
-	"strings"
-	"time"
 )
 
 // timeout for the nsq handler methods
@@ -31,6 +32,21 @@ func mapLogLevel(level string) bus.Level {
 func timeoutHandler(err bus.TimeoutError) error {
 	zapup.MustRootLogger().Error("Timeout processing event", zap.Any("event", err.Event()))
 	return nil
+}
+
+func (s *Server) initSwitchReconfiguration() {
+	// periodically trigger switch reconfiguration
+	t := time.NewTicker(s.AppContext.Config.ReconfigureSwitchInterval)
+	host, _ := os.Hostname()
+	go func() {
+		for range t.C {
+			s.EventHandler().TriggerSwitchReconfigure(host, "periodic")
+		}
+	}()
+
+	go func() {
+		s.EventHandler().ConsumeSwitchReconfigureEvents()
+	}()
 }
 
 func (s *Server) initConsumer() error {
@@ -98,12 +114,12 @@ func (s *Server) initConsumer() error {
 		return err
 	}
 
-	hostname, _ := os.Hostname()
-
 	c, err = bus.NewConsumer(zapup.MustRootLogger(), tlsCfg, s.Config.MQAddress)
 	if err != nil {
 		return nil
 	}
+
+	hostname, _ := os.Hostname()
 
 	err = c.With(bus.LogLevel(mapLogLevel(s.Config.MQLogLevel))).
 		// the hostname is used here as channel name
@@ -119,21 +135,7 @@ func (s *Server) initConsumer() error {
 			)
 			switch evt.Type {
 			case domain.Update:
-				for _, sw := range evt.Switches {
-					sid := *sw.ID
-					if sid == hostname {
-						err := s.EventHandler().ReconfigureSwitch(sid)
-						if err != nil {
-							zapup.MustRootLogger().Error("could not fetch and apply switch configuration", zap.Error(err))
-						}
-						return nil
-					}
-				}
-				zapup.MustRootLogger().Debug("Skip event because it is not intended for this switch",
-					zap.Any("Machine", evt.Machine),
-					zap.Any("Switches", evt.Switches),
-					zap.String("Hostname", hostname),
-				)
+				s.EventHandler().TriggerSwitchReconfigure(hostname, "nsq switch-event")
 			default:
 				zapup.MustRootLogger().Warn("Unhandled event",
 					zap.String("topic", s.Config.SwitchTopic),

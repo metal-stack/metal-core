@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"time"
+
+	httppprof "net/http/pprof"
 
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-core/internal/endpoint"
 	"github.com/metal-stack/metal-lib/zapup"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	httppprof "net/http/pprof"
 
 	"go.uber.org/zap"
 )
@@ -19,18 +19,6 @@ func (s *coreServer) Run() {
 	s.initMetrics()
 
 	Init(endpoint.NewHandler(s.AppContext))
-	t := time.NewTicker(s.AppContext.Config.ReconfigureSwitchInterval)
-	host, _ := os.Hostname()
-	go func() {
-		for range t.C {
-			zapup.MustRootLogger().Info("start periodic switch configuration update")
-			err := s.EventHandler().ReconfigureSwitch(host)
-			if err != nil {
-				zapup.MustRootLogger().Error("unable to fetch and apply switch configuration periodically",
-					zap.Error(err))
-			}
-		}
-	}()
 
 	// enable CORS for the UI to work
 	cors := restful.CrossOriginResourceSharing{

@@ -2,6 +2,9 @@ package metalcore
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 	"github.com/kelseyhightower/envconfig"
@@ -16,8 +19,6 @@ import (
 	"github.com/metal-stack/metal-lib/zapup"
 	"github.com/metal-stack/v"
 	"go.uber.org/zap"
-	"os"
-	"strings"
 )
 
 func Create() *Server {
@@ -95,21 +96,7 @@ func Create() *Server {
 		os.Exit(1)
 	}
 
-	host, err := os.Hostname()
-	if err != nil {
-		zapup.MustRootLogger().Fatal("failed to detect hostname",
-			zap.Error(err),
-		)
-		os.Exit(1)
-	}
-	err = app.EventHandler().ReconfigureSwitch(host)
-	if err != nil {
-		zapup.MustRootLogger().Fatal("failed to fetch and apply current switch configuration",
-			zap.Error(err),
-		)
-		os.Exit(1)
-	}
-
+	app.initSwitchReconfiguration()
 	app.APIClient().ConstantlyPhoneHome()
 
 	app.BootConfig = &domain.BootConfig{
