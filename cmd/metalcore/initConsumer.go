@@ -110,5 +110,25 @@ func (s *Server) initConsumer() error {
 			return nil
 		}, 5, bus.Timeout(receiverHandlerTimeout, timeoutHandler), bus.TTL(time.Duration(s.Config.MachineTopicTTL)*time.Millisecond))
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	c, err = bus.NewConsumer(zapup.MustRootLogger(), tlsCfg, s.Config.MQAddress)
+	if err != nil {
+		return nil
+	}
+
+	hostname, _ := os.Hostname()
+	return c.With(bus.LogLevel(mapLogLevel(s.Config.MQLogLevel))).
+		MustRegister(s.Config.SwitchTopic, hostname).
+		Consume(domain.SwitchEvent{}, func(message interface{}) error {
+			evt := message.(*domain.SwitchEvent)
+			zapup.MustRootLogger().Debug("Ignoring message",
+				zap.String("topic", s.Config.SwitchTopic),
+				zap.String("channel", hostname),
+				zap.Any("event", evt),
+			)
+			return nil
+		}, 1, bus.Timeout(receiverHandlerTimeout, timeoutHandler), bus.TTL(time.Duration(s.Config.SwitchTopicTTL)*time.Millisecond))
 }
