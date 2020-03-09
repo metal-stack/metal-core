@@ -48,7 +48,7 @@ func (h *noopEventHandler) PowerOffChassisIdentifyLED(machineID, description str
 
 func (h *noopEventHandler) TriggerSwitchReconfigure(switchName, eventType string) {}
 
-func (h *noopEventHandler) ConsumeSwitchReconfigureEvents() {}
+func (h *noopEventHandler) ReconfigureSwitch() {}
 
 func mockAPIEndpoint(apiClient func(ctx *domain.AppContext) domain.APIClient) domain.EndpointHandler {
 	_ = os.Setenv(zapup.KeyLogLevel, "info")

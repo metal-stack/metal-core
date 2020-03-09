@@ -35,18 +35,7 @@ func timeoutHandler(err bus.TimeoutError) error {
 }
 
 func (s *Server) initSwitchReconfiguration() {
-	// periodically trigger switch reconfiguration
-	go func() {
-		t := time.NewTicker(s.AppContext.Config.ReconfigureSwitchInterval)
-		host, _ := os.Hostname()
-		for range t.C {
-			s.EventHandler().TriggerSwitchReconfigure(host, "periodic")
-		}
-	}()
-
-	go func() {
-		s.EventHandler().ConsumeSwitchReconfigureEvents()
-	}()
+	go s.EventHandler().ReconfigureSwitch()
 }
 
 func (s *Server) initConsumer() error {

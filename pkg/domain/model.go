@@ -91,8 +91,7 @@ type EventHandler interface {
 	PowerOnChassisIdentifyLED(machineID, description string)
 	PowerOffChassisIdentifyLED(machineID, description string)
 
-	TriggerSwitchReconfigure(switchName, eventType string)
-	ConsumeSwitchReconfigureEvents()
+	ReconfigureSwitch()
 }
 
 type Config struct {

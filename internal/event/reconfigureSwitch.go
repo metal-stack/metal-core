@@ -2,8 +2,10 @@ package event
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	sw "github.com/metal-stack/metal-core/client/switch_operations"
 	"github.com/metal-stack/metal-core/internal/switcher"
@@ -16,19 +18,15 @@ import (
 	"go.uber.org/zap"
 )
 
-// TriggerSwitchReconfigure triggers a switch reconfiguration
-func (h *eventHandler) TriggerSwitchReconfigure(switchName, eventType string) {
-	e := newSwitchReconfigureEvent(switchName, eventType)
-	h.sr <- e
-}
-
-// ConsumeSwitchReconfigureEvents consumes the messages on the switch reconfiguration channel and debounces events
-func (h *eventHandler) ConsumeSwitchReconfigureEvents() {
-	for sre := range h.sr {
-		zapup.MustRootLogger().Info("consuming event", zap.Any("sre", sre))
-		err := h.reconfigureSwitch(sre.switchName)
+// ReconfigureSwitch reconfigures the switch.
+func (h *eventHandler) ReconfigureSwitch() {
+	t := time.NewTicker(h.AppContext.Config.ReconfigureSwitchInterval)
+	host, _ := os.Hostname()
+	for range t.C {
+		zapup.MustRootLogger().Info("trigger reconfiguration")
+		err := h.reconfigureSwitch(host)
 		if err != nil {
-			zapup.MustRootLogger().Error("failed to reconfigure switch", zap.Any("sre", sre), zap.Error(err))
+			zapup.MustRootLogger().Error("failed to reconfigure switch", zap.Error(err))
 		}
 	}
 }
@@ -58,10 +56,15 @@ func (h *eventHandler) reconfigureSwitch(switchName string) error {
 		zapup.MustRootLogger().Debug("Skip config application because of environment setting")
 		return nil
 	}
+
+	start := time.Now()
 	err = c.Apply()
 	if err != nil {
 		return errors.Wrap(err, "could not apply switch config")
 	}
+	elapsed := time.Since(start)
+	zapup.MustRootLogger().Info("switch reconfigure took", zap.Duration("elapsed", elapsed))
+
 	return nil
 }
 
