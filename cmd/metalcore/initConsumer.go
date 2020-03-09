@@ -1,13 +1,14 @@
 package metalcore
 
 import (
+	"os"
+	"strings"
+	"time"
+
 	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-lib/bus"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
-	"os"
-	"strings"
-	"time"
 )
 
 // timeout for the nsq handler methods
@@ -31,6 +32,21 @@ func mapLogLevel(level string) bus.Level {
 func timeoutHandler(err bus.TimeoutError) error {
 	zapup.MustRootLogger().Error("Timeout processing event", zap.Any("event", err.Event()))
 	return nil
+}
+
+func (s *Server) initSwitchReconfiguration() {
+	// periodically trigger switch reconfiguration
+	go func() {
+		t := time.NewTicker(s.AppContext.Config.ReconfigureSwitchInterval)
+		host, _ := os.Hostname()
+		for range t.C {
+			s.EventHandler().TriggerSwitchReconfigure(host, "periodic")
+		}
+	}()
+
+	go func() {
+		s.EventHandler().ConsumeSwitchReconfigureEvents()
+	}()
 }
 
 func (s *Server) initConsumer() error {
@@ -98,51 +114,21 @@ func (s *Server) initConsumer() error {
 		return err
 	}
 
-	hostname, _ := os.Hostname()
-
 	c, err = bus.NewConsumer(zapup.MustRootLogger(), tlsCfg, s.Config.MQAddress)
 	if err != nil {
 		return nil
 	}
 
-	err = c.With(bus.LogLevel(mapLogLevel(s.Config.MQLogLevel))).
-		// the hostname is used here as channel name
-		// this is intended so that messages in the switch topics get replicated
-		// to all channels leaf01, leaf02
+	hostname, _ := os.Hostname()
+	return c.With(bus.LogLevel(mapLogLevel(s.Config.MQLogLevel))).
 		MustRegister(s.Config.SwitchTopic, hostname).
 		Consume(domain.SwitchEvent{}, func(message interface{}) error {
 			evt := message.(*domain.SwitchEvent)
-			zapup.MustRootLogger().Debug("Got message",
+			zapup.MustRootLogger().Debug("Ignoring message",
 				zap.String("topic", s.Config.SwitchTopic),
 				zap.String("channel", hostname),
 				zap.Any("event", evt),
 			)
-			switch evt.Type {
-			case domain.Update:
-				for _, sw := range evt.Switches {
-					sid := *sw.ID
-					if sid == hostname {
-						err := s.EventHandler().ReconfigureSwitch(sid)
-						if err != nil {
-							zapup.MustRootLogger().Error("could not fetch and apply switch configuration", zap.Error(err))
-						}
-						return nil
-					}
-				}
-				zapup.MustRootLogger().Debug("Skip event because it is not intended for this switch",
-					zap.Any("Machine", evt.Machine),
-					zap.Any("Switches", evt.Switches),
-					zap.String("Hostname", hostname),
-				)
-			default:
-				zapup.MustRootLogger().Warn("Unhandled event",
-					zap.String("topic", s.Config.SwitchTopic),
-					zap.String("channel", hostname),
-					zap.Any("event", evt),
-				)
-			}
 			return nil
 		}, 1, bus.Timeout(receiverHandlerTimeout, timeoutHandler), bus.TTL(time.Duration(s.Config.SwitchTopicTTL)*time.Millisecond))
-
-	return err
 }

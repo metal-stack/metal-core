@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"sync"
 
 	sw "github.com/metal-stack/metal-core/client/switch_operations"
 	"github.com/metal-stack/metal-core/internal/switcher"
@@ -16,6 +15,55 @@ import (
 	"github.com/vishvananda/netlink"
 	"go.uber.org/zap"
 )
+
+// TriggerSwitchReconfigure triggers a switch reconfiguration
+func (h *eventHandler) TriggerSwitchReconfigure(switchName, eventType string) {
+	e := newSwitchReconfigureEvent(switchName, eventType)
+	h.sr <- e
+}
+
+// ConsumeSwitchReconfigureEvents consumes the messages on the switch reconfiguration channel and debounces events
+func (h *eventHandler) ConsumeSwitchReconfigureEvents() {
+	for sre := range h.sr {
+		zapup.MustRootLogger().Info("consuming event", zap.Any("sre", sre))
+		err := h.reconfigureSwitch(sre.switchName)
+		if err != nil {
+			zapup.MustRootLogger().Error("failed to reconfigure switch", zap.Any("sre", sre), zap.Error(err))
+		}
+	}
+}
+
+func (h *eventHandler) reconfigureSwitch(switchName string) error {
+	params := sw.NewFindSwitchParams()
+	params.ID = switchName
+	fsr, err := h.SwitchClient.FindSwitch(params, h.Auth)
+	if err != nil {
+		return errors.Wrap(err, "could not fetch switch from metal-api")
+	}
+
+	s := fsr.Payload
+	c, err := buildSwitcherConfig(h.Config, s)
+	if err != nil {
+		return errors.Wrap(err, "could not build switcher config")
+	}
+
+	err = fillEth0Info(c, h.Config.ManagementGateway, h.DevMode)
+	if err != nil {
+		return errors.Wrap(err, "could not gather information about eth0 nic")
+	}
+
+	zapup.MustRootLogger().Info("Assembled new config for switch",
+		zap.Any("config", c))
+	if !h.Config.ReconfigureSwitch {
+		zapup.MustRootLogger().Debug("Skip config application because of environment setting")
+		return nil
+	}
+	err = c.Apply()
+	if err != nil {
+		return errors.Wrap(err, "could not apply switch config")
+	}
+	return nil
+}
 
 func buildSwitcherConfig(conf *domain.Config, s *models.V1SwitchResponse) (*switcher.Conf, error) {
 	c := &switcher.Conf{}
@@ -108,42 +156,6 @@ func mapLogLevel(level string) string {
 	default:
 		return "warnings"
 	}
-}
-
-var mux sync.Mutex
-
-func (h *eventHandler) ReconfigureSwitch(switchID string) error {
-	mux.Lock()
-	defer mux.Unlock()
-	params := sw.NewFindSwitchParams()
-	params.ID = switchID
-	fsr, err := h.SwitchClient.FindSwitch(params, h.Auth)
-	if err != nil {
-		return errors.Wrap(err, "could not fetch switch from metal-api")
-	}
-
-	s := fsr.Payload
-	c, err := buildSwitcherConfig(h.Config, s)
-	if err != nil {
-		return errors.Wrap(err, "could not build switcher config")
-	}
-
-	err = fillEth0Info(c, h.Config.ManagementGateway, h.DevMode)
-	if err != nil {
-		return errors.Wrap(err, "could not gather information about eth0 nic")
-	}
-
-	zapup.MustRootLogger().Info("Assembled new config for switch",
-		zap.Any("config", c))
-	if !h.Config.ReconfigureSwitch {
-		zapup.MustRootLogger().Debug("Skip config application because of environment setting")
-		return nil
-	}
-	err = c.Apply()
-	if err != nil {
-		return errors.Wrap(err, "could not apply switch config")
-	}
-	return nil
 }
 
 func fillEth0Info(c *switcher.Conf, gw string, devMode bool) error {
