@@ -116,8 +116,6 @@ type Config struct {
 	MQLogLevel                string        `required:"false" default:"info" desc:"sets the MQ loglevel (debug, info, warn, error)" envconfig:"mq_loglevel"`
 	MachineTopic              string        `required:"false" default:"machine" desc:"set the machine topic name" split_words:"true"`
 	MachineTopicTTL           int           `required:"false" default:"30000" desc:"sets the TTL in milliseconds for MachineTopic" envconfig:"machine_topic_ttl"`
-	SwitchTopic               string        `required:"false" default:"switch" desc:"set the switch topic name" split_words:"true"`
-	SwitchTopicTTL            int           `required:"false" default:"30000" desc:"sets the TTL in milliseconds for SwitchTopic" envconfig:"switch_topic_ttl"`
 	LoopbackIP                string        `required:"false" default:"10.0.0.11" desc:"set the loopback ip address that is used with BGP unnumbered" split_words:"true"`
 	ASN                       string        `required:"false" default:"420000011" desc:"set the ASN that is used with BGP"`
 	SpineUplinks              string        `required:"false" default:"swp31,swp32" desc:"set the ports that are connected to spines" split_words:"true"`

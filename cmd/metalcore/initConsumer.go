@@ -36,9 +36,9 @@ func timeoutHandler(err bus.TimeoutError) error {
 
 func (s *Server) initSwitchReconfiguration() {
 	// periodically trigger switch reconfiguration
-	t := time.NewTicker(s.AppContext.Config.ReconfigureSwitchInterval)
-	host, _ := os.Hostname()
 	go func() {
+		t := time.NewTicker(s.AppContext.Config.ReconfigureSwitchInterval)
+		host, _ := os.Hostname()
 		for range t.C {
 			s.EventHandler().TriggerSwitchReconfigure(host, "periodic")
 		}
@@ -109,42 +109,6 @@ func (s *Server) initConsumer() error {
 			}
 			return nil
 		}, 5, bus.Timeout(receiverHandlerTimeout, timeoutHandler), bus.TTL(time.Duration(s.Config.MachineTopicTTL)*time.Millisecond))
-
-	if err != nil {
-		return err
-	}
-
-	c, err = bus.NewConsumer(zapup.MustRootLogger(), tlsCfg, s.Config.MQAddress)
-	if err != nil {
-		return nil
-	}
-
-	hostname, _ := os.Hostname()
-
-	err = c.With(bus.LogLevel(mapLogLevel(s.Config.MQLogLevel))).
-		// the hostname is used here as channel name
-		// this is intended so that messages in the switch topics get replicated
-		// to all channels leaf01, leaf02
-		MustRegister(s.Config.SwitchTopic, hostname).
-		Consume(domain.SwitchEvent{}, func(message interface{}) error {
-			evt := message.(*domain.SwitchEvent)
-			zapup.MustRootLogger().Debug("Got message",
-				zap.String("topic", s.Config.SwitchTopic),
-				zap.String("channel", hostname),
-				zap.Any("event", evt),
-			)
-			switch evt.Type {
-			case domain.Update:
-				s.EventHandler().TriggerSwitchReconfigure(hostname, "nsq switch-event")
-			default:
-				zapup.MustRootLogger().Warn("Unhandled event",
-					zap.String("topic", s.Config.SwitchTopic),
-					zap.String("channel", hostname),
-					zap.Any("event", evt),
-				)
-			}
-			return nil
-		}, 1, bus.Timeout(receiverHandlerTimeout, timeoutHandler), bus.TTL(time.Duration(s.Config.SwitchTopicTTL)*time.Millisecond))
 
 	return err
 }

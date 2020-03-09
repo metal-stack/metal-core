@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	sw "github.com/metal-stack/metal-core/client/switch_operations"
 	"github.com/metal-stack/metal-core/internal/switcher"
@@ -25,26 +24,11 @@ func (h *eventHandler) TriggerSwitchReconfigure(switchName, eventType string) {
 
 // ConsumeSwitchReconfigureEvents consumes the messages on the switch reconfiguration channel and debounces events
 func (h *eventHandler) ConsumeSwitchReconfigureEvents() {
-
-consumeEvents:
-	for {
-		sre := <-h.sr
+	for sre := range h.sr {
 		zapup.MustRootLogger().Info("consuming event", zap.Any("sre", sre))
-		err := h.reconfigureSwitch(sre.switchName)q
+		err := h.reconfigureSwitch(sre.switchName)
 		if err != nil {
 			zapup.MustRootLogger().Error("failed to reconfigure switch", zap.Any("sre", sre), zap.Error(err))
-			// notice: there is no continue here - otherwise we would get a mass of errors in case of a failed reconfiguration
-		}
-
-		// skip incoming events at sr channel for the next seconds
-		t := time.NewTimer(h.Config.ReconfigureSwitchInterval)
-		for {
-			select {
-			case sre = <-h.sr: // skip events
-				zapup.MustRootLogger().Info("skip event", zap.Any("sre", sre))
-			case <-t.C:
-				continue consumeEvents
-			}
 		}
 	}
 }

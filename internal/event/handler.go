@@ -25,5 +25,5 @@ func newSwitchReconfigureEvent(switchName, eventType string) switchReconfigureEv
 }
 
 func NewHandler(ctx *domain.AppContext) domain.EventHandler {
-	return &eventHandler{ctx, make(chan switchReconfigureEvent, 50)}
+	return &eventHandler{ctx, make(chan switchReconfigureEvent)}
 }
