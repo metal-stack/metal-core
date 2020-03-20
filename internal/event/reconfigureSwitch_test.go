@@ -50,6 +50,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, actual)
 	expected := &switcher.Conf{
+		LogLevel:      "warnings",
 		Loopback:      "10.0.0.1",
 		MetalCoreCIDR: "10.255.255.2/24",
 		ASN:           420000001,

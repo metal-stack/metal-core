@@ -1,6 +1,8 @@
 package event
 
-import "github.com/metal-stack/metal-core/pkg/domain"
+import (
+	"github.com/metal-stack/metal-core/pkg/domain"
+)
 
 type eventHandler struct {
 	*domain.AppContext

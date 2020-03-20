@@ -5,7 +5,6 @@ import (
 	"github.com/metal-stack/metal-lib/bus"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
-	"os"
 	"strings"
 	"time"
 )
@@ -33,6 +32,10 @@ func timeoutHandler(err bus.TimeoutError) error {
 	return nil
 }
 
+func (s *Server) initSwitchReconfiguration() {
+	go s.EventHandler().ReconfigureSwitch()
+}
+
 func (s *Server) initConsumer() error {
 	tlsCfg := &bus.TLSConfig{
 		CACertFile:     s.Config.MQCACertFile,
@@ -54,33 +57,33 @@ func (s *Server) initConsumer() error {
 			)
 			switch evt.Type {
 			case domain.Delete:
-				s.EventHandler().FreeMachine(evt.Old.ID)
+				s.EventHandler().FreeMachine(*evt.Old.ID)
 			case domain.Command:
 				switch evt.Cmd.Command {
 				case domain.MachineOnCmd:
-					s.EventHandler().PowerOnMachine(evt.Cmd.Target.ID)
+					s.EventHandler().PowerOnMachine(*evt.Cmd.Target.ID)
 				case domain.MachineOffCmd:
-					s.EventHandler().PowerOffMachine(evt.Cmd.Target.ID)
+					s.EventHandler().PowerOffMachine(*evt.Cmd.Target.ID)
 				case domain.MachineResetCmd:
-					s.EventHandler().PowerResetMachine(evt.Cmd.Target.ID)
+					s.EventHandler().PowerResetMachine(*evt.Cmd.Target.ID)
 				case domain.MachineBiosCmd:
-					s.EventHandler().BootBiosMachine(evt.Cmd.Target.ID)
+					s.EventHandler().BootBiosMachine(*evt.Cmd.Target.ID)
 				case domain.MachineReinstall:
-					s.EventHandler().ReinstallMachine(evt.Cmd.Target.ID)
+					s.EventHandler().ReinstallMachine(*evt.Cmd.Target.ID)
 				case domain.MachineAbortReinstall:
-					s.EventHandler().AbortReinstallMachine(evt.Cmd.Target.ID)
+					s.EventHandler().AbortReinstallMachine(*evt.Cmd.Target.ID)
 				case domain.ChassisIdentifyLEDOnCmd:
 					description := strings.TrimSpace(strings.Join(evt.Cmd.Params, " "))
 					if len(description) == 0 {
 						description = "unknown"
 					}
-					s.EventHandler().PowerOnChassisIdentifyLED(evt.Cmd.Target.ID, description)
+					s.EventHandler().PowerOnChassisIdentifyLED(*evt.Cmd.Target.ID, description)
 				case domain.ChassisIdentifyLEDOffCmd:
 					description := strings.TrimSpace(strings.Join(evt.Cmd.Params, " "))
 					if len(description) == 0 {
 						description = "unknown"
 					}
-					s.EventHandler().PowerOffChassisIdentifyLED(evt.Cmd.Target.ID, description)
+					s.EventHandler().PowerOffChassisIdentifyLED(*evt.Cmd.Target.ID, description)
 				default:
 					zapup.MustRootLogger().Warn("Unhandled command",
 						zap.String("topic", s.Config.MachineTopic),
@@ -97,56 +100,6 @@ func (s *Server) initConsumer() error {
 			}
 			return nil
 		}, 5, bus.Timeout(receiverHandlerTimeout, timeoutHandler), bus.TTL(time.Duration(s.Config.MachineTopicTTL)*time.Millisecond))
-
-	if err != nil {
-		return err
-	}
-
-	hostname, _ := os.Hostname()
-
-	c, err = bus.NewConsumer(zapup.MustRootLogger(), tlsCfg, s.Config.MQAddress)
-	if err != nil {
-		return nil
-	}
-
-	err = c.With(bus.LogLevel(mapLogLevel(s.Config.MQLogLevel))).
-		// the hostname is used here as channel name
-		// this is intended so that messages in the switch topics get replicated
-		// to all channels leaf01, leaf02
-		MustRegister(s.Config.SwitchTopic, hostname).
-		Consume(domain.SwitchEvent{}, func(message interface{}) error {
-			evt := message.(*domain.SwitchEvent)
-			zapup.MustRootLogger().Debug("Got message",
-				zap.String("topic", s.Config.SwitchTopic),
-				zap.String("channel", hostname),
-				zap.Any("event", evt),
-			)
-			switch evt.Type {
-			case domain.Update:
-				for _, sw := range evt.Switches {
-					sid := sw.ID
-					if sid == hostname {
-						err := s.EventHandler().ReconfigureSwitch(sid)
-						if err != nil {
-							zapup.MustRootLogger().Error("could not fetch and apply switch configuration", zap.Error(err))
-						}
-						return nil
-					}
-				}
-				zapup.MustRootLogger().Debug("Skip event because it is not intended for this switch",
-					zap.Any("Machine", evt.Machine),
-					zap.Any("Switches", evt.Switches),
-					zap.String("Hostname", hostname),
-				)
-			default:
-				zapup.MustRootLogger().Warn("Unhandled event",
-					zap.String("topic", s.Config.SwitchTopic),
-					zap.String("channel", hostname),
-					zap.Any("event", evt),
-				)
-			}
-			return nil
-		}, 1, bus.Timeout(receiverHandlerTimeout, timeoutHandler), bus.TTL(time.Duration(s.Config.SwitchTopicTTL)*time.Millisecond))
 
 	return err
 }
