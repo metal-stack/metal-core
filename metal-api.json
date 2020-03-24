@@ -924,7 +924,7 @@
           "type": "string"
         },
         "reinstall": {
-          "$ref": "#/definitions/v1.MachineReinstall",
+          "$ref": "#/definitions/v1.MachineSetup",
           "description": "indicates whether to reinstall the machine (if not nil)"
         },
         "ssh_pub_keys": {
@@ -1639,30 +1639,6 @@
         "updated"
       ]
     },
-    "v1.MachineLivelinessReport": {
-      "properties": {
-        "alive_count": {
-          "description": "the number of machines alive",
-          "format": "int32",
-          "type": "integer"
-        },
-        "dead_count": {
-          "description": "the number of dead machines",
-          "format": "int32",
-          "type": "integer"
-        },
-        "unknown_count": {
-          "description": "the number of machines with unknown liveliness",
-          "format": "int32",
-          "type": "integer"
-        }
-      },
-      "required": [
-        "alive_count",
-        "dead_count",
-        "unknown_count"
-      ]
-    },
     "v1.MachineNetwork": {
       "description": "prefixes that are reachable within this network",
       "properties": {
@@ -1856,47 +1832,6 @@
         "uuid"
       ]
     },
-    "v1.MachineReinstall": {
-      "properties": {
-        "bootloaderid": {
-          "description": "the bootloader ID",
-          "type": "string"
-        },
-        "cmdline": {
-          "description": "the cmdline",
-          "type": "string"
-        },
-        "initrd": {
-          "description": "the initrd image",
-          "type": "string"
-        },
-        "kernel": {
-          "description": "the kernel",
-          "type": "string"
-        },
-        "old_image_id": {
-          "description": "the ID of the already existing OS image",
-          "type": "string"
-        },
-        "os_partition": {
-          "description": "device name of disk partition that has the OS installed",
-          "type": "string"
-        },
-        "primary_disk": {
-          "description": "device name of the disk that contains the partition on which the OS is installed",
-          "type": "string"
-        }
-      },
-      "required": [
-        "bootloaderid",
-        "cmdline",
-        "initrd",
-        "kernel",
-        "old_image_id",
-        "os_partition",
-        "primary_disk"
-      ]
-    },
     "v1.MachineReinstallRequest": {
       "properties": {
         "description": {
@@ -2015,6 +1950,47 @@
         "size",
         "state",
         "tags"
+      ]
+    },
+    "v1.MachineSetup": {
+      "properties": {
+        "bootloaderid": {
+          "description": "the bootloader ID",
+          "type": "string"
+        },
+        "cmdline": {
+          "description": "the cmdline",
+          "type": "string"
+        },
+        "initrd": {
+          "description": "the initrd image",
+          "type": "string"
+        },
+        "kernel": {
+          "description": "the kernel",
+          "type": "string"
+        },
+        "old_image_id": {
+          "description": "the ID of the already existing OS image",
+          "type": "string"
+        },
+        "os_partition": {
+          "description": "device name of disk partition that has the OS installed",
+          "type": "string"
+        },
+        "primary_disk": {
+          "description": "device name of the disk that contains the partition on which the OS is installed",
+          "type": "string"
+        }
+      },
+      "required": [
+        "bootloaderid",
+        "cmdline",
+        "initrd",
+        "kernel",
+        "old_image_id",
+        "os_partition",
+        "primary_disk"
       ]
     },
     "v1.MachineState": {
@@ -3817,45 +3793,6 @@
         ]
       }
     },
-    "/v1/machine/liveliness": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "operationId": "checkMachineLiveliness",
-        "parameters": [
-          {
-            "in": "body",
-            "name": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1.EmptyBody"
-            }
-          }
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/v1.MachineLivelinessReport"
-            }
-          },
-          "default": {
-            "description": "Error",
-            "schema": {
-              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
-            }
-          }
-        },
-        "summary": "external trigger for evaluating machine liveliness",
-        "tags": [
-          "machine"
-        ]
-      }
-    },
     "/v1/machine/register": {
       "post": {
         "consumes": [
@@ -4556,12 +4493,6 @@
             "description": "OK",
             "schema": {
               "$ref": "#/definitions/v1.MachineResponse"
-            }
-          },
-          "504": {
-            "description": "Timeout",
-            "schema": {
-              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
             }
           },
           "default": {
