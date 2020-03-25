@@ -29,39 +29,16 @@ const (
 )
 
 type MachineExecCommand struct {
-	Target  *models.V1MachineResponse `json:"target,omitempty"`
-	Command MachineCommand            `json:"cmd,omitempty"`
-	Params  []string                  `json:"params,omitempty"`
+	TargetMachineID string         `json:"target,omitempty"`
+	Command         MachineCommand `json:"cmd,omitempty"`
+	Params          []string       `json:"params,omitempty"`
 }
 
 type MachineEvent struct {
-	Type EventType                 `json:"type,omitempty"`
-	Old  *models.V1MachineResponse `json:"old,omitempty"`
-	New  *models.V1MachineResponse `json:"new,omitempty"`
-	Cmd  *MachineExecCommand       `json:"cmd,omitempty"`
-}
-
-type Connection struct {
-	Nic       models.V1MachineNic `json:"nic"`
-	MachineID string              `json:"machineid"`
-}
-
-type Connections []Connection
-
-type ConnectionMap map[string]Connections
-
-type Switch struct {
-	models.V1Meta
-	Nics               models.V1MachineNic `json:"network_interfaces"`
-	MachineConnections ConnectionMap       `json:"machineconnections"`
-	PartitionID        string              `json:"partitionid"`
-	RackID             string              `json:"rackid"`
-}
-
-type SwitchEvent struct {
-	Type     EventType                `json:"type"`
-	Machine  models.V1MachineResponse `json:"machine"`
-	Switches []Switch                 `json:"switches"`
+	Type         EventType           `json:"type,omitempty"`
+	OldMachineID string              `json:"old,omitempty"`
+	NewMachineID string              `json:"new,omitempty"`
+	Cmd          *MachineExecCommand `json:"cmd,omitempty"`
 }
 
 // Some EventType enums.
