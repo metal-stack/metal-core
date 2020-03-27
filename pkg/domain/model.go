@@ -23,7 +23,6 @@ const (
 	MachineResetCmd          MachineCommand = "RESET"
 	MachineBiosCmd           MachineCommand = "BIOS"
 	MachineReinstall         MachineCommand = "REINSTALL"
-	MachineAbortReinstall    MachineCommand = "ABORT-REINSTALL"
 	ChassisIdentifyLEDOnCmd  MachineCommand = "LED-ON"
 	ChassisIdentifyLEDOffCmd MachineCommand = "LED-OFF"
 )
@@ -89,7 +88,6 @@ type EventHandler interface {
 	PowerResetMachine(machineID string)
 	BootBiosMachine(machineID string)
 	ReinstallMachine(machineID string)
-	AbortReinstallMachine(machineID string)
 
 	PowerOnChassisIdentifyLED(machineID, description string)
 	PowerOffChassisIdentifyLED(machineID, description string)
