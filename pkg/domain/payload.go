@@ -55,3 +55,7 @@ func (r *MetalHammerRegisterMachineRequest) IPMIUser() string {
 func (r *MetalHammerRegisterMachineRequest) IPMIPassword() string {
 	return IPMIPassword(r.IPMI)
 }
+
+type MetalHammerAbortReinstallRequest struct {
+	PrimaryDiskWiped bool `json:"primary_disk_wiped" description:"whether the primary disk is already wiped"`
+}

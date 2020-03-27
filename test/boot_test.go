@@ -78,6 +78,10 @@ func (a *apiHandlerBootTest) InstallImage(machineID string) (int, *models.V1Mach
 	return -1, nil
 }
 
+func (a *apiHandlerBootTest) AbortReinstall(machineID string, request *domain.MetalHammerAbortReinstallRequest) (int, *models.V1BootInfo) {
+	return -1, nil
+}
+
 func (a *apiHandlerBootTest) IPMIConfig(machineID string) (*domain.IPMIConfig, error) {
 	return nil, nil
 }

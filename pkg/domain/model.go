@@ -57,6 +57,7 @@ type APIClient interface {
 	FindPartition(id string) (*models.V1PartitionResponse, error)
 	RegisterMachine(machineID string, request *MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse)
 	InstallImage(machineID string) (int, *models.V1MachineResponse)
+	AbortReinstall(machineID string, request *MetalHammerAbortReinstallRequest) (int, *models.V1BootInfo)
 	IPMIConfig(machineID string) (*IPMIConfig, error)
 	FinalizeAllocation(machineID, consolePassword string, report *Report) (*machine.FinalizeAllocationOK, error)
 	RegisterSwitch() (*models.V1SwitchResponse, error)
@@ -76,6 +77,7 @@ type EndpointHandler interface {
 	FindMachine(request *restful.Request, response *restful.Response)
 	Boot(request *restful.Request, response *restful.Response)
 	Install(request *restful.Request, response *restful.Response)
+	AbortReinstall(request *restful.Request, response *restful.Response)
 	Register(request *restful.Request, response *restful.Response)
 	Report(request *restful.Request, response *restful.Response)
 }

@@ -50,6 +50,17 @@ func (h *endpointHandler) NewMachineService() *restful.WebService {
 		Returns(http.StatusExpectationFailed, "Incomplete machine", nil).
 		Returns(http.StatusInternalServerError, "Error", nil))
 
+	ws.Route(ws.POST("/abort-reinstall/{id}").
+		To(h.AbortReinstall).
+		Doc("abort reinstall machine").
+		Param(ws.PathParameter("id", "identifier of the machine").DataType("string")).
+		Metadata(restfulspec.KeyOpenAPITags, tags).
+		Reads(domain.MetalHammerAbortReinstallRequest{}).
+		Writes(models.V1BootInfo{}).
+		Returns(http.StatusOK, "OK", models.V1BootInfo{}).
+		Returns(http.StatusBadRequest, "Bad request", nil).
+		Returns(http.StatusInternalServerError, "Error", nil))
+
 	ws.Route(ws.POST("/report/{id}").
 		To(h.Report).
 		Doc("report machine").
