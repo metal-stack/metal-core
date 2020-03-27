@@ -14,29 +14,29 @@ import (
 	"go.uber.org/zap"
 )
 
-func (e *endpointHandler) Boot(request *restful.Request, response *restful.Response) {
+func (h *endpointHandler) Boot(request *restful.Request, response *restful.Response) {
 	mac := request.PathParameter("mac")
 
 	zapup.MustRootLogger().Debug("Request Metal-API for a machine",
 		zap.String("MAC", mac),
 	)
 
-	sc, machines := e.APIClient().FindMachines(mac)
+	sc, machines := h.APIClient().FindMachines(mac)
 
 	if sc == http.StatusOK {
 		if len(machines) == 0 {
-			rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse(e))
+			rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse(h))
 			return
 		}
 		if len(machines) == 1 {
 			if machines[0].Allocation == nil {
-				rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse(e))
+				rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse(h))
 				return
 			}
 			// Machine was already in the installation phase but crashed before finalizing allocation
 			// we can boot into metal-hammer again.
 			if !*machines[0].Allocation.Succeeded {
-				rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse(e))
+				rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse(h))
 				return
 			}
 			zapup.MustRootLogger().Error("machine tries to pxe boot which is not expected.",

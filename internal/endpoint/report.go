@@ -14,8 +14,8 @@ import (
 
 func (h *endpointHandler) Report(request *restful.Request, response *restful.Response) {
 	var err error
-	report := &domain.Report{}
 
+	report := &domain.Report{}
 	err = request.ReadEntity(report)
 	if err != nil {
 		rest.Respond(response, http.StatusInternalServerError, nil)
@@ -52,7 +52,7 @@ func (h *endpointHandler) Report(request *restful.Request, response *restful.Res
 		}
 	}
 
-	_, err = h.APIClient().FinalizeAllocation(machineID, report.ConsolePassword)
+	_, err = h.APIClient().FinalizeAllocation(machineID, report.ConsolePassword, report)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to report machine back to api.",
 			zap.String("machineID", machineID),

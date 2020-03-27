@@ -16,30 +16,30 @@ func (c *apiClient) IPMIConfig(machineID string) (*domain.IPMIConfig, error) {
 	params.ID = machineID
 
 	ok, err := c.MachineClient.FindIPMIMachine(params, c.Auth)
-	if err != nil {
+	if err != nil || ok.Payload == nil || ok.Payload.IPMI == nil {
 		zapup.MustRootLogger().Error("IPMI data for machine not found",
 			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 		return nil, errors.Wrapf(err, "IPMI data for machine %s not found", machineID)
 	}
+	ipmiData := ok.Payload.IPMI
 
-	ipmi := ok.Payload
-	if ipmi.IPMI == nil {
-		zapup.MustRootLogger().Error("IPMI data for machine is nil",
+	if ipmiData.Address == nil {
+		zapup.MustRootLogger().Error("IPMI address for machine not found",
 			zap.String("machine", machineID),
+			zap.Error(err),
 		)
-		return nil, errors.Wrapf(err, "IPMI data for machine %s is nil", machineID)
+		return nil, errors.Wrapf(err, "IPMI address for machine %s not found", machineID)
 	}
-
-	hostAndPort := strings.Split(*ipmi.IPMI.Address, ":")
+	hostAndPort := strings.Split(*ipmiData.Address, ":")
 	port := 632
 	if len(hostAndPort) == 2 {
 		port, err = strconv.Atoi(hostAndPort[1])
 		if err != nil {
 			zapup.MustRootLogger().Error("Unable to extract port from IPMI address",
 				zap.String("machine", machineID),
-				zap.String("address", *ipmi.IPMI.Address),
+				zap.String("address", *ipmiData.Address),
 				zap.Error(err),
 			)
 			port = 632
@@ -49,7 +49,7 @@ func (c *apiClient) IPMIConfig(machineID string) (*domain.IPMIConfig, error) {
 	ipmiCfg := &domain.IPMIConfig{
 		Hostname: hostAndPort[0],
 		Port:     port,
-		Ipmi:     ipmi.IPMI,
+		Ipmi:     ipmiData,
 	}
 
 	return ipmiCfg, nil

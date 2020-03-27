@@ -58,11 +58,27 @@ func (a *apiHandlerBootTest) FindMachines(mac string) (int, []*models.V1MachineR
 	}
 }
 
+func (a *apiHandlerBootTest) Emit(eventType domain.ProvisioningEventType, machineID, message string) error {
+	return nil
+}
+
+func (a *apiHandlerBootTest) AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error {
+	return nil
+}
+
+func (a *apiHandlerBootTest) FindMachine(machineID string) (*models.V1MachineResponse, error) {
+	return nil, nil
+}
+
 func (a *apiHandlerBootTest) RegisterMachine(machineID string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse) {
 	return -1, nil
 }
 
 func (a *apiHandlerBootTest) InstallImage(machineID string) (int, *models.V1MachineResponse) {
+	return -1, nil
+}
+
+func (a *apiHandlerBootTest) AbortReinstall(machineID string, request *domain.MetalHammerAbortReinstallRequest) (int, *models.V1BootInfo) {
 	return -1, nil
 }
 
@@ -78,11 +94,7 @@ func (a *apiHandlerBootTest) FindPartition(id string) (*models.V1PartitionRespon
 	}}, nil
 }
 
-func (a *apiHandlerBootTest) AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error {
-	return nil
-}
-
-func (a *apiHandlerBootTest) FinalizeAllocation(machineID, consolepassword string) (*machine.FinalizeAllocationOK, error) {
+func (a *apiHandlerBootTest) FinalizeAllocation(machineID, consolePassword string, report *domain.Report) (*machine.FinalizeAllocationOK, error) {
 	return nil, nil
 }
 

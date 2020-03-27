@@ -69,6 +69,8 @@ func (s *Server) initConsumer() error {
 					s.EventHandler().PowerResetMachine(evt.Cmd.TargetMachineID)
 				case domain.MachineBiosCmd:
 					s.EventHandler().BootBiosMachine(evt.Cmd.TargetMachineID)
+				case domain.MachineReinstall:
+					s.EventHandler().ReinstallMachine(evt.Cmd.TargetMachineID)
 				case domain.ChassisIdentifyLEDOnCmd:
 					description := strings.TrimSpace(strings.Join(evt.Cmd.Params, " "))
 					if len(description) == 0 {

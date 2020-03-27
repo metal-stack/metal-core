@@ -10,11 +10,23 @@ type BootResponse struct {
 	CommandLine string   `json:"cmdline,omitempty"`
 }
 
-// Report is send back to metal-core after installation finished
+type ChangeBootOrder struct {
+	HD   bool `json:"hd,omitempty" description:"whether to boot from Disk"`
+	PXE  bool `json:"pxe,omitempty" description:"whether to boot from PXE"`
+	BIOS bool `json:"bios,omitempty" description:"whether to boot into BIOS"`
+}
+
+// Report is sent by metal-hammer to metal-core after installation finished
 type Report struct {
 	Success         bool   `json:"success,omitempty" description:"true if installation succeeded"`
 	Message         string `json:"message" description:"if installation failed, the error message"`
 	ConsolePassword string `json:"console_password" description:"the console password which was generated while provisioning"`
+	PrimaryDisk     string `json:"primary_disk" description:"the disk having a partition on which the OS is installed"`
+	OSPartition     string `json:"os_partition" description:"the partition on which the OS is installed"`
+	Initrd          string `json:"initrd" description:"the initrd"`
+	Cmdline         string `json:"cmdline" description:"the cmdline"`
+	Kernel          string `json:"kernel" description:"the kernel"`
+	BootloaderID    string `json:"bootloaderid" description:"the bootloader ID"`
 }
 
 type MetalHammerRegisterMachineRequest struct {
@@ -42,4 +54,8 @@ func (r *MetalHammerRegisterMachineRequest) IPMIUser() string {
 
 func (r *MetalHammerRegisterMachineRequest) IPMIPassword() string {
 	return IPMIPassword(r.IPMI)
+}
+
+type MetalHammerAbortReinstallRequest struct {
+	PrimaryDiskWiped bool `json:"primary_disk_wiped" description:"whether the primary disk is already wiped"`
 }

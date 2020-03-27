@@ -3,22 +3,29 @@ package api
 import (
 	"github.com/metal-stack/metal-core/client/machine"
 	"github.com/metal-stack/metal-core/models"
+	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 )
 
-func (c *apiClient) FinalizeAllocation(machineid, consolepassword string) (*machine.FinalizeAllocationOK, error) {
+func (c *apiClient) FinalizeAllocation(machineID, consolePassword string, report *domain.Report) (*machine.FinalizeAllocationOK, error) {
 	body := &models.V1MachineFinalizeAllocationRequest{
-		ConsolePassword: &consolepassword,
+		ConsolePassword: &consolePassword,
+		Primarydisk:     &report.PrimaryDisk,
+		Ospartition:     &report.OSPartition,
+		Initrd:          &report.Initrd,
+		Cmdline:         &report.Cmdline,
+		Kernel:          &report.Kernel,
+		Bootloaderid:    &report.BootloaderID,
 	}
 	params := machine.NewFinalizeAllocationParams()
-	params.ID = machineid
+	params.ID = machineID
 	params.Body = body
 
 	ok, err := c.MachineClient.FinalizeAllocation(params, c.Auth)
 	if err != nil {
 		zapup.MustRootLogger().Error("Finalize failed",
-			zap.String("machineid", machineid),
+			zap.String("machineID", machineID),
 			zap.Error(err),
 		)
 	}

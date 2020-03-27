@@ -79,12 +79,7 @@ func PowerCycleMachine(cfg *domain.IPMIConfig) error {
 		zap.String("MAC", cfg.Mac()),
 	)
 
-	err = client.Control(goipmi.ControlPowerCycle)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return client.Control(goipmi.ControlPowerCycle)
 }
 
 // PowerOnChassisIdentifyLED powers the machine chassis identify LED on indefinitely (raw 0x00 0x04 0x00 0x01)

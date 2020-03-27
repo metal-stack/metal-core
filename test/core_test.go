@@ -43,6 +43,18 @@ func TestLoggingMiddleware(t *testing.T) {
 	require.NotContains(t, logs, "error")
 }
 
+func (a *apiHandlerCoreTest) Emit(eventType domain.ProvisioningEventType, machineID, message string) error {
+	return nil
+}
+
+func (a *apiHandlerCoreTest) AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error {
+	return nil
+}
+
+func (a *apiHandlerCoreTest) FindMachine(machineID string) (*models.V1MachineResponse, error) {
+	return nil, nil
+}
+
 func (a *apiHandlerCoreTest) FindMachines(mac string) (int, []*models.V1MachineResponse) {
 	return -1, nil
 }
@@ -58,6 +70,10 @@ func (a *apiHandlerCoreTest) InstallImage(machineID string) (int, *models.V1Mach
 	return -1, nil
 }
 
+func (a *apiHandlerCoreTest) AbortReinstall(machineID string, request *domain.MetalHammerAbortReinstallRequest) (int, *models.V1BootInfo) {
+	return -1, nil
+}
+
 func (a *apiHandlerCoreTest) IPMIConfig(machineID string) (*domain.IPMIConfig, error) {
 	return nil, nil
 }
@@ -66,11 +82,7 @@ func (a *apiHandlerCoreTest) FindPartition(id string) (*models.V1PartitionRespon
 	return nil, nil
 }
 
-func (a *apiHandlerCoreTest) AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error {
-	return nil
-}
-
-func (a *apiHandlerCoreTest) FinalizeAllocation(machineID, consolepassword string) (*machine.FinalizeAllocationOK, error) {
+func (a *apiHandlerCoreTest) FinalizeAllocation(machineID, consolePassword string, report *domain.Report) (*machine.FinalizeAllocationOK, error) {
 	return nil, nil
 }
 

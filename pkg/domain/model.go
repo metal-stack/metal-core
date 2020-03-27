@@ -22,6 +22,7 @@ const (
 	MachineOffCmd            MachineCommand = "OFF"
 	MachineResetCmd          MachineCommand = "RESET"
 	MachineBiosCmd           MachineCommand = "BIOS"
+	MachineReinstall         MachineCommand = "REINSTALL"
 	ChassisIdentifyLEDOnCmd  MachineCommand = "LED-ON"
 	ChassisIdentifyLEDOffCmd MachineCommand = "LED-OFF"
 )
@@ -48,13 +49,16 @@ const (
 )
 
 type APIClient interface {
+	Emit(eventType ProvisioningEventType, machineID, message string) error
+	AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error
+	FindMachine(id string) (*models.V1MachineResponse, error)
 	FindMachines(mac string) (int, []*models.V1MachineResponse)
 	FindPartition(id string) (*models.V1PartitionResponse, error)
 	RegisterMachine(machineID string, request *MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse)
 	InstallImage(machineID string) (int, *models.V1MachineResponse)
+	AbortReinstall(machineID string, request *MetalHammerAbortReinstallRequest) (int, *models.V1BootInfo)
 	IPMIConfig(machineID string) (*IPMIConfig, error)
-	AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error
-	FinalizeAllocation(machineID, consolepassword string) (*machine.FinalizeAllocationOK, error)
+	FinalizeAllocation(machineID, consolePassword string, report *Report) (*machine.FinalizeAllocationOK, error)
 	RegisterSwitch() (*models.V1SwitchResponse, error)
 	ConstantlyPhoneHome()
 	SetChassisIdentifyLEDStateOn(machineID, description string) error
@@ -69,8 +73,10 @@ type EndpointHandler interface {
 	NewBootService() *restful.WebService
 	NewMachineService() *restful.WebService
 
+	FindMachine(request *restful.Request, response *restful.Response)
 	Boot(request *restful.Request, response *restful.Response)
 	Install(request *restful.Request, response *restful.Response)
+	AbortReinstall(request *restful.Request, response *restful.Response)
 	Register(request *restful.Request, response *restful.Response)
 	Report(request *restful.Request, response *restful.Response)
 }
@@ -81,6 +87,7 @@ type EventHandler interface {
 	PowerOffMachine(machineID string)
 	PowerResetMachine(machineID string)
 	BootBiosMachine(machineID string)
+	ReinstallMachine(machineID string)
 
 	PowerOnChassisIdentifyLED(machineID, description string)
 	PowerOffChassisIdentifyLED(machineID, description string)

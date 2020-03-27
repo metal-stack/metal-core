@@ -1,6 +1,7 @@
 package endpoint
 
 import (
+	"github.com/metal-stack/metal-core/pkg/domain"
 	"net/http"
 
 	"github.com/metal-stack/metal-core/internal/rest"
@@ -13,21 +14,24 @@ import (
 
 type emptyBootRepsonse struct{}
 
-func (e *endpointHandler) Dhcp(request *restful.Request, response *restful.Response) {
-	guid := request.PathParameter("id")
+func (h *endpointHandler) Dhcp(request *restful.Request, response *restful.Response) {
+	machineID := request.PathParameter("id")
 
 	zapup.MustRootLogger().Debug("emit pxe boot event from machine",
-		zap.String("guid", guid),
+		zap.String("machineID", machineID),
 	)
 
-	eventType := string(ProvisioningEventPXEBooting)
+	eventType := string(domain.ProvisioningEventPXEBooting)
 	event := &models.V1MachineProvisioningEvent{
 		Event:   &eventType,
 		Message: "machine sent extended dhcp request",
 	}
-	err := e.APIClient().AddProvisioningEvent(guid, event)
+	err := h.APIClient().AddProvisioningEvent(machineID, event)
 	if err != nil {
-		zapup.MustRootLogger().Error("request metal-api event endpoint for machine", zap.String("guid", guid), zap.String("error", err.Error()))
+		zapup.MustRootLogger().Debug("dhcp: unable to emit PXEBooting provisioning event... ignoring",
+			zap.String("machineID", machineID),
+			zap.String("error", err.Error()),
+		)
 	}
 
 	// the response of the extended dhcp request does not need to contain useful information

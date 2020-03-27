@@ -42,6 +42,8 @@ func (h *noopEventHandler) PowerResetMachine(machineID string) {}
 
 func (h *noopEventHandler) BootBiosMachine(machineID string) {}
 
+func (h *noopEventHandler) ReinstallMachine(machineID string) {}
+
 func (h *noopEventHandler) PowerOnChassisIdentifyLED(machineID, description string) {}
 
 func (h *noopEventHandler) PowerOffChassisIdentifyLED(machineID, description string) {}

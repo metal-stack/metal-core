@@ -16,6 +16,8 @@ type finalizeDataMock struct {
 	simulateError bool
 	machineid     string
 	password      string
+	primaryDisk   string
+	osPartition   string
 }
 
 func (m *finalizeDataMock) Submit(o *runtime.ClientOperation) (interface{}, error) {
@@ -28,7 +30,19 @@ func (m *finalizeDataMock) Submit(o *runtime.ClientOperation) (interface{}, erro
 		Payload: &models.V1MachineResponse{
 			ID: &m.machineid,
 			Allocation: &models.V1MachineAllocation{
-				ConsolePassword: m.password,
+				ConsolePassword: *params.Body.ConsolePassword,
+			},
+			Hardware: &models.V1MachineHardware{
+				Disks: []*models.V1MachineBlockDevice{
+					{
+						Name: params.Body.Primarydisk,
+						Partitions: []*models.V1MachineDiskPartition{
+							{
+								Device: params.Body.Ospartition,
+							},
+						},
+					},
+				},
 			},
 		},
 	}, nil
@@ -39,7 +53,9 @@ func TestFinalizeAllocation_OK(t *testing.T) {
 	m := &finalizeDataMock{
 		simulateError: false,
 		machineid:     "mymachine",
-		password:      "password",
+		password:      "x",
+		primaryDisk:   "a",
+		osPartition:   "b",
 	}
 
 	ctx := &domain.AppContext{
@@ -51,7 +67,17 @@ func TestFinalizeAllocation_OK(t *testing.T) {
 	passwd := "password"
 
 	// WHEN
-	ok, err := ctx.APIClient().FinalizeAllocation(machineID, passwd)
+	ok, err := ctx.APIClient().FinalizeAllocation(machineID, passwd, &domain.Report{
+		Success:         false,
+		Message:         "",
+		ConsolePassword: "",
+		PrimaryDisk:     "",
+		OSPartition:     "",
+		Initrd:          "",
+		Cmdline:         "",
+		Kernel:          "",
+		BootloaderID:    "",
+	})
 
 	// THEN
 	require.Nil(t, err)
@@ -74,7 +100,17 @@ func TestFinalizeAllocation_NOK(t *testing.T) {
 	passwd := "password"
 
 	// WHEN
-	_, err := ctx.APIClient().FinalizeAllocation(machineID, passwd)
+	_, err := ctx.APIClient().FinalizeAllocation(machineID, passwd, &domain.Report{
+		Success:         false,
+		Message:         "",
+		ConsolePassword: "",
+		PrimaryDisk:     "",
+		OSPartition:     "",
+		Initrd:          "",
+		Cmdline:         "",
+		Kernel:          "",
+		BootloaderID:    "",
+	})
 
 	// THEN
 	require.Error(t, err)
