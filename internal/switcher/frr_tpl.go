@@ -15,6 +15,7 @@ debug bgp zebra
 !
 vrf vrf{{ $t.VNI }}
  vni {{ $t.VNI }}
+ exit-vrf
 {{- end }}
 {{- range .Ports.Underlay }}
 !
@@ -31,7 +32,7 @@ interface {{ .Port }}
 {{- range $vrf, $t := .Ports.Vrfs }}
 {{- range $t.Neighbors }}
 !
-interface {{ . }}
+interface {{ . }} vrf {{ $vrf }}
  ipv6 nd ra-interval 6
  no ipv6 nd suppress-ra
 {{- end }}
