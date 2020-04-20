@@ -34,7 +34,7 @@ func TestPXEBoot(t *testing.T) {
 		InitRamDisk: []string{
 			"https://blobstore.fi-ts.io/metal/images/metal-hammer/metal-hammer-initrd.img.lz4",
 		},
-		CommandLine: fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d METAL_API_URL=http://%v:%d%s", c.String(), cfg.Port, cfg.ApiIP, cfg.ApiPort, cfg.ApiBasePath),
+		CommandLine: fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d METAL_API_URL=http://%v:%d%s METAL_GRPC_ADDRESS=%s:%d", c.String(), cfg.Port, cfg.ApiIP, cfg.ApiPort, cfg.ApiBasePath, c.String(), cfg.GrpcPort),
 	}
 
 	// when
@@ -71,10 +71,6 @@ func (a *apiHandlerBootTest) FindMachine(machineID string) (*models.V1MachineRes
 }
 
 func (a *apiHandlerBootTest) RegisterMachine(machineID string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse) {
-	return -1, nil
-}
-
-func (a *apiHandlerBootTest) InstallImage(machineID string) (int, *models.V1MachineResponse) {
 	return -1, nil
 }
 

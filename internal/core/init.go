@@ -10,6 +10,7 @@ import (
 func Init(endpointHandler domain.EndpointHandler) *restfulspec.Config {
 	restful.DefaultContainer.Add(endpointHandler.NewBootService())
 	restful.DefaultContainer.Add(endpointHandler.NewMachineService())
+	restful.DefaultContainer.Add(endpointHandler.NewCertsService())
 
 	cfg := restfulspec.Config{
 		WebServices:                   restful.RegisteredWebServices(),
