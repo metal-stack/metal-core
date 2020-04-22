@@ -24,9 +24,28 @@ func (h *eventHandler) ReconfigureSwitch() {
 	host, _ := os.Hostname()
 	for range t.C {
 		zapup.MustRootLogger().Info("trigger reconfiguration")
+		start := time.Now()
 		err := h.reconfigureSwitch(host)
+		elapsed := time.Since(start)
+		zapup.MustRootLogger().Info("reconfiguration took", zap.Duration("elapsed", elapsed))
+
+		params := sw.NewNotifySwitchParams()
+		ms := elapsed.Milliseconds()
+		nr := &models.V1SwitchNotifyRequest{
+			SyncDuration: &ms,
+		}
 		if err != nil {
-			zapup.MustRootLogger().Error("failed to reconfigure switch", zap.Error(err))
+			errStr := err.Error()
+			nr.Error = &errStr
+			zapup.MustRootLogger().Error("reconfiguration failed", zap.Error(err))
+		} else {
+			zapup.MustRootLogger().Info("reconfiguration succeeded")
+		}
+
+		params.Body = nr
+		_, err = h.SwitchClient.NotifySwitch(params, h.Auth)
+		if err != nil {
+			zapup.MustRootLogger().Error("notification about switch reconfiguration failed", zap.Error(err))
 		}
 	}
 }
@@ -57,13 +76,10 @@ func (h *eventHandler) reconfigureSwitch(switchName string) error {
 		return nil
 	}
 
-	start := time.Now()
 	err = c.Apply()
 	if err != nil {
 		return errors.Wrap(err, "could not apply switch config")
 	}
-	elapsed := time.Since(start)
-	zapup.MustRootLogger().Info("switch reconfigure took", zap.Duration("elapsed", elapsed))
 
 	return nil
 }
