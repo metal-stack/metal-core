@@ -31,9 +31,9 @@ func (h *eventHandler) ReconfigureSwitch() {
 
 		params := sw.NewNotifySwitchParams()
 		params.ID = host
-		ms := elapsed.Milliseconds()
+		ns := elapsed.Nanoseconds()
 		nr := &models.V1SwitchNotifyRequest{
-			SyncDuration: &ms,
+			SyncDuration: &ns,
 		}
 		if err != nil {
 			errStr := err.Error()
