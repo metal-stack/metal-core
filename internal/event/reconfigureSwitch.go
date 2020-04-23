@@ -30,6 +30,7 @@ func (h *eventHandler) ReconfigureSwitch() {
 		zapup.MustRootLogger().Info("reconfiguration took", zap.Duration("elapsed", elapsed))
 
 		params := sw.NewNotifySwitchParams()
+		params.ID = host
 		ms := elapsed.Milliseconds()
 		nr := &models.V1SwitchNotifyRequest{
 			SyncDuration: &ms,

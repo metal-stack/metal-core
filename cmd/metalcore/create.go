@@ -80,8 +80,8 @@ func Create() *Server {
 	app.SetAPIClient(api.NewClient)
 	app.SetServer(core.NewServer)
 	app.SetEndpointHandler(endpoint.NewHandler)
-	app.SetEventHandler(event.NewHandler)
 	app.InitHMAC()
+	app.SetEventHandler(event.NewHandler)
 
 	err := app.initConsumer()
 	if err != nil {
