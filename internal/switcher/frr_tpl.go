@@ -88,7 +88,6 @@ route-map {{ .Name }} {{ .Policy }} {{ .Order }}
         {{- end }}
 !
 {{- end }}
-ip route 0.0.0.0/0 {{ .Ports.Eth0.Gateway }} nexthop-vrf mgmt
 !
 {{- range $vrf, $t := .Ports.Vrfs }}
 router bgp {{ $ASN }} vrf {{ $vrf }}
