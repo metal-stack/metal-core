@@ -88,7 +88,6 @@ route-map {{ .Name }} {{ .Policy }} {{ .Order }}
         {{- end }}
 !
 {{- end }}
-!
 {{- range $vrf, $t := .Ports.Vrfs }}
 router bgp {{ $ASN }} vrf {{ $vrf }}
  bgp router-id {{ $RouterId }}
