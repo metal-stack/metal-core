@@ -7,7 +7,7 @@ import (
 )
 
 func (h *eventHandler) FreeMachine(machineID string) {
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+	ipmiCfg, err := h.APIClient().IPMIConfig(machineID, h.Compliance)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to read IPMI connection details",
 			zap.String("machine", machineID),

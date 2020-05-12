@@ -3,6 +3,7 @@ package test
 import (
 	"errors"
 	"fmt"
+	"github.com/metal-stack/go-hal/pkg/api"
 	"net"
 	"net/http"
 	"strings"
@@ -82,7 +83,7 @@ func (a *apiHandlerBootTest) AbortReinstall(machineID string, request *domain.Me
 	return -1, nil
 }
 
-func (a *apiHandlerBootTest) IPMIConfig(machineID string) (*domain.IPMIConfig, error) {
+func (a *apiHandlerBootTest) IPMIConfig(machineID string, compliance api.Compliance) (*domain.IPMIConfig, error) {
 	return nil, nil
 }
 

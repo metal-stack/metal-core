@@ -7,7 +7,7 @@ import (
 )
 
 func (h *eventHandler) BootBiosMachine(machineID string) {
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+	ipmiCfg, err := h.APIClient().IPMIConfig(machineID, h.Compliance)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to read IPMI connection details",
 			zap.String("machine", machineID),
@@ -16,7 +16,7 @@ func (h *eventHandler) BootBiosMachine(machineID string) {
 		return
 	}
 
-	err = ipmi.SetBootBios(ipmiCfg, h.DevMode)
+	err = ipmi.SetBootBios(ipmiCfg)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to set boot order of machine to BIOS",
 			zap.String("machine", machineID),

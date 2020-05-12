@@ -46,13 +46,13 @@ func (h *endpointHandler) AbortReinstall(request *restful.Request, response *res
 	}
 
 	if h.Config.ChangeBootOrder {
-		ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+		ipmiCfg, err := h.APIClient().IPMIConfig(machineID, h.Compliance)
 		if err != nil {
 			rest.Respond(response, http.StatusInternalServerError, err)
 			return
 		}
 
-		err = ipmi.SetBootDisk(ipmiCfg, h.DevMode)
+		err = ipmi.SetBootDisk(ipmiCfg)
 		if err != nil {
 			zapup.MustRootLogger().Error("Unable to set boot order of machine to HD",
 				zap.String("machineID", machineID),

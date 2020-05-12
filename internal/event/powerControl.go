@@ -7,7 +7,7 @@ import (
 )
 
 func (h *eventHandler) PowerOnMachine(machineID string) {
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+	ipmiCfg, err := h.APIClient().IPMIConfig(machineID, h.Compliance)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to read IPMI connection details",
 			zap.String("machine", machineID),
@@ -26,7 +26,7 @@ func (h *eventHandler) PowerOnMachine(machineID string) {
 }
 
 func (h *eventHandler) PowerOffMachine(machineID string) {
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+	ipmiCfg, err := h.APIClient().IPMIConfig(machineID, h.Compliance)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to read IPMI connection details",
 			zap.String("machine", machineID),
@@ -45,7 +45,7 @@ func (h *eventHandler) PowerOffMachine(machineID string) {
 }
 
 func (h *eventHandler) PowerResetMachine(machineID string) {
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+	ipmiCfg, err := h.APIClient().IPMIConfig(machineID, h.Compliance)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to read IPMI connection details",
 			zap.String("machine", machineID),
@@ -64,7 +64,7 @@ func (h *eventHandler) PowerResetMachine(machineID string) {
 }
 
 func (h *eventHandler) PowerOnChassisIdentifyLED(machineID, description string) {
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+	ipmiCfg, err := h.APIClient().IPMIConfig(machineID, h.Compliance)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to read IPMI connection details",
 			zap.String("machine", machineID),
@@ -92,7 +92,7 @@ func (h *eventHandler) PowerOnChassisIdentifyLED(machineID, description string) 
 }
 
 func (h *eventHandler) PowerOffChassisIdentifyLED(machineID, description string) {
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+	ipmiCfg, err := h.APIClient().IPMIConfig(machineID, h.Compliance)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to read IPMI connection details",
 			zap.String("machine", machineID),
