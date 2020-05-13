@@ -13,7 +13,7 @@ require (
 	github.com/go-openapi/validate v0.19.3
 	github.com/google/gopacket v1.1.17
 	github.com/kelseyhightower/envconfig v1.3.0
-	github.com/metal-stack/go-hal v0.0.0-20200507120602-b98f4c642b63
+	github.com/metal-stack/go-hal v0.0.0-20200513064608-d952a140839b
 	github.com/metal-stack/metal-lib v0.3.0
 	github.com/metal-stack/metal-networker v0.1.1
 	github.com/metal-stack/security v0.3.0
@@ -26,5 +26,3 @@ require (
 	go.uber.org/zap v1.13.0
 	gopkg.in/yaml.v2 v2.2.8
 )
-
-replace github.com/metal-stack/go-hal => ../go-hal
