@@ -2,6 +2,7 @@ package switcher
 
 import (
 	"io"
+	"path"
 	"text/template"
 
 	"github.com/metal-stack/metal-networker/pkg/net"
@@ -21,6 +22,7 @@ const (
 // FrrApplier is responsible for writing and
 // applying the FRR configuration
 type FrrApplier struct {
+	tplFile string
 	applier net.Applier
 }
 
@@ -29,17 +31,27 @@ func NewFrrApplier(c *Conf) Applier {
 	v := net.DBusTemplateValidator{TemplateName: FrrValidationService, InstanceName: FrrTmp}
 	r := net.DBusReloader{ServiceFilename: FrrReloadService}
 	a := net.NewNetworkApplier(c, v, r)
-	return FrrApplier{a}
+	return FrrApplier{
+		applier: a,
+		tplFile: c.FrrTplFile,
+	}
 }
 
 // Apply applies the configuration to the system
 func (a FrrApplier) Apply() error {
-	tpl := template.Must(template.New(frrTPL).Parse(frrTPL))
+	tpl := a.getTpl()
 	return a.applier.Apply(*tpl, FrrTmp, Frr, true)
 }
 
 // Render renders the frr configuration to the given writer
 func (a FrrApplier) Render(w io.Writer) error {
-	tpl := template.Must(template.New(frrTPL).Parse(frrTPL))
+	tpl := a.getTpl()
 	return a.applier.Render(w, *tpl)
+}
+
+func (a FrrApplier) getTpl() *template.Template {
+	if a.tplFile != "" {
+		return template.Must(template.New(path.Base(a.tplFile)).ParseFiles(a.tplFile))
+	}
+	return template.Must(template.New("frr.tpl").Parse(frrTPL))
 }

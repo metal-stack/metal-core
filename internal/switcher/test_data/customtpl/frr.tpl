@@ -1,6 +1,4 @@
-package switcher
-
-const frrTPL = `{{- $ASN := .ASN -}}{{- $RouterId := .Loopback -}}! The frr version is not rendered since it seems to be optional.
+{{- $ASN := .ASN -}}{{- $RouterId := .Loopback -}}! The frr version is not rendered since it seems to be optional.
 frr defaults datacenter
 hostname {{ .Name }}
 username cumulus nopassword
@@ -55,7 +53,7 @@ router bgp {{ $ASN }}
  {{- end }}
  !
  address-family ipv4 unicast
-  redistribute connected route-map LOOPBACKS
+  redistribute connected route-map LOCALS
   neighbor FIREWALL allowas-in 1
   {{- range $k, $f := .Ports.Firewalls }}
   neighbor {{ $f.Port }} route-map fw-{{ $k }}-in in
@@ -72,8 +70,11 @@ router bgp {{ $ASN }}
   {{- end }}
  exit-address-family
 !
-route-map LOOPBACKS permit 10
+route-map LOCALS permit 10
  match interface lo
+!
+route-map LOCALS permit 12
+ match interface vlan4000
 !
 {{- range $k, $f := .Ports.Firewalls }}
 # route-maps for firewall@{{ $k }}
@@ -88,8 +89,6 @@ route-map {{ .Name }} {{ .Policy }} {{ .Order }}
         {{- end }}
 !
 {{- end }}
-ip route 0.0.0.0/0 {{ .Ports.Eth0.Gateway }} nexthop-vrf mgmt
-!
 {{- range $vrf, $t := .Ports.Vrfs }}
 router bgp {{ $ASN }} vrf {{ $vrf }}
  bgp router-id {{ $RouterId }}
@@ -126,4 +125,4 @@ route-map {{ .Name }} {{ .Policy }} {{ .Order }}
         {{- end }}
 !{{- end }}{{- end }}
 line vty
-!`
+!

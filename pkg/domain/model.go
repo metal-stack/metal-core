@@ -125,6 +125,8 @@ type Config struct {
 	AdditionalBridgeVIDs      []string      `required:"false" desc:"additional vlan ids that should be configured at the vlan-aware bridge" envconfig:"additional_bridge_vids"`
 	AdditionalBridgePorts     []string      `required:"false" desc:"additional switch ports that should be configured at the vlan-aware bridge" envconfig:"additional_bridge_ports"`
 	ChangeBootOrder           bool          `required:"false" default:"true" desc:"issue ipmi commands to change boot order" split_words:"true"`
+	InterfacesTplFile         string        `required:"false" default:"" desc:"the golang template file used to render /etc/network/interfaces, a default template is included" envconfig:"interfaces_tpl_file"`
+	FrrTplFile                string        `required:"false" default:"" desc:"the golang template file used to render /etc/frr/frr.conf, a default template is included" envconfig:"frr_tpl_file"`
 	HMACKey                   string        `required:"true" desc:"the preshared key for the hmac calculation" envconfig:"hmac_key"`
 }
 

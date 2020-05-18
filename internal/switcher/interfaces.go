@@ -2,6 +2,7 @@ package switcher
 
 import (
 	"io"
+	"path"
 	"text/template"
 
 	"github.com/metal-stack/metal-networker/pkg/net"
@@ -21,6 +22,7 @@ const (
 // InterfacesApplier is responsible for writing and
 // applying the network interfaces configuration
 type InterfacesApplier struct {
+	tplFile string
 	applier net.Applier
 }
 
@@ -29,17 +31,27 @@ func NewInterfacesApplier(c *Conf) Applier {
 	v := net.DBusTemplateValidator{TemplateName: InterfacesValidationService, InstanceName: InterfacesTmp}
 	r := net.DBusStartReloader{ServiceFilename: InterfacesReloadService}
 	a := net.NewNetworkApplier(c, v, r)
-	return InterfacesApplier{a}
+	return InterfacesApplier{
+		applier: a,
+		tplFile: c.InterfacesTplFile,
+	}
 }
 
 // Apply applies the configuration to the system
 func (a InterfacesApplier) Apply() error {
-	tpl := template.Must(template.New(interfacesTPL).Parse(interfacesTPL))
+	tpl := a.getTpl()
 	return a.applier.Apply(*tpl, InterfacesTmp, Interfaces, true)
 }
 
 // Render renders the network interfaces to the given writer
 func (a InterfacesApplier) Render(w io.Writer) error {
-	tpl := template.Must(template.New(interfacesTPL).Parse(interfacesTPL))
+	tpl := a.getTpl()
 	return a.applier.Render(w, *tpl)
+}
+
+func (a InterfacesApplier) getTpl() *template.Template {
+	if a.tplFile != "" {
+		return template.Must(template.New(path.Base(a.tplFile)).ParseFiles(a.tplFile))
+	}
+	return template.Must(template.New("interfaces.tpl").Parse(interfacesTPL))
 }
