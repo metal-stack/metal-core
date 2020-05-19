@@ -98,6 +98,12 @@ func buildSwitcherConfig(conf *domain.Config, s *models.V1SwitchResponse) (*swit
 	c.ASN = asn
 	c.Loopback = conf.LoopbackIP
 	c.MetalCoreCIDR = conf.CIDR
+	if conf.InterfacesTplFile != "" {
+		c.InterfacesTplFile = conf.InterfacesTplFile
+	}
+	if conf.FrrTplFile != "" {
+		c.FrrTplFile = conf.FrrTplFile
+	}
 	c.AdditionalBridgeVIDs = conf.AdditionalBridgeVIDs
 	p := switcher.Ports{
 		Underlay:      strings.Split(conf.SpineUplinks, ","),

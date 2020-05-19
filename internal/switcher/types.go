@@ -12,6 +12,8 @@ type Conf struct {
 	DevMode              bool
 	MetalCoreCIDR        string
 	AdditionalBridgeVIDs []string
+	FrrTplFile           string
+	InterfacesTplFile    string
 }
 
 type Ports struct {
