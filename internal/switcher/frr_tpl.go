@@ -104,7 +104,7 @@ router bgp {{ $ASN }} vrf {{ $vrf }}
  address-family ipv4 unicast
   redistribute connected
   neighbor MACHINE maximum-prefix 24000
-  {{- if (len $t.IPPrefixLists) gt 0 }}
+  {{- if gt (len $t.IPPrefixLists) 0 }}
   neighbor MACHINE route-map {{ $vrf }}-in in
   {{- end }}
  exit-address-family
@@ -113,7 +113,7 @@ router bgp {{ $ASN }} vrf {{ $vrf }}
   advertise ipv4 unicast
  exit-address-family
 !
-{{- if (len $t.IPPrefixLists) gt 0 }}
+{{- if gt (len $t.IPPrefixLists) 0 }}
 # route-maps for {{ $vrf }}
         {{- range $t.IPPrefixLists }}
 ip prefix-list {{ .Name }} {{ .Spec }}
