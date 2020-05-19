@@ -5,8 +5,7 @@ import (
 	"testing"
 )
 
-//nolint:unused,deadcode
-func aTestFrrApplier(t *testing.T) { //TODO
+func TestFrrApplier(t *testing.T) {
 	for _, tc := range listTestCases() {
 		t.Run(tc, func(t *testing.T) {
 			c := readConf(t, path.Join("test_data", tc, "conf.yaml"))
