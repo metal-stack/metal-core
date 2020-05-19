@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func aTestFrrApplier(t *testing.T) {
+func TestFrrApplier(t *testing.T) {
 	for _, tc := range listTestCases() {
 		t.Run(tc, func(t *testing.T) {
 			c := readConf(t, path.Join("test_data", tc, "conf.yaml"))
