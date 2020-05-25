@@ -65,7 +65,7 @@ func boot(cfg *domain.IPMIConfig, dev goipmi.BootDevice, devMode bool) error {
 		if devMode {
 			uefiQualifier = ipmi2_0.OnlyNextBootUEFI
 		} else {
-			uefiQualifier = smcipmitool.Persistent
+			uefiQualifier = smcipmitool.OnlyNextBoot
 		}
 		bootDevQualifier = ipmi2_0.BIOS
 	default:
