@@ -26,8 +26,6 @@ func SetBootBios(cfg *domain.IPMIConfig, devMode bool) error {
 // boot is a modified wrapper around
 // goipmi.SetSystemBootOptionsRequest to configure the BootDevice per section 28.12:
 // https://www.intel.com/content/dam/www/public/us/en/documents/product-briefs/ipmi-second-gen-interface-spec-v2-rev1-1.pdf
-// We send modified raw parameters according to:
-// https://github.com/metal-stack/smcipmitool/blob/master/com/supermicro/ipmi/IPMIChassisCommand.java#L265
 func boot(cfg *domain.IPMIConfig, dev goipmi.BootDevice, devMode bool) error {
 	client, err := openClientConnection(cfg)
 	if err != nil {
@@ -42,11 +40,8 @@ func boot(cfg *domain.IPMIConfig, dev goipmi.BootDevice, devMode bool) error {
 	   raw 0x00 0x08 0x05 0xe0 0x08 0x00 0x00 0x00  (IPMI 2.0)
 	   raw 0x00 0x08 0x05 0xe0 0x24 0x00 0x00 0x00  (SMCIPMITool)
 
-	   Set boot order to (UEFI) BIOS on next boot only:
-	   raw 0x00 0x08 0x05 0xa0 0x18 0x00 0x00 0x00  (IPMI 2.0   , UEFI BIOS)
-	   raw 0x00 0x08 0x05 0xff 0x18 0x00 0x00 0x00  (SMCIPMITool, legacy BIOS)
-
-	   See https://github.com/metal-stack/metal/issues/73#note_151375
+	   Set boot order to UEFI BIOS on next boot only:
+	   raw 0x00 0x08 0x05 0xa0 0x18 0x00 0x00 0x00  (conforms to IPMI 2.0 as well as SMCIPMITool)
 	*/
 
 	var uefiQualifier, bootDevQualifier uint8
@@ -62,11 +57,7 @@ func boot(cfg *domain.IPMIConfig, dev goipmi.BootDevice, devMode bool) error {
 			bootDevQualifier = smcipmitool.HD
 		}
 	case goipmi.BootDeviceBios:
-		if devMode {
-			uefiQualifier = ipmi2_0.OnlyNextBootUEFI
-		} else {
-			uefiQualifier = smcipmitool.OnlyNextBoot
-		}
+		uefiQualifier = ipmi2_0.OnlyNextBootUEFI
 		bootDevQualifier = ipmi2_0.BIOS
 	default:
 		return fmt.Errorf("unsupported boot device:%s", dev.String())
