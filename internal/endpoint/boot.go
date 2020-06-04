@@ -22,21 +22,25 @@ func (h *endpointHandler) Boot(request *restful.Request, response *restful.Respo
 	)
 
 	sc, machines := h.APIClient().FindMachines(mac)
-
 	if sc == http.StatusOK {
+		bootResponse, err := createBootDiscoveryImageResponse(h)
+		if err != nil {
+			zapup.MustRootLogger().Error("Error assembling boot rsponse", zap.String("MAC", mac), zap.Error(err))
+		}
+
 		if len(machines) == 0 {
-			rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse(h))
+			rest.Respond(response, http.StatusOK, bootResponse)
 			return
 		}
 		if len(machines) == 1 {
 			if machines[0].Allocation == nil {
-				rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse(h))
+				rest.Respond(response, http.StatusOK, bootResponse)
 				return
 			}
 			// Machine was already in the installation phase but crashed before finalizing allocation
 			// we can boot into metal-hammer again.
 			if !*machines[0].Allocation.Succeeded {
-				rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse(h))
+				rest.Respond(response, http.StatusOK, bootResponse)
 				return
 			}
 			zapup.MustRootLogger().Error("machine tries to pxe boot which is not expected.",
@@ -57,7 +61,7 @@ func (h *endpointHandler) Boot(request *restful.Request, response *restful.Respo
 	}
 }
 
-func createBootDiscoveryImageResponse(e *endpointHandler) domain.BootResponse {
+func createBootDiscoveryImageResponse(e *endpointHandler) (*domain.BootResponse, error) {
 	cfg := e.Config
 
 	cidr, _, _ := net.ParseCIDR(cfg.CIDR)
@@ -67,22 +71,24 @@ func createBootDiscoveryImageResponse(e *endpointHandler) domain.BootResponse {
 	bc := e.BootConfig
 	// try to update boot config
 	s, err := e.APIClient().FindPartition(cfg.PartitionID)
-	if err == nil {
-		bc.MetalHammerImageURL = s.Bootconfig.Imageurl
-		bc.MetalHammerKernelURL = s.Bootconfig.Kernelurl
-		bc.MetalHammerCommandLine = s.Bootconfig.Commandline
+	if err != nil {
+		return nil, err
 	}
+
+	bc.MetalHammerImageURL = s.Bootconfig.Imageurl
+	bc.MetalHammerKernelURL = s.Bootconfig.Kernelurl
+	bc.MetalHammerCommandLine = s.Bootconfig.Commandline
 
 	cmdline := []string{bc.MetalHammerCommandLine, metalCoreAddress, metalAPIURL}
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
 		cmdline = append(cmdline, "DEBUG=1")
 	}
 
-	return domain.BootResponse{
+	return &domain.BootResponse{
 		Kernel: bc.MetalHammerKernelURL,
 		InitRamDisk: []string{
 			bc.MetalHammerImageURL,
 		},
 		CommandLine: strings.Join(cmdline, " "),
-	}
+	}, err
 }
