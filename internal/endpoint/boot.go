@@ -26,6 +26,7 @@ func (h *endpointHandler) Boot(request *restful.Request, response *restful.Respo
 		bootResponse, err := createBootDiscoveryImageResponse(h)
 		if err != nil {
 			zapup.MustRootLogger().Error("Error assembling boot rsponse", zap.String("MAC", mac), zap.Error(err))
+			return
 		}
 
 		if len(machines) == 0 {
