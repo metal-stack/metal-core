@@ -35,7 +35,7 @@ func (h *endpointHandler) Report(request *restful.Request, response *restful.Res
 	}
 
 	if h.Config.ChangeBootOrder {
-		ipmiCfg, err := h.APIClient().IPMIConfig(machineID, h.Compliance)
+		ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
 		if err != nil {
 			rest.Respond(response, http.StatusInternalServerError, nil)
 			return

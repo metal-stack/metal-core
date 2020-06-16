@@ -8,7 +8,6 @@ import (
 	"github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 	"github.com/kelseyhightower/envconfig"
-	halapi "github.com/metal-stack/go-hal/pkg/api"
 	"github.com/metal-stack/metal-core/client/machine"
 	"github.com/metal-stack/metal-core/client/partition"
 	sw "github.com/metal-stack/metal-core/client/switch_operations"
@@ -71,11 +70,6 @@ func Create() *Server {
 
 	transport := client.New(fmt.Sprintf("%v:%d", cfg.ApiIP, cfg.ApiPort), cfg.ApiBasePath, []string{cfg.ApiProtocol})
 
-	compliance := halapi.IPMI2Compliance
-	if devMode {
-		compliance = halapi.SMCIPMIToolCompliance
-	}
-
 	app := &Server{
 		AppContext: &domain.AppContext{
 			Config:          cfg,
@@ -83,7 +77,6 @@ func Create() *Server {
 			PartitionClient: partition.New(transport, strfmt.Default),
 			SwitchClient:    sw.New(transport, strfmt.Default),
 			DevMode:         devMode,
-			Compliance:      compliance,
 		},
 	}
 	app.SetAPIClient(api.NewClient)

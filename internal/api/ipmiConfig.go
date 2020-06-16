@@ -1,7 +1,6 @@
 package api
 
 import (
-	"github.com/metal-stack/go-hal/pkg/api"
 	"strconv"
 	"strings"
 
@@ -12,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (c *apiClient) IPMIConfig(machineID string, compliance api.Compliance) (*domain.IPMIConfig, error) {
+func (c *apiClient) IPMIConfig(machineID string) (*domain.IPMIConfig, error) {
 	params := machine.NewFindIPMIMachineParams()
 	params.ID = machineID
 
@@ -48,10 +47,9 @@ func (c *apiClient) IPMIConfig(machineID string, compliance api.Compliance) (*do
 	}
 
 	ipmiCfg := &domain.IPMIConfig{
-		Hostname:   hostAndPort[0],
-		Port:       port,
-		Ipmi:       ipmiData,
-		Compliance: compliance,
+		Hostname: hostAndPort[0],
+		Port:     port,
+		Ipmi:     ipmiData,
 	}
 
 	return ipmiCfg, nil

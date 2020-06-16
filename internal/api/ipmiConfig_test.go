@@ -3,7 +3,6 @@ package api
 import (
 	"errors"
 	"fmt"
-	"github.com/metal-stack/go-hal/pkg/api"
 	"strconv"
 	"testing"
 
@@ -59,7 +58,7 @@ func TestIPMIData_OK(t *testing.T) {
 	machineID := "fakemachineID"
 
 	// WHEN
-	ipmiCfg, err := ctx.APIClient().IPMIConfig(machineID, api.IPMI2Compliance)
+	ipmiCfg, err := ctx.APIClient().IPMIConfig(machineID)
 
 	// THEN
 	require.NotNil(t, ipmiCfg)
@@ -91,7 +90,7 @@ func TestIPMIData_InvalidPort(t *testing.T) {
 	machineID := "fakemachineID"
 
 	// WHEN
-	ipmiCfg, err := ctx.APIClient().IPMIConfig(machineID, api.IPMI2Compliance)
+	ipmiCfg, err := ctx.APIClient().IPMIConfig(machineID)
 
 	// THEN
 	require.NotNil(t, ipmiCfg)
@@ -118,7 +117,7 @@ func TestIPMIData_Error(t *testing.T) {
 	machineID := "fakemachineID"
 
 	// WHEN
-	ipmiCfg, err := ctx.APIClient().IPMIConfig(machineID, api.IPMI2Compliance)
+	ipmiCfg, err := ctx.APIClient().IPMIConfig(machineID)
 
 	// THEN
 	require.Nil(t, ipmiCfg)

@@ -7,7 +7,7 @@ import (
 )
 
 func (h *eventHandler) ReinstallMachine(machineID string) {
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID, h.Compliance)
+	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to read IPMI connection details",
 			zap.String("machine", machineID),

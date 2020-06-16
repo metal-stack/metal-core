@@ -46,7 +46,7 @@ func (h *endpointHandler) AbortReinstall(request *restful.Request, response *res
 	}
 
 	if h.Config.ChangeBootOrder {
-		ipmiCfg, err := h.APIClient().IPMIConfig(machineID, h.Compliance)
+		ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
 		if err != nil {
 			rest.Respond(response, http.StatusInternalServerError, err)
 			return

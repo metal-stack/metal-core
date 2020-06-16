@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"github.com/metal-stack/go-hal/pkg/api"
 	"time"
 
 	"github.com/emicklei/go-restful"
@@ -58,7 +57,7 @@ type APIClient interface {
 	RegisterMachine(machineID string, request *MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse)
 	InstallImage(machineID string) (int, *models.V1MachineResponse)
 	AbortReinstall(machineID string, request *MetalHammerAbortReinstallRequest) (int, *models.V1BootInfo)
-	IPMIConfig(machineID string, compliance api.Compliance) (*IPMIConfig, error)
+	IPMIConfig(machineID string) (*IPMIConfig, error)
 	FinalizeAllocation(machineID, consolePassword string, report *Report) (*machine.FinalizeAllocationOK, error)
 	RegisterSwitch() (*models.V1SwitchResponse, error)
 	ConstantlyPhoneHome()
@@ -138,10 +137,9 @@ type BootConfig struct {
 }
 
 type IPMIConfig struct {
-	Hostname   string
-	Port       int
-	Ipmi       *models.V1MachineIPMI
-	Compliance api.Compliance
+	Hostname string
+	Port     int
+	Ipmi     *models.V1MachineIPMI
 }
 
 func (i *IPMIConfig) Address() string {
@@ -177,7 +175,6 @@ type AppContext struct {
 	hmac            security.HMACAuth
 	Auth            runtime.ClientAuthInfoWriter
 	DevMode         bool
-	Compliance      api.Compliance
 }
 
 func (a *AppContext) APIClient() APIClient {
