@@ -227,8 +227,8 @@ github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Ky
 github.com/matttproud/golang_protobuf_extensions v1.0.1 h1:4hp9jkHxhMHkqkrB3Ix0jegS5sx/RkqARlsWZ6pIwiU=
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
 github.com/metal-pod/v v0.0.2/go.mod h1:zfivn9g6ekhIur+pz78MLlOBqUqTk8sWJaFJNaz9OKk=
-github.com/metal-stack/go-hal v0.0.0-20200617115340-465ae39b997b h1:eTcjz6FLWdgD2gmIO6Ydu6M1SRJmfwnKYQKp+tRSBUc=
-github.com/metal-stack/go-hal v0.0.0-20200617115340-465ae39b997b/go.mod h1:UdT4VGEizBfbWVbuUeY4wBaOWeUdK7zNvAbwNlCqGdE=
+github.com/metal-stack/go-hal v0.0.0-20200617120959-36c7ae2d4210 h1:H55dEvVKzkgUZdHk2F80XpraL+zwJQ37+dHDIkzaCxo=
+github.com/metal-stack/go-hal v0.0.0-20200617120959-36c7ae2d4210/go.mod h1:UdT4VGEizBfbWVbuUeY4wBaOWeUdK7zNvAbwNlCqGdE=
 github.com/metal-stack/metal-lib v0.3.0 h1:uRXtBdwhObyQ/2qU+cZjBrp6OglXZd7u/ftXmWpYx1I=
 github.com/metal-stack/metal-lib v0.3.0/go.mod h1:+MZY2gRk9SRnjqDyQNfaKxebU7/rteQ8JTw3e2nokuk=
 github.com/metal-stack/metal-networker v0.1.1 h1:9uYxawumEw9dpUuJAl0gLN+F5NIhBSq4vrB5DurErKM=
