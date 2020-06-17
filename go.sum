@@ -227,8 +227,8 @@ github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Ky
 github.com/matttproud/golang_protobuf_extensions v1.0.1 h1:4hp9jkHxhMHkqkrB3Ix0jegS5sx/RkqARlsWZ6pIwiU=
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
 github.com/metal-pod/v v0.0.2/go.mod h1:zfivn9g6ekhIur+pz78MLlOBqUqTk8sWJaFJNaz9OKk=
-github.com/metal-stack/go-hal v0.0.0-20200616201018-20969e75c070 h1:0+ImKpGODys7sEmPstKGE+ve/olS8mXEoawmXFur/4c=
-github.com/metal-stack/go-hal v0.0.0-20200616201018-20969e75c070/go.mod h1:UdT4VGEizBfbWVbuUeY4wBaOWeUdK7zNvAbwNlCqGdE=
+github.com/metal-stack/go-hal v0.0.0-20200617110046-9c0f23ed7d78 h1:IE4DQLGooy7p434jr+g0o5jmBzdMLN+sX0wcLNLgXM8=
+github.com/metal-stack/go-hal v0.0.0-20200617110046-9c0f23ed7d78/go.mod h1:NNb/CROhkNCB1PWLU4VJtk4nXptAUngbqu9+kf5xd7I=
 github.com/metal-stack/metal-lib v0.3.0 h1:uRXtBdwhObyQ/2qU+cZjBrp6OglXZd7u/ftXmWpYx1I=
 github.com/metal-stack/metal-lib v0.3.0/go.mod h1:+MZY2gRk9SRnjqDyQNfaKxebU7/rteQ8JTw3e2nokuk=
 github.com/metal-stack/metal-networker v0.1.1 h1:9uYxawumEw9dpUuJAl0gLN+F5NIhBSq4vrB5DurErKM=
@@ -324,8 +324,6 @@ github.com/vishvananda/netlink v1.0.0 h1:bqNY2lgheFIu1meHUFSH3d7vG93AFyqg3oGbJCO
 github.com/vishvananda/netlink v1.0.0/go.mod h1:+SR5DhBJrl6ZM7CoCKvpw5BKroDKQ+PJqOg65H/2ktk=
 github.com/vishvananda/netns v0.0.0-20191106174202-0a2b9b5464df h1:OviZH7qLw/7ZovXvuNyL3XQl8UFofeikI1NW1Gypu7k=
 github.com/vishvananda/netns v0.0.0-20191106174202-0a2b9b5464df/go.mod h1:JP3t17pCcGlemwknint6hfoeCVQrEMVwxRLRjXpq+BU=
-github.com/vmware/goipmi v0.0.0-20181114221114-2333cd82d702 h1:yx587LNBbOpIxzCBHBiI94Wx8ryIAFlu1w0lDwm64cA=
-github.com/vmware/goipmi v0.0.0-20181114221114-2333cd82d702/go.mod h1:YiWonbS/PuCtti3wt9jl+FvNEJ7c0nvmjGoEYxdjyk0=
 github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c/go.mod h1:lB8K/P019DLNhemzwFU4jHLhdvlE6uDZjXFejJXr49I=
 github.com/xdg/stringprep v0.0.0-20180714160509-73f8eece6fdc/go.mod h1:Jhud4/sHMO4oL310DaZAKk9ZaJ08SJfe+sJh0HrGL1Y=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
