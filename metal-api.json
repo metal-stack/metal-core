@@ -78,18 +78,6 @@
         "version"
       ]
     },
-    "timestamp.Timestamp": {
-      "properties": {
-        "nanos": {
-          "format": "int32",
-          "type": "integer"
-        },
-        "seconds": {
-          "format": "int64",
-          "type": "integer"
-        }
-      }
-    },
     "v1.BGPFilter": {
       "properties": {
         "cidrs": {
@@ -765,7 +753,7 @@
     "v1.ImageCreateRequest": {
       "properties": {
         "classification": {
-          "description": "clasification of this image",
+          "description": "classification of this image",
           "type": "string"
         },
         "description": {
@@ -812,7 +800,7 @@
           "type": "string"
         },
         "classification": {
-          "description": "clasification of this image",
+          "description": "classification of this image",
           "type": "string"
         },
         "created": {
@@ -849,6 +837,13 @@
         "url": {
           "description": "the url of this image",
           "type": "string"
+        },
+        "usedby": {
+          "description": "machines where this image is in use",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "required": [
@@ -861,7 +856,7 @@
     "v1.ImageUpdateRequest": {
       "properties": {
         "classification": {
-          "description": "clasification of this image",
+          "description": "classification of this image",
           "type": "string"
         },
         "description": {
@@ -892,6 +887,13 @@
         "url": {
           "description": "the url of this image",
           "type": "string"
+        },
+        "usedby": {
+          "description": "machines where this image is in use",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "required": [
@@ -2083,7 +2085,8 @@
           "type": "string"
         },
         "created_time": {
-          "$ref": "#/definitions/timestamp.Timestamp"
+          "format": "date-time",
+          "type": "string"
         },
         "id": {
           "type": "string"
@@ -2098,7 +2101,8 @@
           "type": "array"
         },
         "updated_time": {
-          "$ref": "#/definitions/timestamp.Timestamp"
+          "format": "date-time",
+          "type": "string"
         },
         "version": {
           "format": "int64",
@@ -2600,16 +2604,16 @@
     "v1.ProjectFindRequest": {
       "properties": {
         "description": {
-          "$ref": "#/definitions/wrappers.StringValue"
+          "type": "string"
         },
         "id": {
-          "$ref": "#/definitions/wrappers.StringValue"
+          "type": "string"
         },
         "name": {
-          "$ref": "#/definitions/wrappers.StringValue"
+          "type": "string"
         },
         "tenant_id": {
-          "$ref": "#/definitions/wrappers.StringValue"
+          "type": "string"
         }
       }
     },
@@ -2635,7 +2639,12 @@
     "v1.Quota": {
       "properties": {
         "quota": {
-          "$ref": "#/definitions/wrappers.Int32Value"
+          "format": "int32",
+          "type": "integer"
+        },
+        "used": {
+          "format": "int32",
+          "type": "integer"
         }
       }
     },
@@ -2934,6 +2943,10 @@
           "type": "string",
           "uniqueItems": true
         },
+        "mode": {
+          "description": "the mode the switch currently has",
+          "type": "string"
+        },
         "name": {
           "description": "a readable name for this entity",
           "type": "string"
@@ -2999,6 +3012,10 @@
           "$ref": "#/definitions/metal.SwitchSync",
           "description": "last synchronization to the switch that was erroneous"
         },
+        "mode": {
+          "description": "the mode the switch currently has",
+          "type": "string"
+        },
         "name": {
           "description": "a readable name for this entity",
           "type": "string"
@@ -3031,25 +3048,39 @@
         "rack_id"
       ]
     },
-    "wrappers.Int32Value": {
+    "v1.SwitchUpdateRequest": {
       "properties": {
-        "value": {
-          "format": "int32",
-          "type": "integer"
-        }
-      }
-    },
-    "wrappers.StringValue": {
-      "properties": {
-        "value": {
+        "description": {
+          "description": "a description for this entity",
+          "type": "string"
+        },
+        "id": {
+          "description": "the unique ID of this entity",
+          "type": "string",
+          "uniqueItems": true
+        },
+        "mode": {
+          "description": "the mode the switch currently has",
+          "type": "string"
+        },
+        "name": {
+          "description": "a readable name for this entity",
+          "type": "string"
+        },
+        "rack_id": {
+          "description": "the id of the rack in which this switch is located",
           "type": "string"
         }
-      }
+      },
+      "required": [
+        "id",
+        "rack_id"
+      ]
     }
   },
   "info": {
     "contact": {
-      "name": "Metal Stack",
+      "name": "metal-stack",
       "url": "https://metal-stack.io"
     },
     "description": "Resource for managing pure metal",
@@ -3359,38 +3390,6 @@
         ]
       }
     },
-    "/v1/image/migrate": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
-        "operationId": "migrateImages",
-        "produces": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "items": {
-                "$ref": "#/definitions/v1.ImageResponse"
-              },
-              "type": "array"
-            }
-          },
-          "default": {
-            "description": "Error",
-            "schema": {
-              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
-            }
-          }
-        },
-        "summary": "migrate existing machine allocation images to semver equivalents",
-        "tags": [
-          "image"
-        ]
-      }
-    },
     "/v1/image/{id}": {
       "delete": {
         "consumes": [
@@ -3460,6 +3459,44 @@
           }
         },
         "summary": "get image by id",
+        "tags": [
+          "image"
+        ]
+      }
+    },
+    "/v1/image/{id}/latest": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "findLatestImage",
+        "parameters": [
+          {
+            "description": "identifier of the image",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/v1.ImageResponse"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          }
+        },
+        "summary": "find latest image by id",
         "tags": [
           "image"
         ]
@@ -5667,6 +5704,49 @@
           }
         },
         "summary": "get all switches",
+        "tags": [
+          "switch"
+        ]
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "updateSwitch",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.SwitchUpdateRequest"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/v1.SwitchResponse"
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/httperrors.HTTPErrorResponse"
+            }
+          }
+        },
+        "summary": "updates a switch. if the switch was changed since this one was read, a conflict is returned",
         "tags": [
           "switch"
         ]
