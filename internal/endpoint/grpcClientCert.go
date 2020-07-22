@@ -45,9 +45,10 @@ func (h *endpointHandler) GrpcClientCert(request *restful.Request, response *res
 	}
 	clientKey := string(bb)
 
-	rest.Respond(response, http.StatusOK, domain.CertResponse{
-		CACert: caCert,
-		Cert:   clientCert,
-		Key:    clientKey,
+	rest.Respond(response, http.StatusOK, domain.GrpcResponse{
+		Address: h.GrpcAddress,
+		CACert:  caCert,
+		Cert:    clientCert,
+		Key:     clientKey,
 	})
 }

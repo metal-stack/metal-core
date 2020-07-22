@@ -60,8 +60,9 @@ type MetalHammerAbortReinstallRequest struct {
 	PrimaryDiskWiped bool `json:"primary_disk_wiped" description:"whether the primary disk is already wiped"`
 }
 
-type CertResponse struct {
-	CACert string `json:"ca_cert,omitempty"`
-	Cert   string `json:"cert,omitempty"`
-	Key    string `json:"key,omitempty"`
+type GrpcResponse struct {
+	Address string `json:"address,omitempty"`
+	CACert  string `json:"ca_cert,omitempty"`
+	Cert    string `json:"cert,omitempty"`
+	Key     string `json:"key,omitempty"`
 }

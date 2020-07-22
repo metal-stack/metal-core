@@ -129,7 +129,7 @@ type Config struct {
 	InterfacesTplFile         string        `required:"false" default:"" desc:"the golang template file used to render /etc/network/interfaces, a default template is included" envconfig:"interfaces_tpl_file"`
 	FrrTplFile                string        `required:"false" default:"" desc:"the golang template file used to render /etc/frr/frr.conf, a default template is included" envconfig:"frr_tpl_file"`
 	HMACKey                   string        `required:"true" desc:"the preshared key for the hmac calculation" envconfig:"hmac_key"`
-	GrpcPort                  int           `required:"true" default:"50051" desc:"the gRPC port" envconfig:"grpc_port"`
+	GrpcAddress               string        `required:"true" default:"" desc:"the gRPC address" envconfig:"grpc_address"`
 	GrpcCACertFile            string        `required:"false" desc:"the gRPC CA certificate file" envconfig:"grpc_ca_cert_file"`
 	GrpcClientCertFile        string        `required:"false" desc:"the gRPC client certificate file" envconfig:"grpc_client_cert_file"`
 	GrpcClientKeyFile         string        `required:"false" desc:"the gRPC client key file" envconfig:"grpc_client_key_file"`

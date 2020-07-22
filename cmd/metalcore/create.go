@@ -64,7 +64,7 @@ func Create() *Server {
 		zap.String("ManagementGateway", cfg.ManagementGateway),
 		zap.Any("AdditionalBridgeVIDs", cfg.AdditionalBridgeVIDs),
 		zap.Any("AdditionalBridgePorts", cfg.AdditionalBridgePorts),
-		zap.Int("gRPC-port", cfg.GrpcPort),
+		zap.String("gRPC-address", cfg.GrpcAddress),
 		zap.String("gRPC-CACertFile", cfg.GrpcCACertFile),
 		zap.String("gRPC-clientCertFile", cfg.GrpcClientCertFile),
 		zap.String("gRPC-clientKeyFile", cfg.GrpcClientKeyFile),

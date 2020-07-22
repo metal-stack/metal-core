@@ -19,8 +19,8 @@ func (h *endpointHandler) NewCertsService() *restful.WebService {
 		To(h.GrpcClientCert).
 		Doc("retrieves the client certificate of the gRPC server").
 		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Writes(domain.CertResponse{}).
-		Returns(http.StatusOK, "OK", domain.CertResponse{}).
+		Writes(domain.GrpcResponse{}).
+		Returns(http.StatusOK, "OK", domain.GrpcResponse{}).
 		Returns(http.StatusInternalServerError, "Error", nil).
 		DefaultReturns("Error", nil))
 

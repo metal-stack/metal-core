@@ -63,7 +63,6 @@ func createBootDiscoveryImageResponse(e *endpointHandler) domain.BootResponse {
 	cidr, _, _ := net.ParseCIDR(cfg.CIDR)
 	metalCoreAddress := fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d", cidr.String(), cfg.Port)
 	metalAPIURL := fmt.Sprintf("METAL_API_URL=%s://%s:%d%s", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort, cfg.ApiBasePath)
-	metalGrpcAddress := fmt.Sprintf("METAL_GRPC_ADDRESS=%v:%d", cidr.String(), cfg.GrpcPort)
 
 	bc := e.BootConfig
 	// try to update boot config
@@ -74,7 +73,7 @@ func createBootDiscoveryImageResponse(e *endpointHandler) domain.BootResponse {
 		bc.MetalHammerCommandLine = s.Bootconfig.Commandline
 	}
 
-	cmdline := []string{bc.MetalHammerCommandLine, metalCoreAddress, metalAPIURL, metalGrpcAddress}
+	cmdline := []string{bc.MetalHammerCommandLine, metalCoreAddress, metalAPIURL}
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
 		cmdline = append(cmdline, "DEBUG=1")
 	}
