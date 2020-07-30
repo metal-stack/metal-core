@@ -97,7 +97,7 @@ func TestIPMIData_InvalidPort(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, machineID, m.actualmachineID)
 	require.Equal(t, m.host, ipmiCfg.Hostname)
-	require.Equal(t, 632, ipmiCfg.Port)
+	require.Equal(t, 623, ipmiCfg.Port)
 	require.Equal(t, m.iface, ipmiCfg.Interface())
 	require.Equal(t, m.user, ipmiCfg.User())
 	require.Equal(t, m.password, ipmiCfg.Password())
