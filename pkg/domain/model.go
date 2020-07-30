@@ -167,6 +167,10 @@ func (i *IPMIConfig) Password() string {
 	return IPMIPassword(i.Ipmi)
 }
 
+func (i *IPMIConfig) IPMIConnection() (string, int, string, string) {
+	return i.Hostname, i.Port, i.User(), i.Password()
+}
+
 type AppContext struct {
 	*Config
 	*BootConfig

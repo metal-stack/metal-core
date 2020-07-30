@@ -21,7 +21,7 @@ func SetBootBios(cfg *domain.IPMIConfig) error {
 }
 
 func boot(cfg *domain.IPMIConfig, target hal.BootTarget) error {
-	outBand, err := detect.ConnectOutBand(cfg.Hostname, cfg.User(), cfg.Password())
+	outBand, err := detect.ConnectOutBand(cfg.IPMIConnection())
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to outband connect",
 			zap.String("hostname", cfg.Hostname),
