@@ -41,6 +41,10 @@ func (h *endpointHandler) Report(request *restful.Request, response *restful.Res
 			return
 		}
 
+		if report.ConsolePassword != "" {
+			ipmiCfg.Ipmi.Password = &report.ConsolePassword
+		}
+
 		err = ipmi.SetBootDisk(ipmiCfg)
 		if err != nil {
 			zapup.MustRootLogger().Error("Unable to set boot order of machine to HD",
