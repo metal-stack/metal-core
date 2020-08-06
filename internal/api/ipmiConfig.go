@@ -33,7 +33,7 @@ func (c *apiClient) IPMIConfig(machineID string) (*domain.IPMIConfig, error) {
 		return nil, errors.Wrapf(err, "IPMI address for machine %s not found", machineID)
 	}
 	hostAndPort := strings.Split(*ipmiData.Address, ":")
-	port := 632
+	port := 623
 	if len(hostAndPort) == 2 {
 		port, err = strconv.Atoi(hostAndPort[1])
 		if err != nil {
@@ -42,7 +42,7 @@ func (c *apiClient) IPMIConfig(machineID string) (*domain.IPMIConfig, error) {
 				zap.String("address", *ipmiData.Address),
 				zap.Error(err),
 			)
-			port = 632
+			port = 623
 		}
 	}
 

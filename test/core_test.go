@@ -66,10 +66,6 @@ func (a *apiHandlerCoreTest) RegisterMachine(machineID string, request *domain.M
 	return http.StatusOK, &machine
 }
 
-func (a *apiHandlerCoreTest) InstallImage(machineID string) (int, *models.V1MachineResponse) {
-	return -1, nil
-}
-
 func (a *apiHandlerCoreTest) AbortReinstall(machineID string, request *domain.MetalHammerAbortReinstallRequest) (int, *models.V1BootInfo) {
 	return -1, nil
 }

@@ -74,10 +74,6 @@ func (a *apiHandlerBootTest) RegisterMachine(machineID string, request *domain.M
 	return -1, nil
 }
 
-func (a *apiHandlerBootTest) InstallImage(machineID string) (int, *models.V1MachineResponse) {
-	return -1, nil
-}
-
 func (a *apiHandlerBootTest) AbortReinstall(machineID string, request *domain.MetalHammerAbortReinstallRequest) (int, *models.V1BootInfo) {
 	return -1, nil
 }

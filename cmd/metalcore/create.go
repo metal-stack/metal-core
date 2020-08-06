@@ -64,8 +64,10 @@ func Create() *Server {
 		zap.String("ManagementGateway", cfg.ManagementGateway),
 		zap.Any("AdditionalBridgeVIDs", cfg.AdditionalBridgeVIDs),
 		zap.Any("AdditionalBridgePorts", cfg.AdditionalBridgePorts),
-		zap.String("InterfacesTplFile", cfg.InterfacesTplFile),
-		zap.String("FrrTplFile", cfg.FrrTplFile),
+		zap.String("gRPC-address", cfg.GrpcAddress),
+		zap.String("gRPC-CACertFile", cfg.GrpcCACertFile),
+		zap.String("gRPC-clientCertFile", cfg.GrpcClientCertFile),
+		zap.String("gRPC-clientKeyFile", cfg.GrpcClientKeyFile),
 	)
 
 	transport := client.New(fmt.Sprintf("%v:%d", cfg.ApiIP, cfg.ApiPort), cfg.ApiBasePath, []string{cfg.ApiProtocol})

@@ -38,18 +38,6 @@ func (h *endpointHandler) NewMachineService() *restful.WebService {
 		Returns(http.StatusBadRequest, "Bad request", nil).
 		Returns(http.StatusInternalServerError, "Error", nil))
 
-	ws.Route(ws.GET("/install/{id}").
-		To(h.Install).
-		Doc("install machine").
-		Param(ws.PathParameter("id", "identifier of the machine").DataType("string")).
-		Metadata(restfulspec.KeyOpenAPITags, tags).
-		Writes(models.V1MachineResponse{}).
-		Returns(http.StatusOK, "OK", models.V1MachineResponse{}).
-		Returns(http.StatusNotModified, "No allocation", nil).
-		Returns(http.StatusNotFound, "Not Found", nil).
-		Returns(http.StatusExpectationFailed, "Incomplete machine", nil).
-		Returns(http.StatusInternalServerError, "Error", nil))
-
 	ws.Route(ws.POST("/abort-reinstall/{id}").
 		To(h.AbortReinstall).
 		Doc("abort reinstall machine").

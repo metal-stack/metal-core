@@ -55,7 +55,6 @@ type APIClient interface {
 	FindMachines(mac string) (int, []*models.V1MachineResponse)
 	FindPartition(id string) (*models.V1PartitionResponse, error)
 	RegisterMachine(machineID string, request *MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse)
-	InstallImage(machineID string) (int, *models.V1MachineResponse)
 	AbortReinstall(machineID string, request *MetalHammerAbortReinstallRequest) (int, *models.V1BootInfo)
 	IPMIConfig(machineID string) (*IPMIConfig, error)
 	FinalizeAllocation(machineID, consolePassword string, report *Report) (*machine.FinalizeAllocationOK, error)
@@ -72,13 +71,15 @@ type Server interface {
 type EndpointHandler interface {
 	NewBootService() *restful.WebService
 	NewMachineService() *restful.WebService
+	NewCertsService() *restful.WebService
 
 	FindMachine(request *restful.Request, response *restful.Response)
 	Boot(request *restful.Request, response *restful.Response)
-	Install(request *restful.Request, response *restful.Response)
 	AbortReinstall(request *restful.Request, response *restful.Response)
 	Register(request *restful.Request, response *restful.Response)
 	Report(request *restful.Request, response *restful.Response)
+
+	GrpcClientCert(request *restful.Request, response *restful.Response)
 }
 
 type EventHandler interface {
@@ -128,6 +129,10 @@ type Config struct {
 	InterfacesTplFile         string        `required:"false" default:"" desc:"the golang template file used to render /etc/network/interfaces, a default template is included" envconfig:"interfaces_tpl_file"`
 	FrrTplFile                string        `required:"false" default:"" desc:"the golang template file used to render /etc/frr/frr.conf, a default template is included" envconfig:"frr_tpl_file"`
 	HMACKey                   string        `required:"true" desc:"the preshared key for the hmac calculation" envconfig:"hmac_key"`
+	GrpcAddress               string        `required:"true" default:"" desc:"the gRPC address" envconfig:"grpc_address"`
+	GrpcCACertFile            string        `required:"false" desc:"the gRPC CA certificate file" envconfig:"grpc_ca_cert_file"`
+	GrpcClientCertFile        string        `required:"false" desc:"the gRPC client certificate file" envconfig:"grpc_client_cert_file"`
+	GrpcClientKeyFile         string        `required:"false" desc:"the gRPC client key file" envconfig:"grpc_client_key_file"`
 }
 
 type BootConfig struct {
@@ -160,6 +165,10 @@ func (i *IPMIConfig) User() string {
 
 func (i *IPMIConfig) Password() string {
 	return IPMIPassword(i.Ipmi)
+}
+
+func (i *IPMIConfig) IPMIConnection() (string, int, string, string) {
+	return i.Hostname, i.Port, i.User(), i.Password()
 }
 
 type AppContext struct {
