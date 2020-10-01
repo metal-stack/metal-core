@@ -17,6 +17,7 @@ func (c *apiClient) FinalizeAllocation(machineID, consolePassword string, report
 		Cmdline:         &report.Cmdline,
 		Kernel:          &report.Kernel,
 		Bootloaderid:    &report.BootloaderID,
+		Fru:             report.Fru,
 	}
 	params := machine.NewFinalizeAllocationParams()
 	params.ID = machineID

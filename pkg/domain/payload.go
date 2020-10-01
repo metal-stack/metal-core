@@ -18,15 +18,16 @@ type ChangeBootOrder struct {
 
 // Report is sent by metal-hammer to metal-core after installation finished
 type Report struct {
-	Success         bool   `json:"success,omitempty" description:"true if installation succeeded"`
-	Message         string `json:"message" description:"if installation failed, the error message"`
-	ConsolePassword string `json:"console_password" description:"the console password which was generated while provisioning"`
-	PrimaryDisk     string `json:"primary_disk" description:"the disk having a partition on which the OS is installed"`
-	OSPartition     string `json:"os_partition" description:"the partition on which the OS is installed"`
-	Initrd          string `json:"initrd" description:"the initrd"`
-	Cmdline         string `json:"cmdline" description:"the cmdline"`
-	Kernel          string `json:"kernel" description:"the kernel"`
-	BootloaderID    string `json:"bootloaderid" description:"the bootloader ID"`
+	Success         bool                 `json:"success,omitempty" description:"true if installation succeeded"`
+	Message         string               `json:"message" description:"if installation failed, the error message"`
+	ConsolePassword string               `json:"console_password" description:"the console password which was generated while provisioning"`
+	PrimaryDisk     string               `json:"primary_disk" description:"the disk having a partition on which the OS is installed"`
+	OSPartition     string               `json:"os_partition" description:"the partition on which the OS is installed"`
+	Initrd          string               `json:"initrd" description:"the initrd"`
+	Cmdline         string               `json:"cmdline" description:"the cmdline"`
+	Kernel          string               `json:"kernel" description:"the kernel"`
+	BootloaderID    string               `json:"bootloaderid" description:"the bootloader ID"`
+	Fru             *models.V1MachineFru `json:"fru" description:"the FRU information"`
 }
 
 type MetalHammerRegisterMachineRequest struct {
