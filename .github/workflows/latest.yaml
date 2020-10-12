@@ -1,4 +1,4 @@
-name: Build from master
+name: Build latest image
 
 on:
   push:
@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
-    - name: Docker Image
+      uses: actions/checkout@v2
+    - name: Build and push Docker image
       run: |
         docker login -u metalstackci -p ${{ secrets.DOCKER_HUB_TOKEN }}
         docker build -t metalstack/metal-core .

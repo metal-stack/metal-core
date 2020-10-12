@@ -1,4 +1,4 @@
-name: Build and Test
+name: Build image from release tag
 
 on:
   push:
@@ -10,12 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
-    - name: Branch name
-      run: echo running on branch ${GITHUB_REF##*/}
-    - name: Build the Docker images
+      uses: actions/checkout@v2
+    - name: Build and push Docker image
       run: |
-        export GITHUB_TAG_NAME=${GITHUB_REF##*/}
         docker login -u metalstackci -p ${{ secrets.DOCKER_HUB_TOKEN }}
-        docker build -t metalstack/metal-core:${GITHUB_TAG_NAME} .
-        docker push metalstack/metal-core:${GITHUB_TAG_NAME}
+        docker build -t metalstack/metal-core:${GITHUB_REF##*/} .
+        docker push metalstack/metal-core:${GITHUB_REF##*/}
