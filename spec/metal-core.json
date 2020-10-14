@@ -228,8 +228,6 @@
         }
       },
       "required": [
-        "changed",
-        "created",
         "expirationDate",
         "features",
         "id",
@@ -665,18 +663,12 @@
         }
       },
       "required": [
-        "allocation",
         "bios",
-        "changed",
-        "created",
         "events",
         "hardware",
         "id",
         "ledstate",
         "liveliness",
-        "partition",
-        "rackid",
-        "size",
         "state",
         "tags"
       ]
@@ -738,8 +730,6 @@
       },
       "required": [
         "bootconfig",
-        "changed",
-        "created",
         "id"
       ]
     },
@@ -788,9 +778,7 @@
         }
       },
       "required": [
-        "changed",
         "constraints",
-        "created",
         "id"
       ]
     }
