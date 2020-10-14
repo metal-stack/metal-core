@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"github.com/metal-stack/metal-core/models"
+	"github.com/metal-stack/metal-go/api/models"
 )
 
 type BootResponse struct {
