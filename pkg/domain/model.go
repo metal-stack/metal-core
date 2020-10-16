@@ -6,10 +6,10 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-	"github.com/metal-stack/metal-core/client/machine"
-	"github.com/metal-stack/metal-core/client/partition"
-	sw "github.com/metal-stack/metal-core/client/switch_operations"
-	"github.com/metal-stack/metal-core/models"
+	"github.com/metal-stack/metal-go/api/client/machine"
+	"github.com/metal-stack/metal-go/api/client/partition"
+	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
+	"github.com/metal-stack/metal-go/api/models"
 	"github.com/metal-stack/security"
 )
 

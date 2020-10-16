@@ -1,6 +1,6 @@
 package domain
 
-import "github.com/metal-stack/metal-core/models"
+import "github.com/metal-stack/metal-go/api/models"
 
 func IPMIAddress(ipmi *models.V1MachineIPMI) string {
 	if ipmi != nil && ipmi.Address != nil {

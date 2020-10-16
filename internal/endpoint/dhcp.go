@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/metal-stack/metal-core/internal/rest"
-	"github.com/metal-stack/metal-core/models"
+	"github.com/metal-stack/metal-go/api/models"
 
 	"github.com/emicklei/go-restful"
 	"github.com/metal-stack/metal-lib/zapup"

@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/metal-stack/metal-core/client/machine"
 	"github.com/metal-stack/metal-core/pkg/domain"
+	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-lib/zapup"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
