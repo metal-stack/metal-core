@@ -53,7 +53,7 @@ func (h *endpointHandler) Boot(request *restful.Request, response *restful.Respo
 		)
 		// FIXME this should not happen, we should consider returning a rec	overy image for digging into to root cause.
 	} else {
-		zapup.MustRootLogger().Error("Request Metal-API for a machine", zap.String("MAC", mac), zap.String("StatusCode", string(sc)))
+		zapup.MustRootLogger().Error("Request Metal-API for a machine", zap.String("MAC", mac), zap.String("StatusCode", fmt.Sprint(sc)))
 	}
 }
 
