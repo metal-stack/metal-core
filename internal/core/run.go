@@ -7,7 +7,7 @@ import (
 
 	httppprof "net/http/pprof"
 
-	"github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful/v3"
 	"github.com/metal-stack/metal-core/internal/endpoint"
 	"github.com/metal-stack/metal-lib/zapup"
 	"github.com/prometheus/client_golang/prometheus/promhttp"

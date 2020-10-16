@@ -1,10 +1,11 @@
 package endpoint
 
 import (
-	"github.com/emicklei/go-restful"
-	"github.com/emicklei/go-restful-openapi"
-	"github.com/metal-stack/metal-core/pkg/domain"
 	"net/http"
+
+	restfulspec "github.com/emicklei/go-restful-openapi/v2"
+	"github.com/emicklei/go-restful/v3"
+	"github.com/metal-stack/metal-core/pkg/domain"
 )
 
 func (h *endpointHandler) NewCertsService() *restful.WebService {
