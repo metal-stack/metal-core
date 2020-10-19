@@ -1,7 +1,7 @@
 package ipmi
 
 import (
-	"github.com/metal-stack/go-hal/detect"
+	"github.com/metal-stack/go-hal/connect"
 	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
@@ -9,7 +9,7 @@ import (
 
 // PowerOnMachine sets the power of the machine to ON
 func PowerOnMachine(cfg *domain.IPMIConfig) error {
-	outBand, err := detect.ConnectOutBand(cfg.IPMIConnection())
+	outBand, err := connect.OutBand(cfg.IPMIConnection())
 	if err != nil {
 		return err
 	}
@@ -24,7 +24,7 @@ func PowerOnMachine(cfg *domain.IPMIConfig) error {
 
 // PowerOffMachine sets the power of the machine to OFF
 func PowerOffMachine(cfg *domain.IPMIConfig) error {
-	outBand, err := detect.ConnectOutBand(cfg.IPMIConnection())
+	outBand, err := connect.OutBand(cfg.IPMIConnection())
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func PowerOffMachine(cfg *domain.IPMIConfig) error {
 
 // PowerResetMachine resets the power of the machine
 func PowerResetMachine(cfg *domain.IPMIConfig) error {
-	outBand, err := detect.ConnectOutBand(cfg.IPMIConnection())
+	outBand, err := connect.OutBand(cfg.IPMIConnection())
 	if err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func PowerResetMachine(cfg *domain.IPMIConfig) error {
 
 // PowerCycleMachine cycles the power of the machine
 func PowerCycleMachine(cfg *domain.IPMIConfig) error {
-	outBand, err := detect.ConnectOutBand(cfg.IPMIConnection())
+	outBand, err := connect.OutBand(cfg.IPMIConnection())
 	if err != nil {
 		return err
 	}
@@ -68,7 +68,7 @@ func PowerCycleMachine(cfg *domain.IPMIConfig) error {
 
 // PowerOnChassisIdentifyLED powers the machine chassis identify LED on indefinitely (raw 0x00 0x04 0x00 0x01)
 func PowerOnChassisIdentifyLED(cfg *domain.IPMIConfig) error {
-	outBand, err := detect.ConnectOutBand(cfg.IPMIConnection())
+	outBand, err := connect.OutBand(cfg.IPMIConnection())
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func PowerOnChassisIdentifyLED(cfg *domain.IPMIConfig) error {
 
 // PowerOffChassisIdentifyLED powers the machine chassis identify LED off (raw 0x00 0x04 0x00)
 func PowerOffChassisIdentifyLED(cfg *domain.IPMIConfig) error {
-	outBand, err := detect.ConnectOutBand(cfg.IPMIConnection())
+	outBand, err := connect.OutBand(cfg.IPMIConnection())
 	if err != nil {
 		return err
 	}
