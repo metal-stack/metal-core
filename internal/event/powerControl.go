@@ -56,8 +56,15 @@ func (h *eventHandler) PowerResetMachine(machineID string) {
 
 	err = ipmi.PowerResetMachine(ipmiCfg)
 	if err != nil {
+		usr := ""
+		if ipmiCfg.Ipmi != nil && ipmiCfg.Ipmi.User != nil {
+			usr = *ipmiCfg.Ipmi.User
+		}
 		zapup.MustRootLogger().Error("Unable to power reset machine",
 			zap.String("machine", machineID),
+			zap.String("hostname", ipmiCfg.Hostname),
+			zap.Int("port", ipmiCfg.Port),
+			zap.String("user", usr),
 			zap.Error(err),
 		)
 	}
