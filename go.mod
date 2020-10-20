@@ -6,15 +6,15 @@ require (
 	github.com/emicklei/go-restful-openapi/v2 v2.2.1
 	github.com/emicklei/go-restful/v3 v3.3.1
 	github.com/go-openapi/errors v0.19.7
-	github.com/go-openapi/runtime v0.19.22
-	github.com/go-openapi/spec v0.19.9
+	github.com/go-openapi/runtime v0.19.23
+	github.com/go-openapi/spec v0.19.10
 	github.com/go-openapi/strfmt v0.19.6
-	github.com/go-openapi/swag v0.19.9
+	github.com/go-openapi/swag v0.19.10
 	github.com/go-openapi/validate v0.19.11
 	github.com/google/gopacket v1.1.18
 	github.com/kelseyhightower/envconfig v1.3.0
 	github.com/metal-stack/go-hal v0.1.12
-	github.com/metal-stack/metal-go v0.9.5-0.20201016133513-b4808bcae2e4
+	github.com/metal-stack/metal-go v0.9.5-0.20201020121632-5ea1c26383e7
 	github.com/metal-stack/metal-lib v0.6.2
 	github.com/metal-stack/metal-networker v0.1.1
 	github.com/metal-stack/security v0.4.0
