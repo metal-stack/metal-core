@@ -15,7 +15,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.3.0
 	github.com/metal-stack/go-hal v0.1.12
 	github.com/metal-stack/metal-go v0.9.5-0.20201021123440-46bad744f10e
-	github.com/metal-stack/metal-lib v0.6.2
+	github.com/metal-stack/metal-lib v0.6.3
 	github.com/metal-stack/metal-networker v0.3.1
 	github.com/metal-stack/security v0.4.0
 	github.com/metal-stack/v v1.0.2
