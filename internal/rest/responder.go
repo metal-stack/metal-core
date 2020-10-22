@@ -2,7 +2,8 @@ package rest
 
 import (
 	"errors"
-	"github.com/emicklei/go-restful"
+
+	"github.com/emicklei/go-restful/v3"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 )

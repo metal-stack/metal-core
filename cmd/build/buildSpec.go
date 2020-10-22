@@ -3,7 +3,8 @@ package build
 import (
 	"encoding/json"
 	"fmt"
-	restfulspec "github.com/emicklei/go-restful-openapi"
+
+	restfulspec "github.com/emicklei/go-restful-openapi/v2"
 	"github.com/metal-stack/metal-core/internal/core"
 	"github.com/metal-stack/metal-core/internal/endpoint"
 )

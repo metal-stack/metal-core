@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/metal-stack/metal-core/internal/switcher"
-	"github.com/metal-stack/metal-core/models"
 	"github.com/metal-stack/metal-core/pkg/domain"
+	"github.com/metal-stack/metal-go/api/models"
 	"github.com/stretchr/testify/require"
 )
 

@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
-	sw "github.com/metal-stack/metal-core/client/switch_operations"
 	"github.com/metal-stack/metal-core/internal/switcher"
 	"github.com/metal-stack/metal-core/internal/vlan"
-	"github.com/metal-stack/metal-core/models"
 	"github.com/metal-stack/metal-core/pkg/domain"
+	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
+	"github.com/metal-stack/metal-go/api/models"
 	"github.com/metal-stack/metal-lib/zapup"
 	"github.com/pkg/errors"
 	"github.com/vishvananda/netlink"
