@@ -1,6 +1,6 @@
 module github.com/metal-stack/metal-core
 
-go 1.13
+go 1.15
 
 require (
 	github.com/emicklei/go-restful-openapi/v2 v2.2.1
