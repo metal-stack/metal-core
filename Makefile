@@ -3,7 +3,7 @@ MAINMODULE := github.com/metal-stack/metal-core
 COMMONDIR := $(or ${COMMONDIR},../builder)
 CGO_ENABLED := 1
 
-in-docker: generate-client gofmt test all;
+in-docker: gofmt test all;
 
 include $(COMMONDIR)/Makefile.inc
 
@@ -11,7 +11,7 @@ include $(COMMONDIR)/Makefile.inc
 all::
 	go mod tidy
 
-release:: generate-client gofmt test all;
+release:: gofmt test all;
 
 .PHONY: spec
 spec: all
@@ -21,11 +21,6 @@ spec: all
 .PHONY: test-switcher
 test-switcher:
 	cd ./switcher && ./validate.sh && cd -
-
-.PHONY: generate-client
-generate-client:
-	rm -rf models client
-	GO111MODULE=off swagger generate client -f metal-api.json --skip-validation
 
 .PHONY: redoc
 redoc:

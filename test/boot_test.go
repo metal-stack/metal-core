@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/emicklei/go-restful"
-	"github.com/metal-stack/metal-core/client/machine"
-	"github.com/metal-stack/metal-core/models"
+	"github.com/emicklei/go-restful/v3"
 	"github.com/metal-stack/metal-core/pkg/domain"
+	"github.com/metal-stack/metal-go/api/client/machine"
+	"github.com/metal-stack/metal-go/api/models"
 	"github.com/stretchr/testify/require"
 )
 

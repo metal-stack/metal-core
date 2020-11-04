@@ -3,8 +3,8 @@ package api
 import (
 	"net/http"
 
-	"github.com/metal-stack/metal-core/client/machine"
-	"github.com/metal-stack/metal-core/models"
+	"github.com/metal-stack/metal-go/api/client/machine"
+	"github.com/metal-stack/metal-go/api/models"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 )

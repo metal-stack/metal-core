@@ -10,7 +10,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/emicklei/go-restful"
+	"github.com/emicklei/go-restful/v3"
 	"github.com/kelseyhightower/envconfig"
 	ep "github.com/metal-stack/metal-core/internal/endpoint"
 	"github.com/metal-stack/metal-core/pkg/domain"

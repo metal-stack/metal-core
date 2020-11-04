@@ -5,9 +5,9 @@ import (
 
 	"github.com/metal-stack/metal-core/pkg/domain"
 
-	"github.com/emicklei/go-restful"
-	restfulspec "github.com/emicklei/go-restful-openapi"
-	"github.com/metal-stack/metal-core/models"
+	restfulspec "github.com/emicklei/go-restful-openapi/v2"
+	"github.com/emicklei/go-restful/v3"
+	"github.com/metal-stack/metal-go/api/models"
 )
 
 func (h *endpointHandler) NewMachineService() *restful.WebService {

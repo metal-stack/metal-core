@@ -1,11 +1,12 @@
 package endpoint
 
 import (
-	"github.com/metal-stack/metal-core/internal/ipmi"
-	"github.com/metal-stack/metal-core/pkg/domain"
 	"net/http"
 
-	"github.com/emicklei/go-restful"
+	"github.com/metal-stack/metal-core/internal/ipmi"
+	"github.com/metal-stack/metal-core/pkg/domain"
+
+	"github.com/emicklei/go-restful/v3"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 
