@@ -3,6 +3,7 @@ package ipmi
 import (
 	"github.com/metal-stack/go-hal"
 	"github.com/metal-stack/go-hal/connect"
+	halzap "github.com/metal-stack/go-hal/pkg/logger/zap"
 	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
@@ -21,7 +22,8 @@ func SetBootBios(cfg *domain.IPMIConfig) error {
 }
 
 func boot(cfg *domain.IPMIConfig, target hal.BootTarget) error {
-	outBand, err := connect.OutBand(cfg.IPMIConnection())
+	host, port, user, password := cfg.IPMIConnection()
+	outBand, err := connect.OutBand(host, port, user, password, halzap.New(zapup.MustRootLogger().Sugar()))
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to outband connect",
 			zap.String("hostname", cfg.Hostname),

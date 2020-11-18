@@ -16,14 +16,14 @@ func (c *apiClient) IPMIConfig(machineID string) (*domain.IPMIConfig, error) {
 	params.ID = machineID
 
 	ok, err := c.MachineClient.FindIPMIMachine(params, c.Auth)
-	if err != nil || ok.Payload == nil || ok.Payload.IPMI == nil {
+	if err != nil || ok.Payload == nil || ok.Payload.Ipmi == nil {
 		zapup.MustRootLogger().Error("IPMI data for machine not found",
 			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 		return nil, errors.Wrapf(err, "IPMI data for machine %s not found", machineID)
 	}
-	ipmiData := ok.Payload.IPMI
+	ipmiData := ok.Payload.Ipmi
 
 	if ipmiData.Address == nil {
 		zapup.MustRootLogger().Error("IPMI address for machine not found",

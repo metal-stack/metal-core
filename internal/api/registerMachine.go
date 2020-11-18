@@ -12,20 +12,20 @@ import (
 )
 
 func (c *apiClient) RegisterMachine(machineID string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse) {
-	partitionId := c.Config.PartitionID
-	rackId := c.Config.RackID
+	partitionID := c.Config.PartitionID
+	rackID := c.Config.RackID
 	params := machine.NewRegisterMachineParams()
 	params.Body = &models.V1MachineRegisterRequest{
 		UUID:        &machineID,
-		Partitionid: &partitionId,
-		Rackid:      &rackId,
+		Partitionid: &partitionID,
+		Rackid:      &rackID,
 		Hardware: &models.V1MachineHardwareExtended{
 			Memory:   request.Memory,
 			CPUCores: request.CPUCores,
 			Nics:     request.Nics,
 			Disks:    request.Disks,
 		},
-		IPMI: request.IPMI,
+		Ipmi: request.IPMI,
 		Bios: request.BIOS,
 	}
 
@@ -33,8 +33,8 @@ func (c *apiClient) RegisterMachine(machineID string, request *domain.MetalHamme
 	if err != nil {
 		zapup.MustRootLogger().Error("Failed to register machine at Metal-API",
 			zap.String("machineID", machineID),
-			zap.String("partitionID", partitionId),
-			zap.String("rackID", rackId),
+			zap.String("partitionID", partitionID),
+			zap.String("rackID", rackID),
 			zap.Error(err),
 		)
 		return http.StatusInternalServerError, nil

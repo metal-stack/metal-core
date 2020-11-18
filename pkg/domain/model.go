@@ -178,9 +178,9 @@ type AppContext struct {
 	server          func(*AppContext) Server
 	endpointHandler func(*AppContext) EndpointHandler
 	eventHandler    func(*AppContext) EventHandler
-	MachineClient   *machine.Client
-	SwitchClient    *sw.Client
-	PartitionClient *partition.Client
+	MachineClient   machine.ClientService
+	SwitchClient    sw.ClientService
+	PartitionClient partition.ClientService
 	hmac            security.HMACAuth
 	Auth            runtime.ClientAuthInfoWriter
 	DevMode         bool
