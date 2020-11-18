@@ -22,6 +22,8 @@ const (
 	MachineOffCmd            MachineCommand = "OFF"
 	MachineResetCmd          MachineCommand = "RESET"
 	MachineBiosCmd           MachineCommand = "BIOS"
+	MachineDiskCmd           MachineCommand = "DISK"
+	MachinePxeCmd            MachineCommand = "PXE"
 	MachineReinstall         MachineCommand = "REINSTALL"
 	ChassisIdentifyLEDOnCmd  MachineCommand = "LED-ON"
 	ChassisIdentifyLEDOffCmd MachineCommand = "LED-OFF"
@@ -87,7 +89,9 @@ type EventHandler interface {
 	PowerOnMachine(machineID string)
 	PowerOffMachine(machineID string)
 	PowerResetMachine(machineID string)
-	BootBiosMachine(machineID string)
+	PowerBootBiosMachine(machineID string)
+	PowerBootDiskMachine(machineID string)
+	PowerBootPxeMachine(machineID string)
 	ReinstallMachine(machineID string)
 
 	PowerOnChassisIdentifyLED(machineID, description string)

@@ -40,7 +40,11 @@ func (h *noopEventHandler) PowerOffMachine(machineID string) {}
 
 func (h *noopEventHandler) PowerResetMachine(machineID string) {}
 
-func (h *noopEventHandler) BootBiosMachine(machineID string) {}
+func (h *noopEventHandler) PowerBootBiosMachine(machineID string) {}
+
+func (h *noopEventHandler) PowerBootDiskMachine(machineID string) {}
+
+func (h *noopEventHandler) PowerBootPxeMachine(machineID string) {}
 
 func (h *noopEventHandler) ReinstallMachine(machineID string) {}
 
