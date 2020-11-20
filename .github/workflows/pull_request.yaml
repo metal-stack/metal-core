@@ -28,11 +28,8 @@ jobs:
       run: |
         # pull request images are prefixed with 'pr' to prevent them from overriding released images
         docker build -t ghcr.io/metal-stack/metal-core:pr-${GITHUB_HEAD_REF##*/} .
-        docker push ghcr.io/metal-stack/metal-core:pr-${GITHUB_HEAD_REF##*/}
 
     - name: Push Docker image
       run: |
-        # pull request images are prefixed with 'pr' to prevent them from overriding released images
-        docker build -t ghcr.io/metal-stack/metal-core:pr-${GITHUB_HEAD_REF##*/} .
         docker push ghcr.io/metal-stack/metal-core:pr-${GITHUB_HEAD_REF##*/}
       if: steps.fork.outputs.is_fork_pr == 'false'
