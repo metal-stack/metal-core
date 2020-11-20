@@ -68,7 +68,7 @@ func NewClient(interfaceName string) (*Client, error) {
 // CatchPackages searches on the configured interface for LLDP packages and
 // pushes the optional TLV SysName and SysDescription fields of each
 // found LLDP package into the given channel.
-func (l *Client) CatchPackages(frameFragmentChannel chan FrameFragment) {
+func (l *Client) CatchPackages(frameFragmentChannel chan<- FrameFragment) {
 	defer func() {
 		close(frameFragmentChannel)
 		l.Close()

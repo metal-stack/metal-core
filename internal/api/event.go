@@ -47,7 +47,7 @@ func (c *apiClient) Emit(eventType domain.ProvisioningEventType, machineID, mess
 func (c *apiClient) PhoneHome(msg *lldp.PhoneHomeMessage) {
 	err := c.Emit(domain.ProvisioningEventPhonedHome, msg.MachineID, msg.Payload)
 	if err != nil {
-		zapup.MustRootLogger().Error("Phone home",
+		zapup.MustRootLogger().Error("Unable to phone home",
 			zap.String("eventType", string(domain.ProvisioningEventPhonedHome)),
 			zap.String("machineID", msg.MachineID),
 			zap.String("message", msg.Payload),

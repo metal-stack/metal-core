@@ -26,7 +26,7 @@ func (c *apiClient) ConstantlyPhoneHome() {
 
 	frameFragmentChan := make(chan lldp.FrameFragment)
 	m := make(map[string]*lldp.PhoneHomeMessage)
-	mtx := sync.Mutex{}
+	mtx := new(sync.RWMutex)
 
 	for _, iface := range ifs {
 		// consider only switch port interfaces
@@ -42,10 +42,10 @@ func (c *apiClient) ConstantlyPhoneHome() {
 			continue
 		}
 
-		// constantly observe LLDP traffic on current machine on current interface
+		// constantly observe LLDP traffic on current machine and current interface
 		go lldpcli.CatchPackages(frameFragmentChan)
 
-		// extract phone-home messages from fetched LLDP packages after a short initial delay
+		// extract phone home messages from fetched LLDP packages after a short initial delay
 		time.AfterFunc(50*time.Second, func() {
 			for phoneHome := range frameFragmentChan {
 				msg := lldpcli.ExtractPhoneHomeMessage(&phoneHome)
@@ -53,28 +53,37 @@ func (c *apiClient) ConstantlyPhoneHome() {
 					continue
 				}
 
-				mtx.Lock()
+				mtx.RLock()
 				_, ok := m[msg.MachineID]
+				mtx.RUnlock()
 				if !ok {
+					mtx.Lock()
 					m[msg.MachineID] = msg
-					// send first incoming message per machine immediately
+					mtx.Unlock()
+					// send first incoming phone home message per machine immediately
 					c.PhoneHome(msg)
 				}
-				mtx.Unlock()
 			}
 		})
 	}
 
-	// send a provisioning event to metal-api every minute for each reported-back machine
+	// send phone home messages for each reported-back machine to metal-api every minute
 	t := time.NewTicker(1 * time.Minute)
 	go func() {
 		for range t.C {
+			// buffer phone home messages from map and clear it
 			mtx.Lock()
+			var mm []*lldp.PhoneHomeMessage
 			for machineID, msg := range m {
-				c.PhoneHome(msg)
+				mm = append(mm, msg)
 				delete(m, machineID)
 			}
 			mtx.Unlock()
+
+			// send buffered phone home messages
+			for _, msg := range mm {
+				c.PhoneHome(msg)
+			}
 		}
 	}()
 }
