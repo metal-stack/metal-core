@@ -113,10 +113,9 @@ router bgp {{ $ASN }} vrf {{ $vrf }}
   redistribute connected
   neighbor MACHINE maximum-prefix 24000
   neighbor MACHINE activate
-# TODO: ipv6 route-map actually does not allow any ipv6 traffic.
-#  {{- if gt (len $t.IPPrefixLists) 0 }}
-#  neighbor MACHINE route-map {{ $vrf }}-in in
-#  {{- end }}
+  {{- if gt (len $t.IPPrefixLists) 0 }}
+  neighbor MACHINE route-map {{ $vrf }}-in6 in
+  {{- end }}
  exit-address-family
  !
  address-family l2vpn evpn
