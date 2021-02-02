@@ -1,6 +1,10 @@
 package switcher
 
-import "fmt"
+import (
+	"fmt"
+
+	"inet.af/netaddr"
+)
 
 // Conf holds the switch configuration
 type Conf struct {
@@ -79,7 +83,11 @@ func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
 		s.RouteMaps = append(s.RouteMaps, rm)
 
 		for j, cidr := range cidrs {
-			spec := fmt.Sprintf("seq %d permit %s le 32", 10+j, cidr)
+			prefix, err := netaddr.ParseIPPrefix(cidr)
+			if err != nil {
+				continue
+			}
+			spec := fmt.Sprintf("seq %d permit %s le %d", 10+j, cidr, prefix.IP.BitLen())
 			prefixList := IPPrefixList{
 				Name: prefixListName,
 				Spec: spec,

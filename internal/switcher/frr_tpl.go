@@ -109,8 +109,19 @@ router bgp {{ $ASN }} vrf {{ $vrf }}
   {{- end }}
  exit-address-family
  !
+ address-family ipv6 unicast
+  redistribute connected
+  neighbor MACHINE maximum-prefix 24000
+  neighbor MACHINE activate
+# TODO: ipv6 route-map actually does not allow any ipv6 traffic.
+#  {{- if gt (len $t.IPPrefixLists) 0 }}
+#  neighbor MACHINE route-map {{ $vrf }}-in in
+#  {{- end }}
+ exit-address-family
+ !
  address-family l2vpn evpn
   advertise ipv4 unicast
+  advertise ipv6 unicast
  exit-address-family
 !
 {{- if gt (len $t.IPPrefixLists) 0 }}
