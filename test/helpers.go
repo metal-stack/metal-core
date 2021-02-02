@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/metal-stack/go-hal/pkg/api"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -51,6 +52,10 @@ func (h *noopEventHandler) ReinstallMachine(machineID string) {}
 func (h *noopEventHandler) PowerOnChassisIdentifyLED(machineID, description string) {}
 
 func (h *noopEventHandler) PowerOffChassisIdentifyLED(machineID, description string) {}
+
+func (h *noopEventHandler) UpdateBios(machineID, revision string, s3Cfg *api.S3Config) {}
+
+func (h *noopEventHandler) UpdateBmc(machineID, revision string, s3Cfg *api.S3Config) {}
 
 func (h *noopEventHandler) TriggerSwitchReconfigure(switchName, eventType string) {}
 

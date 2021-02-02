@@ -1,6 +1,8 @@
 package metalcore
 
 import (
+	"github.com/metal-stack/go-hal/pkg/api"
+	"strconv"
 	"strings"
 	"time"
 
@@ -87,6 +89,32 @@ func (s *Server) initConsumer() error {
 						description = "unknown"
 					}
 					s.EventHandler().PowerOffChassisIdentifyLED(evt.Cmd.TargetMachineID, description)
+				case domain.BiosUpdate:
+					revision := evt.Cmd.Params[0]
+					hostnameImmutable, err := strconv.ParseBool(evt.Cmd.Params[4])
+					if err != nil {
+						hostnameImmutable = false
+					}
+					s.EventHandler().UpdateBios(evt.Cmd.TargetMachineID, revision, &api.S3Config{
+						Region:            evt.Cmd.Params[0],
+						Url:               evt.Cmd.Params[1],
+						Key:               evt.Cmd.Params[2],
+						Secret:            evt.Cmd.Params[3],
+						HostnameImmutable: hostnameImmutable,
+					})
+				case domain.BmcUpdate:
+					revision := evt.Cmd.Params[0]
+					hostnameImmutable, err := strconv.ParseBool(evt.Cmd.Params[4])
+					if err != nil {
+						hostnameImmutable = false
+					}
+					s.EventHandler().UpdateBmc(evt.Cmd.TargetMachineID, revision, &api.S3Config{
+						Region:            evt.Cmd.Params[0],
+						Url:               evt.Cmd.Params[1],
+						Key:               evt.Cmd.Params[2],
+						Secret:            evt.Cmd.Params[3],
+						HostnameImmutable: hostnameImmutable,
+					})
 				default:
 					zapup.MustRootLogger().Warn("Unhandled command",
 						zap.String("topic", s.Config.MachineTopic),
