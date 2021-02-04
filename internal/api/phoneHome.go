@@ -1,14 +1,15 @@
 package api
 
 import (
-	"github.com/google/gopacket/pcap"
-	"github.com/metal-stack/metal-core/internal/lldp"
-	"github.com/metal-stack/metal-lib/zapup"
-	"go.uber.org/zap"
 	"os"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/google/gopacket/pcap"
+	"github.com/metal-stack/metal-core/internal/lldp"
+	"github.com/metal-stack/metal-lib/zapup"
+	"go.uber.org/zap"
 )
 
 // ConstantlyPhoneHome sends every minute a single phone-home
@@ -48,7 +49,7 @@ func (c *apiClient) ConstantlyPhoneHome() {
 		// extract phone home messages from fetched LLDP packages after a short initial delay
 		time.AfterFunc(50*time.Second, func() {
 			for phoneHome := range frameFragmentChan {
-				msg := lldpcli.ExtractPhoneHomeMessage(&phoneHome)
+				msg := lldpcli.ExtractPhoneHomeMessage(phoneHome)
 				if msg == nil {
 					continue
 				}
