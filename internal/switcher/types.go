@@ -66,8 +66,9 @@ type RouteMap struct {
 
 // IPPrefixList represents 'ip prefix-list' filtering mechanism to be used in combination with route-maps.
 type IPPrefixList struct {
-	Name string
-	Spec string
+	AddressFamily string
+	Name          string
+	Spec          string
 }
 
 func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
@@ -82,7 +83,7 @@ func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
 			Order:   10,
 		}
 		s.RouteMaps = append(s.RouteMaps, rm)
-		s.addPrefixList(prefixListName, cidrMap["ipv4"])
+		s.addPrefixList(prefixListName, cidrMap["ipv4"], "ip")
 	}
 	if len(cidrMap["ipv6"]) > 0 {
 		prefixRouteMapName := fmt.Sprintf("%s-in6", rmPrefix)
@@ -94,7 +95,7 @@ func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
 			Order:   10,
 		}
 		s.RouteMaps = append(s.RouteMaps, rm)
-		s.addPrefixList(prefixListName, cidrMap["ipv6"])
+		s.addPrefixList(prefixListName, cidrMap["ipv6"], "ipv6")
 	}
 	if len(vnis) > 0 {
 		vniRouteMapName := fmt.Sprintf("%s-vni", rmPrefix)
@@ -110,7 +111,7 @@ func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
 	}
 }
 
-func (s *Filter) addPrefixList(prefixListName string, cidrs []string) {
+func (s *Filter) addPrefixList(prefixListName string, cidrs []string, af string) {
 	for j, cidr := range cidrs {
 		prefix, err := netaddr.ParseIPPrefix(cidr)
 		if err != nil {
@@ -118,8 +119,9 @@ func (s *Filter) addPrefixList(prefixListName string, cidrs []string) {
 		}
 		spec := fmt.Sprintf("seq %d permit %s le %d", 10+j, cidr, prefix.IP.BitLen())
 		prefixList := IPPrefixList{
-			Name: prefixListName,
-			Spec: spec,
+			AddressFamily: af,
+			Name:          prefixListName,
+			Spec:          spec,
 		}
 		s.IPPrefixLists = append(s.IPPrefixLists, prefixList)
 	}

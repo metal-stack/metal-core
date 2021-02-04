@@ -62,6 +62,15 @@ router bgp {{ $ASN }}
   {{- end }}
  exit-address-family
  !
+ address-family ipv6 unicast
+  redistribute connected route-map LOOPBACKS
+  neighbor FIREWALL allowas-in 1
+  neighbor FIREWALL activate
+  {{- range $k, $f := .Ports.Firewalls }}
+  neighbor {{ $f.Port }} route-map fw-{{ $k }}-in in
+  {{- end }}
+ exit-address-family
+ !
  address-family l2vpn evpn
   advertise-all-vni
   neighbor FABRIC activate
@@ -78,7 +87,7 @@ route-map LOOPBACKS permit 10
 {{- range $k, $f := .Ports.Firewalls }}
 # route-maps for firewall@{{ $k }}
         {{- range $f.IPPrefixLists }}
-ip prefix-list {{ .Name }} {{ .Spec }}
+{{ .AddressFamily }} prefix-list {{ .Name }} {{ .Spec }}
         {{- end}}
         {{- range $f.RouteMaps }}
 route-map {{ .Name }} {{ .Policy }} {{ .Order }}
@@ -126,7 +135,7 @@ router bgp {{ $ASN }} vrf {{ $vrf }}
 {{- if gt (len $t.IPPrefixLists) 0 }}
 # route-maps for {{ $vrf }}
         {{- range $t.IPPrefixLists }}
-ip prefix-list {{ .Name }} {{ .Spec }}
+{{ .AddressFamily }} prefix-list {{ .Name }} {{ .Spec }}
         {{- end}}
         {{- range $t.RouteMaps }}
 route-map {{ .Name }} {{ .Policy }} {{ .Order }}
