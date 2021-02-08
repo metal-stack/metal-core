@@ -1,6 +1,8 @@
 package api
 
 import (
+	"time"
+
 	"github.com/metal-stack/metal-core/internal/lldp"
 	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-go/api/client/machine"
@@ -16,6 +18,7 @@ func (c *apiClient) AddProvisioningEvent(machineID string, event *models.V1Machi
 	params := machine.NewAddProvisioningEventParams()
 	params.ID = machineID
 	params.Body = event
+	params.WithTimeout(5 * time.Second)
 	_, err := c.MachineClient.AddProvisioningEvent(params, c.Auth)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to send provisioning event back to API",

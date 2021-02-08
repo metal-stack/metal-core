@@ -72,7 +72,7 @@ func (c *apiClient) ConstantlyPhoneHome() {
 				mtx.Unlock()
 
 				if sendToAPI {
-					c.PhoneHome(msg)
+					go c.PhoneHome(msg)
 				}
 			}
 		}()
