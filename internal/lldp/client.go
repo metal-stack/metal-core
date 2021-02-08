@@ -31,9 +31,8 @@ type FrameFragment struct {
 
 // PhoneHomeMessage contains a phone-home message.
 type PhoneHomeMessage struct {
-	MachineID  string
-	Payload    string
-	ReceivedAt time.Time
+	MachineID string
+	Payload   string
 }
 
 // NewClient creates a new LLDP client.
@@ -106,9 +105,8 @@ func (l *Client) Close() {
 func (l *Client) ExtractPhoneHomeMessage(frameFragment *FrameFragment) *PhoneHomeMessage {
 	if strings.Contains(frameFragment.SysDescription, "provisioned") {
 		return &PhoneHomeMessage{
-			MachineID:  frameFragment.SysName,
-			Payload:    frameFragment.SysDescription,
-			ReceivedAt: time.Now(),
+			MachineID: frameFragment.SysName,
+			Payload:   frameFragment.SysDescription,
 		}
 	}
 
