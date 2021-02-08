@@ -2,15 +2,16 @@ package lldp
 
 import (
 	"fmt"
+	"net"
+	"strings"
+	"time"
+
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 	"github.com/metal-stack/metal-lib/zapup"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"net"
-	"strings"
-	"time"
 )
 
 const lldpProtocol = "0x88cc"
@@ -30,8 +31,9 @@ type FrameFragment struct {
 
 // PhoneHomeMessage contains a phone-home message.
 type PhoneHomeMessage struct {
-	MachineID string
-	Payload   string
+	MachineID  string
+	Payload    string
+	ReceivedAt time.Time
 }
 
 // NewClient creates a new LLDP client.
@@ -104,8 +106,9 @@ func (l *Client) Close() {
 func (l *Client) ExtractPhoneHomeMessage(frameFragment *FrameFragment) *PhoneHomeMessage {
 	if strings.Contains(frameFragment.SysDescription, "provisioned") {
 		return &PhoneHomeMessage{
-			MachineID: frameFragment.SysName,
-			Payload:   frameFragment.SysDescription,
+			MachineID:  frameFragment.SysName,
+			Payload:    frameFragment.SysDescription,
+			ReceivedAt: time.Now(),
 		}
 	}
 
