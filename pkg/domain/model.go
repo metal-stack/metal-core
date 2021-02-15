@@ -25,11 +25,10 @@ const (
 	MachineBiosCmd           MachineCommand = "BIOS"
 	MachineDiskCmd           MachineCommand = "DISK"
 	MachinePxeCmd            MachineCommand = "PXE"
-	MachineReinstall         MachineCommand = "REINSTALL"
+	MachineReinstallCmd      MachineCommand = "REINSTALL"
 	ChassisIdentifyLEDOnCmd  MachineCommand = "LED-ON"
 	ChassisIdentifyLEDOffCmd MachineCommand = "LED-OFF"
-	BiosUpdate               MachineCommand = "BIOS-UPDATE"
-	BmcUpdate                MachineCommand = "BMC-UPDATE"
+	UpdateFirmwareCmd        MachineCommand = "UPDATE-FIRMWARE"
 )
 
 type MachineExecCommand struct {
@@ -100,8 +99,8 @@ type EventHandler interface {
 	PowerOnChassisIdentifyLED(machineID, description string)
 	PowerOffChassisIdentifyLED(machineID, description string)
 
-	UpdateBios(machineID, revision string, s3Cfg *api.S3Config)
-	UpdateBmc(machineID, revision string, s3Cfg *api.S3Config)
+	UpdateBios(machineID, revision, description string, s3Cfg *api.S3Config)
+	UpdateBmc(machineID, revision, description string, s3Cfg *api.S3Config)
 
 	ReconfigureSwitch()
 }

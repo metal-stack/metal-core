@@ -7,7 +7,13 @@ import (
 	"go.uber.org/zap"
 )
 
-func (h *eventHandler) UpdateBios(machineID, revision string, s3Cfg *api.S3Config) {
+func (h *eventHandler) UpdateBios(machineID, revision, description string, s3Cfg *api.S3Config) {
+	zapup.MustRootLogger().Info("update bios",
+		zap.String("machine", machineID),
+		zap.String("revision", revision),
+		zap.String("description", description),
+	)
+
 	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to read IPMI connection details",
@@ -27,7 +33,13 @@ func (h *eventHandler) UpdateBios(machineID, revision string, s3Cfg *api.S3Confi
 	}
 }
 
-func (h *eventHandler) UpdateBmc(machineID, revision string, s3Cfg *api.S3Config) {
+func (h *eventHandler) UpdateBmc(machineID, revision, description string, s3Cfg *api.S3Config) {
+	zapup.MustRootLogger().Info("update bmc",
+		zap.String("machine", machineID),
+		zap.String("revision", revision),
+		zap.String("description", description),
+	)
+
 	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to read IPMI connection details",

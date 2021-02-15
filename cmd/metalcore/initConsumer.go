@@ -2,7 +2,6 @@ package metalcore
 
 import (
 	"github.com/metal-stack/go-hal/pkg/api"
-	"strconv"
 	"strings"
 	"time"
 
@@ -75,7 +74,7 @@ func (s *Server) initConsumer() error {
 					s.EventHandler().PowerBootDiskMachine(evt.Cmd.TargetMachineID)
 				case domain.MachinePxeCmd:
 					s.EventHandler().PowerBootPxeMachine(evt.Cmd.TargetMachineID)
-				case domain.MachineReinstall:
+				case domain.MachineReinstallCmd:
 					s.EventHandler().ReinstallMachine(evt.Cmd.TargetMachineID)
 				case domain.ChassisIdentifyLEDOnCmd:
 					description := strings.TrimSpace(strings.Join(evt.Cmd.Params, " "))
@@ -89,32 +88,29 @@ func (s *Server) initConsumer() error {
 						description = "unknown"
 					}
 					s.EventHandler().PowerOffChassisIdentifyLED(evt.Cmd.TargetMachineID, description)
-				case domain.BiosUpdate:
-					revision := evt.Cmd.Params[0]
-					hostnameImmutable, err := strconv.ParseBool(evt.Cmd.Params[4])
-					if err != nil {
-						hostnameImmutable = false
+				case domain.UpdateFirmwareCmd:
+					kind := evt.Cmd.Params[0]
+					revision := evt.Cmd.Params[1]
+					description := evt.Cmd.Params[2]
+					s3Cfg := &api.S3Config{
+						Region: evt.Cmd.Params[3],
+						Url:    evt.Cmd.Params[4],
+						Key:    evt.Cmd.Params[5],
+						Secret: evt.Cmd.Params[6],
 					}
-					s.EventHandler().UpdateBios(evt.Cmd.TargetMachineID, revision, &api.S3Config{
-						Region:            evt.Cmd.Params[0],
-						Url:               evt.Cmd.Params[1],
-						Key:               evt.Cmd.Params[2],
-						Secret:            evt.Cmd.Params[3],
-						HostnameImmutable: hostnameImmutable,
-					})
-				case domain.BmcUpdate:
-					revision := evt.Cmd.Params[0]
-					hostnameImmutable, err := strconv.ParseBool(evt.Cmd.Params[4])
-					if err != nil {
-						hostnameImmutable = false
+					switch kind {
+					case "bios":
+						s.EventHandler().UpdateBios(evt.Cmd.TargetMachineID, revision, description, s3Cfg)
+					case "bmc":
+						s.EventHandler().UpdateBmc(evt.Cmd.TargetMachineID, revision, description, s3Cfg)
+					default:
+						zapup.MustRootLogger().Warn("Unknown firmware kind",
+							zap.String("topic", s.Config.MachineTopic),
+							zap.String("channel", "core"),
+							zap.String("firmware kind", kind),
+							zap.Any("event", evt),
+						)
 					}
-					s.EventHandler().UpdateBmc(evt.Cmd.TargetMachineID, revision, &api.S3Config{
-						Region:            evt.Cmd.Params[0],
-						Url:               evt.Cmd.Params[1],
-						Key:               evt.Cmd.Params[2],
-						Secret:            evt.Cmd.Params[3],
-						HostnameImmutable: hostnameImmutable,
-					})
 				default:
 					zapup.MustRootLogger().Warn("Unhandled command",
 						zap.String("topic", s.Config.MachineTopic),

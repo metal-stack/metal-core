@@ -53,9 +53,9 @@ func (h *noopEventHandler) PowerOnChassisIdentifyLED(machineID, description stri
 
 func (h *noopEventHandler) PowerOffChassisIdentifyLED(machineID, description string) {}
 
-func (h *noopEventHandler) UpdateBios(machineID, revision string, s3Cfg *api.S3Config) {}
+func (h *noopEventHandler) UpdateBios(machineID, revision, description string, s3Cfg *api.S3Config) {}
 
-func (h *noopEventHandler) UpdateBmc(machineID, revision string, s3Cfg *api.S3Config) {}
+func (h *noopEventHandler) UpdateBmc(machineID, revision, description string, s3Cfg *api.S3Config) {}
 
 func (h *noopEventHandler) TriggerSwitchReconfigure(switchName, eventType string) {}
 
