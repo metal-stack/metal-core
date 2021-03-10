@@ -93,10 +93,9 @@ func (s *Server) initConsumer() error {
 					revision := evt.Cmd.Params[1]
 					description := evt.Cmd.Params[2]
 					s3Cfg := &api.S3Config{
-						Region: evt.Cmd.Params[3],
-						Url:    evt.Cmd.Params[4],
-						Key:    evt.Cmd.Params[5],
-						Secret: evt.Cmd.Params[6],
+						Url:    evt.Cmd.Params[3],
+						Key:    evt.Cmd.Params[4],
+						Secret: evt.Cmd.Params[5],
 					}
 					switch kind {
 					case "bios":
