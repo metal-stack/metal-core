@@ -510,8 +510,8 @@ github.com/metal-stack/go-hal v0.3.1-0.20210315140756-f240e221a521/go.mod h1:PZI
 github.com/metal-stack/masterdata-api v0.7.3/go.mod h1:AT5m6KOkP6iyqwbDgGa1aQVdSn9bU7PkifjAmaNDLac=
 github.com/metal-stack/masterdata-api v0.8.3/go.mod h1:vNzStBft4l8ItkUNu7mrdHbSF6kcPLhulByXBifYLkA=
 github.com/metal-stack/metal-go v0.10.0/go.mod h1:5emMVOjVD2tj6OxCBUYB8Xo1ruBnoP6idwypVV1pzec=
-github.com/metal-stack/metal-go v0.11.1 h1:aBv/JolspX3YYQDgLrfDAolJpm0HsQ5yf7H4Kv/o/hE=
-github.com/metal-stack/metal-go v0.11.1/go.mod h1:A1ZZSxY8gLIH+cHboUytRxzt42hgnNSCHzfzXwCrRe8=
+github.com/metal-stack/metal-go v0.11.6-0.20210316173631-1cb3fe22a1ee h1:s309YtHZ5n/2TyBhd2lKFrrAaEnAOF3pXfBdfNDfPDA=
+github.com/metal-stack/metal-go v0.11.6-0.20210316173631-1cb3fe22a1ee/go.mod h1:mqhdaQTWVnvjpYvU/8QBAP/Q6p79DkpJYHq46lnNTHM=
 github.com/metal-stack/metal-lib v0.5.0/go.mod h1:Vxr1OwM8fef1gtIv9fUiVU4Gq5mkd4ElHMpTjfuuSFQ=
 github.com/metal-stack/metal-lib v0.6.0/go.mod h1:r8qhfX72eAzClR/pEaQvdwM//Otx9gegYoOphLPmmQ4=
 github.com/metal-stack/metal-lib v0.6.3/go.mod h1:r8qhfX72eAzClR/pEaQvdwM//Otx9gegYoOphLPmmQ4=
@@ -698,9 +698,8 @@ github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
 github.com/testcontainers/testcontainers-go v0.7.0/go.mod h1:4dloDPrC94+8ebXA+Iei3Jy+gxF6uHQssJkB3mlP9Rg=
 github.com/tidwall/pretty v1.0.0/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
+github.com/tidwall/pretty v1.0.1 h1:WE4RBSZ1x6McVVC8S/Md+Qse8YUv6HRObAx6ke00NY8=
 github.com/tidwall/pretty v1.0.1/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
-github.com/tidwall/pretty v1.0.2 h1:Z7S3cePv9Jwm1KwS0513MRaoUe3S01WPbLNV40pwWZU=
-github.com/tidwall/pretty v1.0.2/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
 github.com/ugorji/go v1.1.4/go.mod h1:uQMGLiO92mf5W77hV/PUCpI3pbzQx3CRekS0kk+RGrc=
