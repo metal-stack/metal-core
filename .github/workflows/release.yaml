@@ -12,11 +12,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - name: Lint
-      uses: golangci/golangci-lint-action@v2
-      with:
-        version: v1.32.2
-
     - name: Docker Login
       uses: docker/login-action@v1
       with:
