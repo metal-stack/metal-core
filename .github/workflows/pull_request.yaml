@@ -16,7 +16,6 @@ jobs:
       uses: golangci/golangci-lint-action@v2
       with:
         version: v1.32.2
-        args: -p bugs
 
     - name: Figure out if running fork PR
       id: fork
