@@ -37,7 +37,8 @@ func TestLoggingMiddleware(t *testing.T) {
 
 	// then
 	require.Equal(t, http.StatusOK, sc)
-	logs := getLogs()
+	logs, err := getLogs()
+	require.Nil(t, err)
 	require.Contains(t, logs, "Machine registered")
 	require.Contains(t, logs, fmt.Sprintf("%q:%q", "id", machineID))
 	require.NotContains(t, logs, "error")

@@ -6,11 +6,13 @@ import (
 )
 
 func TestInterfacesApplier(t *testing.T) {
-	for _, tc := range listTestCases() {
-		t.Run(tc, func(t *testing.T) {
-			c := readConf(t, path.Join("test_data", tc, "conf.yaml"))
+	tests := listTestCases()
+	for i := range tests {
+		tt := tests[i]
+		t.Run(tt, func(t *testing.T) {
+			c := readConf(t, path.Join("test_data", tt, "conf.yaml"))
 			a := NewInterfacesApplier(&c)
-			testApplier(t, a, path.Join("test_data", tc, "interfaces"))
+			testApplier(t, a, path.Join("test_data", tt, "interfaces"))
 		})
 	}
 }

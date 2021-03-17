@@ -10,7 +10,7 @@ require (
 	github.com/go-openapi/strfmt v0.19.11
 	github.com/google/gopacket v1.1.19
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/metal-stack/go-hal v0.3.1-0.20210316221317-b0ab7de7c10d
+	github.com/metal-stack/go-hal v0.3.1-0.20210317203712-2410c8c0f91a
 	github.com/metal-stack/metal-go v0.11.6-0.20210316173631-1cb3fe22a1ee
 	github.com/metal-stack/metal-lib v0.6.6
 	github.com/metal-stack/metal-networker v0.5.0

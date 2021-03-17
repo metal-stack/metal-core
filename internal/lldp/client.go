@@ -76,19 +76,18 @@ func (l *Client) CatchPackages(frameFragmentChannel chan<- FrameFragment) {
 
 	for {
 		for packet := range l.Source.Packets() {
-			switch packet.LinkLayer().LayerType() {
-			case layers.LayerTypeEthernet:
-				ff := FrameFragment{}
-				for _, layer := range packet.Layers() {
-					layerType := layer.LayerType()
-					switch layerType {
-					case layers.LayerTypeLinkLayerDiscoveryInfo:
-						info := layer.(*layers.LinkLayerDiscoveryInfo)
-						ff.SysName = info.SysName
-						ff.SysDescription = info.SysDescription
-						frameFragmentChannel <- ff
-					}
+			if packet.LinkLayer().LayerType() != layers.LayerTypeEthernet {
+				continue
+			}
+			ff := FrameFragment{}
+			for _, layer := range packet.Layers() {
+				if layer.LayerType() != layers.LayerTypeLinkLayerDiscoveryInfo {
+					continue
 				}
+				info := layer.(*layers.LinkLayerDiscoveryInfo)
+				ff.SysName = info.SysName
+				ff.SysDescription = info.SysDescription
+				frameFragmentChannel <- ff
 			}
 		}
 	}

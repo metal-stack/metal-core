@@ -118,6 +118,8 @@ func (s *Server) initConsumer() error {
 						zap.Any("event", evt),
 					)
 				}
+			case domain.Create, domain.Update:
+				fallthrough
 			default:
 				zapup.MustRootLogger().Warn("Unhandled event",
 					zap.String("topic", s.Config.MachineTopic),

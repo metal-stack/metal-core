@@ -48,6 +48,7 @@ func (c *apiClient) ConstantlyPhoneHome() {
 		// extract phone home messages from fetched LLDP packages after a short initial delay
 		time.AfterFunc(50*time.Second, func() {
 			for phoneHome := range frameFragmentChan {
+				phoneHome := phoneHome
 				msg := lldpcli.ExtractPhoneHomeMessage(&phoneHome)
 				if msg == nil {
 					continue
