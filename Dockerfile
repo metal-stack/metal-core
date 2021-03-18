@@ -6,9 +6,10 @@ FROM letsdeal/redoc-cli:latest as docbuilder
 COPY --from=builder /work/spec/metal-core.json /spec/metal-core.json
 RUN redoc-cli bundle -o /generate/index.html /spec/metal-core.json
 
-FROM alpine:3.12
+FROM ubuntu:18.04
 
-RUN apk add -U \
+RUN apt update \
+ && apt install -y \
     ca-certificates \
     ipmitool \
     libpcap-dev
