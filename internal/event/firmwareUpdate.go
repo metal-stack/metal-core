@@ -25,9 +25,9 @@ func (h *eventHandler) UpdateBios(machineID, revision, description string, s3Cfg
 
 	err = ipmi.UpdateBios(ipmiCfg, revision, s3Cfg)
 	if err != nil {
-		zapup.MustRootLogger().Error("Unable to change boot order of machine",
+		zapup.MustRootLogger().Error("Unable to update BIOS of machine",
 			zap.String("machineID", machineID),
-			zap.String("boot", "PXE"),
+			zap.String("bios", revision),
 			zap.Error(err),
 		)
 	}
@@ -51,9 +51,9 @@ func (h *eventHandler) UpdateBmc(machineID, revision, description string, s3Cfg 
 
 	err = ipmi.UpdateBmc(ipmiCfg, revision, s3Cfg)
 	if err != nil {
-		zapup.MustRootLogger().Error("Unable to change boot order of machine",
+		zapup.MustRootLogger().Error("Unable to update BMC of machine",
 			zap.String("machineID", machineID),
-			zap.String("boot", "PXE"),
+			zap.String("bmc", revision),
 			zap.Error(err),
 		)
 	}
