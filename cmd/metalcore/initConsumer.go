@@ -2,6 +2,7 @@ package metalcore
 
 import (
 	"github.com/metal-stack/go-hal/pkg/api"
+	metalgo "github.com/metal-stack/metal-go"
 	"strings"
 	"time"
 
@@ -89,7 +90,7 @@ func (s *Server) initConsumer() error {
 					}
 					s.EventHandler().PowerOffChassisIdentifyLED(evt.Cmd.TargetMachineID, description)
 				case domain.UpdateFirmwareCmd:
-					kind := evt.Cmd.Params[0]
+					kind := metalgo.FirmwareKind(evt.Cmd.Params[0])
 					revision := evt.Cmd.Params[1]
 					description := evt.Cmd.Params[2]
 					s3Cfg := &api.S3Config{
@@ -99,15 +100,15 @@ func (s *Server) initConsumer() error {
 						FirmwareBucket: evt.Cmd.Params[6],
 					}
 					switch kind {
-					case "bios":
-						s.EventHandler().UpdateBios(evt.Cmd.TargetMachineID, revision, description, s3Cfg)
-					case "bmc":
-						s.EventHandler().UpdateBmc(evt.Cmd.TargetMachineID, revision, description, s3Cfg)
+					case metalgo.Bios:
+						go s.EventHandler().UpdateBios(evt.Cmd.TargetMachineID, revision, description, s3Cfg)
+					case metalgo.Bmc:
+						go s.EventHandler().UpdateBmc(evt.Cmd.TargetMachineID, revision, description, s3Cfg)
 					default:
 						zapup.MustRootLogger().Warn("Unknown firmware kind",
 							zap.String("topic", s.Config.MachineTopic),
 							zap.String("channel", "core"),
-							zap.String("firmware kind", kind),
+							zap.String("firmware kind", string(kind)),
 							zap.Any("event", evt),
 						)
 					}
