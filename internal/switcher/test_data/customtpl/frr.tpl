@@ -54,7 +54,7 @@ router bgp {{ $ASN }}
  !
  address-family ipv4 unicast
   redistribute connected route-map LOCALS
-  neighbor FIREWALL allowas-in 1
+  neighbor FIREWALL allowas-in 2
   {{- range $k, $f := .Ports.Firewalls }}
   neighbor {{ $f.Port }} route-map fw-{{ $k }}-in in
   {{- end }}
@@ -63,8 +63,9 @@ router bgp {{ $ASN }}
  address-family l2vpn evpn
   advertise-all-vni
   neighbor FABRIC activate
+  neighbor FABRIC allowas-in 2
   neighbor FIREWALL activate
-  neighbor FIREWALL allowas-in 1
+  neighbor FIREWALL allowas-in 2
   {{- range $k, $f := .Ports.Firewalls }}
   neighbor {{ $f.Port }} route-map fw-{{ $k }}-vni out
   {{- end }}
