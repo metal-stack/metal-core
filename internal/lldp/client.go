@@ -2,15 +2,16 @@ package lldp
 
 import (
 	"fmt"
+	"net"
+	"strings"
+	"time"
+
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 	"github.com/metal-stack/metal-lib/zapup"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"net"
-	"strings"
-	"time"
 )
 
 const lldpProtocol = "0x88cc"
