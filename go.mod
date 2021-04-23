@@ -14,7 +14,7 @@ require (
 	github.com/google/gopacket v1.1.19
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/go-hal v0.3.0
-	github.com/metal-stack/metal-go v0.14.1-0.20210421105851-ab8335384e12
+	github.com/metal-stack/metal-go v0.14.1-0.20210423110621-6f5399e2df2a
 	github.com/metal-stack/metal-lib v0.7.2
 	github.com/metal-stack/metal-networker v0.5.0
 	github.com/metal-stack/security v0.5.3
