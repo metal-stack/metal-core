@@ -36,11 +36,6 @@ func (m *finalizeDataMock) Submit(o *runtime.ClientOperation) (interface{}, erro
 				Disks: []*models.V1MachineBlockDevice{
 					{
 						Name: params.Body.Primarydisk,
-						Partitions: []*models.V1MachineDiskPartition{
-							{
-								Device: params.Body.Ospartition,
-							},
-						},
 					},
 				},
 			},
