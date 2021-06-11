@@ -28,10 +28,8 @@ func (m *finalizeDataMock) Submit(o *runtime.ClientOperation) (interface{}, erro
 	}
 	return &machine.FinalizeAllocationOK{
 		Payload: &models.V1MachineResponse{
-			ID: &m.machineid,
-			Allocation: &models.V1MachineAllocation{
-				ConsolePassword: *params.Body.ConsolePassword,
-			},
+			ID:         &m.machineid,
+			Allocation: &models.V1MachineAllocation{},
 			Hardware: &models.V1MachineHardware{
 				Disks: []*models.V1MachineBlockDevice{
 					{
@@ -77,7 +75,6 @@ func TestFinalizeAllocation_OK(t *testing.T) {
 	// THEN
 	require.Nil(t, err)
 	require.Equal(t, machineID, *ok.Payload.ID)
-	require.Equal(t, passwd, ok.Payload.Allocation.ConsolePassword)
 }
 
 func TestFinalizeAllocation_NOK(t *testing.T) {
