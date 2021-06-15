@@ -1,14 +1,16 @@
 module github.com/metal-stack/metal-core
 
-go 1.15
+go 1.16
 
 require (
 	github.com/emicklei/go-restful-openapi/v2 v2.2.1
 	github.com/emicklei/go-restful/v3 v3.4.0
+	github.com/go-openapi/errors v0.19.8
 	github.com/go-openapi/runtime v0.19.24
 	github.com/go-openapi/spec v0.19.14
 	github.com/go-openapi/strfmt v0.19.11
-	github.com/go-openapi/validate v0.19.14 // indirect
+	github.com/go-openapi/swag v0.19.12
+	github.com/go-openapi/validate v0.19.14
 	github.com/google/gopacket v1.1.19
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/go-hal v0.3.1
