@@ -6,13 +6,13 @@ FROM letsdeal/redoc-cli:latest as docbuilder
 COPY --from=builder /work/spec/metal-core.json /spec/metal-core.json
 RUN redoc-cli bundle -o /generate/index.html /spec/metal-core.json
 
-FROM alpine:3.14
+FROM debian:10-slim
 
-RUN apk add \
+RUN apt update \
+ && apt install --yes --no-install-recommends \
     ca-certificates \
-    gcompat \
     ipmitool \
-    libpcap-dev \
+#     libpcap-dev \
  # /usr/bin/sum is provided by busybox
  && rm /usr/bin/sum 
 
