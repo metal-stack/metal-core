@@ -24,7 +24,9 @@ func TestPXEBoot(t *testing.T) {
 	e := mockAPIEndpoint(func(ctx *domain.AppContext) domain.APIClient {
 		return &apiHandlerBootTest{}
 	})
-	defer truncateLogFile()
+	defer func() {
+		_ = truncateLogFile()
+	}()
 
 	restful.Add(e.NewBootService())
 
@@ -39,9 +41,10 @@ func TestPXEBoot(t *testing.T) {
 
 	// when
 	bootResponse := &domain.BootResponse{}
-	sc := doGet(fmt.Sprintf("/v1/boot/%v", fakeMac), bootResponse)
+	sc, err := doGet(fmt.Sprintf("/v1/boot/%v", fakeMac), bootResponse)
 
 	// then
+	require.Nil(t, err)
 	require.Equal(t, http.StatusOK, sc)
 	require.Equal(t, expected.Kernel, bootResponse.Kernel)
 	require.Equal(t, expected.InitRamDisk, bootResponse.InitRamDisk)

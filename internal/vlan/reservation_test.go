@@ -15,7 +15,7 @@ type reservationInput struct {
 }
 
 func TestReserveVlanIDs(t *testing.T) {
-	tt := []struct {
+	tests := []struct {
 		name     string
 		input    reservationInput
 		expected []uint16
@@ -45,15 +45,15 @@ func TestReserveVlanIDs(t *testing.T) {
 			nil,
 		},
 	}
-	for _, tc := range tt {
-		t.Run(tc.name, func(t *testing.T) {
+	for i := range tests {
+		tt := tests[i]
+		t.Run(tt.name, func(t *testing.T) {
 			m := Mapping{}
-			for _, t := range tc.input.taken {
+			for _, t := range tt.input.taken {
 				m[t] = uint32(t)
 			}
-			a, _ := m.reserveVlanIDs(tc.input.min, tc.input.max, tc.input.n)
-			assert.Equal(t, tc.expected, a, fmt.Sprintf("reservation differs (taken: %v)", tc.input.taken))
+			a, _ := m.reserveVlanIDs(tt.input.min, tt.input.max, tt.input.n)
+			assert.Equal(t, tt.expected, a, fmt.Sprintf("reservation differs (taken: %v)", tt.input.taken))
 		})
 	}
-
 }

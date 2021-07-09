@@ -40,7 +40,7 @@ func (c *apiClient) RegisterSwitch() (*models.V1SwitchResponse, error) {
 		ok, created, err := c.SwitchClient.RegisterSwitch(params, c.Auth)
 		if err == nil {
 			if ok != nil {
-				return ok.Payload, nil
+				return ok.Payload, nil //nolint
 			}
 			return created.Payload, nil
 		}
