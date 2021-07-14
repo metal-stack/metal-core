@@ -78,8 +78,8 @@ func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
 		}
 		s.RouteMaps = append(s.RouteMaps, rm)
 
-		for j, cidr := range cidrs {
-			spec := fmt.Sprintf("seq %d permit %s le 32", 10+j, cidr)
+		for _, cidr := range cidrs {
+			spec := fmt.Sprintf("permit %s le 32", cidr)
 			prefixList := IPPrefixList{
 				Name: prefixListName,
 				Spec: spec,
