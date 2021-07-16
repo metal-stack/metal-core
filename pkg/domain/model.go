@@ -21,6 +21,7 @@ const (
 	MachineOnCmd             MachineCommand = "ON"
 	MachineOffCmd            MachineCommand = "OFF"
 	MachineResetCmd          MachineCommand = "RESET"
+	MachineCycleCmd          MachineCommand = "CYCLE"
 	MachineBiosCmd           MachineCommand = "BIOS"
 	MachineDiskCmd           MachineCommand = "DISK"
 	MachinePxeCmd            MachineCommand = "PXE"
@@ -89,6 +90,7 @@ type EventHandler interface {
 	PowerOnMachine(machineID string)
 	PowerOffMachine(machineID string)
 	PowerResetMachine(machineID string)
+	PowerCycleMachine(machineID string)
 	PowerBootBiosMachine(machineID string)
 	PowerBootDiskMachine(machineID string)
 	PowerBootPxeMachine(machineID string)
