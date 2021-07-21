@@ -63,6 +63,25 @@ func (h *eventHandler) PowerResetMachine(machineID string) {
 	}
 }
 
+func (h *eventHandler) PowerCycleMachine(machineID string) {
+	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+	if err != nil {
+		zapup.MustRootLogger().Error("Unable to read IPMI connection details",
+			zap.String("machine", machineID),
+			zap.Error(err),
+		)
+		return
+	}
+
+	err = ipmi.PowerCycleMachine(ipmiCfg)
+	if err != nil {
+		zapup.MustRootLogger().Error("Unable to power cycle machine",
+			zap.String("machine", machineID),
+			zap.Error(err),
+		)
+	}
+}
+
 func (h *eventHandler) PowerOnChassisIdentifyLED(machineID, description string) {
 	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
 	if err != nil {

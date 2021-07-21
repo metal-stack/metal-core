@@ -67,6 +67,8 @@ func (s *Server) initConsumer() error {
 					s.EventHandler().PowerOffMachine(evt.Cmd.TargetMachineID)
 				case domain.MachineResetCmd:
 					s.EventHandler().PowerResetMachine(evt.Cmd.TargetMachineID)
+				case domain.MachineCycleCmd:
+					s.EventHandler().PowerCycleMachine(evt.Cmd.TargetMachineID)
 				case domain.MachineBiosCmd:
 					s.EventHandler().PowerBootBiosMachine(evt.Cmd.TargetMachineID)
 				case domain.MachineDiskCmd:
