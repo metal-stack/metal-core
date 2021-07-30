@@ -42,6 +42,8 @@ func (h *noopEventHandler) PowerOffMachine(machineID string) {}
 
 func (h *noopEventHandler) PowerResetMachine(machineID string) {}
 
+func (h *noopEventHandler) PowerCycleMachine(machineID string) {}
+
 func (h *noopEventHandler) PowerBootBiosMachine(machineID string) {}
 
 func (h *noopEventHandler) PowerBootDiskMachine(machineID string) {}
