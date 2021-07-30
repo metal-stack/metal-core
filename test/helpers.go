@@ -5,12 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/metal-stack/go-hal/pkg/api"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
+
+	"github.com/metal-stack/go-hal/pkg/api"
 
 	"github.com/emicklei/go-restful/v3"
 	"github.com/kelseyhightower/envconfig"
@@ -114,7 +114,7 @@ func doPost(path string, payload interface{}) int {
 }
 
 func getLogs() (string, error) {
-	logs, err := ioutil.ReadFile(logFilename)
+	logs, err := os.ReadFile(logFilename)
 	if err != nil {
 		return "", err
 	}

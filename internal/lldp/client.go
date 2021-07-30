@@ -10,7 +10,6 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 	"github.com/metal-stack/metal-lib/zapup"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
@@ -39,7 +38,7 @@ type PhoneHomeMessage struct {
 func NewClient(interfaceName string) (*Client, error) {
 	iface, err := net.InterfaceByName(interfaceName)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to lookup interface:%s", interfaceName)
+		return nil, fmt.Errorf("unable to lookup interface:%s %w", interfaceName, err)
 	}
 
 	zapup.MustRootLogger().Info("lldp",
@@ -48,14 +47,14 @@ func NewClient(interfaceName string) (*Client, error) {
 
 	handle, err := pcap.OpenLive(iface.Name, 65536, true, 5*time.Second)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to open interface:%s in promiscuous mode", iface.Name)
+		return nil, fmt.Errorf("unable to open interface:%s in promiscuous mode: %w", iface.Name, err)
 	}
 
 	// filter only LLDP packages
 	bpfFilter := fmt.Sprintf("ether proto %s", lldpProtocol)
 	err = handle.SetBPFFilter(bpfFilter)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to filter LLDP ethernet traffic %s on interface:%s", lldpProtocol, iface.Name)
+		return nil, fmt.Errorf("unable to filter LLDP ethernet traffic %s on interface:%s %w", lldpProtocol, iface.Name, err)
 	}
 
 	src := gopacket.NewPacketSource(handle, handle.LinkType())

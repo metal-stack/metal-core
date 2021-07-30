@@ -1,13 +1,13 @@
 package api
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-lib/zapup"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
@@ -21,7 +21,7 @@ func (c *apiClient) IPMIConfig(machineID string) (*domain.IPMIConfig, error) {
 			zap.String("machine", machineID),
 			zap.Error(err),
 		)
-		return nil, errors.Wrapf(err, "IPMI data for machine %s not found", machineID)
+		return nil, fmt.Errorf("IPMI data for machine %s not found: %w", machineID, err)
 	}
 	ipmiData := ok.Payload.Ipmi
 
@@ -30,7 +30,7 @@ func (c *apiClient) IPMIConfig(machineID string) (*domain.IPMIConfig, error) {
 			zap.String("machine", machineID),
 			zap.Error(err),
 		)
-		return nil, errors.Wrapf(err, "IPMI address for machine %s not found", machineID)
+		return nil, fmt.Errorf("IPMI address for machine %s not found: %w", machineID, err)
 	}
 	hostAndPort := strings.Split(*ipmiData.Address, ":")
 	port := 623
