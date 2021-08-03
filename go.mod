@@ -13,7 +13,7 @@ require (
 	github.com/go-openapi/validate v0.20.2
 	github.com/google/gopacket v1.1.19
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/metal-stack/go-hal v0.3.5
+	github.com/metal-stack/go-hal v0.3.6-0.20210803133810-ccfa0d3c8670
 	github.com/metal-stack/metal-go v0.15.3
 	github.com/metal-stack/metal-lib v0.8.0
 	github.com/metal-stack/metal-networker v0.5.0
