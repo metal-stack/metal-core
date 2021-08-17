@@ -2,13 +2,15 @@ package test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
+
+	"github.com/metal-stack/go-hal/pkg/api"
 
 	"github.com/emicklei/go-restful/v3"
 	"github.com/kelseyhightower/envconfig"
@@ -54,6 +56,10 @@ func (h *noopEventHandler) PowerOnChassisIdentifyLED(machineID, description stri
 
 func (h *noopEventHandler) PowerOffChassisIdentifyLED(machineID, description string) {}
 
+func (h *noopEventHandler) UpdateBios(machineID, revision, description string, s3Cfg *api.S3Config) {}
+
+func (h *noopEventHandler) UpdateBmc(machineID, revision, description string, s3Cfg *api.S3Config) {}
+
 func (h *noopEventHandler) TriggerSwitchReconfigure(switchName, eventType string) {}
 
 func (h *noopEventHandler) ReconfigureSwitch() {}
@@ -90,37 +96,37 @@ func mockAPIEndpoint(apiClient func(ctx *domain.AppContext) domain.APIClient) do
 	return appContext.EndpointHandler()
 }
 
-func doGet(path string, response interface{}) int {
-	req, _ := http.NewRequest(http.MethodGet, path, nil)
-	rr := httptest.NewRecorder()
-	restful.DefaultContainer.ServeHTTP(rr, req)
-	if err := json.Unmarshal(rr.Body.Bytes(), response); err != nil {
-		panic(err)
+func doGet(path string, response interface{}) (int, error) {
+	req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, path, nil)
+	r := httptest.NewRecorder()
+	restful.DefaultContainer.ServeHTTP(r, req)
+	if err := json.Unmarshal(r.Body.Bytes(), response); err != nil {
+		return 0, err
 	}
-	return rr.Result().StatusCode
+	return r.Result().StatusCode, nil //nolint
 }
 
 func doPost(path string, payload interface{}) int {
 	bodyJSON, _ := json.Marshal(payload)
-	req, _ := http.NewRequest(http.MethodPost, path, bytes.NewBuffer(bodyJSON))
+	req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, path, bytes.NewBuffer(bodyJSON))
 	req.Header.Add("Content-Type", restful.MIME_JSON)
-	rr := httptest.NewRecorder()
-	restful.DefaultContainer.ServeHTTP(rr, req)
-	return rr.Result().StatusCode
+	r := httptest.NewRecorder()
+	restful.DefaultContainer.ServeHTTP(r, req)
+	return r.Result().StatusCode //nolint
 }
 
-func getLogs() string {
-	logs, err := ioutil.ReadFile(logFilename)
+func getLogs() (string, error) {
+	logs, err := os.ReadFile(logFilename)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
-	return strings.TrimSpace(string(logs))
+	return strings.TrimSpace(string(logs)), nil
 }
 
-func truncateLogFile() {
+func truncateLogFile() error {
 	logFile, err := os.OpenFile(logFilename, os.O_RDWR, 0666)
 	if err != nil {
-		return
+		return err
 	}
 
 	defer func() {
@@ -129,6 +135,7 @@ func truncateLogFile() {
 
 	_ = logFile.Truncate(0)
 	_, _ = logFile.Seek(0, 0)
+	return nil
 }
 
 func deleteLogFile() {

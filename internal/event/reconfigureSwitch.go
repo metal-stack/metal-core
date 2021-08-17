@@ -13,7 +13,6 @@ import (
 	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
 	"github.com/metal-stack/metal-go/api/models"
 	"github.com/metal-stack/metal-lib/zapup"
-	"github.com/pkg/errors"
 	"github.com/vishvananda/netlink"
 	"go.uber.org/zap"
 )
@@ -56,18 +55,18 @@ func (h *eventHandler) reconfigureSwitch(switchName string) error {
 	params.ID = switchName
 	fsr, err := h.SwitchClient.FindSwitch(params, h.Auth)
 	if err != nil {
-		return errors.Wrap(err, "could not fetch switch from metal-api")
+		return fmt.Errorf("could not fetch switch from metal-api: %w", err)
 	}
 
 	s := fsr.Payload
 	c, err := buildSwitcherConfig(h.Config, s)
 	if err != nil {
-		return errors.Wrap(err, "could not build switcher config")
+		return fmt.Errorf("could not build switcher config: %w", err)
 	}
 
 	err = fillEth0Info(c, h.Config.ManagementGateway, h.DevMode)
 	if err != nil {
-		return errors.Wrap(err, "could not gather information about eth0 nic")
+		return fmt.Errorf("could not gather information about eth0 nic: %w", err)
 	}
 
 	zapup.MustRootLogger().Info("Assembled new config for switch",
@@ -79,7 +78,7 @@ func (h *eventHandler) reconfigureSwitch(switchName string) error {
 
 	err = c.Apply()
 	if err != nil {
-		return errors.Wrap(err, "could not apply switch config")
+		return fmt.Errorf("could not apply switch config: %w", err)
 	}
 
 	return nil

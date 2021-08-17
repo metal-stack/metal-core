@@ -3,8 +3,8 @@ package switcher
 import (
 	"bufio"
 	"bytes"
-	"io/ioutil"
 	"log"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -29,7 +29,7 @@ func renderToString(t *testing.T, a Applier) string {
 
 func readConf(t *testing.T, i string) Conf {
 	c := Conf{}
-	b, err := ioutil.ReadFile(i)
+	b, err := os.ReadFile(i)
 	require.Nil(t, err, "unexpected error when reading testing input")
 
 	err = yaml.Unmarshal(b, &c)
@@ -38,13 +38,13 @@ func readConf(t *testing.T, i string) Conf {
 }
 
 func readExpected(t *testing.T, e string) string {
-	ex, err := ioutil.ReadFile(e)
+	ex, err := os.ReadFile(e)
 	require.NoError(t, err, "Couldn't read %s", e)
 	return string(ex)
 }
 
 func listTestCases() []string {
-	files, err := ioutil.ReadDir("test_data")
+	files, err := os.ReadDir("test_data")
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -56,6 +56,7 @@ func (c *apiClient) ConstantlyPhoneHome() {
 			time.Sleep(InitialPhonedHomeBackoff)
 
 			for phoneHome := range frameFragmentChan {
+				phoneHome := phoneHome
 				msg := lldpcli.ExtractPhoneHomeMessage(&phoneHome)
 				if msg == nil {
 					continue

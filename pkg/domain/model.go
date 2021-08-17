@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"github.com/metal-stack/go-hal/pkg/api"
 	"time"
 
 	"github.com/emicklei/go-restful/v3"
@@ -25,9 +26,10 @@ const (
 	MachineBiosCmd           MachineCommand = "BIOS"
 	MachineDiskCmd           MachineCommand = "DISK"
 	MachinePxeCmd            MachineCommand = "PXE"
-	MachineReinstall         MachineCommand = "REINSTALL"
+	MachineReinstallCmd      MachineCommand = "REINSTALL"
 	ChassisIdentifyLEDOnCmd  MachineCommand = "LED-ON"
 	ChassisIdentifyLEDOffCmd MachineCommand = "LED-OFF"
+	UpdateFirmwareCmd        MachineCommand = "UPDATE-FIRMWARE"
 )
 
 type MachineExecCommand struct {
@@ -98,6 +100,9 @@ type EventHandler interface {
 
 	PowerOnChassisIdentifyLED(machineID, description string)
 	PowerOffChassisIdentifyLED(machineID, description string)
+
+	UpdateBios(machineID, revision, description string, s3Cfg *api.S3Config)
+	UpdateBmc(machineID, revision, description string, s3Cfg *api.S3Config)
 
 	ReconfigureSwitch()
 }

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net"
 	"os"
 	"strings"
@@ -9,7 +10,6 @@ import (
 	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
 	"github.com/metal-stack/metal-go/api/models"
 	"github.com/metal-stack/metal-lib/zapup"
-	"github.com/pkg/errors"
 	"github.com/vishvananda/netlink"
 	"go.uber.org/zap"
 )
@@ -20,11 +20,11 @@ func (c *apiClient) RegisterSwitch() (*models.V1SwitchResponse, error) {
 	var hostname string
 
 	if nics, err = getNics(c.AdditionalBridgePorts); err != nil {
-		return nil, errors.Wrap(err, "unable to get nics")
+		return nil, fmt.Errorf("unable to get nics: %w", err)
 	}
 
 	if hostname, err = os.Hostname(); err != nil {
-		return nil, errors.Wrap(err, "unable to get hostname")
+		return nil, fmt.Errorf("unable to get hostname: %w", err)
 	}
 
 	params := sw.NewRegisterSwitchParams()
@@ -40,7 +40,7 @@ func (c *apiClient) RegisterSwitch() (*models.V1SwitchResponse, error) {
 		ok, created, err := c.SwitchClient.RegisterSwitch(params, c.Auth)
 		if err == nil {
 			if ok != nil {
-				return ok.Payload, nil
+				return ok.Payload, nil //nolint
 			}
 			return created.Payload, nil
 		}
@@ -53,7 +53,7 @@ func getNics(blacklist []string) ([]*models.V1SwitchNic, error) {
 	var nics []*models.V1SwitchNic
 	links, err := netlink.LinkList()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to get all links")
+		return nil, fmt.Errorf("unable to get all links: %w", err)
 	}
 links:
 	for _, l := range links {

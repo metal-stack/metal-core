@@ -1,8 +1,8 @@
 package endpoint
 
 import (
-	"io/ioutil"
 	"net/http"
+	"os"
 
 	"github.com/metal-stack/metal-core/internal/rest"
 	"github.com/metal-stack/metal-core/pkg/domain"
@@ -13,7 +13,7 @@ import (
 )
 
 func (h *endpointHandler) GrpcClientCert(request *restful.Request, response *restful.Response) {
-	bb, err := ioutil.ReadFile(h.GrpcCACertFile)
+	bb, err := os.ReadFile(h.GrpcCACertFile)
 	if err != nil {
 		zapup.MustRootLogger().Error("failed to read gRPC CA cert",
 			zap.String("file", h.GrpcCACertFile),
@@ -24,7 +24,7 @@ func (h *endpointHandler) GrpcClientCert(request *restful.Request, response *res
 	}
 	caCert := string(bb)
 
-	bb, err = ioutil.ReadFile(h.GrpcClientCertFile)
+	bb, err = os.ReadFile(h.GrpcClientCertFile)
 	if err != nil {
 		zapup.MustRootLogger().Error("failed to read gRPC client cert",
 			zap.String("file", h.GrpcClientCertFile),
@@ -35,7 +35,7 @@ func (h *endpointHandler) GrpcClientCert(request *restful.Request, response *res
 	}
 	clientCert := string(bb)
 
-	bb, err = ioutil.ReadFile(h.GrpcClientKeyFile)
+	bb, err = os.ReadFile(h.GrpcClientKeyFile)
 	if err != nil {
 		zapup.MustRootLogger().Error("failed to read gRPC client key",
 			zap.String("file", h.GrpcClientKeyFile),

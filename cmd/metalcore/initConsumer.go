@@ -1,6 +1,8 @@
 package metalcore
 
 import (
+	"github.com/metal-stack/go-hal/pkg/api"
+	metalgo "github.com/metal-stack/metal-go"
 	"strings"
 	"time"
 
@@ -75,7 +77,7 @@ func (s *Server) initConsumer() error {
 					s.EventHandler().PowerBootDiskMachine(evt.Cmd.TargetMachineID)
 				case domain.MachinePxeCmd:
 					s.EventHandler().PowerBootPxeMachine(evt.Cmd.TargetMachineID)
-				case domain.MachineReinstall:
+				case domain.MachineReinstallCmd:
 					s.EventHandler().ReinstallMachine(evt.Cmd.TargetMachineID)
 				case domain.ChassisIdentifyLEDOnCmd:
 					description := strings.TrimSpace(strings.Join(evt.Cmd.Params, " "))
@@ -89,6 +91,29 @@ func (s *Server) initConsumer() error {
 						description = "unknown"
 					}
 					s.EventHandler().PowerOffChassisIdentifyLED(evt.Cmd.TargetMachineID, description)
+				case domain.UpdateFirmwareCmd:
+					kind := metalgo.FirmwareKind(evt.Cmd.Params[0])
+					revision := evt.Cmd.Params[1]
+					description := evt.Cmd.Params[2]
+					s3Cfg := &api.S3Config{
+						Url:            evt.Cmd.Params[3],
+						Key:            evt.Cmd.Params[4],
+						Secret:         evt.Cmd.Params[5],
+						FirmwareBucket: evt.Cmd.Params[6],
+					}
+					switch kind {
+					case metalgo.Bios:
+						go s.EventHandler().UpdateBios(evt.Cmd.TargetMachineID, revision, description, s3Cfg)
+					case metalgo.Bmc:
+						go s.EventHandler().UpdateBmc(evt.Cmd.TargetMachineID, revision, description, s3Cfg)
+					default:
+						zapup.MustRootLogger().Warn("Unknown firmware kind",
+							zap.String("topic", s.Config.MachineTopic),
+							zap.String("channel", "core"),
+							zap.String("firmware kind", string(kind)),
+							zap.Any("event", evt),
+						)
+					}
 				default:
 					zapup.MustRootLogger().Warn("Unhandled command",
 						zap.String("topic", s.Config.MachineTopic),
@@ -96,6 +121,8 @@ func (s *Server) initConsumer() error {
 						zap.Any("event", evt),
 					)
 				}
+			case domain.Create, domain.Update:
+				fallthrough
 			default:
 				zapup.MustRootLogger().Warn("Unhandled event",
 					zap.String("topic", s.Config.MachineTopic),
