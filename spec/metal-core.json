@@ -415,10 +415,10 @@
         "boot_info": {
           "$ref": "#/definitions/models.V1BootInfo"
         },
-        "console_password": {
+        "created": {
           "type": "string"
         },
-        "created": {
+        "creator": {
           "type": "string"
         },
         "description": {
@@ -448,6 +448,9 @@
         "reinstall": {
           "type": "boolean"
         },
+        "role": {
+          "type": "string"
+        },
         "ssh_pub_keys": {
           "items": {
             "type": "string"
@@ -463,11 +466,13 @@
       },
       "required": [
         "created",
+        "creator",
         "hostname",
         "name",
         "networks",
         "project",
         "reinstall",
+        "role",
         "ssh_pub_keys",
         "succeeded"
       ]
@@ -613,6 +618,9 @@
         "password": {
           "type": "string"
         },
+        "powerstate": {
+          "type": "string"
+        },
         "user": {
           "type": "string"
         }
@@ -624,6 +632,7 @@
         "interface",
         "mac",
         "password",
+        "powerstate",
         "user"
       ]
     },
