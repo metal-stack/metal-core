@@ -13,6 +13,10 @@ all::
 
 release:: gofmt test all;
 
+.PHONY: spec-in-docker
+spec-in-docker:
+	docker run -it --rm -v ${PWD}:/work -w /work metalstack/builder make spec
+
 .PHONY: spec
 spec: all
 	@$(info spec=$$(bin/metal-core spec | jq -S 'walk(if type == "array" then sort_by(strings) else . end)' 2>/dev/null) && echo "$${spec}" > spec/metal-core.json)
