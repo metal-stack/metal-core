@@ -53,5 +53,5 @@ func (a InterfacesApplier) getTpl() *template.Template {
 	if a.tplFile != "" {
 		return template.Must(template.New(path.Base(a.tplFile)).ParseFiles(a.tplFile))
 	}
-	return template.Must(template.New("interfaces.tpl").Parse(interfacesTPL))
+	return template.Must(template.New("interfaces.tpl").Parse(mustReadTpl("interfaces.tpl")))
 }

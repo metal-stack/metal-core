@@ -3,8 +3,8 @@ module github.com/metal-stack/metal-core
 go 1.17
 
 require (
-	github.com/emicklei/go-restful-openapi/v2 v2.6.1
-	github.com/emicklei/go-restful/v3 v3.7.2
+	github.com/emicklei/go-restful-openapi/v2 v2.7.0
+	github.com/emicklei/go-restful/v3 v3.7.3
 	github.com/go-openapi/errors v0.20.1
 	github.com/go-openapi/runtime v0.21.0
 	github.com/go-openapi/spec v0.20.4

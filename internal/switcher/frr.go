@@ -53,5 +53,5 @@ func (a FrrApplier) getTpl() *template.Template {
 	if a.tplFile != "" {
 		return template.Must(template.New(path.Base(a.tplFile)).ParseFiles(a.tplFile))
 	}
-	return template.Must(template.New("frr.tpl").Parse(frrTPL))
+	return template.Must(template.New("frr.tpl").Parse(mustReadTpl("frr.tpl")))
 }
