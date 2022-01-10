@@ -1,6 +1,4 @@
-package switcher
-
-const interfacesTPL = `{{- $IPLoopback := .Loopback -}}
+{{- $IPLoopback := .Loopback -}}
 # This file describes the network interfaces available on your system
 # and how to activate them. For more information, see interfaces(5).
 
@@ -106,4 +104,3 @@ iface {{ . }}
     mtu 9000
     bridge-access 4000
 {{- end }}
-`

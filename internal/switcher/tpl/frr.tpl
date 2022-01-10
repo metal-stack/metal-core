@@ -1,6 +1,4 @@
-package switcher
-
-const frrTPL = `{{- $ASN := .ASN -}}{{- $RouterId := .Loopback -}}! The frr version is not rendered since it seems to be optional.
+{{- $ASN := .ASN -}}{{- $RouterId := .Loopback -}}! The frr version is not rendered since it seems to be optional.
 frr defaults datacenter
 hostname {{ .Name }}
 username cumulus nopassword
@@ -127,4 +125,4 @@ route-map {{ .Name }} {{ .Policy }} {{ .Order }}
         {{- end }}
 !{{- end }}{{- end }}
 line vty
-!`
+!
