@@ -53,6 +53,9 @@ func (c *apiClient) ConstantlyPhoneHome() {
 			)
 			continue
 		}
+		zapup.MustRootLogger().Info("start lldp client",
+			zap.String("interface", iface.Name),
+		)
 
 		// constantly observe LLDP traffic on current machine and current interface
 		go lldpcli.Start(discoveryResultChan)
