@@ -3,7 +3,6 @@ package api
 import (
 	"time"
 
-	"github.com/metal-stack/metal-core/internal/lldp"
 	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-go/api/models"
@@ -47,7 +46,7 @@ func (c *apiClient) Emit(eventType domain.ProvisioningEventType, machineID, mess
 	return c.AddProvisioningEvent(machineID, event)
 }
 
-func (c *apiClient) PhoneHome(msg *lldp.PhoneHomeMessage) {
+func (c *apiClient) PhoneHome(msg *PhoneHomeMessage) {
 	err := c.Emit(domain.ProvisioningEventPhonedHome, msg.MachineID, msg.Payload)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to phone home",
