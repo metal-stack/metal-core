@@ -764,8 +764,8 @@ github.com/mdlayher/lldp v0.0.0-20150915211757-afd9f83164c5/go.mod h1:IZAsRpRUv/
 github.com/mdlayher/raw v0.0.0-20190606142536-fef19f00fc18/go.mod h1:7EpbotpCmVZcu+KCX4g9WaRNuu11uyhiW7+Le1dKawg=
 github.com/metal-stack/go-hal v0.3.6 h1:rmbgvtKQ0LWYUn840r6qMj3EzvMjl+BkDFPqydNCta8=
 github.com/metal-stack/go-hal v0.3.6/go.mod h1:sW5Q48o3LGdiYvzo6nhGsT9+WMGRiL5Xz2QCoyfRf34=
-github.com/metal-stack/go-lldpd v0.3.7-0.20220125144131-ef8cb4a10c6d h1:VNdBgXIq8uDsxEyC8b+9FZ1SouQxADpE0mJeJA90kVk=
-github.com/metal-stack/go-lldpd v0.3.7-0.20220125144131-ef8cb4a10c6d/go.mod h1:KwrRT+P5KPPcCbtZs/jU1uI1JbhBt8hZa0IA4mp4dfc=
+github.com/metal-stack/go-lldpd v0.3.7-0.20220126080421-7cd8fa940228 h1:eseLFgWbzlHrx1AMTnnZtT2K3vPcpfXEKEC+L/LB1vg=
+github.com/metal-stack/go-lldpd v0.3.7-0.20220126080421-7cd8fa940228/go.mod h1:KwrRT+P5KPPcCbtZs/jU1uI1JbhBt8hZa0IA4mp4dfc=
 github.com/metal-stack/masterdata-api v0.7.3/go.mod h1:AT5m6KOkP6iyqwbDgGa1aQVdSn9bU7PkifjAmaNDLac=
 github.com/metal-stack/masterdata-api v0.8.8 h1:SkKw53K0lEZgH74/h3RfSMpxfb/agmxrId8i51Da0a8=
 github.com/metal-stack/masterdata-api v0.8.8/go.mod h1:rpwFGYKHAtoZ/Phi6WQCt4VgswA7lcLambbleqFgMMg=
