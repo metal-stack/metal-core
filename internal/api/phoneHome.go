@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net"
 	"os"
 	"strings"
@@ -40,12 +41,15 @@ func (c *apiClient) ConstantlyPhoneHome() {
 	m := make(map[string]time.Time)
 	mtx := new(sync.Mutex)
 
+	// FIXME context should come from caller and canceled on shutdown
+	ctx := context.Background()
+
 	for _, iface := range ifs {
 		// consider only switch port interfaces
 		if !strings.HasPrefix(iface.Name, "swp") {
 			continue
 		}
-		lldpcli, err := lldp.NewClient(iface)
+		lldpcli, err := lldp.NewClient(ctx, iface)
 		if err != nil {
 			zapup.MustRootLogger().Error("unable to start LLDP client",
 				zap.String("interface", iface.Name),
