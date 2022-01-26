@@ -1,13 +1,14 @@
 package api
 
 import (
+	"context"
+	"net"
 	"os"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/google/gopacket/pcap"
-	"github.com/metal-stack/metal-core/internal/lldp"
+	"github.com/metal-stack/go-lldpd/pkg/lldp"
 	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 )
@@ -22,7 +23,13 @@ const (
 // phone-home LLDP package to any interface of the host machine
 // during this interval.
 func (c *apiClient) ConstantlyPhoneHome() {
-	ifs, err := pcap.FindAllDevs()
+	// FIXME this list of interfaces is only read on startup
+	// if additional interfaces are configured, no new lldpd client is started and therefore no
+	// phoned home events are sent for these interfaces.
+	// Solution:
+	// - either ensure metal-core is restarted on interfaces added/removed
+	// - dynamically detect changes and stop/start goroutines for the lldpd client per interface
+	ifs, err := net.Interfaces()
 	if err != nil {
 		zapup.MustRootLogger().Error("unable to find interfaces",
 			zap.Error(err),
@@ -30,16 +37,19 @@ func (c *apiClient) ConstantlyPhoneHome() {
 		os.Exit(1)
 	}
 
-	frameFragmentChan := make(chan lldp.FrameFragment)
+	discoveryResultChan := make(chan lldp.DiscoveryResult)
 	m := make(map[string]time.Time)
 	mtx := new(sync.Mutex)
+
+	// FIXME context should come from caller and canceled on shutdown
+	ctx := context.Background()
 
 	for _, iface := range ifs {
 		// consider only switch port interfaces
 		if !strings.HasPrefix(iface.Name, "swp") {
 			continue
 		}
-		lldpcli, err := lldp.NewClient(iface.Name)
+		lldpcli, err := lldp.NewClient(ctx, iface)
 		if err != nil {
 			zapup.MustRootLogger().Error("unable to start LLDP client",
 				zap.String("interface", iface.Name),
@@ -47,17 +57,20 @@ func (c *apiClient) ConstantlyPhoneHome() {
 			)
 			continue
 		}
+		zapup.MustRootLogger().Info("start lldp client",
+			zap.String("interface", iface.Name),
+		)
 
 		// constantly observe LLDP traffic on current machine and current interface
-		go lldpcli.CatchPackages(frameFragmentChan)
+		go lldpcli.Start(discoveryResultChan)
 
 		// extract phone home messages from fetched LLDP packages after a short initial delay
 		go func() {
 			time.Sleep(InitialPhonedHomeBackoff)
 
-			for phoneHome := range frameFragmentChan {
+			for phoneHome := range discoveryResultChan {
 				phoneHome := phoneHome
-				msg := lldpcli.ExtractPhoneHomeMessage(&phoneHome)
+				msg := toPhoneHomeMessage(phoneHome)
 				if msg == nil {
 					continue
 				}
@@ -65,10 +78,10 @@ func (c *apiClient) ConstantlyPhoneHome() {
 				sendToAPI := false
 
 				mtx.Lock()
-				lastSend, ok := m[msg.MachineID]
+				lastSend, ok := m[msg.machineID]
 				if !ok || time.Since(lastSend) > PhonedHomeBackoff {
 					sendToAPI = true
-					m[msg.MachineID] = time.Now()
+					m[msg.machineID] = time.Now()
 				}
 				mtx.Unlock()
 
@@ -78,4 +91,22 @@ func (c *apiClient) ConstantlyPhoneHome() {
 			}
 		}()
 	}
+}
+
+// phoneHomeMessage contains a phone-home message.
+type phoneHomeMessage struct {
+	machineID string
+	payload   string
+}
+
+// toPhoneHomeMessage extracts the machineID and payload of the given lldp frame fragment.
+// An error will be returned if the frame fragment does not contain a phone-home message.
+func toPhoneHomeMessage(discoveryResult lldp.DiscoveryResult) *phoneHomeMessage {
+	if strings.Contains(discoveryResult.SysDescription, "provisioned") {
+		return &phoneHomeMessage{
+			machineID: discoveryResult.SysName,
+			payload:   discoveryResult.SysDescription,
+		}
+	}
+	return nil
 }

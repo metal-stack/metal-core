@@ -1,8 +1,9 @@
 package switcher
 
 import (
-	"github.com/metal-stack/metal-core/internal/vlan"
 	"testing"
+
+	"github.com/metal-stack/metal-core/internal/vlan"
 
 	"github.com/stretchr/testify/require"
 )
@@ -10,9 +11,9 @@ import (
 func TestFillVLANIDs(t *testing.T) {
 	m := vlan.Mapping{1001: 101001, 1003: 101003}
 	vrfs := map[string]*Vrf{
-		"101001": &Vrf{VNI: 101001},
-		"101002": &Vrf{VNI: 101002},
-		"101003": &Vrf{VNI: 101003}}
+		"101001": {VNI: 101001},
+		"101002": {VNI: 101002},
+		"101003": {VNI: 101003}}
 	c := Conf{
 		Ports: Ports{
 			Vrfs: vrfs,
