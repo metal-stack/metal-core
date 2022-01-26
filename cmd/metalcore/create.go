@@ -30,7 +30,7 @@ func Create() *Server {
 	level := zap.InfoLevel
 	err := level.UnmarshalText([]byte(cfg.LogLevel))
 	if err != nil {
-		panic(fmt.Errorf("can't initialize zap logger: %v", err))
+		panic(fmt.Errorf("can't initialize zap logger: %w", err))
 	}
 
 	zcfg := zap.NewProductionConfig()
@@ -40,8 +40,7 @@ func Create() *Server {
 
 	log, err := zcfg.Build()
 	if err != nil {
-		fmt.Printf("can't initialize zap logger: %s", err)
-		os.Exit(1)
+		panic(fmt.Errorf("can't initialize zap logger: %w", err))
 	}
 
 	log.Info("Metal-Core Version", zap.Any("version", v.V))
