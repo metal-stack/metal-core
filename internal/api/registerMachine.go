@@ -7,7 +7,6 @@ import (
 
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-go/api/models"
-	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 )
 
@@ -31,7 +30,7 @@ func (c *apiClient) RegisterMachine(machineID string, request *domain.MetalHamme
 
 	ok, created, err := c.MachineClient.RegisterMachine(params, c.Auth)
 	if err != nil {
-		zapup.MustRootLogger().Error("Failed to register machine at Metal-API",
+		c.Log.Error("Failed to register machine at Metal-API",
 			zap.String("machineID", machineID),
 			zap.String("partitionID", partitionID),
 			zap.String("rackID", rackID),

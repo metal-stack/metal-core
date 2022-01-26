@@ -12,7 +12,6 @@ import (
 	"github.com/metal-stack/metal-core/pkg/domain"
 	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
 	"github.com/metal-stack/metal-go/api/models"
-	"github.com/metal-stack/metal-lib/zapup"
 	"github.com/vishvananda/netlink"
 	"go.uber.org/zap"
 )
@@ -22,11 +21,11 @@ func (h *eventHandler) ReconfigureSwitch() {
 	t := time.NewTicker(h.AppContext.Config.ReconfigureSwitchInterval)
 	host, _ := os.Hostname()
 	for range t.C {
-		zapup.MustRootLogger().Info("trigger reconfiguration")
+		h.Log.Info("trigger reconfiguration")
 		start := time.Now()
 		err := h.reconfigureSwitch(host)
 		elapsed := time.Since(start)
-		zapup.MustRootLogger().Info("reconfiguration took", zap.Duration("elapsed", elapsed))
+		h.Log.Info("reconfiguration took", zap.Duration("elapsed", elapsed))
 
 		params := sw.NewNotifySwitchParams()
 		params.ID = host
@@ -37,15 +36,15 @@ func (h *eventHandler) ReconfigureSwitch() {
 		if err != nil {
 			errStr := err.Error()
 			nr.Error = &errStr
-			zapup.MustRootLogger().Error("reconfiguration failed", zap.Error(err))
+			h.Log.Error("reconfiguration failed", zap.Error(err))
 		} else {
-			zapup.MustRootLogger().Info("reconfiguration succeeded")
+			h.Log.Info("reconfiguration succeeded")
 		}
 
 		params.Body = nr
 		_, err = h.SwitchClient.NotifySwitch(params, h.Auth)
 		if err != nil {
-			zapup.MustRootLogger().Error("notification about switch reconfiguration failed", zap.Error(err))
+			h.Log.Error("notification about switch reconfiguration failed", zap.Error(err))
 		}
 	}
 }
@@ -69,10 +68,10 @@ func (h *eventHandler) reconfigureSwitch(switchName string) error {
 		return fmt.Errorf("could not gather information about eth0 nic: %w", err)
 	}
 
-	zapup.MustRootLogger().Info("Assembled new config for switch",
+	h.Log.Info("Assembled new config for switch",
 		zap.Any("config", c))
 	if !h.Config.ReconfigureSwitch {
-		zapup.MustRootLogger().Debug("Skip config application because of environment setting")
+		h.Log.Debug("Skip config application because of environment setting")
 		return nil
 	}
 

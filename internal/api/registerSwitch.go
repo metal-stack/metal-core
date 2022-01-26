@@ -9,7 +9,6 @@ import (
 
 	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
 	"github.com/metal-stack/metal-go/api/models"
-	"github.com/metal-stack/metal-lib/zapup"
 	"github.com/vishvananda/netlink"
 	"go.uber.org/zap"
 )
@@ -19,7 +18,7 @@ func (c *apiClient) RegisterSwitch() (*models.V1SwitchResponse, error) {
 	var nics []*models.V1SwitchNic
 	var hostname string
 
-	if nics, err = getNics(c.AdditionalBridgePorts); err != nil {
+	if nics, err = getNics(c.Log, c.AdditionalBridgePorts); err != nil {
 		return nil, fmt.Errorf("unable to get nics: %w", err)
 	}
 
@@ -44,12 +43,12 @@ func (c *apiClient) RegisterSwitch() (*models.V1SwitchResponse, error) {
 			}
 			return created.Payload, nil
 		}
-		zapup.MustRootLogger().Error("unable to register at metal-api", zap.Error(err))
+		c.Log.Error("unable to register at metal-api", zap.Error(err))
 		time.Sleep(time.Second)
 	}
 }
 
-func getNics(blacklist []string) ([]*models.V1SwitchNic, error) {
+func getNics(log *zap.Logger, blacklist []string) ([]*models.V1SwitchNic, error) {
 	var nics []*models.V1SwitchNic
 	links, err := netlink.LinkList()
 	if err != nil {
@@ -62,7 +61,7 @@ links:
 		mac := attrs.HardwareAddr.String()
 		for _, b := range blacklist {
 			if b == name {
-				zapup.MustRootLogger().Debug("skip interface, because it is contained in the blacklist",
+				log.Debug("skip interface, because it is contained in the blacklist",
 					zap.String("interface", name),
 					zap.Any("blacklist", blacklist),
 				)
@@ -70,7 +69,7 @@ links:
 			}
 		}
 		if !strings.HasPrefix(name, "swp") {
-			zapup.MustRootLogger().Debug("skip interface, because only swp* switch ports are reported to metal-api",
+			log.Debug("skip interface, because only swp* switch ports are reported to metal-api",
 				zap.String("interface", name),
 				zap.String("MAC", mac),
 			)
@@ -78,7 +77,7 @@ links:
 		}
 		_, err := net.ParseMAC(mac)
 		if err != nil {
-			zapup.MustRootLogger().Debug("skip interface with invalid mac",
+			log.Debug("skip interface with invalid mac",
 				zap.String("interface", name),
 				zap.String("MAC", mac),
 			)

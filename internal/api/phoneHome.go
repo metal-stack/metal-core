@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/metal-stack/go-lldpd/pkg/lldp"
-	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 )
 
@@ -31,7 +30,7 @@ func (c *apiClient) ConstantlyPhoneHome() {
 	// - dynamically detect changes and stop/start goroutines for the lldpd client per interface
 	ifs, err := net.Interfaces()
 	if err != nil {
-		zapup.MustRootLogger().Error("unable to find interfaces",
+		c.Log.Error("unable to find interfaces",
 			zap.Error(err),
 		)
 		os.Exit(1)
@@ -51,13 +50,13 @@ func (c *apiClient) ConstantlyPhoneHome() {
 		}
 		lldpcli, err := lldp.NewClient(ctx, iface)
 		if err != nil {
-			zapup.MustRootLogger().Error("unable to start LLDP client",
+			c.Log.Error("unable to start LLDP client",
 				zap.String("interface", iface.Name),
 				zap.Error(err),
 			)
 			continue
 		}
-		zapup.MustRootLogger().Info("start lldp client",
+		c.Log.Info("start lldp client",
 			zap.String("interface", iface.Name),
 		)
 

@@ -6,13 +6,12 @@ import (
 	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-go/api/models"
-	"github.com/metal-stack/metal-lib/zapup"
 
 	"go.uber.org/zap"
 )
 
 func (c *apiClient) AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error {
-	zapup.MustRootLogger().Debug("event", zap.String("machineID", machineID))
+	c.Log.Debug("event", zap.String("machineID", machineID))
 
 	params := machine.NewAddProvisioningEventParams()
 	params.ID = machineID
@@ -20,7 +19,7 @@ func (c *apiClient) AddProvisioningEvent(machineID string, event *models.V1Machi
 	params.WithTimeout(5 * time.Second)
 	_, err := c.MachineClient.AddProvisioningEvent(params, c.Auth)
 	if err != nil {
-		zapup.MustRootLogger().Error("Unable to send provisioning event back to API",
+		c.Log.Error("Unable to send provisioning event back to API",
 			zap.String("eventType", *event.Event),
 			zap.String("machineID", machineID),
 			zap.String("message", event.Message),
@@ -33,7 +32,7 @@ func (c *apiClient) AddProvisioningEvent(machineID string, event *models.V1Machi
 func (c *apiClient) Emit(eventType domain.ProvisioningEventType, machineID, message string) error {
 	et := string(eventType)
 
-	zapup.MustRootLogger().Debug("Emit event",
+	c.Log.Debug("Emit event",
 		zap.String("eventType", et),
 		zap.String("machineID", machineID),
 		zap.String("message", message),
@@ -49,7 +48,7 @@ func (c *apiClient) Emit(eventType domain.ProvisioningEventType, machineID, mess
 func (c *apiClient) PhoneHome(msg *phoneHomeMessage) {
 	err := c.Emit(domain.ProvisioningEventPhonedHome, msg.machineID, msg.payload)
 	if err != nil {
-		zapup.MustRootLogger().Error("Unable to phone home",
+		c.Log.Error("Unable to phone home",
 			zap.String("eventType", string(domain.ProvisioningEventPhonedHome)),
 			zap.String("machineID", msg.machineID),
 			zap.String("message", msg.payload),

@@ -7,7 +7,6 @@ import (
 	"github.com/metal-stack/metal-go/api/models"
 
 	"github.com/emicklei/go-restful/v3"
-	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 )
 
@@ -15,18 +14,18 @@ func (h *endpointHandler) AddProvisioningEvent(request *restful.Request, respons
 	event := &models.V1MachineProvisioningEvent{}
 	err := request.ReadEntity(event)
 	if err != nil {
-		rest.Respond(response, http.StatusInternalServerError, nil)
+		rest.Respond(h.Log, response, http.StatusInternalServerError, nil)
 		return
 	}
 
 	machineID := request.PathParameter("id")
-	zapup.MustRootLogger().Debug("event", zap.String("machineID", machineID))
+	h.Log.Debug("event", zap.String("machineID", machineID))
 
 	err = h.APIClient().AddProvisioningEvent(machineID, event)
 	if err != nil {
-		rest.Respond(response, http.StatusInternalServerError, nil)
+		rest.Respond(h.Log, response, http.StatusInternalServerError, nil)
 		return
 	}
 
-	rest.Respond(response, http.StatusOK, nil)
+	rest.Respond(h.Log, response, http.StatusOK, nil)
 }

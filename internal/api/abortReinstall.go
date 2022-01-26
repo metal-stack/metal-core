@@ -1,13 +1,13 @@
 package api
 
 import (
+	"net/http"
+
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-go/api/models"
-	"net/http"
 
 	"github.com/metal-stack/metal-core/pkg/domain"
 
-	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 )
 
@@ -19,7 +19,7 @@ func (c *apiClient) AbortReinstall(machineID string, request *domain.MetalHammer
 
 	ok, err := c.MachineClient.AbortReinstallMachine(params, c.Auth)
 	if err != nil {
-		zapup.MustRootLogger().Error("Failed to abort reinstall",
+		c.Log.Error("Failed to abort reinstall",
 			zap.String("machineID", machineID),
 			zap.Bool("primary disk already wiped", request.PrimaryDiskWiped),
 			zap.Error(err),

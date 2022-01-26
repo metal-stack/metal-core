@@ -2,13 +2,15 @@ package api
 
 import (
 	"errors"
+	"net/http"
+	"testing"
+
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/stretchr/testify/require"
-	"net/http"
-	"testing"
+	"go.uber.org/zap/zaptest"
 )
 
 type searchMachineMock struct {
@@ -33,6 +35,7 @@ func TestFindMachines_OK(t *testing.T) {
 
 	ctx := &domain.AppContext{
 		MachineClient: machine.New(m, strfmt.Default),
+		Log:           zaptest.NewLogger(t),
 	}
 	ctx.SetAPIClient(NewClient)
 
@@ -54,6 +57,7 @@ func TestFindMachines_Error(t *testing.T) {
 
 	ctx := &domain.AppContext{
 		MachineClient: machine.New(m, strfmt.Default),
+		Log:           zaptest.NewLogger(t),
 	}
 	ctx.SetAPIClient(NewClient)
 

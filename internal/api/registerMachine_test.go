@@ -11,6 +11,7 @@ import (
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-go/api/models"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap/zaptest"
 )
 
 type registerMachineMock struct {
@@ -47,6 +48,7 @@ func TestRegisterMachine_OK(t *testing.T) {
 			PartitionID: partitionID,
 			RackID:      rackID,
 		},
+		Log: zaptest.NewLogger(t),
 	}
 	ctx.SetAPIClient(NewClient)
 
@@ -80,6 +82,7 @@ func TestRegisterMachine_Error(t *testing.T) {
 			PartitionID: partitionID,
 			RackID:      rackID,
 		},
+		Log: zaptest.NewLogger(t),
 	}
 	ctx.SetAPIClient(NewClient)
 

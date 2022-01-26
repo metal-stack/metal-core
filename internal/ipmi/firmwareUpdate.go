@@ -5,15 +5,14 @@ import (
 	"github.com/metal-stack/go-hal/pkg/api"
 	halzap "github.com/metal-stack/go-hal/pkg/logger/zap"
 	"github.com/metal-stack/metal-core/pkg/domain"
-	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 )
 
-func UpdateBios(cfg *domain.IPMIConfig, revision string, s3Cfg *api.S3Config) error {
+func UpdateBios(log *zap.Logger, cfg *domain.IPMIConfig, revision string, s3Cfg *api.S3Config) error {
 	host, port, user, password := cfg.IPMIConnection()
-	outBand, err := connect.OutBand(host, port, user, password, halzap.New(zapup.MustRootLogger().Sugar()))
+	outBand, err := connect.OutBand(host, port, user, password, halzap.New(log.Sugar()))
 	if err != nil {
-		zapup.MustRootLogger().Error("Unable to outband connect",
+		log.Error("Unable to outband connect",
 			zap.String("hostname", cfg.Hostname),
 			zap.String("MAC", cfg.Mac()),
 			zap.Error(err),
@@ -26,7 +25,7 @@ func UpdateBios(cfg *domain.IPMIConfig, revision string, s3Cfg *api.S3Config) er
 		partNumber = cfg.Ipmi.Fru.BoardPartNumber
 	}
 
-	zapup.MustRootLogger().Info("Updating machine BIOS",
+	log.Info("Updating machine BIOS",
 		zap.String("hostname", cfg.Hostname),
 		zap.String("MAC", cfg.Mac()),
 		zap.String("BoardPartNumber", partNumber),
@@ -36,11 +35,11 @@ func UpdateBios(cfg *domain.IPMIConfig, revision string, s3Cfg *api.S3Config) er
 	return outBand.UpdateBIOS(partNumber, revision, s3Cfg)
 }
 
-func UpdateBmc(cfg *domain.IPMIConfig, revision string, s3Cfg *api.S3Config) error {
+func UpdateBmc(log *zap.Logger, cfg *domain.IPMIConfig, revision string, s3Cfg *api.S3Config) error {
 	host, port, user, password := cfg.IPMIConnection()
-	outBand, err := connect.OutBand(host, port, user, password, halzap.New(zapup.MustRootLogger().Sugar()))
+	outBand, err := connect.OutBand(host, port, user, password, halzap.New(log.Sugar()))
 	if err != nil {
-		zapup.MustRootLogger().Error("Unable to outband connect",
+		log.Error("Unable to outband connect",
 			zap.String("hostname", cfg.Hostname),
 			zap.String("MAC", cfg.Mac()),
 			zap.Error(err),
@@ -53,7 +52,7 @@ func UpdateBmc(cfg *domain.IPMIConfig, revision string, s3Cfg *api.S3Config) err
 		partNumber = cfg.Ipmi.Fru.BoardPartNumber
 	}
 
-	zapup.MustRootLogger().Info("Updating machine bmc",
+	log.Info("Updating machine bmc",
 		zap.String("hostname", cfg.Hostname),
 		zap.String("MAC", cfg.Mac()),
 		zap.String("BoardPartNumber", partNumber),

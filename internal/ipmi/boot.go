@@ -5,27 +5,26 @@ import (
 	"github.com/metal-stack/go-hal/connect"
 	halzap "github.com/metal-stack/go-hal/pkg/logger/zap"
 	"github.com/metal-stack/metal-core/pkg/domain"
-	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 )
 
-func SetBootPXE(cfg *domain.IPMIConfig) error {
-	return boot(cfg, hal.BootTargetPXE)
+func SetBootPXE(log *zap.Logger, cfg *domain.IPMIConfig) error {
+	return boot(log, cfg, hal.BootTargetPXE)
 }
 
-func SetBootDisk(cfg *domain.IPMIConfig) error {
-	return boot(cfg, hal.BootTargetDisk)
+func SetBootDisk(log *zap.Logger, cfg *domain.IPMIConfig) error {
+	return boot(log, cfg, hal.BootTargetDisk)
 }
 
-func SetBootBios(cfg *domain.IPMIConfig) error {
-	return boot(cfg, hal.BootTargetBIOS)
+func SetBootBios(log *zap.Logger, cfg *domain.IPMIConfig) error {
+	return boot(log, cfg, hal.BootTargetBIOS)
 }
 
-func boot(cfg *domain.IPMIConfig, target hal.BootTarget) error {
+func boot(log *zap.Logger, cfg *domain.IPMIConfig, target hal.BootTarget) error {
 	host, port, user, password := cfg.IPMIConnection()
-	outBand, err := connect.OutBand(host, port, user, password, halzap.New(zapup.MustRootLogger().Sugar()))
+	outBand, err := connect.OutBand(host, port, user, password, halzap.New(log.Sugar()))
 	if err != nil {
-		zapup.MustRootLogger().Error("Unable to outband connect",
+		log.Error("Unable to outband connect",
 			zap.String("hostname", cfg.Hostname),
 			zap.String("MAC", cfg.Mac()),
 			zap.Error(err),
@@ -33,7 +32,7 @@ func boot(cfg *domain.IPMIConfig, target hal.BootTarget) error {
 		return err
 	}
 
-	zapup.MustRootLogger().Info("Setting boot machine to boot from",
+	log.Info("Setting boot machine to boot from",
 		zap.String("device", target.String()),
 		zap.String("hostname", cfg.Hostname),
 		zap.String("MAC", cfg.Mac()),

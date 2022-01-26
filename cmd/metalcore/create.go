@@ -16,29 +16,39 @@ import (
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-go/api/client/partition"
 	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
-	"github.com/metal-stack/metal-lib/zapup"
 	"github.com/metal-stack/v"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 func Create() *Server {
 	cfg := &domain.Config{}
 	if err := envconfig.Process("METAL_CORE", cfg); err != nil {
-		panic(fmt.Errorf("Bad configuration:\n%+v", cfg))
-	}
-	os.Setenv(zapup.KeyFieldApp, "Metal-Core")
-	os.Setenv(zapup.KeyLogLevel, cfg.LogLevel)
-	if cfg.ConsoleLogging {
-		os.Setenv(zapup.KeyLogEncoding, "console")
+		panic(fmt.Errorf("bad configuration:\n%+v", cfg))
 	}
 
-	zapup.MustRootLogger().Info("Metal-Core Version",
-		zap.Any("version", v.V),
-	)
+	level := zap.InfoLevel
+	err := level.UnmarshalText([]byte(cfg.LogLevel))
+	if err != nil {
+		panic(fmt.Errorf("can't initialize zap logger: %v", err))
+	}
+
+	zcfg := zap.NewProductionConfig()
+	zcfg.EncoderConfig.TimeKey = "timestamp"
+	zcfg.EncoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
+	zcfg.Level = zap.NewAtomicLevelAt(level)
+
+	log, err := zcfg.Build()
+	if err != nil {
+		fmt.Printf("can't initialize zap logger: %s", err)
+		os.Exit(1)
+	}
+
+	log.Info("Metal-Core Version", zap.Any("version", v.V))
 
 	devMode := strings.Contains(cfg.PartitionID, "vagrant")
 
-	zapup.MustRootLogger().Info("Configuration",
+	log.Info("Configuration",
 		zap.Bool("DevMode", devMode),
 		zap.String("CIDR", cfg.CIDR),
 		zap.String("PartitionID", cfg.PartitionID),
@@ -79,6 +89,7 @@ func Create() *Server {
 			PartitionClient: partition.New(transport, strfmt.Default),
 			SwitchClient:    sw.New(transport, strfmt.Default),
 			DevMode:         devMode,
+			Log:             log,
 		},
 	}
 	app.SetAPIClient(api.NewClient)
@@ -87,9 +98,9 @@ func Create() *Server {
 	app.InitHMAC()
 	app.SetEventHandler(event.NewHandler)
 
-	err := app.initConsumer()
+	err = app.initConsumer()
 	if err != nil {
-		zapup.MustRootLogger().Fatal("failed to init NSQ consumer",
+		log.Fatal("failed to init NSQ consumer",
 			zap.Error(err),
 		)
 		os.Exit(1)
@@ -97,7 +108,7 @@ func Create() *Server {
 
 	s, err := app.APIClient().RegisterSwitch()
 	if err != nil {
-		zapup.MustRootLogger().Fatal("failed to register switch",
+		log.Fatal("failed to register switch",
 			zap.Error(err),
 		)
 		os.Exit(1)

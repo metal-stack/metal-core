@@ -24,9 +24,6 @@ func TestPXEBoot(t *testing.T) {
 	e := mockAPIEndpoint(func(ctx *domain.AppContext) domain.APIClient {
 		return &apiHandlerBootTest{}
 	})
-	defer func() {
-		_ = truncateLogFile()
-	}()
 
 	restful.Add(e.NewBootService())
 

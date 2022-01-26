@@ -10,6 +10,7 @@ import (
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-go/api/models"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap/zaptest"
 )
 
 type finalizeDataMock struct {
@@ -85,6 +86,7 @@ func TestFinalizeAllocation_NOK(t *testing.T) {
 
 	ctx := &domain.AppContext{
 		MachineClient: machine.New(m, strfmt.Default),
+		Log:           zaptest.NewLogger(t),
 	}
 	ctx.SetAPIClient(NewClient)
 
