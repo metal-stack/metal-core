@@ -74,10 +74,10 @@ func (c *apiClient) ConstantlyPhoneHome() {
 				sendToAPI := false
 
 				mtx.Lock()
-				lastSend, ok := m[msg.MachineID]
+				lastSend, ok := m[msg.machineID]
 				if !ok || time.Since(lastSend) > PhonedHomeBackoff {
 					sendToAPI = true
-					m[msg.MachineID] = time.Now()
+					m[msg.machineID] = time.Now()
 				}
 				mtx.Unlock()
 
@@ -89,19 +89,19 @@ func (c *apiClient) ConstantlyPhoneHome() {
 	}
 }
 
-// PhoneHomeMessage contains a phone-home message.
-type PhoneHomeMessage struct {
-	MachineID string
-	Payload   string
+// phoneHomeMessage contains a phone-home message.
+type phoneHomeMessage struct {
+	machineID string
+	payload   string
 }
 
 // toPhoneHomeMessage extracts the machineID and payload of the given lldp frame fragment.
 // An error will be returned if the frame fragment does not contain a phone-home message.
-func toPhoneHomeMessage(discoveryResult lldp.DiscoveryResult) *PhoneHomeMessage {
+func toPhoneHomeMessage(discoveryResult lldp.DiscoveryResult) *phoneHomeMessage {
 	if strings.Contains(discoveryResult.SysDescription, "provisioned") {
-		return &PhoneHomeMessage{
-			MachineID: discoveryResult.SysName,
-			Payload:   discoveryResult.SysDescription,
+		return &phoneHomeMessage{
+			machineID: discoveryResult.SysName,
+			payload:   discoveryResult.SysDescription,
 		}
 	}
 	return nil

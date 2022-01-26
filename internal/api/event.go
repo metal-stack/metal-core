@@ -46,13 +46,13 @@ func (c *apiClient) Emit(eventType domain.ProvisioningEventType, machineID, mess
 	return c.AddProvisioningEvent(machineID, event)
 }
 
-func (c *apiClient) PhoneHome(msg *PhoneHomeMessage) {
-	err := c.Emit(domain.ProvisioningEventPhonedHome, msg.MachineID, msg.Payload)
+func (c *apiClient) PhoneHome(msg *phoneHomeMessage) {
+	err := c.Emit(domain.ProvisioningEventPhonedHome, msg.machineID, msg.payload)
 	if err != nil {
 		zapup.MustRootLogger().Error("Unable to phone home",
 			zap.String("eventType", string(domain.ProvisioningEventPhonedHome)),
-			zap.String("machineID", msg.MachineID),
-			zap.String("message", msg.Payload),
+			zap.String("machineID", msg.machineID),
+			zap.String("message", msg.payload),
 		)
 	}
 }
