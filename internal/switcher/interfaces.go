@@ -1,6 +1,7 @@
 package switcher
 
 import (
+	"fmt"
 	"io"
 	"path"
 	"text/template"
@@ -40,7 +41,11 @@ func NewInterfacesApplier(c *Conf) Applier {
 // Apply applies the configuration to the system
 func (a InterfacesApplier) Apply() error {
 	tpl := a.getTpl()
-	return a.applier.Apply(*tpl, InterfacesTmp, Interfaces, true)
+	ok, err := a.applier.Apply(*tpl, InterfacesTmp, Interfaces, true)
+	if !ok {
+		return fmt.Errorf("interface changes have not been applied %w", err)
+	}
+	return err
 }
 
 // Render renders the network interfaces to the given writer
