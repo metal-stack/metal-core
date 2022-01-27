@@ -23,7 +23,7 @@ func (h *endpointHandler) Report(request *restful.Request, response *restful.Res
 
 	machineID := request.PathParameter("id")
 
-	h.Log.Debug("Got report for machine",
+	h.Log.Debug("got report for machine",
 		zap.String("machineID", machineID),
 		zap.Any("report", report),
 	)
@@ -42,7 +42,7 @@ func (h *endpointHandler) Report(request *restful.Request, response *restful.Res
 
 		err = ipmi.SetBootDisk(h.Log, ipmiCfg)
 		if err != nil {
-			h.Log.Error("Unable to set boot order of machine to HD",
+			h.Log.Error("unable to set boot order of machine to HD",
 				zap.String("machineID", machineID),
 				zap.Error(err),
 			)
@@ -53,7 +53,7 @@ func (h *endpointHandler) Report(request *restful.Request, response *restful.Res
 
 	_, err = h.APIClient().FinalizeAllocation(machineID, report.ConsolePassword, report)
 	if err != nil {
-		h.Log.Error("Unable to report machine back to api.",
+		h.Log.Error("unable to report machine back to api.",
 			zap.String("machineID", machineID),
 			zap.Error(err),
 		)

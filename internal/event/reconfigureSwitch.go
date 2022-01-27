@@ -68,10 +68,10 @@ func (h *eventHandler) reconfigureSwitch(switchName string) error {
 		return fmt.Errorf("could not gather information about eth0 nic: %w", err)
 	}
 
-	h.Log.Info("Assembled new config for switch",
+	h.Log.Info("assembled new config for switch",
 		zap.Any("config", c))
 	if !h.Config.ReconfigureSwitch {
-		h.Log.Debug("Skip config application because of environment setting")
+		h.Log.Debug("skip config application because of environment setting")
 		return nil
 	}
 

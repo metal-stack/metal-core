@@ -11,7 +11,7 @@ func (c *apiClient) FindMachine(id string) (*models.V1MachineResponse, error) {
 	findMachine.ID = id
 	ok, err := c.MachineClient.FindMachine(findMachine, c.Auth)
 	if err != nil {
-		c.Log.Error("Machine not found",
+		c.Log.Error("machine not found",
 			zap.String("ID", id),
 			zap.Error(err),
 		)

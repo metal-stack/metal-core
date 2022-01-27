@@ -16,7 +16,7 @@ import (
 func (h *endpointHandler) Boot(request *restful.Request, response *restful.Response) {
 	mac := request.PathParameter("mac")
 
-	h.Log.Debug("Request Metal-API for a machine",
+	h.Log.Debug("request metal-api for a machine",
 		zap.String("MAC", mac),
 	)
 
@@ -52,7 +52,7 @@ func (h *endpointHandler) Boot(request *restful.Request, response *restful.Respo
 		)
 		// FIXME this should not happen, we should consider returning a rec	overy image for digging into to root cause.
 	} else {
-		h.Log.Error("Request Metal-API for a machine", zap.String("MAC", mac), zap.Int("StatusCode", sc))
+		h.Log.Error("request metal-api for a machine", zap.String("MAC", mac), zap.Int("statusCode", sc))
 	}
 }
 

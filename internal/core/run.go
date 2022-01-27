@@ -30,7 +30,7 @@ func (s *coreServer) Run() {
 
 	addr := fmt.Sprintf("%v:%d", s.Config.BindAddress, s.Config.Port)
 
-	s.Log.Info("Starting metal-core",
+	s.Log.Info("starting metal-core",
 		zap.String("address", addr),
 	)
 

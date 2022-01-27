@@ -24,7 +24,7 @@ func boot(log *zap.Logger, cfg *domain.IPMIConfig, target hal.BootTarget) error 
 	host, port, user, password := cfg.IPMIConnection()
 	outBand, err := connect.OutBand(host, port, user, password, halzap.New(log.Sugar()))
 	if err != nil {
-		log.Error("Unable to outband connect",
+		log.Error("unable to outband connect",
 			zap.String("hostname", cfg.Hostname),
 			zap.String("MAC", cfg.Mac()),
 			zap.Error(err),
@@ -32,7 +32,7 @@ func boot(log *zap.Logger, cfg *domain.IPMIConfig, target hal.BootTarget) error 
 		return err
 	}
 
-	log.Info("Setting boot machine to boot from",
+	log.Info("setting boot machine to boot from",
 		zap.String("device", target.String()),
 		zap.String("hostname", cfg.Hostname),
 		zap.String("MAC", cfg.Mac()),

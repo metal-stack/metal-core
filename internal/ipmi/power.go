@@ -15,7 +15,7 @@ func PowerOnMachine(log *zap.Logger, cfg *domain.IPMIConfig) error {
 		return err
 	}
 
-	log.Info("Machine Power ON",
+	log.Info("machine power on",
 		zap.String("hostname", cfg.Hostname),
 		zap.String("MAC", cfg.Mac()),
 	)
@@ -31,7 +31,7 @@ func PowerOffMachine(log *zap.Logger, cfg *domain.IPMIConfig) error {
 		return err
 	}
 
-	log.Info("Machine Power OFF",
+	log.Info("machine power off",
 		zap.String("hostname", cfg.Hostname),
 		zap.String("MAC", cfg.Mac()),
 	)
@@ -47,7 +47,7 @@ func PowerResetMachine(log *zap.Logger, cfg *domain.IPMIConfig) error {
 		return err
 	}
 
-	log.Info("Machine Power RESET",
+	log.Info("machine power reset",
 		zap.String("hostname", cfg.Hostname),
 		zap.String("MAC", cfg.Mac()),
 	)
@@ -62,7 +62,7 @@ func PowerCycleMachine(log *zap.Logger, cfg *domain.IPMIConfig) error {
 		return err
 	}
 
-	log.Info("Machine Power CYCLE",
+	log.Info("machine power cycle",
 		zap.String("hostname", cfg.Hostname),
 		zap.String("MAC", cfg.Mac()),
 	)
@@ -78,7 +78,7 @@ func PowerOnChassisIdentifyLED(log *zap.Logger, cfg *domain.IPMIConfig) error {
 		return err
 	}
 
-	log.Info("Machine chassis identify LED Power ON",
+	log.Info("machine chassis identify led power on",
 		zap.String("hostname", cfg.Hostname),
 		zap.String("MAC", cfg.Mac()),
 	)
@@ -94,7 +94,7 @@ func PowerOffChassisIdentifyLED(log *zap.Logger, cfg *domain.IPMIConfig) error {
 		return err
 	}
 
-	log.Info("Machine chassis identify LED Power OFF",
+	log.Info("machine chassis identify led power off",
 		zap.String("hostname", cfg.Hostname),
 		zap.String("MAC", cfg.Mac()),
 	)

@@ -32,7 +32,7 @@ func (c *apiClient) AddProvisioningEvent(machineID string, event *models.V1Machi
 func (c *apiClient) Emit(eventType domain.ProvisioningEventType, machineID, message string) error {
 	et := string(eventType)
 
-	c.Log.Debug("Emit event",
+	c.Log.Debug("emit event",
 		zap.String("eventType", et),
 		zap.String("machineID", machineID),
 		zap.String("message", message),
@@ -48,7 +48,7 @@ func (c *apiClient) Emit(eventType domain.ProvisioningEventType, machineID, mess
 func (c *apiClient) PhoneHome(msg *phoneHomeMessage) {
 	err := c.Emit(domain.ProvisioningEventPhonedHome, msg.machineID, msg.payload)
 	if err != nil {
-		c.Log.Error("Unable to phone home",
+		c.Log.Error("unable to phone home",
 			zap.String("eventType", string(domain.ProvisioningEventPhonedHome)),
 			zap.String("machineID", msg.machineID),
 			zap.String("message", msg.payload),

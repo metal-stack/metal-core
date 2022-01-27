@@ -31,7 +31,7 @@ func mapLogLevel(level string) bus.Level {
 }
 
 func (s *Server) timeoutHandler(err bus.TimeoutError) error {
-	s.Log.Error("Timeout processing event", zap.Any("event", err.Event()))
+	s.Log.Error("timeout processing event", zap.Any("event", err.Event()))
 	return nil
 }
 
@@ -53,7 +53,7 @@ func (s *Server) initConsumer() error {
 		MustRegister(s.Config.MachineTopic, "core").
 		Consume(domain.MachineEvent{}, func(message interface{}) error {
 			evt := message.(*domain.MachineEvent)
-			s.Log.Debug("Got message",
+			s.Log.Debug("got message",
 				zap.String("topic", s.Config.MachineTopic),
 				zap.String("channel", "core"),
 				zap.Any("event", evt),
@@ -107,7 +107,7 @@ func (s *Server) initConsumer() error {
 					case metalgo.Bmc:
 						go s.EventHandler().UpdateBmc(evt.Cmd.TargetMachineID, revision, description, s3Cfg)
 					default:
-						s.Log.Warn("Unknown firmware kind",
+						s.Log.Warn("unknown firmware kind",
 							zap.String("topic", s.Config.MachineTopic),
 							zap.String("channel", "core"),
 							zap.String("firmware kind", string(kind)),
@@ -115,7 +115,7 @@ func (s *Server) initConsumer() error {
 						)
 					}
 				default:
-					s.Log.Warn("Unhandled command",
+					s.Log.Warn("unhandled command",
 						zap.String("topic", s.Config.MachineTopic),
 						zap.String("channel", "core"),
 						zap.Any("event", evt),
@@ -124,7 +124,7 @@ func (s *Server) initConsumer() error {
 			case domain.Create, domain.Update:
 				fallthrough
 			default:
-				s.Log.Warn("Unhandled event",
+				s.Log.Warn("unhandled event",
 					zap.String("topic", s.Config.MachineTopic),
 					zap.String("channel", "core"),
 					zap.Any("event", evt),

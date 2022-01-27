@@ -19,7 +19,7 @@ func (c *apiClient) AbortReinstall(machineID string, request *domain.MetalHammer
 
 	ok, err := c.MachineClient.AbortReinstallMachine(params, c.Auth)
 	if err != nil {
-		c.Log.Error("Failed to abort reinstall",
+		c.Log.Error("failed to abort reinstall",
 			zap.String("machineID", machineID),
 			zap.Bool("primary disk already wiped", request.PrimaryDiskWiped),
 			zap.Error(err),

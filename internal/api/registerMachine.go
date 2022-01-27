@@ -30,7 +30,7 @@ func (c *apiClient) RegisterMachine(machineID string, request *domain.MetalHamme
 
 	ok, created, err := c.MachineClient.RegisterMachine(params, c.Auth)
 	if err != nil {
-		c.Log.Error("Failed to register machine at Metal-API",
+		c.Log.Error("failed to register machine at metal-api",
 			zap.String("machineID", machineID),
 			zap.String("partitionID", partitionID),
 			zap.String("rackID", rackID),

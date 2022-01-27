@@ -17,7 +17,7 @@ func (h *endpointHandler) AbortReinstall(request *restful.Request, response *res
 	err := request.ReadEntity(req)
 	if err != nil {
 		errMsg := "Unable to read body"
-		h.Log.Error("Cannot read request",
+		h.Log.Error("cannot read request",
 			zap.Error(err),
 		)
 		rest.RespondError(h.Log, response, http.StatusBadRequest, errMsg)
@@ -26,14 +26,14 @@ func (h *endpointHandler) AbortReinstall(request *restful.Request, response *res
 
 	machineID := request.PathParameter("id")
 
-	h.Log.Debug("Abort reinstall",
+	h.Log.Debug("abort reinstall",
 		zap.String("machineID", machineID),
 		zap.Bool("primary disk already wiped", req.PrimaryDiskWiped),
 	)
 
 	sc, bootInfo := h.APIClient().AbortReinstall(machineID, req)
 	if sc != http.StatusOK {
-		errMsg := "Failed to abort reinstall"
+		errMsg := "failed to abort reinstall"
 		h.Log.Error(errMsg,
 			zap.Int("statusCode", sc),
 			zap.String("machineID", machineID),
@@ -54,7 +54,7 @@ func (h *endpointHandler) AbortReinstall(request *restful.Request, response *res
 
 		err = ipmi.SetBootDisk(h.Log, ipmiCfg)
 		if err != nil {
-			h.Log.Error("Unable to set boot order of machine to HD",
+			h.Log.Error("unable to set boot order of machine to HD",
 				zap.String("machineID", machineID),
 				zap.Any("boot information", bootInfo),
 				zap.Error(err),
@@ -64,7 +64,7 @@ func (h *endpointHandler) AbortReinstall(request *restful.Request, response *res
 		}
 	}
 
-	h.Log.Info("Machine reinstall aborted",
+	h.Log.Info("machine reinstall aborted",
 		zap.Int("statusCode", sc),
 		zap.String("machineID", machineID),
 		zap.Bool("primary disk already wiped", req.PrimaryDiskWiped),

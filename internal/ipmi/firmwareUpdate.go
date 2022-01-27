@@ -12,7 +12,7 @@ func UpdateBios(log *zap.Logger, cfg *domain.IPMIConfig, revision string, s3Cfg 
 	host, port, user, password := cfg.IPMIConnection()
 	outBand, err := connect.OutBand(host, port, user, password, halzap.New(log.Sugar()))
 	if err != nil {
-		log.Error("Unable to outband connect",
+		log.Error("unable to outband connect",
 			zap.String("hostname", cfg.Hostname),
 			zap.String("MAC", cfg.Mac()),
 			zap.Error(err),
@@ -25,7 +25,7 @@ func UpdateBios(log *zap.Logger, cfg *domain.IPMIConfig, revision string, s3Cfg 
 		partNumber = cfg.Ipmi.Fru.BoardPartNumber
 	}
 
-	log.Info("Updating machine BIOS",
+	log.Info("updating machine BIOS",
 		zap.String("hostname", cfg.Hostname),
 		zap.String("MAC", cfg.Mac()),
 		zap.String("BoardPartNumber", partNumber),
@@ -39,7 +39,7 @@ func UpdateBmc(log *zap.Logger, cfg *domain.IPMIConfig, revision string, s3Cfg *
 	host, port, user, password := cfg.IPMIConnection()
 	outBand, err := connect.OutBand(host, port, user, password, halzap.New(log.Sugar()))
 	if err != nil {
-		log.Error("Unable to outband connect",
+		log.Error("unable to outband connect",
 			zap.String("hostname", cfg.Hostname),
 			zap.String("MAC", cfg.Mac()),
 			zap.Error(err),
@@ -52,7 +52,7 @@ func UpdateBmc(log *zap.Logger, cfg *domain.IPMIConfig, revision string, s3Cfg *
 		partNumber = cfg.Ipmi.Fru.BoardPartNumber
 	}
 
-	log.Info("Updating machine bmc",
+	log.Info("updating machine bmc",
 		zap.String("hostname", cfg.Hostname),
 		zap.String("MAC", cfg.Mac()),
 		zap.String("BoardPartNumber", partNumber),

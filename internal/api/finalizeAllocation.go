@@ -23,7 +23,7 @@ func (c *apiClient) FinalizeAllocation(machineID, consolePassword string, report
 
 	ok, err := c.MachineClient.FinalizeAllocation(params, c.Auth)
 	if err != nil {
-		c.Log.Error("Finalize failed",
+		c.Log.Error("finalize failed",
 			zap.String("machineID", machineID),
 			zap.Error(err),
 		)
