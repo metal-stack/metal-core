@@ -19,7 +19,7 @@ func (c *apiClient) AddProvisioningEvent(machineID string, event *models.V1Machi
 	params.WithTimeout(5 * time.Second)
 	_, err := c.MachineClient.AddProvisioningEvent(params, c.Auth)
 	if err != nil {
-		c.Log.Error("Unable to send provisioning event back to API",
+		c.Log.Error("unable to send provisioning event back to API",
 			zap.String("eventType", *event.Event),
 			zap.String("machineID", machineID),
 			zap.String("message", event.Message),
