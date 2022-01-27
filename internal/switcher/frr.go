@@ -1,7 +1,6 @@
 package switcher
 
 import (
-	"fmt"
 	"io"
 	"path"
 	"text/template"
@@ -41,10 +40,7 @@ func NewFrrApplier(c *Conf) Applier {
 // Apply applies the configuration to the system
 func (a FrrApplier) Apply() error {
 	tpl := a.getTpl()
-	ok, err := a.applier.Apply(*tpl, FrrTmp, Frr, true)
-	if !ok && err != nil {
-		return fmt.Errorf("frr changes have not been applied %w", err)
-	}
+	_, err := a.applier.Apply(*tpl, FrrTmp, Frr, true)
 	return err
 }
 
