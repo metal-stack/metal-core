@@ -42,7 +42,7 @@ func NewFrrApplier(c *Conf) Applier {
 func (a FrrApplier) Apply() error {
 	tpl := a.getTpl()
 	ok, err := a.applier.Apply(*tpl, FrrTmp, Frr, true)
-	if !ok {
+	if !ok && err != nil {
 		return fmt.Errorf("frr changes have not been applied %w", err)
 	}
 	return err

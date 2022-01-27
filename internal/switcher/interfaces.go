@@ -42,7 +42,7 @@ func NewInterfacesApplier(c *Conf) Applier {
 func (a InterfacesApplier) Apply() error {
 	tpl := a.getTpl()
 	ok, err := a.applier.Apply(*tpl, InterfacesTmp, Interfaces, true)
-	if !ok {
+	if !ok && err != nil {
 		return fmt.Errorf("interface changes have not been applied %w", err)
 	}
 	return err
