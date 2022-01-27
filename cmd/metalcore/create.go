@@ -43,11 +43,11 @@ func Create() *Server {
 		panic(fmt.Errorf("can't initialize zap logger: %w", err))
 	}
 
-	log.Info("Metal-Core Version", zap.Any("version", v.V))
+	log.Info("metal-core version", zap.Any("version", v.V))
 
 	devMode := strings.Contains(cfg.PartitionID, "vagrant")
 
-	log.Info("Configuration",
+	log.Info("configuration",
 		zap.Bool("DevMode", devMode),
 		zap.String("CIDR", cfg.CIDR),
 		zap.String("PartitionID", cfg.PartitionID),
