@@ -2,36 +2,35 @@ package event
 
 import (
 	"github.com/metal-stack/metal-core/internal/ipmi"
-	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 )
 
 func (h *eventHandler) FreeMachine(machineID string) {
 	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
 	if err != nil {
-		zapup.MustRootLogger().Error("Unable to read IPMI connection details",
+		h.Log.Error("unable to read IPMI connection details",
 			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 		return
 	}
 
-	err = ipmi.SetBootPXE(ipmiCfg)
+	err = ipmi.SetBootPXE(h.Log, ipmiCfg)
 	if err != nil {
-		zapup.MustRootLogger().Error("Unable to set boot order of machine to PXE",
+		h.Log.Error("unable to set boot order of machine to PXE",
 			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 		return
 	}
 
-	zapup.MustRootLogger().Info("Freed machine",
+	h.Log.Info("freed machine",
 		zap.String("machine", machineID),
 	)
 
-	err = ipmi.PowerCycleMachine(ipmiCfg)
+	err = ipmi.PowerCycleMachine(h.Log, ipmiCfg)
 	if err != nil {
-		zapup.MustRootLogger().Error("Unable to power cycle machine",
+		h.Log.Error("unable to power cycle machine",
 			zap.String("machine", machineID),
 			zap.Error(err),
 		)

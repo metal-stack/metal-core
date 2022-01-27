@@ -3,7 +3,6 @@ package api
 import (
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-go/api/models"
-	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 )
 
@@ -12,7 +11,7 @@ func (c *apiClient) FindMachine(id string) (*models.V1MachineResponse, error) {
 	findMachine.ID = id
 	ok, err := c.MachineClient.FindMachine(findMachine, c.Auth)
 	if err != nil {
-		zapup.MustRootLogger().Error("Machine not found",
+		c.Log.Error("machine not found",
 			zap.String("ID", id),
 			zap.Error(err),
 		)

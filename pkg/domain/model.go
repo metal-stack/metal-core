@@ -1,8 +1,10 @@
 package domain
 
 import (
-	"github.com/metal-stack/go-hal/pkg/api"
 	"time"
+
+	"github.com/metal-stack/go-hal/pkg/api"
+	"go.uber.org/zap"
 
 	"github.com/emicklei/go-restful/v3"
 	"github.com/go-openapi/runtime"
@@ -195,6 +197,7 @@ type AppContext struct {
 	hmac            security.HMACAuth
 	Auth            runtime.ClientAuthInfoWriter
 	DevMode         bool
+	Log             *zap.Logger
 }
 
 func (a *AppContext) APIClient() APIClient {

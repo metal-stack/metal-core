@@ -10,14 +10,13 @@ import (
 	"github.com/metal-stack/metal-core/pkg/domain"
 
 	"github.com/emicklei/go-restful/v3"
-	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 )
 
 func (h *endpointHandler) Boot(request *restful.Request, response *restful.Response) {
 	mac := request.PathParameter("mac")
 
-	zapup.MustRootLogger().Debug("Request Metal-API for a machine",
+	h.Log.Debug("request metal-api for a machine",
 		zap.String("MAC", mac),
 	)
 
@@ -25,21 +24,21 @@ func (h *endpointHandler) Boot(request *restful.Request, response *restful.Respo
 
 	if sc == http.StatusOK {
 		if len(machines) == 0 {
-			rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse(h))
+			rest.Respond(h.Log, response, http.StatusOK, createBootDiscoveryImageResponse(h))
 			return
 		}
 		if len(machines) == 1 {
 			if machines[0].Allocation == nil {
-				rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse(h))
+				rest.Respond(h.Log, response, http.StatusOK, createBootDiscoveryImageResponse(h))
 				return
 			}
 			// Machine was already in the installation phase but crashed before finalizing allocation
 			// we can boot into metal-hammer again.
 			if !*machines[0].Allocation.Succeeded {
-				rest.Respond(response, http.StatusOK, createBootDiscoveryImageResponse(h))
+				rest.Respond(h.Log, response, http.StatusOK, createBootDiscoveryImageResponse(h))
 				return
 			}
-			zapup.MustRootLogger().Error("machine tries to pxe boot which is not expected.",
+			h.Log.Error("machine tries to pxe boot which is not expected.",
 				zap.Int("statusCode", sc),
 				zap.String("MAC", mac),
 				zap.String("machineID", *machines[0].ID),
@@ -47,13 +46,13 @@ func (h *endpointHandler) Boot(request *restful.Request, response *restful.Respo
 			return
 		}
 
-		zapup.MustRootLogger().Error("more than one machines with same mac found, not booting machine.",
+		h.Log.Error("more than one machines with same mac found, not booting machine.",
 			zap.Int("statusCode", sc),
 			zap.String("MAC", mac),
 		)
 		// FIXME this should not happen, we should consider returning a rec	overy image for digging into to root cause.
 	} else {
-		zapup.MustRootLogger().Error("Request Metal-API for a machine", zap.String("MAC", mac), zap.Int("StatusCode", sc))
+		h.Log.Error("request metal-api for a machine", zap.String("MAC", mac), zap.Int("statusCode", sc))
 	}
 }
 

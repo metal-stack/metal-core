@@ -9,7 +9,6 @@ import (
 
 	"github.com/emicklei/go-restful/v3"
 	"github.com/metal-stack/metal-core/internal/endpoint"
-	"github.com/metal-stack/metal-lib/zapup"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"go.uber.org/zap"
@@ -31,15 +30,15 @@ func (s *coreServer) Run() {
 
 	addr := fmt.Sprintf("%v:%d", s.Config.BindAddress, s.Config.Port)
 
-	zapup.MustRootLogger().Info("Starting metal-core",
+	s.Log.Info("starting metal-core",
 		zap.String("address", addr),
 	)
 
-	zapup.MustRootLogger().Sugar().Fatal(http.ListenAndServe(addr, nil))
+	s.Log.Sugar().Fatal(http.ListenAndServe(addr, nil))
 }
 
 func (s *coreServer) initMetrics() {
-	logger := zapup.MustRootLogger().Sugar()
+	logger := s.Log.Sugar()
 
 	addr := fmt.Sprintf("%v:%d", s.Config.MetricsServerBindAddress, s.Config.MetricsServerPort)
 

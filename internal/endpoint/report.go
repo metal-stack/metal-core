@@ -8,7 +8,6 @@ import (
 	"github.com/metal-stack/metal-core/pkg/domain"
 
 	"github.com/emicklei/go-restful/v3"
-	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 )
 
@@ -18,49 +17,49 @@ func (h *endpointHandler) Report(request *restful.Request, response *restful.Res
 	report := &domain.Report{}
 	err = request.ReadEntity(report)
 	if err != nil {
-		rest.Respond(response, http.StatusInternalServerError, nil)
+		rest.Respond(h.Log, response, http.StatusInternalServerError, nil)
 		return
 	}
 
 	machineID := request.PathParameter("id")
 
-	zapup.MustRootLogger().Debug("Got report for machine",
+	h.Log.Debug("got report for machine",
 		zap.String("machineID", machineID),
 		zap.Any("report", report),
 	)
 
 	if !report.Success {
-		rest.Respond(response, http.StatusNotAcceptable, nil)
+		rest.Respond(h.Log, response, http.StatusNotAcceptable, nil)
 		return
 	}
 
 	if h.Config.ChangeBootOrder {
 		ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
 		if err != nil {
-			rest.Respond(response, http.StatusInternalServerError, nil)
+			rest.Respond(h.Log, response, http.StatusInternalServerError, nil)
 			return
 		}
 
-		err = ipmi.SetBootDisk(ipmiCfg)
+		err = ipmi.SetBootDisk(h.Log, ipmiCfg)
 		if err != nil {
-			zapup.MustRootLogger().Error("Unable to set boot order of machine to HD",
+			h.Log.Error("unable to set boot order of machine to HD",
 				zap.String("machineID", machineID),
 				zap.Error(err),
 			)
-			rest.Respond(response, http.StatusInternalServerError, nil)
+			rest.Respond(h.Log, response, http.StatusInternalServerError, nil)
 			return
 		}
 	}
 
 	_, err = h.APIClient().FinalizeAllocation(machineID, report.ConsolePassword, report)
 	if err != nil {
-		zapup.MustRootLogger().Error("Unable to report machine back to api.",
+		h.Log.Error("unable to report machine back to api.",
 			zap.String("machineID", machineID),
 			zap.Error(err),
 		)
-		rest.Respond(response, http.StatusInternalServerError, nil)
+		rest.Respond(h.Log, response, http.StatusInternalServerError, nil)
 		return
 	}
 
-	rest.Respond(response, http.StatusOK, nil)
+	rest.Respond(h.Log, response, http.StatusOK, nil)
 }

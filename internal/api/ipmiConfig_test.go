@@ -12,6 +12,7 @@ import (
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-go/api/models"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap/zaptest"
 )
 
 type ipmiDataMock struct {
@@ -52,6 +53,7 @@ func TestIPMIData_OK(t *testing.T) {
 
 	ctx := &domain.AppContext{
 		MachineClient: machine.New(m, strfmt.Default),
+		Log:           zaptest.NewLogger(t),
 	}
 	ctx.SetAPIClient(NewClient)
 
@@ -84,6 +86,7 @@ func TestIPMIData_InvalidPort(t *testing.T) {
 
 	ctx := &domain.AppContext{
 		MachineClient: machine.New(m, strfmt.Default),
+		Log:           zaptest.NewLogger(t),
 	}
 	ctx.SetAPIClient(NewClient)
 
@@ -111,6 +114,7 @@ func TestIPMIData_Error(t *testing.T) {
 
 	ctx := &domain.AppContext{
 		MachineClient: machine.New(m, strfmt.Default),
+		Log:           zaptest.NewLogger(t),
 	}
 	ctx.SetAPIClient(NewClient)
 
@@ -122,5 +126,5 @@ func TestIPMIData_Error(t *testing.T) {
 	// THEN
 	require.Nil(t, ipmiCfg)
 	require.NotNil(t, err)
-	require.Equal(t, fmt.Sprintf("IPMI data for machine %s not found: not found", machineID), err.Error())
+	require.Equal(t, fmt.Sprintf("ipmi data for machine %s not found: not found", machineID), err.Error())
 }

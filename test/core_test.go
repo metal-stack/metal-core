@@ -22,7 +22,6 @@ func TestLoggingMiddleware(t *testing.T) {
 	e := mockAPIEndpoint(func(ctx *domain.AppContext) domain.APIClient {
 		return &apiHandlerCoreTest{}
 	})
-	defer deleteLogFile()
 
 	restful.Add(e.NewMachineService())
 
@@ -37,11 +36,6 @@ func TestLoggingMiddleware(t *testing.T) {
 
 	// then
 	require.Equal(t, http.StatusOK, sc)
-	logs, err := getLogs()
-	require.Nil(t, err)
-	require.Contains(t, logs, "Machine registered")
-	require.Contains(t, logs, fmt.Sprintf("%q:%q", "id", machineID))
-	require.NotContains(t, logs, "error")
 }
 
 func (a *apiHandlerCoreTest) Emit(eventType domain.ProvisioningEventType, machineID, message string) error {

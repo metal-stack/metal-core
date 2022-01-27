@@ -7,7 +7,6 @@ import (
 	"github.com/metal-stack/metal-core/pkg/domain"
 
 	"github.com/emicklei/go-restful/v3"
-	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 
 	"github.com/metal-stack/metal-core/internal/rest"
@@ -18,59 +17,59 @@ func (h *endpointHandler) AbortReinstall(request *restful.Request, response *res
 	err := request.ReadEntity(req)
 	if err != nil {
 		errMsg := "Unable to read body"
-		zapup.MustRootLogger().Error("Cannot read request",
+		h.Log.Error("cannot read request",
 			zap.Error(err),
 		)
-		rest.RespondError(response, http.StatusBadRequest, errMsg)
+		rest.RespondError(h.Log, response, http.StatusBadRequest, errMsg)
 		return
 	}
 
 	machineID := request.PathParameter("id")
 
-	zapup.MustRootLogger().Debug("Abort reinstall",
+	h.Log.Debug("abort reinstall",
 		zap.String("machineID", machineID),
 		zap.Bool("primary disk already wiped", req.PrimaryDiskWiped),
 	)
 
 	sc, bootInfo := h.APIClient().AbortReinstall(machineID, req)
 	if sc != http.StatusOK {
-		errMsg := "Failed to abort reinstall"
-		zapup.MustRootLogger().Error(errMsg,
+		errMsg := "failed to abort reinstall"
+		h.Log.Error(errMsg,
 			zap.Int("statusCode", sc),
 			zap.String("machineID", machineID),
 			zap.Bool("primary disk already wiped", req.PrimaryDiskWiped),
 			zap.Any("boot information", bootInfo),
 			zap.Error(err),
 		)
-		rest.Respond(response, http.StatusInternalServerError, errMsg)
+		rest.Respond(h.Log, response, http.StatusInternalServerError, errMsg)
 		return
 	}
 
 	if h.Config.ChangeBootOrder {
 		ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
 		if err != nil {
-			rest.Respond(response, http.StatusInternalServerError, err)
+			rest.Respond(h.Log, response, http.StatusInternalServerError, err)
 			return
 		}
 
-		err = ipmi.SetBootDisk(ipmiCfg)
+		err = ipmi.SetBootDisk(h.Log, ipmiCfg)
 		if err != nil {
-			zapup.MustRootLogger().Error("Unable to set boot order of machine to HD",
+			h.Log.Error("unable to set boot order of machine to HD",
 				zap.String("machineID", machineID),
 				zap.Any("boot information", bootInfo),
 				zap.Error(err),
 			)
-			rest.Respond(response, http.StatusInternalServerError, err)
+			rest.Respond(h.Log, response, http.StatusInternalServerError, err)
 			return
 		}
 	}
 
-	zapup.MustRootLogger().Info("Machine reinstall aborted",
+	h.Log.Info("machine reinstall aborted",
 		zap.Int("statusCode", sc),
 		zap.String("machineID", machineID),
 		zap.Bool("primary disk already wiped", req.PrimaryDiskWiped),
 		zap.Any("boot information", bootInfo),
 	)
 
-	rest.Respond(response, http.StatusOK, bootInfo)
+	rest.Respond(h.Log, response, http.StatusOK, bootInfo)
 }

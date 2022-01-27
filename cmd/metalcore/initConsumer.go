@@ -1,14 +1,14 @@
 package metalcore
 
 import (
-	"github.com/metal-stack/go-hal/pkg/api"
-	metalgo "github.com/metal-stack/metal-go"
 	"strings"
 	"time"
 
+	"github.com/metal-stack/go-hal/pkg/api"
+	metalgo "github.com/metal-stack/metal-go"
+
 	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-lib/bus"
-	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 )
 
@@ -30,8 +30,8 @@ func mapLogLevel(level string) bus.Level {
 	}
 }
 
-func timeoutHandler(err bus.TimeoutError) error {
-	zapup.MustRootLogger().Error("Timeout processing event", zap.Any("event", err.Event()))
+func (s *Server) timeoutHandler(err bus.TimeoutError) error {
+	s.Log.Error("timeout processing event", zap.Any("event", err.Event()))
 	return nil
 }
 
@@ -44,7 +44,7 @@ func (s *Server) initConsumer() error {
 		CACertFile:     s.Config.MQCACertFile,
 		ClientCertFile: s.Config.MQClientCertFile,
 	}
-	c, err := bus.NewConsumer(zapup.MustRootLogger(), tlsCfg, s.Config.MQAddress)
+	c, err := bus.NewConsumer(s.Log, tlsCfg, s.Config.MQAddress)
 	if err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func (s *Server) initConsumer() error {
 		MustRegister(s.Config.MachineTopic, "core").
 		Consume(domain.MachineEvent{}, func(message interface{}) error {
 			evt := message.(*domain.MachineEvent)
-			zapup.MustRootLogger().Debug("Got message",
+			s.Log.Debug("got message",
 				zap.String("topic", s.Config.MachineTopic),
 				zap.String("channel", "core"),
 				zap.Any("event", evt),
@@ -107,7 +107,7 @@ func (s *Server) initConsumer() error {
 					case metalgo.Bmc:
 						go s.EventHandler().UpdateBmc(evt.Cmd.TargetMachineID, revision, description, s3Cfg)
 					default:
-						zapup.MustRootLogger().Warn("Unknown firmware kind",
+						s.Log.Warn("unknown firmware kind",
 							zap.String("topic", s.Config.MachineTopic),
 							zap.String("channel", "core"),
 							zap.String("firmware kind", string(kind)),
@@ -115,7 +115,7 @@ func (s *Server) initConsumer() error {
 						)
 					}
 				default:
-					zapup.MustRootLogger().Warn("Unhandled command",
+					s.Log.Warn("unhandled command",
 						zap.String("topic", s.Config.MachineTopic),
 						zap.String("channel", "core"),
 						zap.Any("event", evt),
@@ -124,14 +124,14 @@ func (s *Server) initConsumer() error {
 			case domain.Create, domain.Update:
 				fallthrough
 			default:
-				zapup.MustRootLogger().Warn("Unhandled event",
+				s.Log.Warn("unhandled event",
 					zap.String("topic", s.Config.MachineTopic),
 					zap.String("channel", "core"),
 					zap.Any("event", evt),
 				)
 			}
 			return nil
-		}, 5, bus.Timeout(receiverHandlerTimeout, timeoutHandler), bus.TTL(time.Duration(s.Config.MachineTopicTTL)*time.Millisecond))
+		}, 5, bus.Timeout(receiverHandlerTimeout, s.timeoutHandler), bus.TTL(time.Duration(s.Config.MachineTopicTTL)*time.Millisecond))
 
 	return err
 }

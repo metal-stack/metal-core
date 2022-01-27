@@ -4,19 +4,18 @@ import (
 	"github.com/metal-stack/go-hal/connect"
 	halzap "github.com/metal-stack/go-hal/pkg/logger/zap"
 	"github.com/metal-stack/metal-core/pkg/domain"
-	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 )
 
 // PowerOnMachine sets the power of the machine to ON
-func PowerOnMachine(cfg *domain.IPMIConfig) error {
+func PowerOnMachine(log *zap.Logger, cfg *domain.IPMIConfig) error {
 	host, port, user, password := cfg.IPMIConnection()
-	outBand, err := connect.OutBand(host, port, user, password, halzap.New(zapup.MustRootLogger().Sugar()))
+	outBand, err := connect.OutBand(host, port, user, password, halzap.New(log.Sugar()))
 	if err != nil {
 		return err
 	}
 
-	zapup.MustRootLogger().Info("Machine Power ON",
+	log.Info("machine power on",
 		zap.String("hostname", cfg.Hostname),
 		zap.String("MAC", cfg.Mac()),
 	)
@@ -25,14 +24,14 @@ func PowerOnMachine(cfg *domain.IPMIConfig) error {
 }
 
 // PowerOffMachine sets the power of the machine to OFF
-func PowerOffMachine(cfg *domain.IPMIConfig) error {
+func PowerOffMachine(log *zap.Logger, cfg *domain.IPMIConfig) error {
 	host, port, user, password := cfg.IPMIConnection()
-	outBand, err := connect.OutBand(host, port, user, password, halzap.New(zapup.MustRootLogger().Sugar()))
+	outBand, err := connect.OutBand(host, port, user, password, halzap.New(log.Sugar()))
 	if err != nil {
 		return err
 	}
 
-	zapup.MustRootLogger().Info("Machine Power OFF",
+	log.Info("machine power off",
 		zap.String("hostname", cfg.Hostname),
 		zap.String("MAC", cfg.Mac()),
 	)
@@ -41,14 +40,14 @@ func PowerOffMachine(cfg *domain.IPMIConfig) error {
 }
 
 // PowerResetMachine resets the power of the machine
-func PowerResetMachine(cfg *domain.IPMIConfig) error {
+func PowerResetMachine(log *zap.Logger, cfg *domain.IPMIConfig) error {
 	host, port, user, password := cfg.IPMIConnection()
-	outBand, err := connect.OutBand(host, port, user, password, halzap.New(zapup.MustRootLogger().Sugar()))
+	outBand, err := connect.OutBand(host, port, user, password, halzap.New(log.Sugar()))
 	if err != nil {
 		return err
 	}
 
-	zapup.MustRootLogger().Info("Machine Power RESET",
+	log.Info("machine power reset",
 		zap.String("hostname", cfg.Hostname),
 		zap.String("MAC", cfg.Mac()),
 	)
@@ -56,14 +55,14 @@ func PowerResetMachine(cfg *domain.IPMIConfig) error {
 }
 
 // PowerCycleMachine cycles the power of the machine
-func PowerCycleMachine(cfg *domain.IPMIConfig) error {
+func PowerCycleMachine(log *zap.Logger, cfg *domain.IPMIConfig) error {
 	host, port, user, password := cfg.IPMIConnection()
-	outBand, err := connect.OutBand(host, port, user, password, halzap.New(zapup.MustRootLogger().Sugar()))
+	outBand, err := connect.OutBand(host, port, user, password, halzap.New(log.Sugar()))
 	if err != nil {
 		return err
 	}
 
-	zapup.MustRootLogger().Info("Machine Power CYCLE",
+	log.Info("machine power cycle",
 		zap.String("hostname", cfg.Hostname),
 		zap.String("MAC", cfg.Mac()),
 	)
@@ -72,14 +71,14 @@ func PowerCycleMachine(cfg *domain.IPMIConfig) error {
 }
 
 // PowerOnChassisIdentifyLED powers the machine chassis identify LED on indefinitely (raw 0x00 0x04 0x00 0x01)
-func PowerOnChassisIdentifyLED(cfg *domain.IPMIConfig) error {
+func PowerOnChassisIdentifyLED(log *zap.Logger, cfg *domain.IPMIConfig) error {
 	host, port, user, password := cfg.IPMIConnection()
-	outBand, err := connect.OutBand(host, port, user, password, halzap.New(zapup.MustRootLogger().Sugar()))
+	outBand, err := connect.OutBand(host, port, user, password, halzap.New(log.Sugar()))
 	if err != nil {
 		return err
 	}
 
-	zapup.MustRootLogger().Info("Machine chassis identify LED Power ON",
+	log.Info("machine chassis identify led power on",
 		zap.String("hostname", cfg.Hostname),
 		zap.String("MAC", cfg.Mac()),
 	)
@@ -88,14 +87,14 @@ func PowerOnChassisIdentifyLED(cfg *domain.IPMIConfig) error {
 }
 
 // PowerOffChassisIdentifyLED powers the machine chassis identify LED off (raw 0x00 0x04 0x00)
-func PowerOffChassisIdentifyLED(cfg *domain.IPMIConfig) error {
+func PowerOffChassisIdentifyLED(log *zap.Logger, cfg *domain.IPMIConfig) error {
 	host, port, user, password := cfg.IPMIConnection()
-	outBand, err := connect.OutBand(host, port, user, password, halzap.New(zapup.MustRootLogger().Sugar()))
+	outBand, err := connect.OutBand(host, port, user, password, halzap.New(log.Sugar()))
 	if err != nil {
 		return err
 	}
 
-	zapup.MustRootLogger().Info("Machine chassis identify LED Power OFF",
+	log.Info("machine chassis identify led power off",
 		zap.String("hostname", cfg.Hostname),
 		zap.String("MAC", cfg.Mac()),
 	)

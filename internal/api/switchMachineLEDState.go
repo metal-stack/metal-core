@@ -3,7 +3,6 @@ package api
 import (
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-go/api/models"
-	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 )
 
@@ -35,7 +34,7 @@ func (c *apiClient) setChassisIdentifyLEDState(machineID, description, state str
 	}
 
 	if ok.Payload != nil && ok.Payload.Ledstate != nil {
-		zapup.MustRootLogger().Info("Set machine chassis identify LED state",
+		c.Log.Info("set machine chassis identify led state",
 			zap.String("machineID", machineID),
 			zap.String("state", *ok.Payload.Ledstate.Value),
 			zap.String("description", *ok.Payload.Ledstate.Description),

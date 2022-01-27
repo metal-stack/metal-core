@@ -9,7 +9,6 @@ import (
 	"github.com/metal-stack/metal-go/api/models"
 
 	"github.com/emicklei/go-restful/v3"
-	"github.com/metal-stack/metal-lib/zapup"
 	"go.uber.org/zap"
 )
 
@@ -18,7 +17,7 @@ type emptyBootRepsonse struct{}
 func (h *endpointHandler) Dhcp(request *restful.Request, response *restful.Response) {
 	machineID := request.PathParameter("id")
 
-	zapup.MustRootLogger().Debug("emit pxe boot event from machine",
+	h.Log.Debug("emit pxe boot event from machine",
 		zap.String("machineID", machineID),
 	)
 
@@ -29,7 +28,7 @@ func (h *endpointHandler) Dhcp(request *restful.Request, response *restful.Respo
 	}
 	err := h.APIClient().AddProvisioningEvent(machineID, event)
 	if err != nil {
-		zapup.MustRootLogger().Debug("dhcp: unable to emit PXEBooting provisioning event... ignoring",
+		h.Log.Debug("dhcp: unable to emit PXEBooting provisioning event... ignoring",
 			zap.String("machineID", machineID),
 			zap.String("error", err.Error()),
 		)
@@ -37,5 +36,5 @@ func (h *endpointHandler) Dhcp(request *restful.Request, response *restful.Respo
 
 	// the response of the extended dhcp request does not need to contain useful information
 	// only the ipxe http request following the dhcp extended request will need to contain the boot image data
-	rest.Respond(response, http.StatusOK, emptyBootRepsonse{})
+	rest.Respond(h.Log, response, http.StatusOK, emptyBootRepsonse{})
 }

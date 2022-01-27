@@ -8,18 +8,15 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"strings"
 
 	"github.com/metal-stack/go-hal/pkg/api"
+	"go.uber.org/zap"
 
 	"github.com/emicklei/go-restful/v3"
 	"github.com/kelseyhightower/envconfig"
 	ep "github.com/metal-stack/metal-core/internal/endpoint"
 	"github.com/metal-stack/metal-core/pkg/domain"
-	"github.com/metal-stack/metal-lib/zapup"
 )
-
-const logFilename = "output.log"
 
 var (
 	cfg        *domain.Config
@@ -65,8 +62,7 @@ func (h *noopEventHandler) TriggerSwitchReconfigure(switchName, eventType string
 func (h *noopEventHandler) ReconfigureSwitch() {}
 
 func mockAPIEndpoint(apiClient func(ctx *domain.AppContext) domain.APIClient) domain.EndpointHandler {
-	_ = os.Setenv(zapup.KeyLogLevel, "info")
-	_ = os.Setenv(zapup.KeyOutput, logFilename)
+
 	_ = os.Setenv("METAL_CORE_CIDR", "10.0.0.11/24")
 	_ = os.Setenv("METAL_CORE_PARTITION_ID", "FRA")
 	_ = os.Setenv("METAL_CORE_RACK_ID", "Vagrant Rack 1")
@@ -85,9 +81,12 @@ func mockAPIEndpoint(apiClient func(ctx *domain.AppContext) domain.APIClient) do
 		MetalHammerCommandLine: "",
 	}
 
+	log, _ := zap.NewProduction()
+
 	appContext = &domain.AppContext{
 		Config:     cfg,
 		BootConfig: bootCfg,
+		Log:        log,
 	}
 	appContext.SetAPIClient(apiClient)
 	appContext.SetEndpointHandler(ep.NewHandler)
@@ -113,31 +112,4 @@ func doPost(path string, payload interface{}) int {
 	r := httptest.NewRecorder()
 	restful.DefaultContainer.ServeHTTP(r, req)
 	return r.Result().StatusCode //nolint
-}
-
-func getLogs() (string, error) {
-	logs, err := os.ReadFile(logFilename)
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(string(logs)), nil
-}
-
-func truncateLogFile() error {
-	logFile, err := os.OpenFile(logFilename, os.O_RDWR, 0666)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		_ = logFile.Close()
-	}()
-
-	_ = logFile.Truncate(0)
-	_, _ = logFile.Seek(0, 0)
-	return nil
-}
-
-func deleteLogFile() {
-	_ = os.Remove(logFilename)
 }
