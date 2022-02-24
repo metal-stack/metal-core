@@ -106,7 +106,7 @@ func doGet(path string, response interface{}) (int, error) {
 }
 
 func doPost(path string, payload interface{}) int {
-	bodyJSON, _ := json.Marshal(payload)
+	bodyJSON, _ := json.Marshal(payload) //nolint
 	req, _ := http.NewRequestWithContext(context.TODO(), http.MethodPost, path, bytes.NewBuffer(bodyJSON))
 	req.Header.Add("Content-Type", restful.MIME_JSON)
 	r := httptest.NewRecorder()
