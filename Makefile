@@ -1,17 +1,12 @@
 BINARY := metal-core
 MAINMODULE := github.com/metal-stack/metal-core
-COMMONDIR := $(or ${COMMONDIR},../builder)
 CGO_ENABLED := 1
 
 in-docker: gofmt test all;
 
 release:: gofmt test all;
 
-ifeq ($(CGO_ENABLED),1)
-	LINKMODE := -linkmode external -extldflags '-static -s -w'
-endif
-
-LINKMODE := $(LINKMODE) \
+LINKMODE := -linkmode external -extldflags '-static -s -w' \
 		 -X 'github.com/metal-stack/v.Version=$(VERSION)' \
 		 -X 'github.com/metal-stack/v.Revision=$(GITVERSION)' \
 		 -X 'github.com/metal-stack/v.GitSHA1=$(SHA)' \
