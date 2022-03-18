@@ -27,8 +27,7 @@ func Create() *Server {
 		panic(fmt.Errorf("bad configuration:\n%+v", cfg))
 	}
 
-	level := zap.InfoLevel
-	err := level.UnmarshalText([]byte(cfg.LogLevel))
+	level, err := zap.ParseAtomicLevel(cfg.LogLevel)
 	if err != nil {
 		panic(fmt.Errorf("can't initialize zap logger: %w", err))
 	}
@@ -36,7 +35,7 @@ func Create() *Server {
 	zcfg := zap.NewProductionConfig()
 	zcfg.EncoderConfig.TimeKey = "timestamp"
 	zcfg.EncoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
-	zcfg.Level = zap.NewAtomicLevelAt(level)
+	zcfg.Level = level
 
 	log, err := zcfg.Build()
 	if err != nil {

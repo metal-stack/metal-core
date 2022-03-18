@@ -5,13 +5,38 @@ CGO_ENABLED := 1
 
 in-docker: gofmt test all;
 
-include $(COMMONDIR)/Makefile.inc
+release:: gofmt test all;
+
+ifeq ($(CGO_ENABLED),1)
+	LINKMODE := -linkmode external -extldflags '-static -s -w'
+endif
+
+LINKMODE := $(LINKMODE) \
+		 -X 'github.com/metal-stack/v.Version=$(VERSION)' \
+		 -X 'github.com/metal-stack/v.Revision=$(GITVERSION)' \
+		 -X 'github.com/metal-stack/v.GitSHA1=$(SHA)' \
+		 -X 'github.com/metal-stack/v.BuildDate=$(BUILDDATE)'
 
 .PHONY: all
-all::
-	go mod tidy
+all:: bin/$(BINARY);
 
-release:: gofmt test all;
+bin/$(BINARY): test $(GOSRC)
+	$(info CGO_ENABLED="$(CGO_ENABLED)")
+	go build \
+		-tags netgo,client \
+		-ldflags \
+		"$(LINKMODE)" \
+		-o bin/$(BINARY) \
+		$(MAINMODULE)
+
+.PHONY: test
+test:
+	CGO_ENABLED=1 go test -tags client -cover ./...
+
+
+.PHONY: gofmt
+gofmt:
+	go fmt ./...
 
 .PHONY: spec-in-docker
 spec-in-docker:
