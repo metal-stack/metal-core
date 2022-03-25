@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/go-openapi/strfmt"
@@ -47,6 +48,12 @@ func (c *apiClient) Emit(eventType domain.ProvisioningEventType, machineID, mess
 }
 
 func (c *apiClient) PhoneHome(msgs []phoneHomeMessage) {
+	c.Log.Debug("phomehome",
+		zap.String("machines", fmt.Sprintf("%v", msgs)),
+	)
+	c.Log.Info("phomehome",
+		zap.Int("machines", len(msgs)),
+	)
 	events := models.V1MachineProvisioningEvents{}
 	phonedHomeEvent := string(domain.ProvisioningEventPhonedHome)
 	for i := range msgs {
