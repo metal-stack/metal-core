@@ -46,6 +46,8 @@ func (c *apiClient) ConstantlyPhoneHome() {
 	// FIXME context should come from caller and canceled on shutdown
 	ctx := context.Background()
 
+	lastBulksend := time.Now()
+
 	for _, iface := range ifs {
 		// consider only switch port interfaces
 		if !strings.HasPrefix(iface.Name, "swp") {
@@ -87,10 +89,11 @@ func (c *apiClient) ConstantlyPhoneHome() {
 				}
 				if sendToAPI {
 					phoneHomeMessages = append(phoneHomeMessages, *msg)
-					// FIXME: configurable len or calculate inteligently
-					if len(phoneHomeMessages) > 16 {
+					// FIXME make max batch size configurable
+					if len(phoneHomeMessages) > 32 || time.Since(lastBulksend) > PhonedHomeBackoff {
 						go c.PhoneHome(phoneHomeMessages)
 						phoneHomeMessages = nil
+						lastBulksend = time.Now()
 					}
 				}
 				mtx.Unlock()
