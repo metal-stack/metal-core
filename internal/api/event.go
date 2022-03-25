@@ -48,10 +48,10 @@ func (c *apiClient) Emit(eventType domain.ProvisioningEventType, machineID, mess
 }
 
 func (c *apiClient) PhoneHome(msgs []phoneHomeMessage) {
-	c.Log.Debug("phomehome",
+	c.Log.Debug("phonehome",
 		zap.String("machines", fmt.Sprintf("%v", msgs)),
 	)
-	c.Log.Info("phomehome",
+	c.Log.Info("phonehome",
 		zap.Int("machines", len(msgs)),
 	)
 	events := models.V1MachineProvisioningEvents{}

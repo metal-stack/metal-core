@@ -48,6 +48,7 @@ func (c *apiClient) ConstantlyPhoneHome() {
 
 	lastBulksend := time.Now()
 
+	interfaceCount := 0
 	for _, iface := range ifs {
 		// consider only switch port interfaces
 		if !strings.HasPrefix(iface.Name, "swp") {
@@ -61,6 +62,7 @@ func (c *apiClient) ConstantlyPhoneHome() {
 			)
 			continue
 		}
+		interfaceCount++
 		c.Log.Info("start lldp client",
 			zap.String("interface", iface.Name),
 		)
@@ -89,8 +91,8 @@ func (c *apiClient) ConstantlyPhoneHome() {
 				}
 				if sendToAPI {
 					phoneHomeMessages = append(phoneHomeMessages, *msg)
-					// FIXME make max batch size configurable
-					if len(phoneHomeMessages) > 32 || time.Since(lastBulksend) > PhonedHomeBackoff {
+					// there can be no more machine present in this switch as interfaces in question
+					if len(phoneHomeMessages) >= interfaceCount || time.Since(lastBulksend) > PhonedHomeBackoff {
 						go c.PhoneHome(phoneHomeMessages)
 						phoneHomeMessages = nil
 						lastBulksend = time.Now()
