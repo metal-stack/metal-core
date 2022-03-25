@@ -103,6 +103,7 @@ func (c *apiClient) ConstantlyPhoneHome() {
 type phoneHomeMessage struct {
 	machineID string
 	payload   string
+	time      time.Time
 }
 
 // toPhoneHomeMessage extracts the machineID and payload of the given lldp frame fragment.
@@ -112,6 +113,7 @@ func toPhoneHomeMessage(discoveryResult lldp.DiscoveryResult) *phoneHomeMessage 
 		return &phoneHomeMessage{
 			machineID: discoveryResult.SysName,
 			payload:   discoveryResult.SysDescription,
+			time:      time.Now(),
 		}
 	}
 	return nil

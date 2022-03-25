@@ -3,6 +3,7 @@ package api
 import (
 	"time"
 
+	"github.com/go-openapi/strfmt"
 	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-go/api/models"
@@ -53,6 +54,7 @@ func (c *apiClient) PhoneHome(msgs []phoneHomeMessage) {
 		event := models.V1MachineProvisioningEvent{
 			Event:   &phonedHomeEvent,
 			Message: msg.payload,
+			Time:    strfmt.DateTime(msg.time),
 		}
 		events[msg.machineID] = event
 	}
