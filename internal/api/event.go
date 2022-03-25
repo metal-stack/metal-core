@@ -45,13 +45,25 @@ func (c *apiClient) Emit(eventType domain.ProvisioningEventType, machineID, mess
 	return c.AddProvisioningEvent(machineID, event)
 }
 
-func (c *apiClient) PhoneHome(msg *phoneHomeMessage) {
-	err := c.Emit(domain.ProvisioningEventPhonedHome, msg.machineID, msg.payload)
+func (c *apiClient) PhoneHome(msgs []phoneHomeMessage) {
+	events := models.V1MachineProvisioningEvents{}
+	phonedHomeEvent := string(domain.ProvisioningEventPhonedHome)
+	for i := range msgs {
+		msg := msgs[i]
+		event := models.V1MachineProvisioningEvent{
+			Event:   &phonedHomeEvent,
+			Message: msg.payload,
+		}
+		events[msg.machineID] = event
+	}
+
+	params := machine.NewAddProvisioningEventsParams()
+	params.Body = events
+	params.WithTimeout(5 * time.Second)
+	_, err := c.MachineClient.AddProvisioningEvents(params, c.Auth)
 	if err != nil {
-		c.Log.Error("unable to phone home",
-			zap.String("eventType", string(domain.ProvisioningEventPhonedHome)),
-			zap.String("machineID", msg.machineID),
-			zap.String("message", msg.payload),
+		c.Log.Error("unable to send provisioning event back to API",
+			zap.Error(err),
 		)
 	}
 }

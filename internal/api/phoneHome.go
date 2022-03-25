@@ -38,6 +38,9 @@ func (c *apiClient) ConstantlyPhoneHome() {
 
 	discoveryResultChan := make(chan lldp.DiscoveryResult)
 	m := make(map[string]time.Time)
+
+	phoneHomeMessages := []phoneHomeMessage{}
+
 	mtx := new(sync.Mutex)
 
 	// FIXME context should come from caller and canceled on shutdown
@@ -82,11 +85,15 @@ func (c *apiClient) ConstantlyPhoneHome() {
 					sendToAPI = true
 					m[msg.machineID] = time.Now()
 				}
-				mtx.Unlock()
-
 				if sendToAPI {
-					go c.PhoneHome(msg)
+					phoneHomeMessages = append(phoneHomeMessages, *msg)
+					// FIXME: configurable len or calculate inteligently
+					if len(phoneHomeMessages) > 16 {
+						go c.PhoneHome(phoneHomeMessages)
+						phoneHomeMessages = nil
+					}
 				}
+				mtx.Unlock()
 			}
 		}()
 	}
