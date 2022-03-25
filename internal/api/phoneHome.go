@@ -39,15 +39,13 @@ func (c *apiClient) ConstantlyPhoneHome() {
 	discoveryResultChan := make(chan lldp.DiscoveryResult)
 	m := make(map[string]time.Time)
 
-	phoneHomeMessages := []phoneHomeMessage{}
-
 	mtx := new(sync.Mutex)
 
 	// FIXME context should come from caller and canceled on shutdown
 	ctx := context.Background()
 
+	phoneHomeMessages := []phoneHomeMessage{}
 	lastBulksend := time.Now()
-
 	interfaceCount := 0
 	for _, iface := range ifs {
 		// consider only switch port interfaces
@@ -81,22 +79,18 @@ func (c *apiClient) ConstantlyPhoneHome() {
 					continue
 				}
 
-				sendToAPI := false
-
 				mtx.Lock()
 				lastSend, ok := m[msg.machineID]
 				if !ok || time.Since(lastSend) > PhonedHomeBackoff {
-					sendToAPI = true
 					m[msg.machineID] = time.Now()
-				}
-				if sendToAPI {
 					phoneHomeMessages = append(phoneHomeMessages, *msg)
-					// there can be no more machine present in this switch as interfaces in question
-					if len(phoneHomeMessages) >= interfaceCount || time.Since(lastBulksend) > PhonedHomeBackoff {
-						go c.PhoneHome(phoneHomeMessages)
-						phoneHomeMessages = nil
-						lastBulksend = time.Now()
-					}
+				}
+
+				// there can be no more machine present in this switch as interfaces in question
+				if len(phoneHomeMessages) >= interfaceCount || time.Since(lastBulksend) > PhonedHomeBackoff {
+					go c.PhoneHome(phoneHomeMessages)
+					phoneHomeMessages = nil
+					lastBulksend = time.Now()
 				}
 				mtx.Unlock()
 			}
