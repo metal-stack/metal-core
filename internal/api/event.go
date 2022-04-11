@@ -69,10 +69,15 @@ func (c *apiClient) PhoneHome(msgs []phoneHomeMessage) {
 	params := machine.NewAddProvisioningEventsParams()
 	params.Body = events
 	params.WithTimeout(5 * time.Second)
-	_, err := c.MachineClient.AddProvisioningEvents(params, c.Auth)
+	resp, err := c.MachineClient.AddProvisioningEvents(params, c.Auth)
 	if err != nil {
 		c.Log.Error("unable to send provisioning event back to API",
 			zap.Error(err),
+		)
+	}
+	if resp != nil && resp.Payload != nil && resp.Payload.Events != nil {
+		c.Log.Info("phonehome sent",
+			zap.Int64("machines", *resp.Payload.Events),
 		)
 	}
 }

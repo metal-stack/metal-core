@@ -14,7 +14,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/go-hal v0.3.7
 	github.com/metal-stack/go-lldpd v0.3.7
-	github.com/metal-stack/metal-go v0.16.4-0.20220325095241-7d173db119b3
+	github.com/metal-stack/metal-go v0.16.4-0.20220411084807-05d9d85d9232
 	github.com/metal-stack/metal-lib v0.9.0
 	github.com/metal-stack/metal-networker v0.8.2
 	github.com/metal-stack/security v0.6.3
