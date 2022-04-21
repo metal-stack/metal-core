@@ -1,8 +1,10 @@
 package api
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/go-openapi/strfmt"
 	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-go/api/models"
@@ -45,13 +47,37 @@ func (c *apiClient) Emit(eventType domain.ProvisioningEventType, machineID, mess
 	return c.AddProvisioningEvent(machineID, event)
 }
 
-func (c *apiClient) PhoneHome(msg *phoneHomeMessage) {
-	err := c.Emit(domain.ProvisioningEventPhonedHome, msg.machineID, msg.payload)
+func (c *apiClient) PhoneHome(msgs []phoneHomeMessage) {
+	c.Log.Debug("phonehome",
+		zap.String("machines", fmt.Sprintf("%v", msgs)),
+	)
+	c.Log.Info("phonehome",
+		zap.Int("machines", len(msgs)),
+	)
+	events := models.V1MachineProvisioningEvents{}
+	phonedHomeEvent := string(domain.ProvisioningEventPhonedHome)
+	for i := range msgs {
+		msg := msgs[i]
+		event := models.V1MachineProvisioningEvent{
+			Event:   &phonedHomeEvent,
+			Message: msg.payload,
+			Time:    strfmt.DateTime(msg.time),
+		}
+		events[msg.machineID] = event
+	}
+
+	params := machine.NewAddProvisioningEventsParams()
+	params.Body = events
+	params.WithTimeout(5 * time.Second)
+	resp, err := c.MachineClient.AddProvisioningEvents(params, c.Auth)
 	if err != nil {
-		c.Log.Error("unable to phone home",
-			zap.String("eventType", string(domain.ProvisioningEventPhonedHome)),
-			zap.String("machineID", msg.machineID),
-			zap.String("message", msg.payload),
+		c.Log.Error("unable to send provisioning event back to API",
+			zap.Error(err),
+		)
+	}
+	if resp != nil && resp.Payload != nil && resp.Payload.Events != nil {
+		c.Log.Info("phonehome sent",
+			zap.Int64("machines", *resp.Payload.Events),
 		)
 	}
 }

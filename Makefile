@@ -9,7 +9,7 @@ include $(COMMONDIR)/Makefile.inc
 
 .PHONY: all
 all::
-	go mod tidy
+	go mod tidy -compat=1.17
 
 release:: gofmt test all;
 
