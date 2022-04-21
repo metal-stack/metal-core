@@ -13,8 +13,7 @@ import (
 )
 
 const (
-	InitialPhonedHomeBackoff = 20 * time.Second
-	PhonedHomeBackoff        = 58 * time.Second // lldpd sends messages every two seconds
+	phonedHomeInterval = time.Minute // lldpd sends messages every two seconds
 )
 
 // ConstantlyPhoneHome sends every minute a single phone-home
@@ -37,16 +36,11 @@ func (c *apiClient) ConstantlyPhoneHome() {
 	}
 
 	discoveryResultChan := make(chan lldp.DiscoveryResult)
-	m := make(map[string]time.Time)
-
-	mtx := new(sync.Mutex)
 
 	// FIXME context should come from caller and canceled on shutdown
 	ctx := context.Background()
 
-	phoneHomeMessages := []phoneHomeMessage{}
-	lastBulksend := time.Now()
-	interfaceCount := 0
+	phoneHomeMessages := sync.Map{}
 	for _, iface := range ifs {
 		// consider only switch port interfaces
 		if !strings.HasPrefix(iface.Name, "swp") {
@@ -60,7 +54,6 @@ func (c *apiClient) ConstantlyPhoneHome() {
 			)
 			continue
 		}
-		interfaceCount++
 		c.Log.Info("start lldp client",
 			zap.String("interface", iface.Name),
 		)
@@ -68,34 +61,42 @@ func (c *apiClient) ConstantlyPhoneHome() {
 		// constantly observe LLDP traffic on current machine and current interface
 		go lldpcli.Start(discoveryResultChan)
 
-		// extract phone home messages from fetched LLDP packages after a short initial delay
-		go func() {
-			time.Sleep(InitialPhonedHomeBackoff)
-
-			for phoneHome := range discoveryResultChan {
-				phoneHome := phoneHome
-				msg := toPhoneHomeMessage(phoneHome)
-				if msg == nil {
-					continue
-				}
-
-				mtx.Lock()
-				lastSend, ok := m[msg.machineID]
-				if !ok || time.Since(lastSend) > PhonedHomeBackoff {
-					m[msg.machineID] = time.Now()
-					phoneHomeMessages = append(phoneHomeMessages, *msg)
-				}
-
-				// there can be no more machine present in this switch as interfaces in question
-				if len(phoneHomeMessages) >= interfaceCount || time.Since(lastBulksend) > PhonedHomeBackoff {
-					go c.PhoneHome(phoneHomeMessages)
-					phoneHomeMessages = nil
-					lastBulksend = time.Now()
-				}
-				mtx.Unlock()
-			}
-		}()
 	}
+	// extract phone home messages from fetched LLDP packages
+	go func() {
+		for phoneHome := range discoveryResultChan {
+			phoneHome := phoneHome
+			msg := toPhoneHomeMessage(phoneHome)
+			if msg == nil {
+				continue
+			}
+
+			phoneHomeMessages.Store(msg.machineID, *msg)
+		}
+	}()
+
+	// send arrived messages on a ticker basis
+	ticker := time.NewTicker(phonedHomeInterval)
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				msgs := []phoneHomeMessage{}
+				phoneHomeMessages.Range(func(key, value interface{}) bool {
+					msg, ok := value.(phoneHomeMessage)
+					if !ok {
+						return true
+					}
+					phoneHomeMessages.Delete(key)
+					msgs = append(msgs, msg)
+					return true
+				})
+				c.PhoneHome(msgs)
+			}
+		}
+	}()
 }
 
 // phoneHomeMessage contains a phone-home message.
