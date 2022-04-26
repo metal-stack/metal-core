@@ -41,13 +41,13 @@ router bgp {{ $ASN }}
  bgp bestpath as-path multipath-relax
  neighbor FABRIC peer-group
  neighbor FABRIC remote-as external
- neighbor FABRIC timers 1 3
+ neighbor FABRIC timers 2 8
  {{- range .Ports.Underlay }}
  neighbor {{ . }} interface peer-group FABRIC
  {{- end }}
  neighbor FIREWALL peer-group
  neighbor FIREWALL remote-as external
- neighbor FIREWALL timers 1 3
+ neighbor FIREWALL timers 2 8
  {{- range .Ports.Firewalls }}
  neighbor {{ .Port }} interface peer-group FIREWALL
  {{- end }}
@@ -96,7 +96,7 @@ router bgp {{ $ASN }} vrf {{ $vrf }}
  bgp bestpath as-path multipath-relax
  neighbor MACHINE peer-group
  neighbor MACHINE remote-as external
- neighbor MACHINE timers 1 3
+ neighbor MACHINE timers 2 8
  {{- range $t.Neighbors }}
  neighbor {{ . }} interface peer-group MACHINE
  {{- end }}
