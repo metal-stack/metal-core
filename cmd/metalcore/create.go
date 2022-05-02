@@ -123,11 +123,10 @@ func Create() *Server {
 	if err != nil {
 		log.Fatal("failed to create grpc client", zap.Error(err))
 	}
-	eventServiceClient, closer, err := grpcClient.NewEventClient()
+	eventServiceClient, _, err := grpcClient.NewEventClient()
 	if err != nil {
 		log.Fatal("failed to create grpc event service client", zap.Error(err))
 	}
-	defer closer.Close()
 	app.SetEventServiceClient(eventServiceClient)
 
 	app.initSwitchReconfiguration()

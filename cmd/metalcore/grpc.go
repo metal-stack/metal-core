@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"io"
 	"time"
 
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
@@ -58,13 +57,10 @@ func NewGrpcClient(log *zap.SugaredLogger, address string, cert, key, caCert []b
 	}, nil
 }
 
-func (c *GrpcClient) NewEventClient() (v1.EventServiceClient, io.Closer, error) {
+func (c *GrpcClient) NewEventClient() (v1.EventServiceClient, error) {
 	conn, err := grpc.DialContext(context.Background(), c.addr, c.dialOpts...)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	if err != nil {
-		return nil, nil, err
-	}
-	return v1.NewEventServiceClient(conn), conn, nil
+	return v1.NewEventServiceClient(conn), nil
 }
