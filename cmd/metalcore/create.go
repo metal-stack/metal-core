@@ -106,7 +106,7 @@ func Create() *Server {
 	if err != nil {
 		log.Fatal("failed to register switch", zap.Error(err))
 	}
-	cert, err := os.ReadFile(cfg.GrpcCACertFile)
+	cert, err := os.ReadFile(cfg.GrpcClientCertFile)
 	if err != nil {
 		log.Fatal("failed to read cert", zap.Error(err))
 	}

@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"fmt"
 	"io"
 	"time"
 
@@ -26,7 +27,7 @@ type GrpcClient struct {
 func NewGrpcClient(log *zap.SugaredLogger, address string, cert, key, caCert []byte) (*GrpcClient, error) {
 	clientCert, err := tls.X509KeyPair(cert, key)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to create x509 keypair %w", err)
 	}
 
 	caCertPool := x509.NewCertPool()
