@@ -59,20 +59,12 @@ func NewGrpcClient(log *zap.SugaredLogger, address string, cert, key, caCert []b
 }
 
 func (c *GrpcClient) NewEventClient() (v1.EventServiceClient, io.Closer, error) {
-	conn, err := c.newConnection()
+	conn, err := grpc.DialContext(context.Background(), c.addr, c.dialOpts...)
+	if err != nil {
+		return nil, nil, err
+	}
 	if err != nil {
 		return nil, nil, err
 	}
 	return v1.NewEventServiceClient(conn), conn, nil
-}
-func (c *GrpcClient) newConnection() (*grpc.ClientConn, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-
-	conn, err := grpc.DialContext(ctx, c.addr, c.dialOpts...)
-	if err != nil {
-		return nil, err
-	}
-
-	return conn, err
 }
