@@ -13,7 +13,7 @@ import (
 )
 
 func (c *apiClient) Send(event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	s, err := c.EventServiceClient.Send(ctx, event)
 	if err != nil {
