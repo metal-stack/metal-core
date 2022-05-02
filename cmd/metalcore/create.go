@@ -123,7 +123,7 @@ func Create() *Server {
 	if err != nil {
 		log.Fatal("failed to create grpc client", zap.Error(err))
 	}
-	eventServiceClient, _, err := grpcClient.NewEventClient()
+	eventServiceClient, err := grpcClient.NewEventClient()
 	if err != nil {
 		log.Fatal("failed to create grpc event service client", zap.Error(err))
 	}
