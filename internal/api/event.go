@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"fmt"
-	"time"
 
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 	"github.com/metal-stack/metal-core/pkg/domain"
@@ -13,9 +12,7 @@ import (
 )
 
 func (c *apiClient) Send(event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-	defer cancel()
-	s, err := c.EventServiceClient.Send(ctx, event)
+	s, err := c.EventServiceClient.Send(context.Background(), event)
 	if err != nil {
 		return nil, err
 	}
