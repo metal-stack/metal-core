@@ -41,7 +41,7 @@ func (c *apiClient) PhoneHome(msgs []phoneHomeMessage) {
 		events[msg.machineID] = event
 	}
 
-	s, err := c.Send(&v1.EventServiceSendRequest{Events: events})
+	s, err := c.EventServiceClient.Send(context.Background(), &v1.EventServiceSendRequest{Events: events})
 	if err != nil {
 		c.Log.Error("unable to send provisioning event back to API",
 			zap.Error(err),
