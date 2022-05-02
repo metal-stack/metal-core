@@ -728,7 +728,7 @@
         "neighbors"
       ]
     },
-    "v1.EventServiceSendResponse": {
+    "models.V1MachineProvisioningEvent": {
       "properties": {
         "event": {
           "type": "string"
@@ -754,7 +754,7 @@
         },
         "log": {
           "items": {
-            "$ref": "#/definitions/v1.EventServiceSendResponse"
+            "$ref": "#/definitions/models.V1MachineProvisioningEvent"
           },
           "type": "array"
         }
@@ -1205,49 +1205,6 @@
           }
         },
         "summary": "find machine",
-        "tags": [
-          "machine"
-        ]
-      }
-    },
-    "/machine/{id}/event": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "operationId": "AddProvisioningEvent",
-        "parameters": [
-          {
-            "description": "identifier of the machine",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1.EventServiceSendResponse"
-            }
-          }
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "default": {
-            "description": "Unexpected Error"
-          }
-        },
-        "summary": "adds a machine provisioning event",
         "tags": [
           "machine"
         ]
