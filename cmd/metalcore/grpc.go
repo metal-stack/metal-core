@@ -21,7 +21,7 @@ type GrpcClient struct {
 	log      *zap.SugaredLogger
 }
 
-// NewGrpcClient fetches the address and certificates from metal-core needed to communicate with metal-api via grpc,
+// NewGrpcClient create a grpc client to communicate with metal-api via grpc,
 // and returns a new grpc client that can be used to invoke all provided grpc endpoints.
 func NewGrpcClient(log *zap.SugaredLogger, address string, cert, key, caCert []byte) (*GrpcClient, error) {
 	clientCert, err := tls.X509KeyPair(cert, key)
