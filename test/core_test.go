@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/emicklei/go-restful/v3"
+	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-go/api/models"
@@ -38,12 +39,8 @@ func TestLoggingMiddleware(t *testing.T) {
 	require.Equal(t, http.StatusOK, sc)
 }
 
-func (a *apiHandlerCoreTest) Emit(eventType domain.ProvisioningEventType, machineID, message string) error {
-	return nil
-}
-
-func (a *apiHandlerCoreTest) AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error {
-	return nil
+func (a *apiHandlerCoreTest) Send(event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error) {
+	return nil, nil
 }
 
 func (a *apiHandlerCoreTest) FindMachine(machineID string) (*models.V1MachineResponse, error) {

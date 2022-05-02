@@ -728,7 +728,7 @@
         "neighbors"
       ]
     },
-    "models.V1MachineProvisioningEvent": {
+    "v1.EventServiceSendResponse": {
       "properties": {
         "event": {
           "type": "string"
@@ -754,7 +754,7 @@
         },
         "log": {
           "items": {
-            "$ref": "#/definitions/models.V1MachineProvisioningEvent"
+            "$ref": "#/definitions/v1.EventServiceSendResponse"
           },
           "type": "array"
         }
@@ -1229,7 +1229,7 @@
             "name": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/models.V1MachineProvisioningEvent"
+              "$ref": "#/definitions/v1.EventServiceSendResponse"
             }
           }
         ],

@@ -99,19 +99,36 @@ func Create() *Server {
 
 	err = app.initConsumer()
 	if err != nil {
-		log.Fatal("failed to init NSQ consumer",
-			zap.Error(err),
-		)
-		os.Exit(1)
+		log.Fatal("failed to init NSQ consumer", zap.Error(err))
 	}
 
 	s, err := app.APIClient().RegisterSwitch()
 	if err != nil {
-		log.Fatal("failed to register switch",
-			zap.Error(err),
-		)
-		os.Exit(1)
+		log.Fatal("failed to register switch", zap.Error(err))
 	}
+	cert, err := os.ReadFile(cfg.GrpcCACertFile)
+	if err != nil {
+		log.Fatal("failed to read cert", zap.Error(err))
+	}
+	cacert, err := os.ReadFile(cfg.GrpcCACertFile)
+	if err != nil {
+		log.Fatal("failed to read cacert", zap.Error(err))
+	}
+	key, err := os.ReadFile(cfg.GrpcClientKeyFile)
+	if err != nil {
+		log.Fatal("failed to read key", zap.Error(err))
+	}
+
+	grpcClient, err := NewGrpcClient(log.Sugar(), cfg.GrpcAddress, cert, key, cacert)
+	if err != nil {
+		log.Fatal("failed to create grpc client", zap.Error(err))
+	}
+	eventServiceClient, closer, err := grpcClient.NewEventClient()
+	if err != nil {
+		log.Fatal("failed to create grpc event service client", zap.Error(err))
+	}
+	defer closer.Close()
+	app.SetEventServiceClient(eventServiceClient)
 
 	app.initSwitchReconfiguration()
 	app.APIClient().ConstantlyPhoneHome()

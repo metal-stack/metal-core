@@ -3,10 +3,10 @@ package endpoint
 import (
 	"net/http"
 
+	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 	"github.com/metal-stack/metal-core/pkg/domain"
 
 	"github.com/metal-stack/metal-core/internal/rest"
-	"github.com/metal-stack/metal-go/api/models"
 
 	"github.com/emicklei/go-restful/v3"
 	"go.uber.org/zap"
@@ -22,11 +22,13 @@ func (h *endpointHandler) Dhcp(request *restful.Request, response *restful.Respo
 	)
 
 	eventType := string(domain.ProvisioningEventPXEBooting)
-	event := &models.V1MachineProvisioningEvent{
-		Event:   &eventType,
-		Message: "machine sent extended dhcp request",
-	}
-	err := h.APIClient().AddProvisioningEvent(machineID, event)
+	event := &v1.EventServiceSendRequest{Events: map[string]*v1.MachineProvisioningEvent{
+		machineID: {
+			Event:   eventType,
+			Message: "machine sent extended dhcp request",
+		},
+	}}
+	_, err := h.APIClient().Send(event)
 	if err != nil {
 		h.Log.Debug("dhcp: unable to emit PXEBooting provisioning event... ignoring",
 			zap.String("machineID", machineID),
