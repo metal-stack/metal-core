@@ -15,7 +15,7 @@ require (
 	github.com/metal-stack/go-hal v0.4.0
 	github.com/metal-stack/go-lldpd v0.3.7
 	github.com/metal-stack/metal-api v0.17.1-0.20220509132731-4c2b811b2f1f
-	github.com/metal-stack/metal-go v0.17.0
+	github.com/metal-stack/metal-go v0.17.1-0.20220509142822-ed99c3e88a6d
 	github.com/metal-stack/metal-lib v0.9.0
 	github.com/metal-stack/metal-networker v0.8.3
 	github.com/metal-stack/security v0.6.4
