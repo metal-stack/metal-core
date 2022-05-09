@@ -6,7 +6,7 @@ require (
 	github.com/emicklei/go-restful-openapi/v2 v2.9.0
 	github.com/emicklei/go-restful/v3 v3.7.4
 	github.com/go-openapi/errors v0.20.2
-	github.com/go-openapi/runtime v0.24.0
+	github.com/go-openapi/runtime v0.24.1
 	github.com/go-openapi/spec v0.20.6
 	github.com/go-openapi/strfmt v0.21.2
 	github.com/go-openapi/swag v0.21.1
@@ -14,8 +14,8 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/go-hal v0.4.0
 	github.com/metal-stack/go-lldpd v0.3.7
-	github.com/metal-stack/metal-api v0.16.7-0.20220502060144-306899e7b35a
-	github.com/metal-stack/metal-go v0.16.6
+	github.com/metal-stack/metal-api v0.17.1-0.20220509132731-4c2b811b2f1f
+	github.com/metal-stack/metal-go v0.17.0
 	github.com/metal-stack/metal-lib v0.9.0
 	github.com/metal-stack/metal-networker v0.8.3
 	github.com/metal-stack/security v0.6.4
@@ -33,7 +33,7 @@ require (
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/avast/retry-go/v4 v4.0.4 // indirect
-	github.com/aws/aws-sdk-go v1.44.3 // indirect
+	github.com/aws/aws-sdk-go v1.44.7 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect

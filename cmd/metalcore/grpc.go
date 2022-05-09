@@ -16,9 +16,8 @@ import (
 )
 
 type GrpcClient struct {
-	addr     string
-	dialOpts []grpc.DialOption
-	log      *zap.SugaredLogger
+	log  *zap.SugaredLogger
+	conn *grpc.ClientConn
 }
 
 // NewGrpcClient create a grpc client to communicate with metal-api via grpc,
@@ -46,21 +45,20 @@ func NewGrpcClient(log *zap.SugaredLogger, address string, cert, key, caCert []b
 		Certificates: []tls.Certificate{clientCert},
 		MinVersion:   tls.VersionTLS12,
 	}
+	dialOpts := []grpc.DialOption{
+		grpc.WithKeepaliveParams(kacp),
+		grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
+	}
+	conn, err := grpc.DialContext(context.Background(), address, dialOpts...)
+	if err != nil {
+		return nil, err
+	}
 	return &GrpcClient{
-		addr: address,
+		conn: conn,
 		log:  log,
-		dialOpts: []grpc.DialOption{
-			grpc.WithKeepaliveParams(kacp),
-			grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
-			grpc.WithBlock(),
-		},
 	}, nil
 }
 
 func (c *GrpcClient) NewEventClient() (v1.EventServiceClient, error) {
-	conn, err := grpc.DialContext(context.Background(), c.addr, c.dialOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return v1.NewEventServiceClient(conn), nil
+	return v1.NewEventServiceClient(c.conn), nil
 }
