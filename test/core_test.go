@@ -2,42 +2,17 @@ package test
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
-	"testing"
 
-	"github.com/emicklei/go-restful/v3"
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-go/api/models"
-	"github.com/stretchr/testify/require"
 )
 
 var machineID = "fake-machine-id"
 
 type apiHandlerCoreTest struct{}
-
-func TestLoggingMiddleware(t *testing.T) {
-	// given
-	e := mockAPIEndpoint(func(ctx *domain.AppContext) domain.APIClient {
-		return &apiHandlerCoreTest{}
-	})
-
-	restful.Add(e.NewMachineService())
-
-	payload := &domain.MetalHammerRegisterMachineRequest{
-		UUID: machineID,
-	}
-	payload.Nics = []*models.V1MachineNic{}
-	payload.Disks = []*models.V1MachineBlockDevice{}
-
-	// when
-	sc := doPost(fmt.Sprintf("/machine/register/%v", machineID), payload)
-
-	// then
-	require.Equal(t, http.StatusOK, sc)
-}
 
 func (a *apiHandlerCoreTest) Send(event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error) {
 	return nil, nil
