@@ -23,14 +23,6 @@ func (h *eventHandler) PowerBootBiosMachine(machineID string) {
 		)
 		return
 	}
-
-	err = ipmi.PowerResetMachine(h.Log, ipmiCfg)
-	if err != nil {
-		h.Log.Error("unable to power reset machine",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
-	}
 }
 
 func (h *eventHandler) PowerBootDiskMachine(machineID string) {
@@ -50,14 +42,6 @@ func (h *eventHandler) PowerBootDiskMachine(machineID string) {
 			zap.Error(err),
 		)
 		return
-	}
-
-	err = ipmi.PowerResetMachine(h.Log, ipmiCfg)
-	if err != nil {
-		h.Log.Error("unable to power reset machine",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
 	}
 }
 
@@ -80,11 +64,4 @@ func (h *eventHandler) PowerBootPxeMachine(machineID string) {
 		return
 	}
 
-	err = ipmi.PowerResetMachine(h.Log, ipmiCfg)
-	if err != nil {
-		h.Log.Error("unable to power reset machine",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
-	}
 }
