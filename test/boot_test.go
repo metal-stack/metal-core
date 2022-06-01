@@ -108,3 +108,11 @@ func (a *apiHandlerBootTest) SetChassisIdentifyLEDStateOn(machineID, description
 func (a *apiHandlerBootTest) SetChassisIdentifyLEDStateOff(machineID, description string) error {
 	return nil
 }
+
+func (a *apiHandlerBootTest) NotifySwitch(switchID string, request *models.V1SwitchNotifyRequest) (*models.V1SwitchResponse, error) {
+	return nil, nil
+}
+
+func (a *apiHandlerBootTest) FindSwitch(id string) (*models.V1SwitchResponse, error) {
+	return nil, nil
+}

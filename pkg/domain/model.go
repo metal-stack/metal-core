@@ -69,6 +69,8 @@ type APIClient interface {
 	ConstantlyPhoneHome()
 	SetChassisIdentifyLEDStateOn(machineID, description string) error
 	SetChassisIdentifyLEDStateOff(machineID, description string) error
+	NotifySwitch(switchID string, request *models.V1SwitchNotifyRequest) (*models.V1SwitchResponse, error)
+	FindSwitch(id string) (*models.V1SwitchResponse, error)
 }
 
 type Server interface {

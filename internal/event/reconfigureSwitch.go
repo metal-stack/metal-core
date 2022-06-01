@@ -10,7 +10,6 @@ import (
 	"github.com/metal-stack/metal-core/internal/switcher"
 	"github.com/metal-stack/metal-core/internal/vlan"
 	"github.com/metal-stack/metal-core/pkg/domain"
-	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
 	"github.com/metal-stack/metal-go/api/models"
 	"github.com/vishvananda/netlink"
 	"go.uber.org/zap"
@@ -61,8 +60,6 @@ func (h *eventHandler) ReconfigureSwitch() {
 		elapsed := time.Since(start)
 		h.log.Info("reconfiguration took", zap.Duration("elapsed", elapsed))
 
-		params := sw.NewNotifySwitchParams()
-		params.ID = host
 		ns := elapsed.Nanoseconds()
 		nr := &models.V1SwitchNotifyRequest{
 			SyncDuration: &ns,
@@ -75,8 +72,7 @@ func (h *eventHandler) ReconfigureSwitch() {
 			h.log.Info("reconfiguration succeeded")
 		}
 
-		params.Body = nr
-		_, err = h.switchClient.NotifySwitch(params, h.auth)
+		_, err = h.apiClient.NotifySwitch(host, nr)
 		if err != nil {
 			h.log.Error("notification about switch reconfiguration failed", zap.Error(err))
 		}
@@ -84,14 +80,11 @@ func (h *eventHandler) ReconfigureSwitch() {
 }
 
 func (h *eventHandler) reconfigureSwitch(switchName string) error {
-	params := sw.NewFindSwitchParams()
-	params.ID = switchName
-	fsr, err := h.switchClient.FindSwitch(params, h.auth)
+	s, err := h.apiClient.FindSwitch(switchName)
 	if err != nil {
 		return fmt.Errorf("could not fetch switch from metal-api: %w", err)
 	}
 
-	s := fsr.Payload
 	c, err := buildSwitcherConfig(h.config, s)
 	if err != nil {
 		return fmt.Errorf("could not build switcher config: %w", err)
