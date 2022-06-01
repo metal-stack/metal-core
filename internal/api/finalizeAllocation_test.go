@@ -53,6 +53,7 @@ func TestFinalizeAllocation_OK(t *testing.T) {
 	}
 
 	ctx := &domain.AppContext{
+		Config:        &domain.Config{},
 		MachineClient: machine.New(m, strfmt.Default),
 	}
 	ctx.SetAPIClient(NewClient)
@@ -85,6 +86,7 @@ func TestFinalizeAllocation_NOK(t *testing.T) {
 	}
 
 	ctx := &domain.AppContext{
+		Config:        &domain.Config{},
 		MachineClient: machine.New(m, strfmt.Default),
 		Log:           zaptest.NewLogger(t),
 	}

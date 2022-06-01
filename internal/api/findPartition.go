@@ -10,9 +10,9 @@ func (c *apiClient) FindPartition(id string) (*models.V1PartitionResponse, error
 	params := partition.NewFindPartitionParams()
 	params.SetID(id)
 
-	ok, err := c.PartitionClient.FindPartition(params, c.Auth)
+	ok, err := c.partitionClient.FindPartition(params, c.auth)
 	if err != nil {
-		c.Log.Error("partition not found",
+		c.log.Error("partition not found",
 			zap.String("id", id),
 			zap.Error(err),
 		)

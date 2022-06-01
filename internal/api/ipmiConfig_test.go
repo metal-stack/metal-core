@@ -52,6 +52,7 @@ func TestIPMIData_OK(t *testing.T) {
 	}
 
 	ctx := &domain.AppContext{
+		Config:        &domain.Config{},
 		MachineClient: machine.New(m, strfmt.Default),
 		Log:           zaptest.NewLogger(t),
 	}
@@ -85,6 +86,7 @@ func TestIPMIData_InvalidPort(t *testing.T) {
 	}
 
 	ctx := &domain.AppContext{
+		Config:        &domain.Config{},
 		MachineClient: machine.New(m, strfmt.Default),
 		Log:           zaptest.NewLogger(t),
 	}
@@ -113,6 +115,7 @@ func TestIPMIData_Error(t *testing.T) {
 	}
 
 	ctx := &domain.AppContext{
+		Config:        &domain.Config{},
 		MachineClient: machine.New(m, strfmt.Default),
 		Log:           zaptest.NewLogger(t),
 	}

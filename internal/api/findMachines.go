@@ -15,9 +15,9 @@ func (c *apiClient) FindMachines(mac string) (int, []*models.V1MachineResponse) 
 	}
 	findMachines.SetBody(req)
 
-	ok, err := c.MachineClient.FindMachines(findMachines, c.Auth)
+	ok, err := c.machineClient.FindMachines(findMachines, c.auth)
 	if err != nil {
-		c.Log.Error("machine(s) not found",
+		c.log.Error("machine(s) not found",
 			zap.String("MAC", mac),
 			zap.Error(err),
 		)

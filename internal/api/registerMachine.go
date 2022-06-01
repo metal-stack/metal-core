@@ -11,8 +11,8 @@ import (
 )
 
 func (c *apiClient) RegisterMachine(machineID string, request *domain.MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse) {
-	partitionID := c.Config.PartitionID
-	rackID := c.Config.RackID
+	partitionID := c.partitionID
+	rackID := c.rackID
 	params := machine.NewRegisterMachineParams()
 	params.Body = &models.V1MachineRegisterRequest{
 		UUID:        &machineID,
@@ -28,9 +28,9 @@ func (c *apiClient) RegisterMachine(machineID string, request *domain.MetalHamme
 		Bios: request.BIOS,
 	}
 
-	ok, created, err := c.MachineClient.RegisterMachine(params, c.Auth)
+	ok, created, err := c.machineClient.RegisterMachine(params, c.auth)
 	if err != nil {
-		c.Log.Error("failed to register machine at metal-api",
+		c.log.Error("failed to register machine at metal-api",
 			zap.String("machineID", machineID),
 			zap.String("partitionID", partitionID),
 			zap.String("rackID", rackID),

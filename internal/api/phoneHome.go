@@ -29,7 +29,7 @@ func (c *apiClient) ConstantlyPhoneHome() {
 	// - dynamically detect changes and stop/start goroutines for the lldpd client per interface
 	ifs, err := net.Interfaces()
 	if err != nil {
-		c.Log.Error("unable to find interfaces",
+		c.log.Error("unable to find interfaces",
 			zap.Error(err),
 		)
 		os.Exit(1)
@@ -48,13 +48,13 @@ func (c *apiClient) ConstantlyPhoneHome() {
 		}
 		lldpcli, err := lldp.NewClient(ctx, iface)
 		if err != nil {
-			c.Log.Error("unable to start LLDP client",
+			c.log.Error("unable to start LLDP client",
 				zap.String("interface", iface.Name),
 				zap.Error(err),
 			)
 			continue
 		}
-		c.Log.Info("start lldp client",
+		c.log.Info("start lldp client",
 			zap.String("interface", iface.Name),
 		)
 

@@ -28,13 +28,13 @@ func (c *apiClient) setChassisIdentifyLEDState(machineID, description, state str
 	}
 	params.SetBody(req)
 
-	ok, err := c.MachineClient.SetChassisIdentifyLEDState(params, c.Auth)
+	ok, err := c.machineClient.SetChassisIdentifyLEDState(params, c.auth)
 	if err != nil {
 		return err
 	}
 
 	if ok.Payload != nil && ok.Payload.Ledstate != nil {
-		c.Log.Info("set machine chassis identify led state",
+		c.log.Info("set machine chassis identify led state",
 			zap.String("machineID", machineID),
 			zap.String("state", *ok.Payload.Ledstate.Value),
 			zap.String("description", *ok.Payload.Ledstate.Description),

@@ -9,9 +9,9 @@ import (
 func (c *apiClient) FindMachine(id string) (*models.V1MachineResponse, error) {
 	findMachine := machine.NewFindMachineParams()
 	findMachine.ID = id
-	ok, err := c.MachineClient.FindMachine(findMachine, c.Auth)
+	ok, err := c.machineClient.FindMachine(findMachine, c.auth)
 	if err != nil {
-		c.Log.Error("machine not found",
+		c.log.Error("machine not found",
 			zap.String("ID", id),
 			zap.Error(err),
 		)

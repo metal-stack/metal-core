@@ -18,7 +18,7 @@ func (c *apiClient) RegisterSwitch() (*models.V1SwitchResponse, error) {
 	var nics []*models.V1SwitchNic
 	var hostname string
 
-	if nics, err = getNics(c.Log, c.AdditionalBridgePorts); err != nil {
+	if nics, err = getNics(c.log, c.additionalBridgePorts); err != nil {
 		return nil, fmt.Errorf("unable to get nics: %w", err)
 	}
 
@@ -30,20 +30,20 @@ func (c *apiClient) RegisterSwitch() (*models.V1SwitchResponse, error) {
 	params.Body = &models.V1SwitchRegisterRequest{
 		ID:          &hostname,
 		Name:        hostname,
-		PartitionID: &c.PartitionID,
-		RackID:      &c.RackID,
+		PartitionID: &c.partitionID,
+		RackID:      &c.rackID,
 		Nics:        nics,
 	}
 
 	for {
-		ok, created, err := c.SwitchClient.RegisterSwitch(params, c.Auth)
+		ok, created, err := c.switchClient.RegisterSwitch(params, c.auth)
 		if err == nil {
 			if ok != nil {
 				return ok.Payload, nil //nolint
 			}
 			return created.Payload, nil
 		}
-		c.Log.Error("unable to register at metal-api", zap.Error(err))
+		c.log.Error("unable to register at metal-api", zap.Error(err))
 		time.Sleep(time.Second)
 	}
 }

@@ -14,9 +14,9 @@ func (c *apiClient) IPMIConfig(machineID string) (*domain.IPMIConfig, error) {
 	params := machine.NewFindIPMIMachineParams()
 	params.ID = machineID
 
-	ok, err := c.MachineClient.FindIPMIMachine(params, c.Auth)
+	ok, err := c.machineClient.FindIPMIMachine(params, c.auth)
 	if err != nil || ok.Payload == nil || ok.Payload.Ipmi == nil {
-		c.Log.Error("ipmi data for machine not found",
+		c.log.Error("ipmi data for machine not found",
 			zap.String("machine", machineID),
 			zap.Error(err),
 		)
@@ -25,7 +25,7 @@ func (c *apiClient) IPMIConfig(machineID string) (*domain.IPMIConfig, error) {
 	ipmiData := ok.Payload.Ipmi
 
 	if ipmiData.Address == nil {
-		c.Log.Error("ipmi address for machine not found",
+		c.log.Error("ipmi address for machine not found",
 			zap.String("machine", machineID),
 			zap.Error(err),
 		)
@@ -36,7 +36,7 @@ func (c *apiClient) IPMIConfig(machineID string) (*domain.IPMIConfig, error) {
 	if len(hostAndPort) == 2 {
 		port, err = strconv.Atoi(hostAndPort[1])
 		if err != nil {
-			c.Log.Error("unable to extract port from ipmi address",
+			c.log.Error("unable to extract port from ipmi address",
 				zap.String("machine", machineID),
 				zap.String("address", *ipmiData.Address),
 				zap.Error(err),

@@ -34,6 +34,7 @@ func TestFindMachines_OK(t *testing.T) {
 	}
 
 	ctx := &domain.AppContext{
+		Config:        &domain.Config{},
 		MachineClient: machine.New(m, strfmt.Default),
 		Log:           zaptest.NewLogger(t),
 	}
@@ -56,6 +57,7 @@ func TestFindMachines_Error(t *testing.T) {
 	}
 
 	ctx := &domain.AppContext{
+		Config:        &domain.Config{},
 		MachineClient: machine.New(m, strfmt.Default),
 		Log:           zaptest.NewLogger(t),
 	}

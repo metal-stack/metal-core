@@ -13,15 +13,15 @@ import (
 )
 
 func (c *apiClient) AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error {
-	c.Log.Debug("event", zap.String("machineID", machineID))
+	c.log.Debug("event", zap.String("machineID", machineID))
 
 	params := machine.NewAddProvisioningEventParams()
 	params.ID = machineID
 	params.Body = event
 	params.WithTimeout(5 * time.Second)
-	_, err := c.MachineClient.AddProvisioningEvent(params, c.Auth)
+	_, err := c.machineClient.AddProvisioningEvent(params, c.auth)
 	if err != nil {
-		c.Log.Error("unable to send provisioning event back to API",
+		c.log.Error("unable to send provisioning event back to API",
 			zap.String("eventType", *event.Event),
 			zap.String("machineID", machineID),
 			zap.String("message", event.Message),
@@ -34,7 +34,7 @@ func (c *apiClient) AddProvisioningEvent(machineID string, event *models.V1Machi
 func (c *apiClient) Emit(eventType domain.ProvisioningEventType, machineID, message string) error {
 	et := string(eventType)
 
-	c.Log.Debug("emit event",
+	c.log.Debug("emit event",
 		zap.String("eventType", et),
 		zap.String("machineID", machineID),
 		zap.String("message", message),
@@ -48,10 +48,10 @@ func (c *apiClient) Emit(eventType domain.ProvisioningEventType, machineID, mess
 }
 
 func (c *apiClient) PhoneHome(msgs []phoneHomeMessage) {
-	c.Log.Debug("phonehome",
+	c.log.Debug("phonehome",
 		zap.String("machines", fmt.Sprintf("%v", msgs)),
 	)
-	c.Log.Info("phonehome",
+	c.log.Info("phonehome",
 		zap.Int("machines", len(msgs)),
 	)
 	events := models.V1MachineProvisioningEvents{}
@@ -69,14 +69,14 @@ func (c *apiClient) PhoneHome(msgs []phoneHomeMessage) {
 	params := machine.NewAddProvisioningEventsParams()
 	params.Body = events
 	params.WithTimeout(5 * time.Second)
-	resp, err := c.MachineClient.AddProvisioningEvents(params, c.Auth)
+	resp, err := c.machineClient.AddProvisioningEvents(params, c.auth)
 	if err != nil {
-		c.Log.Error("unable to send provisioning event back to API",
+		c.log.Error("unable to send provisioning event back to API",
 			zap.Error(err),
 		)
 	}
 	if resp != nil && resp.Payload != nil && resp.Payload.Events != nil {
-		c.Log.Info("phonehome sent",
+		c.log.Info("phonehome sent",
 			zap.Int64("machines", *resp.Payload.Events),
 		)
 	}
