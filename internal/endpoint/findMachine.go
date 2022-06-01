@@ -11,18 +11,18 @@ import (
 func (h *endpointHandler) FindMachine(request *restful.Request, response *restful.Response) {
 	machineID := request.PathParameter("id")
 
-	h.Log.Debug("request metal-api to find a machine",
+	h.log.Debug("request metal-api to Find a machine",
 		zap.String("machineID", machineID),
 	)
 
-	machine, err := h.APIClient().FindMachine(machineID)
+	machine, err := h.apiClient.FindMachine(machineID)
 	if err != nil {
-		errMsg := "failed to find machine"
-		h.Log.Error(errMsg,
+		errMsg := "failed to Find machine"
+		h.log.Error(errMsg,
 			zap.String("machineID", machineID),
 		)
-		rest.Respond(h.Log, response, http.StatusInternalServerError, errMsg)
+		rest.Respond(h.log, response, http.StatusInternalServerError, errMsg)
 	}
 
-	rest.Respond(h.Log, response, http.StatusOK, machine)
+	rest.Respond(h.log, response, http.StatusOK, machine)
 }

@@ -17,59 +17,59 @@ func (h *endpointHandler) AbortReinstall(request *restful.Request, response *res
 	err := request.ReadEntity(req)
 	if err != nil {
 		errMsg := "Unable to read body"
-		h.Log.Error("cannot read request",
+		h.log.Error("cannot read request",
 			zap.Error(err),
 		)
-		rest.RespondError(h.Log, response, http.StatusBadRequest, errMsg)
+		rest.RespondError(h.log, response, http.StatusBadRequest, errMsg)
 		return
 	}
 
 	machineID := request.PathParameter("id")
 
-	h.Log.Debug("abort reinstall",
+	h.log.Debug("abort reinstall",
 		zap.String("machineID", machineID),
 		zap.Bool("primary disk already wiped", req.PrimaryDiskWiped),
 	)
 
-	sc, bootInfo := h.APIClient().AbortReinstall(machineID, req)
+	sc, bootInfo := h.apiClient.AbortReinstall(machineID, req)
 	if sc != http.StatusOK {
 		errMsg := "failed to abort reinstall"
-		h.Log.Error(errMsg,
+		h.log.Error(errMsg,
 			zap.Int("statusCode", sc),
 			zap.String("machineID", machineID),
 			zap.Bool("primary disk already wiped", req.PrimaryDiskWiped),
 			zap.Any("boot information", bootInfo),
 			zap.Error(err),
 		)
-		rest.Respond(h.Log, response, http.StatusInternalServerError, errMsg)
+		rest.Respond(h.log, response, http.StatusInternalServerError, errMsg)
 		return
 	}
 
-	if h.Config.ChangeBootOrder {
-		ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+	if h.changeBootOrder {
+		ipmiCfg, err := h.apiClient.IPMIConfig(machineID)
 		if err != nil {
-			rest.Respond(h.Log, response, http.StatusInternalServerError, err)
+			rest.Respond(h.log, response, http.StatusInternalServerError, err)
 			return
 		}
 
-		err = ipmi.SetBootDisk(h.Log, ipmiCfg)
+		err = ipmi.SetBootDisk(h.log, ipmiCfg)
 		if err != nil {
-			h.Log.Error("unable to set boot order of machine to HD",
+			h.log.Error("unable to set boot order of machine to HD",
 				zap.String("machineID", machineID),
 				zap.Any("boot information", bootInfo),
 				zap.Error(err),
 			)
-			rest.Respond(h.Log, response, http.StatusInternalServerError, err)
+			rest.Respond(h.log, response, http.StatusInternalServerError, err)
 			return
 		}
 	}
 
-	h.Log.Info("machine reinstall aborted",
+	h.log.Info("machine reinstall aborted",
 		zap.Int("statusCode", sc),
 		zap.String("machineID", machineID),
 		zap.Bool("primary disk already wiped", req.PrimaryDiskWiped),
 		zap.Any("boot information", bootInfo),
 	)
 
-	rest.Respond(h.Log, response, http.StatusOK, bootInfo)
+	rest.Respond(h.log, response, http.StatusOK, bootInfo)
 }

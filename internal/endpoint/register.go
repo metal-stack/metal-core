@@ -16,16 +16,16 @@ func (h *endpointHandler) Register(request *restful.Request, response *restful.R
 	err := request.ReadEntity(req)
 	if err != nil {
 		errMsg := "Unable to read body"
-		h.Log.Error("cannot read request",
+		h.log.Error("cannot read request",
 			zap.Error(err),
 		)
-		rest.RespondError(h.Log, response, http.StatusBadRequest, errMsg)
+		rest.RespondError(h.log, response, http.StatusBadRequest, errMsg)
 		return
 	}
 
 	machineID := request.PathParameter("id")
 
-	h.Log.Debug("register machine at metal-api",
+	h.log.Debug("register machine at metal-api",
 		zap.String("machineID", machineID),
 		zap.String("IPMI-Address", req.IPMIAddress()),
 		zap.String("IPMI-Interface", req.IPMIInterface()),
@@ -33,24 +33,24 @@ func (h *endpointHandler) Register(request *restful.Request, response *restful.R
 		zap.String("IPMI-User", req.IPMIUser()),
 	)
 
-	sc, machine := h.APIClient().RegisterMachine(machineID, req)
+	sc, machine := h.apiClient.RegisterMachine(machineID, req)
 
 	if sc != http.StatusOK {
 		errMsg := "failed to register machine"
-		h.Log.Error(errMsg,
+		h.log.Error(errMsg,
 			zap.Int("statusCode", sc),
 			zap.String("machineID", machineID),
 			zap.Any("machine", machine),
 			zap.Error(err),
 		)
-		rest.RespondError(h.Log, response, http.StatusInternalServerError, errMsg)
+		rest.RespondError(h.log, response, http.StatusInternalServerError, errMsg)
 		return
 	}
 
-	h.Log.Info("machine registered",
+	h.log.Info("machine registered",
 		zap.Int("statusCode", sc),
 		zap.Any("machine", machine),
 	)
 
-	rest.Respond(h.Log, response, http.StatusOK, machine)
+	rest.Respond(h.log, response, http.StatusOK, machine)
 }

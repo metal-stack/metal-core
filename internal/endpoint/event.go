@@ -14,18 +14,18 @@ func (h *endpointHandler) AddProvisioningEvent(request *restful.Request, respons
 	event := &models.V1MachineProvisioningEvent{}
 	err := request.ReadEntity(event)
 	if err != nil {
-		rest.Respond(h.Log, response, http.StatusInternalServerError, nil)
+		rest.Respond(h.log, response, http.StatusInternalServerError, nil)
 		return
 	}
 
 	machineID := request.PathParameter("id")
-	h.Log.Debug("event", zap.String("machineID", machineID))
+	h.log.Debug("event", zap.String("machineID", machineID))
 
-	err = h.APIClient().AddProvisioningEvent(machineID, event)
+	err = h.apiClient.AddProvisioningEvent(machineID, event)
 	if err != nil {
-		rest.Respond(h.Log, response, http.StatusInternalServerError, nil)
+		rest.Respond(h.log, response, http.StatusInternalServerError, nil)
 		return
 	}
 
-	rest.Respond(h.Log, response, http.StatusOK, nil)
+	rest.Respond(h.log, response, http.StatusOK, nil)
 }

@@ -17,7 +17,7 @@ type emptyBootRepsonse struct{}
 func (h *endpointHandler) Dhcp(request *restful.Request, response *restful.Response) {
 	machineID := request.PathParameter("id")
 
-	h.Log.Debug("emit pxe boot event from machine",
+	h.log.Debug("emit pxe boot event from machine",
 		zap.String("machineID", machineID),
 	)
 
@@ -26,9 +26,9 @@ func (h *endpointHandler) Dhcp(request *restful.Request, response *restful.Respo
 		Event:   &eventType,
 		Message: "machine sent extended dhcp request",
 	}
-	err := h.APIClient().AddProvisioningEvent(machineID, event)
+	err := h.apiClient.AddProvisioningEvent(machineID, event)
 	if err != nil {
-		h.Log.Debug("dhcp: unable to emit PXEBooting provisioning event... ignoring",
+		h.log.Debug("dhcp: unable to emit PXEBooting provisioning event... ignoring",
 			zap.String("machineID", machineID),
 			zap.String("error", err.Error()),
 		)
@@ -36,5 +36,5 @@ func (h *endpointHandler) Dhcp(request *restful.Request, response *restful.Respo
 
 	// the response of the extended dhcp request does not need to contain useful information
 	// only the ipxe http request following the dhcp extended request will need to contain the boot image data
-	rest.Respond(h.Log, response, http.StatusOK, emptyBootRepsonse{})
+	rest.Respond(h.log, response, http.StatusOK, emptyBootRepsonse{})
 }
