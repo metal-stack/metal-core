@@ -6,27 +6,27 @@ import (
 )
 
 func (h *eventHandler) PowerBootBiosMachine(machineID string) {
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+	ipmiCfg, err := h.apiClient.IPMIConfig(machineID)
 	if err != nil {
-		h.Log.Error("unable to read IPMI connection details",
+		h.log.Error("unable to read IPMI connection details",
 			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 		return
 	}
 
-	err = ipmi.SetBootBios(h.Log, ipmiCfg)
+	err = ipmi.SetBootBios(h.log, ipmiCfg)
 	if err != nil {
-		h.Log.Error("unable to set boot order of machine to BIOS",
+		h.log.Error("unable to set boot order of machine to BIOS",
 			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 		return
 	}
 
-	err = ipmi.PowerResetMachine(h.Log, ipmiCfg)
+	err = ipmi.PowerResetMachine(h.log, ipmiCfg)
 	if err != nil {
-		h.Log.Error("unable to power reset machine",
+		h.log.Error("unable to power reset machine",
 			zap.String("machine", machineID),
 			zap.Error(err),
 		)
@@ -34,27 +34,27 @@ func (h *eventHandler) PowerBootBiosMachine(machineID string) {
 }
 
 func (h *eventHandler) PowerBootDiskMachine(machineID string) {
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+	ipmiCfg, err := h.apiClient.IPMIConfig(machineID)
 	if err != nil {
-		h.Log.Error("unable to read IPMI connection details",
+		h.log.Error("unable to read IPMI connection details",
 			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 		return
 	}
 
-	err = ipmi.SetBootDisk(h.Log, ipmiCfg)
+	err = ipmi.SetBootDisk(h.log, ipmiCfg)
 	if err != nil {
-		h.Log.Error("unable to set boot order of machine to disk",
+		h.log.Error("unable to set boot order of machine to disk",
 			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 		return
 	}
 
-	err = ipmi.PowerResetMachine(h.Log, ipmiCfg)
+	err = ipmi.PowerResetMachine(h.log, ipmiCfg)
 	if err != nil {
-		h.Log.Error("unable to power reset machine",
+		h.log.Error("unable to power reset machine",
 			zap.String("machine", machineID),
 			zap.Error(err),
 		)
@@ -62,27 +62,27 @@ func (h *eventHandler) PowerBootDiskMachine(machineID string) {
 }
 
 func (h *eventHandler) PowerBootPxeMachine(machineID string) {
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+	ipmiCfg, err := h.apiClient.IPMIConfig(machineID)
 	if err != nil {
-		h.Log.Error("unable to read IPMI connection details",
+		h.log.Error("unable to read IPMI connection details",
 			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 		return
 	}
 
-	err = ipmi.SetBootPXE(h.Log, ipmiCfg)
+	err = ipmi.SetBootPXE(h.log, ipmiCfg)
 	if err != nil {
-		h.Log.Error("unable to set boot order of machine to PXE",
+		h.log.Error("unable to set boot order of machine to PXE",
 			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 		return
 	}
 
-	err = ipmi.PowerResetMachine(h.Log, ipmiCfg)
+	err = ipmi.PowerResetMachine(h.log, ipmiCfg)
 	if err != nil {
-		h.Log.Error("unable to power reset machine",
+		h.log.Error("unable to power reset machine",
 			zap.String("machine", machineID),
 			zap.Error(err),
 		)

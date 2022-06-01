@@ -6,31 +6,31 @@ import (
 )
 
 func (h *eventHandler) FreeMachine(machineID string) {
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+	ipmiCfg, err := h.apiClient.IPMIConfig(machineID)
 	if err != nil {
-		h.Log.Error("unable to read IPMI connection details",
+		h.log.Error("unable to read IPMI connection details",
 			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 		return
 	}
 
-	err = ipmi.SetBootPXE(h.Log, ipmiCfg)
+	err = ipmi.SetBootPXE(h.log, ipmiCfg)
 	if err != nil {
-		h.Log.Error("unable to set boot order of machine to PXE",
+		h.log.Error("unable to set boot order of machine to PXE",
 			zap.String("machine", machineID),
 			zap.Error(err),
 		)
 		return
 	}
 
-	h.Log.Info("freed machine",
+	h.log.Info("freed machine",
 		zap.String("machine", machineID),
 	)
 
-	err = ipmi.PowerCycleMachine(h.Log, ipmiCfg)
+	err = ipmi.PowerCycleMachine(h.log, ipmiCfg)
 	if err != nil {
-		h.Log.Error("unable to power cycle machine",
+		h.log.Error("unable to power cycle machine",
 			zap.String("machine", machineID),
 			zap.Error(err),
 		)

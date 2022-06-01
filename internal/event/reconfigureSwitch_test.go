@@ -4,20 +4,17 @@ import (
 	"testing"
 
 	"github.com/metal-stack/metal-core/internal/switcher"
-	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-go/api/models"
 	"github.com/stretchr/testify/require"
 )
 
 func TestBuildSwitcherConfig(t *testing.T) {
-	config := &domain.Config{
-		CIDR:                 "10.255.255.2/24",
-		PartitionID:          "fra-equ01",
-		RackID:               "rack01",
-		ASN:                  "420000001",
-		LoopbackIP:           "10.0.0.1",
-		SpineUplinks:         "swp31,swp32",
-		AdditionalBridgeVIDs: []string{"201-256", "301-356"},
+	config := &config{
+		additionalBridgeVIDs: []string{"201-256", "301-356"},
+		asn:                  "420000001",
+		cidr:                 "10.255.255.2/24",
+		loopbackIP:           "10.0.0.1",
+		spineUplinks:         "swp31,swp32",
 	}
 	n1 := "swp1"
 	m1 := "00:00:00:00:00:01"

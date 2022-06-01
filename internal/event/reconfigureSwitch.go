@@ -16,16 +16,50 @@ import (
 	"go.uber.org/zap"
 )
 
+type config struct {
+	additionalBridgePorts     []string
+	additionalBridgeVIDs      []string
+	asn                       string
+	cidr                      string
+	devMode                   bool
+	frrTplFile                string
+	interfacesTplFile         string
+	logLevel                  string
+	loopbackIP                string
+	managementGateway         string
+	reconfigureSwitch         bool
+	reconfigureSwitchInterval time.Duration
+	spineUplinks              string
+}
+
+func newConfig(cfg *domain.Config, devMode bool) *config {
+	return &config{
+		additionalBridgePorts:     cfg.AdditionalBridgePorts,
+		additionalBridgeVIDs:      cfg.AdditionalBridgeVIDs,
+		asn:                       cfg.ASN,
+		cidr:                      cfg.CIDR,
+		devMode:                   devMode,
+		frrTplFile:                cfg.FrrTplFile,
+		interfacesTplFile:         cfg.InterfacesTplFile,
+		managementGateway:         cfg.ManagementGateway,
+		logLevel:                  cfg.LogLevel,
+		loopbackIP:                cfg.LoopbackIP,
+		reconfigureSwitch:         cfg.ReconfigureSwitch,
+		reconfigureSwitchInterval: cfg.ReconfigureSwitchInterval,
+		spineUplinks:              cfg.SpineUplinks,
+	}
+}
+
 // ReconfigureSwitch reconfigures the switch.
 func (h *eventHandler) ReconfigureSwitch() {
-	t := time.NewTicker(h.AppContext.Config.ReconfigureSwitchInterval)
+	t := time.NewTicker(h.config.reconfigureSwitchInterval)
 	host, _ := os.Hostname()
 	for range t.C {
-		h.Log.Info("trigger reconfiguration")
+		h.log.Info("trigger reconfiguration")
 		start := time.Now()
 		err := h.reconfigureSwitch(host)
 		elapsed := time.Since(start)
-		h.Log.Info("reconfiguration took", zap.Duration("elapsed", elapsed))
+		h.log.Info("reconfiguration took", zap.Duration("elapsed", elapsed))
 
 		params := sw.NewNotifySwitchParams()
 		params.ID = host
@@ -36,15 +70,15 @@ func (h *eventHandler) ReconfigureSwitch() {
 		if err != nil {
 			errStr := err.Error()
 			nr.Error = &errStr
-			h.Log.Error("reconfiguration failed", zap.Error(err))
+			h.log.Error("reconfiguration failed", zap.Error(err))
 		} else {
-			h.Log.Info("reconfiguration succeeded")
+			h.log.Info("reconfiguration succeeded")
 		}
 
 		params.Body = nr
-		_, err = h.SwitchClient.NotifySwitch(params, h.Auth)
+		_, err = h.switchClient.NotifySwitch(params, h.auth)
 		if err != nil {
-			h.Log.Error("notification about switch reconfiguration failed", zap.Error(err))
+			h.log.Error("notification about switch reconfiguration failed", zap.Error(err))
 		}
 	}
 }
@@ -52,26 +86,26 @@ func (h *eventHandler) ReconfigureSwitch() {
 func (h *eventHandler) reconfigureSwitch(switchName string) error {
 	params := sw.NewFindSwitchParams()
 	params.ID = switchName
-	fsr, err := h.SwitchClient.FindSwitch(params, h.Auth)
+	fsr, err := h.switchClient.FindSwitch(params, h.auth)
 	if err != nil {
 		return fmt.Errorf("could not fetch switch from metal-api: %w", err)
 	}
 
 	s := fsr.Payload
-	c, err := buildSwitcherConfig(h.Config, s)
+	c, err := buildSwitcherConfig(h.config, s)
 	if err != nil {
 		return fmt.Errorf("could not build switcher config: %w", err)
 	}
 
-	err = fillEth0Info(c, h.Config.ManagementGateway, h.DevMode)
+	err = fillEth0Info(c, h.config.managementGateway, h.config.devMode)
 	if err != nil {
 		return fmt.Errorf("could not gather information about eth0 nic: %w", err)
 	}
 
-	h.Log.Info("assembled new config for switch",
+	h.log.Info("assembled new config for switch",
 		zap.Any("config", c))
-	if !h.Config.ReconfigureSwitch {
-		h.Log.Debug("skip config application because of environment setting")
+	if !h.config.reconfigureSwitch {
+		h.log.Debug("skip config application because of environment setting")
 		return nil
 	}
 
@@ -83,39 +117,39 @@ func (h *eventHandler) reconfigureSwitch(switchName string) error {
 	return nil
 }
 
-func buildSwitcherConfig(conf *domain.Config, s *models.V1SwitchResponse) (*switcher.Conf, error) {
+func buildSwitcherConfig(conf *config, s *models.V1SwitchResponse) (*switcher.Conf, error) {
 	c := &switcher.Conf{}
 	c.Name = s.Name
-	c.LogLevel = mapLogLevel(conf.LogLevel)
-	asn64, err := strconv.ParseUint(conf.ASN, 10, 32)
+	c.LogLevel = mapLogLevel(conf.logLevel)
+	asn64, err := strconv.ParseUint(conf.asn, 10, 32)
 	asn := uint32(asn64)
 	if err != nil {
 		return nil, err
 	}
 
 	c.ASN = asn
-	c.Loopback = conf.LoopbackIP
-	c.MetalCoreCIDR = conf.CIDR
-	if conf.InterfacesTplFile != "" {
-		c.InterfacesTplFile = conf.InterfacesTplFile
+	c.Loopback = conf.loopbackIP
+	c.MetalCoreCIDR = conf.cidr
+	if conf.interfacesTplFile != "" {
+		c.InterfacesTplFile = conf.interfacesTplFile
 	}
-	if conf.FrrTplFile != "" {
-		c.FrrTplFile = conf.FrrTplFile
+	if conf.frrTplFile != "" {
+		c.FrrTplFile = conf.frrTplFile
 	}
-	c.AdditionalBridgeVIDs = conf.AdditionalBridgeVIDs
+	c.AdditionalBridgeVIDs = conf.additionalBridgeVIDs
 	p := switcher.Ports{
-		Underlay:      strings.Split(conf.SpineUplinks, ","),
+		Underlay:      strings.Split(conf.spineUplinks, ","),
 		Unprovisioned: []string{},
 		Vrfs:          map[string]*switcher.Vrf{},
 		Firewalls:     map[string]*switcher.Firewall{},
 	}
-	p.BladePorts = conf.AdditionalBridgePorts
+	p.BladePorts = conf.additionalBridgePorts
 	for _, nic := range s.Nics {
 		port := *nic.Name
 		if contains(p.Underlay, port) {
 			continue
 		}
-		if contains(conf.AdditionalBridgePorts, port) {
+		if contains(conf.additionalBridgePorts, port) {
 			continue
 		}
 		if nic.Vrf == "" {
