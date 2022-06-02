@@ -45,10 +45,7 @@ func Create() *Server {
 
 	log.Info("metal-core version", zap.Any("version", v.V))
 
-	devMode := strings.Contains(cfg.PartitionID, "vagrant")
-
 	log.Info("configuration",
-		zap.Bool("DevMode", devMode),
 		zap.String("CIDR", cfg.CIDR),
 		zap.String("PartitionID", cfg.PartitionID),
 		zap.String("RackID", cfg.RackID),
@@ -87,7 +84,6 @@ func Create() *Server {
 			MachineClient:   machine.New(transport, strfmt.Default),
 			PartitionClient: partition.New(transport, strfmt.Default),
 			SwitchClient:    sw.New(transport, strfmt.Default),
-			DevMode:         devMode,
 			Log:             log,
 		},
 	}

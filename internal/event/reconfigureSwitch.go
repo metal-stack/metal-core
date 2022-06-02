@@ -63,7 +63,7 @@ func (h *eventHandler) reconfigureSwitch(switchName string) error {
 		return fmt.Errorf("could not build switcher config: %w", err)
 	}
 
-	err = fillEth0Info(c, h.Config.ManagementGateway, h.DevMode)
+	err = fillEth0Info(c, h.Config.ManagementGateway)
 	if err != nil {
 		return fmt.Errorf("could not gather information about eth0 nic: %w", err)
 	}
@@ -182,7 +182,7 @@ func mapLogLevel(level string) string {
 	}
 }
 
-func fillEth0Info(c *switcher.Conf, gw string, devMode bool) error {
+func fillEth0Info(c *switcher.Conf, gw string) error {
 	c.Ports.Eth0 = switcher.Nic{}
 	eth0, err := netlink.LinkByName("eth0")
 	if err != nil {
@@ -200,7 +200,6 @@ func fillEth0Info(c *switcher.Conf, gw string, devMode bool) error {
 	s, _ := addrs[0].IPNet.Mask.Size()
 	c.Ports.Eth0.AddressCIDR = fmt.Sprintf("%s/%d", ip.String(), s)
 	c.Ports.Eth0.Gateway = gw
-	c.DevMode = devMode
 	return nil
 }
 
