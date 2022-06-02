@@ -1,14 +1,12 @@
 package core
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 
 	httppprof "net/http/pprof"
 
 	"github.com/emicklei/go-restful/v3"
-	"github.com/metal-stack/metal-core/internal/endpoint"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"go.uber.org/zap"
@@ -17,7 +15,7 @@ import (
 func (s *coreServer) Run() {
 	s.initMetrics()
 
-	Init(endpoint.NewHandler(s.AppContext))
+	Init(s.endpointHandler)
 
 	// enable CORS for the UI to work
 	cors := restful.CrossOriginResourceSharing{
@@ -28,21 +26,17 @@ func (s *coreServer) Run() {
 	}
 	restful.DefaultContainer.Filter(cors.Filter)
 
-	addr := fmt.Sprintf("%v:%d", s.Config.BindAddress, s.Config.Port)
-
-	s.Log.Info("starting metal-core",
-		zap.String("address", addr),
+	s.log.Info("starting metal-core",
+		zap.String("address", s.serverAddr),
 	)
 
-	s.Log.Sugar().Fatal(http.ListenAndServe(addr, nil))
+	s.log.Sugar().Fatal(http.ListenAndServe(s.serverAddr, nil))
 }
 
 func (s *coreServer) initMetrics() {
-	logger := s.Log.Sugar()
+	logger := s.log.Sugar()
 
-	addr := fmt.Sprintf("%v:%d", s.Config.MetricsServerBindAddress, s.Config.MetricsServerPort)
-
-	logger.Infow("starting metrics endpoint", "addr", addr)
+	logger.Infow("starting metrics endpoint", "addr", s.metricServerAddr)
 	metricsServer := http.NewServeMux()
 	metricsServer.Handle("/metrics", promhttp.Handler())
 	// see: https://dev.to/davidsbond/golang-debugging-memory-leaks-using-pprof-5di8
@@ -53,7 +47,7 @@ func (s *coreServer) initMetrics() {
 	metricsServer.Handle("/pprof/goroutine", httppprof.Handler("goroutine"))
 
 	go func() {
-		err := http.ListenAndServe(addr, metricsServer)
+		err := http.ListenAndServe(s.metricServerAddr, metricsServer)
 		if err != nil {
 			logger.Errorw("failed to start metrics endpoint, exiting...", "error", err)
 			os.Exit(1)
