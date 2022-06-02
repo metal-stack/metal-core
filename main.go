@@ -12,6 +12,6 @@ func main() {
 		return
 	}
 
-	server := metalcore.Create()
-	server.Run()
+	app := metalcore.Create()
+	app.Run()
 }

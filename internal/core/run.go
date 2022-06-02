@@ -12,7 +12,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (s *coreServer) Run() {
+func (s *server) Run() {
 	s.initMetrics()
 
 	Init(s.endpointHandler)
@@ -33,7 +33,7 @@ func (s *coreServer) Run() {
 	s.log.Sugar().Fatal(http.ListenAndServe(s.serverAddr, nil))
 }
 
-func (s *coreServer) initMetrics() {
+func (s *server) initMetrics() {
 	logger := s.log.Sugar()
 
 	logger.Infow("starting metrics endpoint", "addr", s.metricServerAddr)

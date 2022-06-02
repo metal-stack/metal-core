@@ -21,7 +21,29 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func Create() *Server {
+type App struct {
+	ctx *domain.AppContext
+}
+
+func (a *App) Run() {
+	a.startConstantlySwitchReconfiguration()
+	a.startConstantlyPhoneHome()
+	a.runServer()
+}
+
+func (a *App) startConstantlySwitchReconfiguration() {
+	go a.ctx.EventHandler().ReconfigureSwitch()
+}
+
+func (a *App) startConstantlyPhoneHome() {
+	a.ctx.APIClient().ConstantlyPhoneHome()
+}
+
+func (a *App) runServer() {
+	a.ctx.Server().Run()
+}
+
+func Create() *App {
 	cfg := &domain.Config{}
 	if err := envconfig.Process("METAL_CORE", cfg); err != nil {
 		panic(fmt.Errorf("bad configuration:\n%+v", cfg))
@@ -47,6 +69,56 @@ func Create() *Server {
 
 	devMode := strings.Contains(cfg.PartitionID, "vagrant")
 
+	logConfiguration(log, devMode, cfg)
+
+	transport := client.New(fmt.Sprintf("%v:%d", cfg.ApiIP, cfg.ApiPort), cfg.ApiBasePath, []string{cfg.ApiProtocol})
+
+	ctx := &domain.AppContext{
+		Config:          cfg,
+		MachineClient:   machine.New(transport, strfmt.Default),
+		PartitionClient: partition.New(transport, strfmt.Default),
+		SwitchClient:    sw.New(transport, strfmt.Default),
+		DevMode:         devMode,
+		Log:             log,
+	}
+	ctx.SetAPIClient(api.NewClient)
+	ctx.SetServer(core.NewServer)
+	ctx.SetEndpointHandler(endpoint.NewHandler)
+	ctx.InitHMAC()
+	ctx.SetEventHandler(event.NewHandler)
+
+	mqClient := newMQClient(cfg, log)
+
+	err = mqClient.initConsumer(ctx.EventHandler())
+	if err != nil {
+		log.Fatal("failed to init NSQ consumer",
+			zap.Error(err),
+		)
+		os.Exit(1)
+	}
+
+	s, err := ctx.APIClient().RegisterSwitch()
+	if err != nil {
+		log.Fatal("failed to register switch",
+			zap.Error(err),
+		)
+		os.Exit(1)
+	}
+
+	ctx.BootConfig = &domain.BootConfig{
+		MetalHammerImageURL:    s.Partition.Bootconfig.Imageurl,
+		MetalHammerKernelURL:   s.Partition.Bootconfig.Kernelurl,
+		MetalHammerCommandLine: s.Partition.Bootconfig.Commandline,
+	}
+
+	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
+		_ = os.Setenv("DEBUG", "1")
+	}
+
+	return &App{ctx: ctx}
+}
+
+func logConfiguration(log *zap.Logger, devMode bool, cfg *domain.Config) {
 	log.Info("configuration",
 		zap.Bool("DevMode", devMode),
 		zap.String("CIDR", cfg.CIDR),
@@ -78,53 +150,4 @@ func Create() *Server {
 		zap.String("gRPC-clientCertFile", cfg.GrpcClientCertFile),
 		zap.String("gRPC-clientKeyFile", cfg.GrpcClientKeyFile),
 	)
-
-	transport := client.New(fmt.Sprintf("%v:%d", cfg.ApiIP, cfg.ApiPort), cfg.ApiBasePath, []string{cfg.ApiProtocol})
-
-	app := &Server{
-		AppContext: &domain.AppContext{
-			Config:          cfg,
-			MachineClient:   machine.New(transport, strfmt.Default),
-			PartitionClient: partition.New(transport, strfmt.Default),
-			SwitchClient:    sw.New(transport, strfmt.Default),
-			DevMode:         devMode,
-			Log:             log,
-		},
-	}
-	app.SetAPIClient(api.NewClient)
-	app.SetServer(core.NewServer)
-	app.SetEndpointHandler(endpoint.NewHandler)
-	app.InitHMAC()
-	app.SetEventHandler(event.NewHandler)
-
-	err = app.initConsumer()
-	if err != nil {
-		log.Fatal("failed to init NSQ consumer",
-			zap.Error(err),
-		)
-		os.Exit(1)
-	}
-
-	s, err := app.APIClient().RegisterSwitch()
-	if err != nil {
-		log.Fatal("failed to register switch",
-			zap.Error(err),
-		)
-		os.Exit(1)
-	}
-
-	app.initSwitchReconfiguration()
-	app.APIClient().ConstantlyPhoneHome()
-
-	app.BootConfig = &domain.BootConfig{
-		MetalHammerImageURL:    s.Partition.Bootconfig.Imageurl,
-		MetalHammerKernelURL:   s.Partition.Bootconfig.Kernelurl,
-		MetalHammerCommandLine: s.Partition.Bootconfig.Commandline,
-	}
-
-	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
-		_ = os.Setenv("DEBUG", "1")
-	}
-
-	return app
 }
