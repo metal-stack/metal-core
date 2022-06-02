@@ -41,23 +41,18 @@ func TestRegisterMachine_OK(t *testing.T) {
 	partitionID := "fakePartitionID"
 	rackID := "fakeRackID"
 	machineID := "fakeMachineID"
-
-	ctx := &domain.AppContext{
-		MachineClient: machine.New(m, strfmt.Default),
-		Config: &domain.Config{
-			PartitionID: partitionID,
-			RackID:      rackID,
-		},
-		Log: zaptest.NewLogger(t),
+	c := &apiClient{
+		machineClient: machine.New(m, strfmt.Default),
+		partitionID:   partitionID,
+		rackID:        rackID,
+		log:           zaptest.NewLogger(t),
 	}
-	ctx.SetAPIClient(NewClient)
-
 	payload := &domain.MetalHammerRegisterMachineRequest{
 		UUID: machineID,
 	}
 
 	// WHEN
-	sc, _ := ctx.APIClient().RegisterMachine(machineID, payload)
+	sc, _ := c.RegisterMachine(machineID, payload)
 
 	// THEN
 	require.Equal(t, http.StatusOK, sc)
@@ -75,23 +70,18 @@ func TestRegisterMachine_Error(t *testing.T) {
 	partitionID := "fakePartitionID"
 	rackID := "fakeRackID"
 	machineID := "fakeMachineID"
-
-	ctx := &domain.AppContext{
-		MachineClient: machine.New(m, strfmt.Default),
-		Config: &domain.Config{
-			PartitionID: partitionID,
-			RackID:      rackID,
-		},
-		Log: zaptest.NewLogger(t),
+	c := &apiClient{
+		machineClient: machine.New(m, strfmt.Default),
+		partitionID:   partitionID,
+		rackID:        rackID,
+		log:           zaptest.NewLogger(t),
 	}
-	ctx.SetAPIClient(NewClient)
-
 	payload := &domain.MetalHammerRegisterMachineRequest{
 		UUID: machineID,
 	}
 
 	// WHEN
-	sc, _ := ctx.APIClient().RegisterMachine(machineID, payload)
+	sc, _ := c.RegisterMachine(machineID, payload)
 
 	// THEN
 	require.Equal(t, http.StatusInternalServerError, sc)

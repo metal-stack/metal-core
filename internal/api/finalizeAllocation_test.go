@@ -51,18 +51,14 @@ func TestFinalizeAllocation_OK(t *testing.T) {
 		primaryDisk:   "a",
 		osPartition:   "b",
 	}
-
-	ctx := &domain.AppContext{
-		Config:        &domain.Config{},
-		MachineClient: machine.New(m, strfmt.Default),
+	c := &apiClient{
+		machineClient: machine.New(m, strfmt.Default),
 	}
-	ctx.SetAPIClient(NewClient)
-
 	machineID := "fakemachineID"
 	passwd := "password"
 
 	// WHEN
-	ok, err := ctx.APIClient().FinalizeAllocation(machineID, passwd, &domain.Report{
+	ok, err := c.FinalizeAllocation(machineID, passwd, &domain.Report{
 		Success:         false,
 		Message:         "",
 		ConsolePassword: "",
@@ -84,19 +80,15 @@ func TestFinalizeAllocation_NOK(t *testing.T) {
 	m := &finalizeDataMock{
 		simulateError: true,
 	}
-
-	ctx := &domain.AppContext{
-		Config:        &domain.Config{},
-		MachineClient: machine.New(m, strfmt.Default),
-		Log:           zaptest.NewLogger(t),
+	c := &apiClient{
+		machineClient: machine.New(m, strfmt.Default),
+		log:           zaptest.NewLogger(t),
 	}
-	ctx.SetAPIClient(NewClient)
-
 	machineID := "fakemachineID"
 	passwd := "password"
 
 	// WHEN
-	_, err := ctx.APIClient().FinalizeAllocation(machineID, passwd, &domain.Report{
+	_, err := c.FinalizeAllocation(machineID, passwd, &domain.Report{
 		Success:         false,
 		Message:         "",
 		ConsolePassword: "",

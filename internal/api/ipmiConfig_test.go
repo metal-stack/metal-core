@@ -8,7 +8,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-go/api/models"
 	"github.com/stretchr/testify/require"
@@ -50,18 +49,14 @@ func TestIPMIData_OK(t *testing.T) {
 		user:          "user",
 		password:      "password",
 	}
-
-	ctx := &domain.AppContext{
-		Config:        &domain.Config{},
-		MachineClient: machine.New(m, strfmt.Default),
-		Log:           zaptest.NewLogger(t),
+	c := &apiClient{
+		machineClient: machine.New(m, strfmt.Default),
+		log:           zaptest.NewLogger(t),
 	}
-	ctx.SetAPIClient(NewClient)
-
 	machineID := "fakemachineID"
 
 	// WHEN
-	ipmiCfg, err := ctx.APIClient().IPMIConfig(machineID)
+	ipmiCfg, err := c.IPMIConfig(machineID)
 
 	// THEN
 	require.NotNil(t, ipmiCfg)
@@ -84,18 +79,14 @@ func TestIPMIData_InvalidPort(t *testing.T) {
 		user:          "user",
 		password:      "password",
 	}
-
-	ctx := &domain.AppContext{
-		Config:        &domain.Config{},
-		MachineClient: machine.New(m, strfmt.Default),
-		Log:           zaptest.NewLogger(t),
+	c := &apiClient{
+		machineClient: machine.New(m, strfmt.Default),
+		log:           zaptest.NewLogger(t),
 	}
-	ctx.SetAPIClient(NewClient)
-
 	machineID := "fakemachineID"
 
 	// WHEN
-	ipmiCfg, err := ctx.APIClient().IPMIConfig(machineID)
+	ipmiCfg, err := c.IPMIConfig(machineID)
 
 	// THEN
 	require.NotNil(t, ipmiCfg)
@@ -113,18 +104,14 @@ func TestIPMIData_Error(t *testing.T) {
 	m := &ipmiDataMock{
 		simulateError: true,
 	}
-
-	ctx := &domain.AppContext{
-		Config:        &domain.Config{},
-		MachineClient: machine.New(m, strfmt.Default),
-		Log:           zaptest.NewLogger(t),
+	c := &apiClient{
+		machineClient: machine.New(m, strfmt.Default),
+		log:           zaptest.NewLogger(t),
 	}
-	ctx.SetAPIClient(NewClient)
-
 	machineID := "fakemachineID"
 
 	// WHEN
-	ipmiCfg, err := ctx.APIClient().IPMIConfig(machineID)
+	ipmiCfg, err := c.IPMIConfig(machineID)
 
 	// THEN
 	require.Nil(t, ipmiCfg)

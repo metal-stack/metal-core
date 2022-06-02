@@ -7,7 +7,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
@@ -32,18 +31,13 @@ func TestFindMachines_OK(t *testing.T) {
 	m := &searchMachineMock{
 		simulateError: false,
 	}
-
-	ctx := &domain.AppContext{
-		Config:        &domain.Config{},
-		MachineClient: machine.New(m, strfmt.Default),
-		Log:           zaptest.NewLogger(t),
+	c := &apiClient{
+		machineClient: machine.New(m, strfmt.Default),
 	}
-	ctx.SetAPIClient(NewClient)
-
 	mac := "00:11:22:33:44:55:66:77"
 
 	// WHEN
-	sc, _ := ctx.APIClient().FindMachines(mac)
+	sc, _ := c.FindMachines(mac)
 
 	// THEN
 	require.Equal(t, http.StatusOK, sc)
@@ -55,18 +49,14 @@ func TestFindMachines_Error(t *testing.T) {
 	m := &searchMachineMock{
 		simulateError: true,
 	}
-
-	ctx := &domain.AppContext{
-		Config:        &domain.Config{},
-		MachineClient: machine.New(m, strfmt.Default),
-		Log:           zaptest.NewLogger(t),
+	c := &apiClient{
+		machineClient: machine.New(m, strfmt.Default),
+		log:           zaptest.NewLogger(t),
 	}
-	ctx.SetAPIClient(NewClient)
-
 	mac := "00:11:22:33:44:55:66:77"
 
 	// WHEN
-	sc, _ := ctx.APIClient().FindMachines(mac)
+	sc, _ := c.FindMachines(mac)
 
 	// THEN
 	require.Equal(t, http.StatusInternalServerError, sc)
