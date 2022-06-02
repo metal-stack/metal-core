@@ -1,10 +1,12 @@
-package test
+package endpoint
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -13,6 +15,7 @@ import (
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-go/api/models"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
 var fakeMac = "00:11:22:33:44:55"
@@ -21,19 +24,30 @@ type apiHandlerBootTest struct{}
 
 func TestPXEBoot(t *testing.T) {
 	// given
-	e := mockAPIEndpoint(func(ctx *domain.AppContext) domain.APIClient {
-		return &apiHandlerBootTest{}
-	})
-
+	cfg := &domain.Config{
+		CIDR:        "10.0.0.11/24",
+		ApiIP:       "apiIP",
+		ApiPort:     8080,
+		ApiProtocol: "http",
+		ApiBasePath: "basePath",
+		Port:        4242,
+	}
+	log, _ := zap.NewProduction()
+	e := endpointHandler{
+		apiClient:   &apiHandlerBootTest{},
+		bootConfig:  newBootConfig(&domain.BootConfig{}, cfg),
+		grpcConfig:  &grpcConfig{},
+		log:         log,
+		partitionID: "FRA",
+	}
 	restful.Add(e.NewBootService())
 
-	c, _, _ := net.ParseCIDR(cfg.CIDR)
 	expected := domain.BootResponse{
 		Kernel: "https://blobstore.fi-ts.io/metal/images/metal-hammer/metal-hammer-kernel",
 		InitRamDisk: []string{
 			"https://blobstore.fi-ts.io/metal/images/metal-hammer/metal-hammer-initrd.img.lz4",
 		},
-		CommandLine: fmt.Sprintf("METAL_CORE_ADDRESS=%v:%d METAL_API_URL=http://%v:%d%s", c.String(), cfg.Port, cfg.ApiIP, cfg.ApiPort, cfg.ApiBasePath),
+		CommandLine: "METAL_CORE_ADDRESS=10.0.0.11:4242 METAL_API_URL=http://apiIP:8080basePath",
 	}
 
 	// when
@@ -47,6 +61,16 @@ func TestPXEBoot(t *testing.T) {
 	require.Equal(t, expected.InitRamDisk, bootResponse.InitRamDisk)
 	bootResponse.CommandLine = bootResponse.CommandLine[strings.Index(bootResponse.CommandLine, "METAL_CORE_ADDRESS"):]
 	require.Equal(t, expected.CommandLine, bootResponse.CommandLine)
+}
+
+func doGet(path string, response interface{}) (int, error) {
+	req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, path, nil)
+	r := httptest.NewRecorder()
+	restful.DefaultContainer.ServeHTTP(r, req)
+	if err := json.Unmarshal(r.Body.Bytes(), response); err != nil {
+		return 0, err
+	}
+	return r.Result().StatusCode, nil //nolint
 }
 
 func (a *apiHandlerBootTest) FindMachines(mac string) (int, []*models.V1MachineResponse) {
