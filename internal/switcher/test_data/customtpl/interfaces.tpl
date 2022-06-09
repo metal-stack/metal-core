@@ -15,11 +15,6 @@ iface eth0
     address {{ .Ports.Eth0.AddressCIDR }}
     gateway {{ .Ports.Eth0.Gateway }}
     vrf mgmt
-{{- if .DevMode  }}
-
-auto vagrant
-iface vagrant inet dhcp
-{{- end }}
 
 auto mgmt
 iface mgmt

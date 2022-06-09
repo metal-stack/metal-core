@@ -9,7 +9,6 @@ type Conf struct {
 	Loopback             string
 	ASN                  uint32
 	Ports                Ports
-	DevMode              bool
 	MetalCoreCIDR        string
 	AdditionalBridgeVIDs []string
 	FrrTplFile           string
