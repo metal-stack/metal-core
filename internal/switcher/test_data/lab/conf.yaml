@@ -3,7 +3,6 @@ name: leaf01
 loglevel: debugging
 loopback: 10.0.0.10
 asn: 4200000010
-devmode: true
 metalcorecidr: 10.255.255.2/24
 ports:
   eth0:
