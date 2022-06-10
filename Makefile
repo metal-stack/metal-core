@@ -2,6 +2,11 @@ BINARY := metal-core
 MAINMODULE := github.com/metal-stack/metal-core
 CGO_ENABLED := 1
 
+SHA := $(shell git rev-parse --short=8 HEAD)
+GITVERSION := $(shell git describe --long --all)
+BUILDDATE := $(shell GO111MODULE=off go run ${COMMONDIR}/time.go)
+VERSION := $(or ${VERSION},$(shell git describe --tags --exact-match 2> /dev/null || git symbolic-ref -q --short HEAD || git rev-parse --short HEAD))
+
 in-docker: gofmt test all;
 
 release:: gofmt test all;
