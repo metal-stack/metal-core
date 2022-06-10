@@ -72,7 +72,7 @@ func (c *Core) reconfigureSwitch(switchName string) error {
 		return nil
 	}
 
-	err = switchConfig.Apply()
+	err = c.nos.Apply(switchConfig)
 	if err != nil {
 		return fmt.Errorf("could not apply switch config: %w", err)
 	}
@@ -95,12 +95,6 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*switcher.Conf, 
 		AdditionalBridgeVIDs: c.additionalBridgeVIDs,
 	}
 
-	if c.interfacesTplFile != "" {
-		switcherConfig.InterfacesTplFile = c.interfacesTplFile
-	}
-	if c.frrTplFile != "" {
-		switcherConfig.FrrTplFile = c.frrTplFile
-	}
 	p := switcher.Ports{
 		Underlay:      strings.Split(c.spineUplinks, ","),
 		Unprovisioned: []string{},

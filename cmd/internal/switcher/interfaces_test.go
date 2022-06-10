@@ -16,3 +16,11 @@ func TestInterfacesApplier(t *testing.T) {
 		})
 	}
 }
+
+func TestCustomInterfacesTpl(t *testing.T) {
+	t.Run("customtpl", func(t *testing.T) {
+		c := readConf(t, "test_data/dev/conf.yaml")
+		r := newInterfacesRenderer("test_data/dev/customtpl/interfaces.tpl")
+		testRenderer(t, r, &c, "test_data/dev/customtpl/interfaces")
+	})
+}

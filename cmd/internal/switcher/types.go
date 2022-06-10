@@ -11,8 +11,6 @@ type Conf struct {
 	Ports                Ports
 	MetalCoreCIDR        string
 	AdditionalBridgeVIDs []string
-	FrrTplFile           string
-	InterfacesTplFile    string
 }
 
 type Ports struct {
