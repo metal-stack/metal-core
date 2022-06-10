@@ -4,13 +4,10 @@ go 1.18
 
 require (
 	github.com/emicklei/go-restful-openapi/v2 v2.8.0
-	github.com/emicklei/go-restful/v3 v3.7.4
-	github.com/go-openapi/errors v0.20.2
+	github.com/emicklei/go-restful/v3 v3.8.0
 	github.com/go-openapi/runtime v0.23.3
 	github.com/go-openapi/spec v0.20.5
 	github.com/go-openapi/strfmt v0.21.2
-	github.com/go-openapi/swag v0.21.1
-	github.com/go-openapi/validate v0.21.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/go-hal v0.3.7
 	github.com/metal-stack/go-lldpd v0.3.7
@@ -42,9 +39,12 @@ require (
 	github.com/gliderlabs/ssh v0.3.3 // indirect
 	github.com/go-logr/logr v1.2.2 // indirect
 	github.com/go-openapi/analysis v0.21.3 // indirect
+	github.com/go-openapi/errors v0.20.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
 	github.com/go-openapi/loads v0.21.1 // indirect
+	github.com/go-openapi/swag v0.21.1 // indirect
+	github.com/go-openapi/validate v0.21.0 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/goccy/go-json v0.7.8 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
