@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	"net"
 	"os"
 	"strings"
 	"sync"
@@ -30,7 +29,7 @@ func (c *Core) ConstantlyPhoneHome() {
 	// Solution:
 	// - either ensure metal-core is restarted on interfaces added/removed
 	// - dynamically detect changes and stop/start goroutines for the lldpd client per interface
-	ifs, err := net.Interfaces()
+	ifs, err := c.nos.GetSwitchPorts()
 	if err != nil {
 		c.log.Errorw("unable to find interfaces", "error", err)
 		os.Exit(1)
@@ -43,11 +42,7 @@ func (c *Core) ConstantlyPhoneHome() {
 
 	phoneHomeMessages := sync.Map{}
 	for _, iface := range ifs {
-		// consider only switch port interfaces
-		if !strings.HasPrefix(iface.Name, "swp") {
-			continue
-		}
-		lldpcli, err := lldp.NewClient(ctx, iface)
+		lldpcli, err := lldp.NewClient(ctx, *iface)
 		if err != nil {
 			c.log.Errorw("unable to start LLDP client", "interface", iface.Name, "error", err)
 			continue
