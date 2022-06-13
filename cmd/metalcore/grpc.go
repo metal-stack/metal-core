@@ -66,6 +66,6 @@ func NewGrpcClient(log *zap.SugaredLogger, address string, cert, key, caCert []b
 	}, nil
 }
 
-func (c *GrpcClient) NewEventClient() (v1.EventServiceClient, error) {
-	return v1.NewEventServiceClient(c.c), nil
+func (c *GrpcClient) NewEventClient() v1.EventServiceClient {
+	return v1.NewEventServiceClient(c.c)
 }

@@ -101,13 +101,13 @@ func Create() *Server {
 	if err != nil {
 		log.Fatal("failed to register switch", zap.Error(err))
 	}
-	cert, err := os.ReadFile(cfg.GrpcCACertFile)
+	cert, err := os.ReadFile(cfg.GrpcClientCertFile)
 	if err != nil {
 		log.Fatal("failed to read cert", zap.Error(err))
 	}
 	cacert, err := os.ReadFile(cfg.GrpcCACertFile)
 	if err != nil {
-		log.Fatal("failed to read cacert", zap.Error(err))
+		log.Fatal("failed to read ca cert", zap.Error(err))
 	}
 	key, err := os.ReadFile(cfg.GrpcClientKeyFile)
 	if err != nil {
@@ -118,11 +118,7 @@ func Create() *Server {
 	if err != nil {
 		log.Fatal("failed to create grpc client", zap.Error(err))
 	}
-	eventServiceClient, err := grpcClient.NewEventClient()
-	if err != nil {
-		log.Fatal("failed to create grpc event service client", zap.Error(err))
-	}
-	app.SetEventServiceClient(eventServiceClient)
+	app.SetEventServiceClient(grpcClient.NewEventClient())
 
 	app.initSwitchReconfiguration()
 	app.APIClient().ConstantlyPhoneHome()

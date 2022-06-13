@@ -12,14 +12,6 @@ import (
 	"go.uber.org/zap"
 )
 
-func (c *apiClient) AddProvisioningEvent(machineID string, event *v1.EventServiceSendRequest) error {
-	c.Log.Debug("event", zap.String("machineID", machineID))
-	_, err := c.Send(event)
-	if err != nil {
-		c.Log.Error("unable to send provisioning event back to API", zap.Error(err))
-	}
-	return err
-}
 func (c *apiClient) Send(event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

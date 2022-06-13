@@ -196,7 +196,6 @@ type AppContext struct {
 	PartitionClient    partition.ClientService
 	hmac               security.HMACAuth
 	Auth               runtime.ClientAuthInfoWriter
-	DevMode            bool
 	EventServiceClient v1.EventServiceClient
 	Log                *zap.Logger
 }
