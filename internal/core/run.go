@@ -7,8 +7,6 @@ import (
 
 	httppprof "net/http/pprof"
 
-	"github.com/emicklei/go-restful/v3"
-	"github.com/metal-stack/metal-core/internal/endpoint"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"go.uber.org/zap"
@@ -16,18 +14,6 @@ import (
 
 func (s *coreServer) Run() {
 	s.initMetrics()
-
-	Init(endpoint.NewHandler(s.AppContext))
-
-	// enable CORS for the UI to work
-	cors := restful.CrossOriginResourceSharing{
-		AllowedHeaders: []string{"Content-Type", "Accept"},
-		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
-		CookiesAllowed: false,
-		Container:      restful.DefaultContainer,
-	}
-	restful.DefaultContainer.Filter(cors.Filter)
-
 	addr := fmt.Sprintf("%v:%d", s.Config.BindAddress, s.Config.Port)
 
 	s.Log.Info("starting metal-core",

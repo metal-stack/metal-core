@@ -7,7 +7,6 @@ import (
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 	"go.uber.org/zap"
 
-	"github.com/emicklei/go-restful/v3"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 	"github.com/metal-stack/metal-go/api/client/machine"
@@ -57,13 +56,7 @@ const (
 )
 
 type APIClient interface {
-	FindMachine(id string) (*models.V1MachineResponse, error)
-	FindMachines(mac string) (int, []*models.V1MachineResponse)
-	FindPartition(id string) (*models.V1PartitionResponse, error)
-	RegisterMachine(machineID string, request *MetalHammerRegisterMachineRequest) (int, *models.V1MachineResponse)
-	AbortReinstall(machineID string, request *MetalHammerAbortReinstallRequest) (int, *models.V1BootInfo)
 	IPMIConfig(machineID string) (*IPMIConfig, error)
-	FinalizeAllocation(machineID, consolePassword string, report *Report) (*machine.FinalizeAllocationOK, error)
 	RegisterSwitch() (*models.V1SwitchResponse, error)
 	ConstantlyPhoneHome()
 	SetChassisIdentifyLEDStateOn(machineID, description string) error
@@ -73,20 +66,6 @@ type APIClient interface {
 
 type Server interface {
 	Run()
-}
-
-type EndpointHandler interface {
-	NewBootService() *restful.WebService
-	NewMachineService() *restful.WebService
-	NewCertsService() *restful.WebService
-
-	FindMachine(request *restful.Request, response *restful.Response)
-	Boot(request *restful.Request, response *restful.Response)
-	AbortReinstall(request *restful.Request, response *restful.Response)
-	Register(request *restful.Request, response *restful.Response)
-	Report(request *restful.Request, response *restful.Response)
-
-	GrpcClientCert(request *restful.Request, response *restful.Response)
 }
 
 type EventHandler interface {
@@ -189,7 +168,6 @@ type AppContext struct {
 	*BootConfig
 	apiClient          func(*AppContext) APIClient
 	server             func(*AppContext) Server
-	endpointHandler    func(*AppContext) EndpointHandler
 	eventHandler       func(*AppContext) EventHandler
 	MachineClient      machine.ClientService
 	SwitchClient       sw.ClientService
@@ -218,14 +196,6 @@ func (a *AppContext) Server() Server {
 
 func (a *AppContext) SetServer(server func(*AppContext) Server) {
 	a.server = server
-}
-
-func (a *AppContext) EndpointHandler() EndpointHandler {
-	return a.endpointHandler(a)
-}
-
-func (a *AppContext) SetEndpointHandler(endpointHandler func(*AppContext) EndpointHandler) {
-	a.endpointHandler = endpointHandler
 }
 
 func (a *AppContext) EventHandler() EventHandler {
