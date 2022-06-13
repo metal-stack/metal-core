@@ -39,13 +39,13 @@ func (c *Conf) FillRouteMapsAndIPPrefixLists() {
 }
 
 func (c *Conf) applyFrr() error {
-	a := NewFrrApplier(c)
-	return a.Apply()
+	a := newFrrApplier(c.FrrTplFile)
+	return a.Apply(c)
 }
 
 func (c *Conf) applyInterfaces() error {
-	a := NewInterfacesApplier(c)
-	return a.Apply()
+	a := newInterfacesApplier(c.InterfacesTplFile)
+	return a.Apply(c)
 }
 
 // Apply applies the configuration to the switch

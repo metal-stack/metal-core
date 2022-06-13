@@ -5,15 +5,15 @@ import (
 	"testing"
 )
 
-func TestFrrApplier(t *testing.T) {
+func TestFrrRenderer(t *testing.T) {
 	tests := listTestCases()
 	for i := range tests {
 		tt := tests[i]
 		t.Run(tt, func(t *testing.T) {
 			c := readConf(t, path.Join("test_data", tt, "conf.yaml"))
 			c.FillRouteMapsAndIPPrefixLists()
-			a := NewFrrApplier(&c)
-			testApplier(t, a, path.Join("test_data", tt, "frr.conf"))
+			r := newFrrRenderer(c.FrrTplFile)
+			testRenderer(t, r, &c, path.Join("test_data", tt, "frr.conf"))
 		})
 	}
 }

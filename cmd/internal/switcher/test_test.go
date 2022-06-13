@@ -11,16 +11,16 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func testApplier(t *testing.T, a Applier, expectedFilename string) {
-	actual := renderToString(t, a)
+func testRenderer(t *testing.T, r Renderer, c *Conf, expectedFilename string) {
+	actual := renderToString(t, r, c)
 	expected := readExpected(t, expectedFilename)
 	require.Equal(t, expected, actual, "Wanted: %s, Got: %s", expected, actual)
 }
 
-func renderToString(t *testing.T, a Applier) string {
+func renderToString(t *testing.T, r Renderer, c *Conf) string {
 	var b bytes.Buffer
 	w := bufio.NewWriter(&b)
-	err := a.Render(w)
+	err := r.Render(w, c)
 	require.NoError(t, err, "Couldn't render configuration")
 	err = w.Flush()
 	require.NoError(t, err, "Couldn't flush writer")

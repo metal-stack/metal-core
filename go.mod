@@ -3,13 +3,13 @@ module github.com/metal-stack/metal-core
 go 1.18
 
 require (
+	github.com/coreos/go-systemd/v22 v22.3.2
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/go-hal v0.4.0
 	github.com/metal-stack/go-lldpd v0.4.0
 	github.com/metal-stack/metal-api v0.18.1
 	github.com/metal-stack/metal-go v0.18.1
 	github.com/metal-stack/metal-lib v0.9.0
-	github.com/metal-stack/metal-networker v0.8.3
 	github.com/metal-stack/v v1.0.3
 	github.com/prometheus/client_golang v1.12.2
 	github.com/stretchr/testify v1.7.2
@@ -28,7 +28,6 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/coreos/go-oidc/v3 v3.1.0 // indirect
-	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
 	github.com/creack/pty v1.1.18 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.0-20210816181553-5444fa50b93d // indirect

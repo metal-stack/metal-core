@@ -1,58 +1,29 @@
 package switcher
 
-import (
-	"io"
-	"path"
-	"text/template"
-
-	"github.com/metal-stack/metal-networker/pkg/net"
-)
-
 const (
-	// Interfaces is the path to the network interfaces file
-	Interfaces = "/etc/network/interfaces"
-	// InterfacesTmp is the path to a temporary location of the interfaces file
-	InterfacesTmp = "/etc/network/interfaces.tmp"
-	// InterfacesReloadService is the systemd service to reload
-	InterfacesReloadService = "ifreload.service"
-	// InterfacesValidationService is the systemd unit that is used for validation
-	InterfacesValidationService = "interfaces-validation"
+	interfaces                  = "/etc/network/interfaces"
+	interfacesTmp               = "/etc/network/interfaces.tmp"
+	interfacesTpl               = "interfaces.tpl"
+	interfacesReloadService     = "ifreload.service"
+	interfacesValidationService = "interfaces-validation"
 )
 
-// InterfacesApplier is responsible for writing and
-// applying the network interfaces configuration
-type InterfacesApplier struct {
-	tplFile string
-	applier net.Applier
-}
-
-// NewInterfacesApplier creates a new InterfacesApplier
-func NewInterfacesApplier(c *Conf) Applier {
-	v := net.DBusTemplateValidator{TemplateName: InterfacesValidationService, InstanceName: InterfacesTmp}
-	r := net.DBusStartReloader{ServiceFilename: InterfacesReloadService}
-	a := net.NewNetworkApplier(c, v, r)
-	return InterfacesApplier{
-		applier: a,
-		tplFile: c.InterfacesTplFile,
+func newInterfacesRenderer(tplPath string) *templateRenderer {
+	if tplPath != "" {
+		return &templateRenderer{mustParseFile(tplPath)}
 	}
+	return &templateRenderer{mustParseFS(interfacesTpl)}
 }
 
-// Apply applies the configuration to the system
-func (a InterfacesApplier) Apply() error {
-	tpl := a.getTpl()
-	_, err := a.applier.Apply(*tpl, InterfacesTmp, Interfaces, true)
-	return err
-}
+func newInterfacesApplier(tplPath string) *networkApplier {
+	r := dbusStartReloader{interfacesReloadService}
+	v := dbusTemplateValidator{interfacesValidationService}
 
-// Render renders the network interfaces to the given writer
-func (a InterfacesApplier) Render(w io.Writer) error {
-	tpl := a.getTpl()
-	return a.applier.Render(w, *tpl)
-}
-
-func (a InterfacesApplier) getTpl() *template.Template {
-	if a.tplFile != "" {
-		return template.Must(template.New(path.Base(a.tplFile)).ParseFiles(a.tplFile))
+	return &networkApplier{
+		dest:      interfaces,
+		reloader:  &r,
+		renderer:  newInterfacesRenderer(tplPath),
+		tmpFile:   interfacesTmp,
+		validator: &v,
 	}
-	return template.Must(template.New("interfaces.tpl").Parse(interfacesTPL))
 }
