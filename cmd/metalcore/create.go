@@ -27,8 +27,7 @@ func Create() *Server {
 		panic(fmt.Errorf("bad configuration:\n%+v", cfg))
 	}
 
-	level := zap.InfoLevel
-	err := level.UnmarshalText([]byte(cfg.LogLevel))
+	level, err := zap.ParseAtomicLevel(cfg.LogLevel)
 	if err != nil {
 		panic(fmt.Errorf("can't initialize zap logger: %w", err))
 	}
@@ -36,7 +35,7 @@ func Create() *Server {
 	zcfg := zap.NewProductionConfig()
 	zcfg.EncoderConfig.TimeKey = "timestamp"
 	zcfg.EncoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
-	zcfg.Level = zap.NewAtomicLevelAt(level)
+	zcfg.Level = level
 
 	log, err := zcfg.Build()
 	if err != nil {
@@ -45,10 +44,7 @@ func Create() *Server {
 
 	log.Info("metal-core version", zap.Any("version", v.V))
 
-	devMode := strings.Contains(cfg.PartitionID, "vagrant")
-
 	log.Info("configuration",
-		zap.Bool("DevMode", devMode),
 		zap.String("CIDR", cfg.CIDR),
 		zap.String("PartitionID", cfg.PartitionID),
 		zap.String("RackID", cfg.RackID),
@@ -87,7 +83,6 @@ func Create() *Server {
 			MachineClient:   machine.New(transport, strfmt.Default),
 			PartitionClient: partition.New(transport, strfmt.Default),
 			SwitchClient:    sw.New(transport, strfmt.Default),
-			DevMode:         devMode,
 			Log:             log,
 		},
 	}

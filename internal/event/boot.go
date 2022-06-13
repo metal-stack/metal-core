@@ -23,7 +23,6 @@ func (h *eventHandler) PowerBootBiosMachine(machineID string) {
 		)
 		return
 	}
-
 }
 
 func (h *eventHandler) PowerBootDiskMachine(machineID string) {
@@ -44,7 +43,6 @@ func (h *eventHandler) PowerBootDiskMachine(machineID string) {
 		)
 		return
 	}
-
 }
 
 func (h *eventHandler) PowerBootPxeMachine(machineID string) {

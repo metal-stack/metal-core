@@ -4,27 +4,27 @@ go 1.18
 
 require (
 	github.com/emicklei/go-restful-openapi/v2 v2.9.0
-	github.com/emicklei/go-restful/v3 v3.7.4
+	github.com/emicklei/go-restful/v3 v3.8.0
 	github.com/go-openapi/errors v0.20.2
-	github.com/go-openapi/runtime v0.23.3
-	github.com/go-openapi/spec v0.20.5
+	github.com/go-openapi/runtime v0.24.1
+	github.com/go-openapi/spec v0.20.6
 	github.com/go-openapi/strfmt v0.21.2
 	github.com/go-openapi/swag v0.21.1
-	github.com/go-openapi/validate v0.21.0
+	github.com/go-openapi/validate v0.22.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/go-hal v0.4.0
-	github.com/metal-stack/go-lldpd v0.3.7
-	github.com/metal-stack/metal-api v0.16.7-0.20220502060144-306899e7b35a
-	github.com/metal-stack/metal-go v0.16.6
+	github.com/metal-stack/go-lldpd v0.4.0
+	github.com/metal-stack/metal-api v0.18.0
+	github.com/metal-stack/metal-go v0.18.0
 	github.com/metal-stack/metal-lib v0.9.0
 	github.com/metal-stack/metal-networker v0.8.3
 	github.com/metal-stack/security v0.6.4
 	github.com/metal-stack/v v1.0.3
-	github.com/prometheus/client_golang v1.12.1
-	github.com/stretchr/testify v1.7.1
+	github.com/prometheus/client_golang v1.12.2
+	github.com/stretchr/testify v1.7.2
 	github.com/vishvananda/netlink v1.1.0
 	go.uber.org/zap v1.21.0
-	google.golang.org/grpc v1.46.0
+	google.golang.org/grpc v1.47.0
 	google.golang.org/protobuf v1.28.0
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -32,8 +32,8 @@ require (
 require (
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
-	github.com/avast/retry-go/v4 v4.0.4 // indirect
-	github.com/aws/aws-sdk-go v1.44.3 // indirect
+	github.com/avast/retry-go/v4 v4.0.5 // indirect
+	github.com/aws/aws-sdk-go v1.44.24 // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
@@ -93,13 +93,13 @@ require (
 	go.mongodb.org/mongo-driver v1.9.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
-	golang.org/x/crypto v0.0.0-20220427172511-eb4f295cb31f // indirect
-	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4 // indirect
+	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
+	golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2 // indirect
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5 // indirect
-	golang.org/x/sys v0.0.0-20220422013727-9388b58f7150 // indirect
+	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20220407144326-9054f6ed7bac // indirect
+	google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

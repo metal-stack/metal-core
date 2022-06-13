@@ -29,7 +29,7 @@ func TestLoggingMiddleware(t *testing.T) {
 	payload := &domain.MetalHammerRegisterMachineRequest{
 		UUID: machineID,
 	}
-	payload.Nics = []*models.V1MachineNicExtended{}
+	payload.Nics = []*models.V1MachineNic{}
 	payload.Disks = []*models.V1MachineBlockDevice{}
 
 	// when
