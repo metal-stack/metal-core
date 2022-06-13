@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
-	"io"
 	"time"
 
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
@@ -16,9 +15,9 @@ import (
 )
 
 type GrpcClient struct {
-	addr     string
-	dialOpts []grpc.DialOption
-	log      *zap.SugaredLogger
+	addr string
+	log  *zap.SugaredLogger
+	c    *grpc.ClientConn
 }
 
 // NewGrpcClient fetches the address and certificates from metal-core needed to communicate with metal-api via grpc,
@@ -46,32 +45,27 @@ func NewGrpcClient(log *zap.SugaredLogger, address string, cert, key, caCert []b
 		Certificates: []tls.Certificate{clientCert},
 		MinVersion:   tls.VersionTLS12,
 	}
-	return &GrpcClient{
-		addr: address,
-		log:  log,
-		dialOpts: []grpc.DialOption{
-			grpc.WithKeepaliveParams(kacp),
-			grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
-			grpc.WithBlock(),
-		},
-	}, nil
-}
 
-func (c *GrpcClient) NewEventClient() (v1.EventServiceClient, io.Closer, error) {
-	conn, err := c.newConnection()
-	if err != nil {
-		return nil, nil, err
+	dialOpts := []grpc.DialOption{
+		grpc.WithKeepaliveParams(kacp),
+		grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
+		grpc.WithBlock(),
 	}
-	return v1.NewEventServiceClient(conn), conn, nil
-}
-func (c *GrpcClient) newConnection() (*grpc.ClientConn, error) {
+
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	conn, err := grpc.DialContext(ctx, c.addr, c.dialOpts...)
+	conn, err := grpc.DialContext(ctx, address, dialOpts...)
 	if err != nil {
 		return nil, err
 	}
 
-	return conn, err
+	return &GrpcClient{
+		log: log,
+		c:   conn,
+	}, nil
+}
+
+func (c *GrpcClient) NewEventClient() (v1.EventServiceClient, error) {
+	return v1.NewEventServiceClient(c.c), nil
 }
