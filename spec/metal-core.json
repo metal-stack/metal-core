@@ -1210,49 +1210,6 @@
         ]
       }
     },
-    "/machine/{id}/event": {
-      "post": {
-        "consumes": [
-          "application/json"
-        ],
-        "operationId": "AddProvisioningEvent",
-        "parameters": [
-          {
-            "description": "identifier of the machine",
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/models.V1MachineProvisioningEvent"
-            }
-          }
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "default": {
-            "description": "Unexpected Error"
-          }
-        },
-        "summary": "adds a machine provisioning event",
-        "tags": [
-          "machine"
-        ]
-      }
-    },
     "/v1/boot/{mac}": {
       "get": {
         "consumes": [

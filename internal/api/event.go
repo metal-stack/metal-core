@@ -1,50 +1,28 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"time"
 
-	"github.com/go-openapi/strfmt"
+	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 	"github.com/metal-stack/metal-core/pkg/domain"
-	"github.com/metal-stack/metal-go/api/client/machine"
-	"github.com/metal-stack/metal-go/api/models"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"go.uber.org/zap"
 )
 
-func (c *apiClient) AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error {
-	c.Log.Debug("event", zap.String("machineID", machineID))
-
-	params := machine.NewAddProvisioningEventParams()
-	params.ID = machineID
-	params.Body = event
-	params.WithTimeout(5 * time.Second)
-	_, err := c.MachineClient.AddProvisioningEvent(params, c.Auth)
+func (c *apiClient) Send(event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	s, err := c.EventServiceClient.Send(ctx, event)
 	if err != nil {
-		c.Log.Error("unable to send provisioning event back to API",
-			zap.String("eventType", *event.Event),
-			zap.String("machineID", machineID),
-			zap.String("message", event.Message),
-			zap.Error(err),
-		)
+		return nil, err
 	}
-	return err
-}
-
-func (c *apiClient) Emit(eventType domain.ProvisioningEventType, machineID, message string) error {
-	et := string(eventType)
-
-	c.Log.Debug("emit event",
-		zap.String("eventType", et),
-		zap.String("machineID", machineID),
-		zap.String("message", message),
-	)
-
-	event := &models.V1MachineProvisioningEvent{
-		Event:   &et,
-		Message: message,
+	if s != nil {
+		c.Log.Sugar().Infow("event", "send", s.Events, "failed", s.Failed)
 	}
-	return c.AddProvisioningEvent(machineID, event)
+	return s, err
 }
 
 func (c *apiClient) PhoneHome(msgs []phoneHomeMessage) {
@@ -54,30 +32,27 @@ func (c *apiClient) PhoneHome(msgs []phoneHomeMessage) {
 	c.Log.Info("phonehome",
 		zap.Int("machines", len(msgs)),
 	)
-	events := models.V1MachineProvisioningEvents{}
+	events := make(map[string]*v1.MachineProvisioningEvent)
 	phonedHomeEvent := string(domain.ProvisioningEventPhonedHome)
 	for i := range msgs {
 		msg := msgs[i]
-		event := models.V1MachineProvisioningEvent{
-			Event:   &phonedHomeEvent,
+		event := &v1.MachineProvisioningEvent{
+			Event:   phonedHomeEvent,
 			Message: msg.payload,
-			Time:    strfmt.DateTime(msg.time),
+			Time:    timestamppb.New(msg.time),
 		}
 		events[msg.machineID] = event
 	}
 
-	params := machine.NewAddProvisioningEventsParams()
-	params.Body = events
-	params.WithTimeout(5 * time.Second)
-	resp, err := c.MachineClient.AddProvisioningEvents(params, c.Auth)
+	s, err := c.Send(&v1.EventServiceSendRequest{Events: events})
 	if err != nil {
 		c.Log.Error("unable to send provisioning event back to API",
 			zap.Error(err),
 		)
 	}
-	if resp != nil && resp.Payload != nil && resp.Payload.Events != nil {
+	if s != nil {
 		c.Log.Info("phonehome sent",
-			zap.Int64("machines", *resp.Payload.Events),
+			zap.Uint64("machines", s.Events),
 		)
 	}
 }

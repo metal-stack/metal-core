@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/emicklei/go-restful/v3"
+	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-go/api/client/machine"
 	"github.com/metal-stack/metal-go/api/models"
@@ -58,12 +59,8 @@ func (a *apiHandlerBootTest) FindMachines(mac string) (int, []*models.V1MachineR
 	}
 }
 
-func (a *apiHandlerBootTest) Emit(eventType domain.ProvisioningEventType, machineID, message string) error {
-	return nil
-}
-
-func (a *apiHandlerBootTest) AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error {
-	return nil
+func (a *apiHandlerBootTest) Send(event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error) {
+	return nil, nil
 }
 
 func (a *apiHandlerBootTest) FindMachine(machineID string) (*models.V1MachineResponse, error) {

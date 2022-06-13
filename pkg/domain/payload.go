@@ -30,7 +30,7 @@ type Report struct {
 }
 
 type MetalHammerRegisterMachineRequest struct {
-	models.V1MachineHardwareExtended
+	models.V1MachineHardware
 	UUID string                `json:"uuid,omitempty" description:"the uuid of the machine to register"`
 	IPMI *models.V1MachineIPMI `json:"ipmi" description:"the IPMI connection configuration"`
 	BIOS *models.V1MachineBIOS `json:"bios" description:"the Bios configuration"`

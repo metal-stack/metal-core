@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/metal-stack/go-hal/pkg/api"
+	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 	"go.uber.org/zap"
 
 	"github.com/emicklei/go-restful/v3"
@@ -56,8 +57,6 @@ const (
 )
 
 type APIClient interface {
-	Emit(eventType ProvisioningEventType, machineID, message string) error
-	AddProvisioningEvent(machineID string, event *models.V1MachineProvisioningEvent) error
 	FindMachine(id string) (*models.V1MachineResponse, error)
 	FindMachines(mac string) (int, []*models.V1MachineResponse)
 	FindPartition(id string) (*models.V1PartitionResponse, error)
@@ -69,6 +68,7 @@ type APIClient interface {
 	ConstantlyPhoneHome()
 	SetChassisIdentifyLEDStateOn(machineID, description string) error
 	SetChassisIdentifyLEDStateOff(machineID, description string) error
+	Send(event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error)
 }
 
 type Server interface {
@@ -187,16 +187,17 @@ func (i *IPMIConfig) IPMIConnection() (string, int, string, string) {
 type AppContext struct {
 	*Config
 	*BootConfig
-	apiClient       func(*AppContext) APIClient
-	server          func(*AppContext) Server
-	endpointHandler func(*AppContext) EndpointHandler
-	eventHandler    func(*AppContext) EventHandler
-	MachineClient   machine.ClientService
-	SwitchClient    sw.ClientService
-	PartitionClient partition.ClientService
-	hmac            security.HMACAuth
-	Auth            runtime.ClientAuthInfoWriter
-	Log             *zap.Logger
+	apiClient          func(*AppContext) APIClient
+	server             func(*AppContext) Server
+	endpointHandler    func(*AppContext) EndpointHandler
+	eventHandler       func(*AppContext) EventHandler
+	MachineClient      machine.ClientService
+	SwitchClient       sw.ClientService
+	PartitionClient    partition.ClientService
+	hmac               security.HMACAuth
+	Auth               runtime.ClientAuthInfoWriter
+	EventServiceClient v1.EventServiceClient
+	Log                *zap.Logger
 }
 
 func (a *AppContext) APIClient() APIClient {
@@ -205,6 +206,10 @@ func (a *AppContext) APIClient() APIClient {
 
 func (a *AppContext) SetAPIClient(apiClient func(*AppContext) APIClient) {
 	a.apiClient = apiClient
+}
+
+func (a *AppContext) SetEventServiceClient(eventServiceClient v1.EventServiceClient) {
+	a.EventServiceClient = eventServiceClient
 }
 
 func (a *AppContext) Server() Server {
