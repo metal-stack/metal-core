@@ -8,12 +8,11 @@ import (
 	"github.com/metal-stack/go-hal"
 	"github.com/metal-stack/go-hal/connect"
 	halzap "github.com/metal-stack/go-hal/pkg/logger/zap"
-	"github.com/metal-stack/metal-core/pkg/domain"
 
 	"go.uber.org/zap"
 )
 
-func outBand(ipmi domain.IPMI, log *zap.SugaredLogger) (hal.OutBand, error) {
+func outBand(ipmi IPMI, log *zap.SugaredLogger) (hal.OutBand, error) {
 	host, portString, found := strings.Cut(ipmi.Address, ":")
 	if !found {
 		portString = "623"

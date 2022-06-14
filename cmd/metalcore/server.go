@@ -8,7 +8,6 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/metal-stack/metal-core/internal/api"
 	"github.com/metal-stack/metal-core/internal/core"
-	"github.com/metal-stack/metal-core/internal/event"
 	"github.com/metal-stack/metal-core/pkg/domain"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/v"
@@ -62,7 +61,6 @@ func Run() {
 	}
 	app.SetAPIClient(api.NewClient)
 	app.SetServer(core.NewServer)
-	app.SetEventHandler(event.NewHandler)
 
 	err = app.initConsumer()
 	if err != nil {

@@ -7,7 +7,7 @@ import (
 	"github.com/metal-stack/go-hal/pkg/api"
 	metalgo "github.com/metal-stack/metal-go"
 
-	"github.com/metal-stack/metal-core/pkg/domain"
+	"github.com/metal-stack/metal-core/internal/event"
 	"github.com/metal-stack/metal-lib/bus"
 )
 
@@ -44,37 +44,39 @@ func (s *Server) initConsumer() error {
 		return err
 	}
 
+	evh := event.NewHandler(s.Log)
+
 	err = c.With(bus.LogLevel(mapLogLevel(s.Config.MQLogLevel))).
 		MustRegister(s.Config.MachineTopic, "core").
-		Consume(domain.MachineEvent{}, func(message interface{}) error {
-			evt := message.(*domain.MachineEvent)
+		Consume(event.MachineEvent{}, func(message interface{}) error {
+			evt := message.(*event.MachineEvent)
 			s.Log.Sugar().Debugw("got message", "topic", s.Config.MachineTopic, "channel", "core", "event", evt)
 			switch evt.Type {
-			case domain.Delete:
-				s.EventHandler().FreeMachine(*evt)
-			case domain.Command:
+			case event.Delete:
+				evh.FreeMachine(*evt)
+			case event.Command:
 				switch evt.Cmd.Command {
-				case domain.MachineOnCmd:
-					s.EventHandler().PowerOnMachine(*evt)
-				case domain.MachineOffCmd:
-					s.EventHandler().PowerOffMachine(*evt)
-				case domain.MachineResetCmd:
-					s.EventHandler().PowerResetMachine(*evt)
-				case domain.MachineCycleCmd:
-					s.EventHandler().PowerCycleMachine(*evt)
-				case domain.MachineBiosCmd:
-					s.EventHandler().PowerBootBiosMachine(*evt)
-				case domain.MachineDiskCmd:
-					s.EventHandler().PowerBootDiskMachine(*evt)
-				case domain.MachinePxeCmd:
-					s.EventHandler().PowerBootPxeMachine(*evt)
-				case domain.MachineReinstallCmd:
-					s.EventHandler().ReinstallMachine(*evt)
-				case domain.ChassisIdentifyLEDOnCmd:
-					s.EventHandler().PowerOnChassisIdentifyLED(*evt)
-				case domain.ChassisIdentifyLEDOffCmd:
-					s.EventHandler().PowerOffChassisIdentifyLED(*evt)
-				case domain.UpdateFirmwareCmd:
+				case event.MachineOnCmd:
+					evh.PowerOnMachine(*evt)
+				case event.MachineOffCmd:
+					evh.PowerOffMachine(*evt)
+				case event.MachineResetCmd:
+					evh.PowerResetMachine(*evt)
+				case event.MachineCycleCmd:
+					evh.PowerCycleMachine(*evt)
+				case event.MachineBiosCmd:
+					evh.PowerBootBiosMachine(*evt)
+				case event.MachineDiskCmd:
+					evh.PowerBootDiskMachine(*evt)
+				case event.MachinePxeCmd:
+					evh.PowerBootPxeMachine(*evt)
+				case event.MachineReinstallCmd:
+					evh.ReinstallMachine(*evt)
+				case event.ChassisIdentifyLEDOnCmd:
+					evh.PowerOnChassisIdentifyLED(*evt)
+				case event.ChassisIdentifyLEDOffCmd:
+					evh.PowerOffChassisIdentifyLED(*evt)
+				case event.UpdateFirmwareCmd:
 					kind := metalgo.FirmwareKind(evt.Cmd.Params[0])
 					revision := evt.Cmd.Params[1]
 					description := evt.Cmd.Params[2]
@@ -86,9 +88,9 @@ func (s *Server) initConsumer() error {
 					}
 					switch kind {
 					case metalgo.Bios:
-						go s.EventHandler().UpdateBios(revision, description, s3Cfg, *evt)
+						go evh.UpdateBios(revision, description, s3Cfg, *evt)
 					case metalgo.Bmc:
-						go s.EventHandler().UpdateBmc(revision, description, s3Cfg, *evt)
+						go evh.UpdateBmc(revision, description, s3Cfg, *evt)
 					default:
 						s.Log.Sugar().Warnw("unknown firmware kind",
 							"topic", s.Config.MachineTopic,
@@ -104,7 +106,7 @@ func (s *Server) initConsumer() error {
 						"event", evt,
 					)
 				}
-			case domain.Create, domain.Update:
+			case event.Create, event.Update:
 				fallthrough
 			default:
 				s.Log.Sugar().Warn("unhandled event",

@@ -2,24 +2,23 @@ package event
 
 import (
 	"github.com/metal-stack/go-hal"
-	"github.com/metal-stack/metal-core/pkg/domain"
 )
 
-func (h *eventHandler) ReinstallMachine(event domain.MachineEvent) {
-	outBand, err := outBand(*event.IPMI, h.Log.Sugar())
+func (h *EventHandler) ReinstallMachine(event MachineEvent) {
+	outBand, err := outBand(*event.IPMI, h.log.Sugar())
 	if err != nil {
-		h.Log.Sugar().Errorw("reinstall", "error", err)
+		h.log.Sugar().Errorw("reinstall", "error", err)
 		return
 	}
 	err = outBand.BootFrom(hal.BootTargetPXE)
 	if err != nil {
-		h.Log.Sugar().Errorw("reinstall", "error", err)
+		h.log.Sugar().Errorw("reinstall", "error", err)
 		return
 	}
 
 	err = outBand.PowerReset()
 	if err != nil {
-		h.Log.Sugar().Errorw("reinstall", "error", err)
+		h.log.Sugar().Errorw("reinstall", "error", err)
 		return
 	}
 }

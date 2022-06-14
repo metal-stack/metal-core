@@ -3,61 +3,9 @@ package domain
 import (
 	"time"
 
-	"github.com/metal-stack/go-hal/pkg/api"
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 	metalgo "github.com/metal-stack/metal-go"
 	"go.uber.org/zap"
-)
-
-type EventType string
-
-type MachineCommand string
-
-const (
-	MachineOnCmd             MachineCommand = "ON"
-	MachineOffCmd            MachineCommand = "OFF"
-	MachineResetCmd          MachineCommand = "RESET"
-	MachineCycleCmd          MachineCommand = "CYCLE"
-	MachineBiosCmd           MachineCommand = "BIOS"
-	MachineDiskCmd           MachineCommand = "DISK"
-	MachinePxeCmd            MachineCommand = "PXE"
-	MachineReinstallCmd      MachineCommand = "REINSTALL"
-	ChassisIdentifyLEDOnCmd  MachineCommand = "LED-ON"
-	ChassisIdentifyLEDOffCmd MachineCommand = "LED-OFF"
-	UpdateFirmwareCmd        MachineCommand = "UPDATE-FIRMWARE"
-)
-
-type MachineExecCommand struct {
-	TargetMachineID string         `json:"target,omitempty"`
-	Command         MachineCommand `json:"cmd,omitempty"`
-	Params          []string       `json:"params,omitempty"`
-}
-
-type MachineEvent struct {
-	Type         EventType           `json:"type,omitempty"`
-	OldMachineID string              `json:"old,omitempty"`
-	Cmd          *MachineExecCommand `json:"cmd,omitempty"`
-	IPMI         *IPMI               `json:"ipmi,omitempty"`
-}
-
-type IPMI struct {
-	// Address is host:port of the connection to the ipmi BMC, host can be either a ip address or a hostname
-	Address  string `json:"address"`
-	User     string `json:"user"`
-	Password string `json:"password"`
-	Fru      Fru    `json:"fru"`
-}
-
-type Fru struct {
-	BoardPartNumber string `json:"board_part_number"`
-}
-
-// Some EventType enums.
-const (
-	Create  EventType = "create"
-	Update  EventType = "update"
-	Delete  EventType = "delete"
-	Command EventType = "command"
 )
 
 type APIClient interface {
@@ -69,24 +17,6 @@ type APIClient interface {
 
 type Server interface {
 	Run()
-}
-
-type EventHandler interface {
-	FreeMachine(event MachineEvent)
-	PowerOnMachine(event MachineEvent)
-	PowerOffMachine(event MachineEvent)
-	PowerResetMachine(event MachineEvent)
-	PowerCycleMachine(event MachineEvent)
-	PowerBootBiosMachine(event MachineEvent)
-	PowerBootDiskMachine(event MachineEvent)
-	PowerBootPxeMachine(event MachineEvent)
-	ReinstallMachine(event MachineEvent)
-
-	PowerOnChassisIdentifyLED(event MachineEvent)
-	PowerOffChassisIdentifyLED(event MachineEvent)
-
-	UpdateBios(revision, description string, s3Cfg *api.S3Config, event MachineEvent)
-	UpdateBmc(revision, description string, s3Cfg *api.S3Config, event MachineEvent)
 }
 
 type Config struct {
@@ -129,7 +59,6 @@ type AppContext struct {
 	*Config
 	apiClient          func(*AppContext) APIClient
 	server             func(*AppContext) Server
-	eventHandler       func(*AppContext) EventHandler
 	Driver             metalgo.Client
 	EventServiceClient v1.EventServiceClient
 	Log                *zap.Logger
@@ -153,12 +82,4 @@ func (a *AppContext) Server() Server {
 
 func (a *AppContext) SetServer(server func(*AppContext) Server) {
 	a.server = server
-}
-
-func (a *AppContext) EventHandler() EventHandler {
-	return a.eventHandler(a)
-}
-
-func (a *AppContext) SetEventHandler(eventHandler func(*AppContext) EventHandler) {
-	a.eventHandler = eventHandler
 }
