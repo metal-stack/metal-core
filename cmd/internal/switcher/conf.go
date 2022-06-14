@@ -1,7 +1,7 @@
 package switcher
 
 import (
-	"github.com/metal-stack/metal-core/internal/vlan"
+	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 )
 
 // FillVLANIDs fills the given configuration object with switch-local VLAN-IDs

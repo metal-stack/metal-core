@@ -3,7 +3,7 @@ package switcher
 import (
 	"testing"
 
-	"github.com/metal-stack/metal-core/internal/vlan"
+	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 
 	"github.com/stretchr/testify/require"
 )

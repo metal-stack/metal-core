@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/metal-stack/metal-core/internal/switcher"
-	"github.com/metal-stack/metal-core/internal/vlan"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher"
+	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
 	"github.com/metal-stack/metal-go/api/models"
 	"github.com/vishvananda/netlink"

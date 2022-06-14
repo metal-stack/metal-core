@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/kelseyhightower/envconfig"
-	"github.com/metal-stack/metal-core/internal/bmc"
-	"github.com/metal-stack/metal-core/internal/core"
+	"github.com/metal-stack/metal-core/cmd/internal/bmc"
+	"github.com/metal-stack/metal-core/cmd/internal/core"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/v"
 	"github.com/prometheus/client_golang/prometheus/promhttp"

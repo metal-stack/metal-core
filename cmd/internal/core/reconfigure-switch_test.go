@@ -3,7 +3,7 @@ package core
 import (
 	"testing"
 
-	"github.com/metal-stack/metal-core/internal/switcher"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 	"github.com/metal-stack/metal-go/api/models"
 	"github.com/stretchr/testify/require"
 )
