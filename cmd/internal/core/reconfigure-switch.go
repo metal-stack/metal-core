@@ -12,7 +12,6 @@ import (
 	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
 	"github.com/metal-stack/metal-go/api/models"
 	"github.com/vishvananda/netlink"
-	"go.uber.org/zap"
 )
 
 // ReconfigureSwitch reconfigures the switch.
@@ -24,7 +23,7 @@ func (c *Core) ReconfigureSwitch() {
 		start := time.Now()
 		err := c.reconfigureSwitch(host)
 		elapsed := time.Since(start)
-		c.log.Info("reconfiguration took", zap.Duration("elapsed", elapsed))
+		c.log.Infow("reconfiguration took", "elapsed", elapsed)
 
 		params := sw.NewNotifySwitchParams()
 		params.ID = host
@@ -35,7 +34,7 @@ func (c *Core) ReconfigureSwitch() {
 		if err != nil {
 			errStr := err.Error()
 			nr.Error = &errStr
-			c.log.Error("reconfiguration failed", zap.Error(err))
+			c.log.Errorw("reconfiguration failed", "error", err)
 		} else {
 			c.log.Info("reconfiguration succeeded")
 		}
@@ -43,7 +42,7 @@ func (c *Core) ReconfigureSwitch() {
 		params.Body = nr
 		_, err = c.driver.SwitchOperations().NotifySwitch(params, nil)
 		if err != nil {
-			c.log.Error("notification about switch reconfiguration failed", zap.Error(err))
+			c.log.Errorw("notification about switch reconfiguration failed", "error", err)
 		}
 	}
 }
@@ -67,8 +66,7 @@ func (c *Core) reconfigureSwitch(switchName string) error {
 		return fmt.Errorf("could not gather information about eth0 nic: %w", err)
 	}
 
-	c.log.Info("assembled new config for switch",
-		zap.Any("config", switchConfig))
+	c.log.Infow("assembled new config for switch", "config", switchConfig)
 	if !c.enableReconfigureSwitch {
 		c.log.Debug("skip config application because of environment setting")
 		return nil

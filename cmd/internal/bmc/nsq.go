@@ -29,7 +29,7 @@ func mapLogLevel(level string) bus.Level {
 }
 
 func (b *BMCService) timeoutHandler(err bus.TimeoutError) error {
-	b.log.Sugar().Errorw("timeout processing event", "event", err.Event())
+	b.log.Errorw("timeout processing event", "event", err.Event())
 	return nil
 }
 
@@ -38,7 +38,7 @@ func (b *BMCService) InitConsumer() error {
 		CACertFile:     b.mqCACertFile,
 		ClientCertFile: b.mqClientCertFile,
 	}
-	c, err := bus.NewConsumer(b.log, tlsCfg, b.mqAddress)
+	c, err := bus.NewConsumer(b.log.Desugar(), tlsCfg, b.mqAddress)
 	if err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func (b *BMCService) InitConsumer() error {
 		MustRegister(b.machineTopic, "core").
 		Consume(MachineEvent{}, func(message interface{}) error {
 			evt := message.(*MachineEvent)
-			b.log.Sugar().Debugw("got message", "topic", b.machineTopic, "channel", "core", "event", evt)
+			b.log.Debugw("got message", "topic", b.machineTopic, "channel", "core", "event", evt)
 			switch evt.Type {
 			case Delete:
 				b.FreeMachine(evt)
@@ -89,7 +89,7 @@ func (b *BMCService) InitConsumer() error {
 					case metalgo.Bmc:
 						go b.UpdateBmc(revision, description, s3Cfg, evt)
 					default:
-						b.log.Sugar().Warnw("unknown firmware kind",
+						b.log.Warnw("unknown firmware kind",
 							"topic", b.machineTopic,
 							"channel", "core",
 							"firmware kind", string(kind),
@@ -97,7 +97,7 @@ func (b *BMCService) InitConsumer() error {
 						)
 					}
 				default:
-					b.log.Sugar().Warnw("unhandled command",
+					b.log.Warnw("unhandled command",
 						"topic", b.machineTopic,
 						"channel", "core",
 						"event", evt,
@@ -106,7 +106,7 @@ func (b *BMCService) InitConsumer() error {
 			case Create, Update:
 				fallthrough
 			default:
-				b.log.Sugar().Warn("unhandled event",
+				b.log.Warnw("unhandled event",
 					"topic", b.machineTopic,
 					"channel", "core",
 					"event", evt,

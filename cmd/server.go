@@ -21,7 +21,7 @@ import (
 func Run() {
 	cfg := &Config{}
 	if err := envconfig.Process("METAL_CORE", cfg); err != nil {
-		panic(fmt.Errorf("bad configuration:\n%+v", cfg))
+		panic(fmt.Errorf("bad configuration:%w", err))
 	}
 
 	level, err := zap.ParseAtomicLevel(cfg.LogLevel)
@@ -70,7 +70,7 @@ func Run() {
 	}
 
 	c := core.New(core.Config{
-		Log:                       l,
+		Log:                       log,
 		LogLevel:                  cfg.LogLevel,
 		CIDR:                      cfg.CIDR,
 		LoopbackIP:                cfg.LoopbackIP,
@@ -97,7 +97,7 @@ func Run() {
 	c.ConstantlyPhoneHome()
 
 	b := bmc.New(bmc.Config{
-		Log:              l,
+		Log:              log,
 		MQAddress:        cfg.MQAddress,
 		MQCACertFile:     cfg.MQCACertFile,
 		MQClientCertFile: cfg.MQClientCertFile,
@@ -114,6 +114,7 @@ func Run() {
 		_ = os.Setenv("DEBUG", "1")
 	}
 
+	// Start metrics
 	metricsAddr := fmt.Sprintf("%v:%d", cfg.MetricsServerBindAddress, cfg.MetricsServerPort)
 
 	log.Infow("starting metrics endpoint", "addr", metricsAddr)

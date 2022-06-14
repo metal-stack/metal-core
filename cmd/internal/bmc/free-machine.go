@@ -5,20 +5,20 @@ import (
 )
 
 func (h *BMCService) FreeMachine(event *MachineEvent) {
-	outBand, err := outBand(*event.IPMI, h.log.Sugar())
+	outBand, err := outBand(*event.IPMI, h.log)
 	if err != nil {
-		h.log.Sugar().Errorw("freemachine", "error", err)
+		h.log.Errorw("freemachine", "error", err)
 		return
 	}
 	err = outBand.BootFrom(hal.BootTargetPXE)
 	if err != nil {
-		h.log.Sugar().Errorw("freemachine", "error", err)
+		h.log.Errorw("freemachine", "error", err)
 		return
 	}
 
 	err = outBand.PowerCycle()
 	if err != nil {
-		h.log.Sugar().Errorw("freemachine", "error", err)
+		h.log.Errorw("freemachine", "error", err)
 		return
 	}
 }

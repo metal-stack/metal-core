@@ -9,7 +9,7 @@ import (
 )
 
 type Core struct {
-	log      *zap.Logger
+	log      *zap.SugaredLogger
 	logLevel string
 
 	cidr                      string
@@ -32,7 +32,7 @@ type Core struct {
 }
 
 type Config struct {
-	Log      *zap.Logger
+	Log      *zap.SugaredLogger
 	LogLevel string
 
 	CIDR                      string

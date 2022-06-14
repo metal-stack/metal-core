@@ -11,7 +11,6 @@ import (
 
 	"github.com/metal-stack/go-lldpd/pkg/lldp"
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
-	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -33,9 +32,7 @@ func (c *Core) ConstantlyPhoneHome() {
 	// - dynamically detect changes and stop/start goroutines for the lldpd client per interface
 	ifs, err := net.Interfaces()
 	if err != nil {
-		c.log.Error("unable to find interfaces",
-			zap.Error(err),
-		)
+		c.log.Errorw("unable to find interfaces", "error", err)
 		os.Exit(1)
 	}
 
@@ -52,15 +49,10 @@ func (c *Core) ConstantlyPhoneHome() {
 		}
 		lldpcli, err := lldp.NewClient(ctx, iface)
 		if err != nil {
-			c.log.Error("unable to start LLDP client",
-				zap.String("interface", iface.Name),
-				zap.Error(err),
-			)
+			c.log.Errorw("unable to start LLDP client", "interface", iface.Name, "error", err)
 			continue
 		}
-		c.log.Info("start lldp client",
-			zap.String("interface", iface.Name),
-		)
+		c.log.Infow("start lldp client", "interface", iface.Name)
 
 		// constantly observe LLDP traffic on current machine and current interface
 		go lldpcli.Start(discoveryResultChan)
@@ -111,18 +103,15 @@ func (c *Core) send(event *v1.EventServiceSendRequest) (*v1.EventServiceSendResp
 		return nil, err
 	}
 	if s != nil {
-		c.log.Sugar().Infow("event", "send", s.Events, "failed", s.Failed)
+		c.log.Infow("event", "send", s.Events, "failed", s.Failed)
 	}
 	return s, err
 }
 
 func (c *Core) phoneHome(msgs []phoneHomeMessage) {
-	c.log.Debug("phonehome",
-		zap.String("machines", fmt.Sprintf("%v", msgs)),
-	)
-	c.log.Info("phonehome",
-		zap.Int("machines", len(msgs)),
-	)
+	c.log.Debugw("phonehome", "machines", fmt.Sprintf("%v", msgs))
+	c.log.Infow("phonehome", "machines", len(msgs))
+
 	events := make(map[string]*v1.MachineProvisioningEvent)
 	phonedHomeEvent := string(provisioningEventPhonedHome)
 	for i := range msgs {
@@ -137,14 +126,10 @@ func (c *Core) phoneHome(msgs []phoneHomeMessage) {
 
 	s, err := c.send(&v1.EventServiceSendRequest{Events: events})
 	if err != nil {
-		c.log.Error("unable to send provisioning event back to API",
-			zap.Error(err),
-		)
+		c.log.Errorw("unable to send provisioning event back to API", "error", err)
 	}
 	if s != nil {
-		c.log.Info("phonehome sent",
-			zap.Uint64("machines", s.Events),
-		)
+		c.log.Infow("phonehome sent", "machines", s.Events)
 	}
 }
 

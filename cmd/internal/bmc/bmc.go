@@ -13,7 +13,7 @@ import (
 )
 
 type BMCService struct {
-	log *zap.Logger
+	log *zap.SugaredLogger
 	// NSQ related config options
 	mqAddress        string
 	mqCACertFile     string
@@ -24,7 +24,7 @@ type BMCService struct {
 }
 
 type Config struct {
-	Log              *zap.Logger
+	Log              *zap.SugaredLogger
 	MQAddress        string
 	MQCACertFile     string
 	MQClientCertFile string
@@ -71,8 +71,6 @@ type Fru struct {
 	BoardPartNumber string `json:"board_part_number"`
 }
 
-type EventType string
-
 type MachineCommand string
 
 const (
@@ -89,7 +87,8 @@ const (
 	UpdateFirmwareCmd        MachineCommand = "UPDATE-FIRMWARE"
 )
 
-// Some EventType enums.
+type EventType string
+
 const (
 	Create  EventType = "create"
 	Update  EventType = "update"

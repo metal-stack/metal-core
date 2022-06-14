@@ -5,40 +5,40 @@ import (
 )
 
 func (h *BMCService) PowerBootBiosMachine(event *MachineEvent) {
-	outBand, err := outBand(*event.IPMI, h.log.Sugar())
+	outBand, err := outBand(*event.IPMI, h.log)
 	if err != nil {
-		h.log.Sugar().Errorw("power boot bios", "error", err)
+		h.log.Errorw("power boot bios", "error", err)
 		return
 	}
 	err = outBand.BootFrom(hal.BootTargetBIOS)
 	if err != nil {
-		h.log.Sugar().Errorw("power boot bios", "error", err)
+		h.log.Errorw("power boot bios", "error", err)
 		return
 	}
 }
 
 func (h *BMCService) PowerBootDiskMachine(event *MachineEvent) {
-	outBand, err := outBand(*event.IPMI, h.log.Sugar())
+	outBand, err := outBand(*event.IPMI, h.log)
 	if err != nil {
-		h.log.Sugar().Errorw("power boot disk", "error", err)
+		h.log.Errorw("power boot disk", "error", err)
 		return
 	}
 	err = outBand.BootFrom(hal.BootTargetDisk)
 	if err != nil {
-		h.log.Sugar().Errorw("power boot disk", "error", err)
+		h.log.Errorw("power boot disk", "error", err)
 		return
 	}
 }
 
 func (h *BMCService) PowerBootPxeMachine(event *MachineEvent) {
-	outBand, err := outBand(*event.IPMI, h.log.Sugar())
+	outBand, err := outBand(*event.IPMI, h.log)
 	if err != nil {
-		h.log.Sugar().Errorw("power boot pxe", "error", err)
+		h.log.Errorw("power boot pxe", "error", err)
 		return
 	}
 	err = outBand.BootFrom(hal.BootTargetPXE)
 	if err != nil {
-		h.log.Sugar().Errorw("power boot pxe", "error", err)
+		h.log.Errorw("power boot pxe", "error", err)
 		return
 	}
 }

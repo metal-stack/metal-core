@@ -14,7 +14,7 @@ import (
 )
 
 func (c *Core) RegisterSwitch() error {
-	c.log.Sugar().Infow("register switch")
+	c.log.Infow("register switch")
 	var (
 		err      error
 		nics     []*models.V1SwitchNic
@@ -43,14 +43,14 @@ func (c *Core) RegisterSwitch() error {
 		if err == nil {
 			break
 		}
-		c.log.Error("unable to register at metal-api, retrying", zap.Error(err))
+		c.log.Errorw("unable to register at metal-api, retrying", "error", err)
 		time.Sleep(30 * time.Second)
 	}
-	c.log.Sugar().Infow("register switch completed")
+	c.log.Infow("register switch completed")
 	return nil
 }
 
-func getNics(log *zap.Logger, blacklist []string) ([]*models.V1SwitchNic, error) {
+func getNics(log *zap.SugaredLogger, blacklist []string) ([]*models.V1SwitchNic, error) {
 	var nics []*models.V1SwitchNic
 	links, err := netlink.LinkList()
 	if err != nil {
@@ -63,26 +63,17 @@ links:
 		mac := attrs.HardwareAddr.String()
 		for _, b := range blacklist {
 			if b == name {
-				log.Debug("skip interface, because it is contained in the blacklist",
-					zap.String("interface", name),
-					zap.Any("blacklist", blacklist),
-				)
+				log.Debugw("skip interface, because it is contained in the blacklist", "interface", name, "blacklist", blacklist)
 				continue links
 			}
 		}
 		if !strings.HasPrefix(name, "swp") {
-			log.Debug("skip interface, because only swp* switch ports are reported to metal-api",
-				zap.String("interface", name),
-				zap.String("MAC", mac),
-			)
+			log.Debugw("skip interface, because only swp* switch ports are reported to metal-api", "interface", name, "MAC", mac)
 			continue
 		}
 		_, err := net.ParseMAC(mac)
 		if err != nil {
-			log.Debug("skip interface with invalid mac",
-				zap.String("interface", name),
-				zap.String("MAC", mac),
-			)
+			log.Debugw("skip interface with invalid mac", "interface", name, "MAC", mac)
 			continue
 		}
 		nic := &models.V1SwitchNic{
