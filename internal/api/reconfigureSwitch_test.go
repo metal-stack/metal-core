@@ -1,4 +1,4 @@
-package event
+package api
 
 import (
 	"testing"
@@ -58,7 +58,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 			Underlay:      []string{"swp31", "swp32"},
 			Unprovisioned: []string{"swp1"},
 			Firewalls: map[string]*switcher.Firewall{
-				"swp3": &switcher.Firewall{
+				"swp3": {
 					Port: "swp3",
 				},
 			},

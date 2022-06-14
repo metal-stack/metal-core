@@ -34,10 +34,6 @@ func (s *Server) timeoutHandler(err bus.TimeoutError) error {
 	return nil
 }
 
-func (s *Server) initSwitchReconfiguration() {
-	go s.EventHandler().ReconfigureSwitch()
-}
-
 func (s *Server) initConsumer() error {
 	tlsCfg := &bus.TLSConfig{
 		CACertFile:     s.Config.MQCACertFile,

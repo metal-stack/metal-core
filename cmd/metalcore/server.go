@@ -92,7 +92,7 @@ func Run() {
 	}
 	app.SetEventServiceClient(grpcClient.NewEventClient())
 
-	app.initSwitchReconfiguration()
+	go app.APIClient().ReconfigureSwitch()
 	app.APIClient().ConstantlyPhoneHome()
 
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {

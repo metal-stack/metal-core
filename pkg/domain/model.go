@@ -62,6 +62,7 @@ const (
 
 type APIClient interface {
 	RegisterSwitch() error
+	ReconfigureSwitch()
 	ConstantlyPhoneHome()
 	Send(event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error)
 }
@@ -86,8 +87,6 @@ type EventHandler interface {
 
 	UpdateBios(revision, description string, s3Cfg *api.S3Config, event MachineEvent)
 	UpdateBmc(revision, description string, s3Cfg *api.S3Config, event MachineEvent)
-
-	ReconfigureSwitch()
 }
 
 type Config struct {

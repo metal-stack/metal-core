@@ -1,4 +1,4 @@
-package event
+package api
 
 import (
 	"fmt"
@@ -17,15 +17,15 @@ import (
 )
 
 // ReconfigureSwitch reconfigures the switch.
-func (h *eventHandler) ReconfigureSwitch() {
-	t := time.NewTicker(h.AppContext.Config.ReconfigureSwitchInterval)
+func (c *apiClient) ReconfigureSwitch() {
+	t := time.NewTicker(c.Config.ReconfigureSwitchInterval)
 	host, _ := os.Hostname()
 	for range t.C {
-		h.Log.Info("trigger reconfiguration")
+		c.Log.Info("trigger reconfiguration")
 		start := time.Now()
-		err := h.reconfigureSwitch(host)
+		err := c.reconfigureSwitch(host)
 		elapsed := time.Since(start)
-		h.Log.Info("reconfiguration took", zap.Duration("elapsed", elapsed))
+		c.Log.Info("reconfiguration took", zap.Duration("elapsed", elapsed))
 
 		params := sw.NewNotifySwitchParams()
 		params.ID = host
@@ -36,46 +36,46 @@ func (h *eventHandler) ReconfigureSwitch() {
 		if err != nil {
 			errStr := err.Error()
 			nr.Error = &errStr
-			h.Log.Error("reconfiguration failed", zap.Error(err))
+			c.Log.Error("reconfiguration failed", zap.Error(err))
 		} else {
-			h.Log.Info("reconfiguration succeeded")
+			c.Log.Info("reconfiguration succeeded")
 		}
 
 		params.Body = nr
-		_, err = h.Driver.SwitchOperations().NotifySwitch(params, nil)
+		_, err = c.Driver.SwitchOperations().NotifySwitch(params, nil)
 		if err != nil {
-			h.Log.Error("notification about switch reconfiguration failed", zap.Error(err))
+			c.Log.Error("notification about switch reconfiguration failed", zap.Error(err))
 		}
 	}
 }
 
-func (h *eventHandler) reconfigureSwitch(switchName string) error {
+func (c *apiClient) reconfigureSwitch(switchName string) error {
 	params := sw.NewFindSwitchParams()
 	params.ID = switchName
-	fsr, err := h.Driver.SwitchOperations().FindSwitch(params, nil)
+	fsr, err := c.Driver.SwitchOperations().FindSwitch(params, nil)
 	if err != nil {
 		return fmt.Errorf("could not fetch switch from metal-api: %w", err)
 	}
 
 	s := fsr.Payload
-	c, err := buildSwitcherConfig(h.Config, s)
+	switchConfig, err := buildSwitcherConfig(c.Config, s)
 	if err != nil {
 		return fmt.Errorf("could not build switcher config: %w", err)
 	}
 
-	err = fillEth0Info(c, h.Config.ManagementGateway)
+	err = fillEth0Info(switchConfig, c.Config.ManagementGateway)
 	if err != nil {
 		return fmt.Errorf("could not gather information about eth0 nic: %w", err)
 	}
 
-	h.Log.Info("assembled new config for switch",
+	c.Log.Info("assembled new config for switch",
 		zap.Any("config", c))
-	if !h.Config.ReconfigureSwitch {
-		h.Log.Debug("skip config application because of environment setting")
+	if !c.Config.ReconfigureSwitch {
+		c.Log.Debug("skip config application because of environment setting")
 		return nil
 	}
 
-	err = c.Apply()
+	err = switchConfig.Apply()
 	if err != nil {
 		return fmt.Errorf("could not apply switch config: %w", err)
 	}
