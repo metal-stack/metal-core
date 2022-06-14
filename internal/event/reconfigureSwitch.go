@@ -42,7 +42,7 @@ func (h *eventHandler) ReconfigureSwitch() {
 		}
 
 		params.Body = nr
-		_, err = h.SwitchClient.NotifySwitch(params, h.Auth)
+		_, err = h.Driver.SwitchOperations().NotifySwitch(params, nil)
 		if err != nil {
 			h.Log.Error("notification about switch reconfiguration failed", zap.Error(err))
 		}
@@ -52,7 +52,7 @@ func (h *eventHandler) ReconfigureSwitch() {
 func (h *eventHandler) reconfigureSwitch(switchName string) error {
 	params := sw.NewFindSwitchParams()
 	params.ID = switchName
-	fsr, err := h.SwitchClient.FindSwitch(params, h.Auth)
+	fsr, err := h.Driver.SwitchOperations().FindSwitch(params, nil)
 	if err != nil {
 		return fmt.Errorf("could not fetch switch from metal-api: %w", err)
 	}

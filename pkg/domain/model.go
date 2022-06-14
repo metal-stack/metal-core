@@ -5,14 +5,10 @@ import (
 
 	"github.com/metal-stack/go-hal/pkg/api"
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
+	metalgo "github.com/metal-stack/metal-go"
 	"go.uber.org/zap"
 
-	"github.com/go-openapi/runtime"
-	"github.com/go-openapi/strfmt"
-	"github.com/metal-stack/metal-go/api/client/machine"
-	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
 	"github.com/metal-stack/metal-go/api/models"
-	"github.com/metal-stack/security"
 )
 
 type EventType string
@@ -147,10 +143,7 @@ type AppContext struct {
 	apiClient          func(*AppContext) APIClient
 	server             func(*AppContext) Server
 	eventHandler       func(*AppContext) EventHandler
-	MachineClient      machine.ClientService
-	SwitchClient       sw.ClientService
-	hmac               security.HMACAuth
-	Auth               runtime.ClientAuthInfoWriter
+	Driver             metalgo.Client
 	EventServiceClient v1.EventServiceClient
 	Log                *zap.Logger
 }
@@ -181,14 +174,4 @@ func (a *AppContext) EventHandler() EventHandler {
 
 func (a *AppContext) SetEventHandler(eventHandler func(*AppContext) EventHandler) {
 	a.eventHandler = eventHandler
-}
-
-func (a *AppContext) InitHMAC() {
-	a.hmac = security.NewHMACAuth("Metal-Edit", []byte(a.HMACKey))
-	a.Auth = runtime.ClientAuthInfoWriterFunc(a.auther)
-}
-
-func (a *AppContext) auther(rq runtime.ClientRequest, rg strfmt.Registry) error {
-	a.hmac.AddAuthToClientRequest(rq, time.Now())
-	return nil
 }

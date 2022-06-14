@@ -60,7 +60,6 @@ func (s *Server) initConsumer() error {
 			)
 			switch evt.Type {
 			case domain.Delete:
-				// MachineID should be taken from evt.Cmd.TargetMachineID
 				s.EventHandler().FreeMachine(*evt)
 			case domain.Command:
 				switch evt.Cmd.Command {

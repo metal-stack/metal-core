@@ -5,15 +5,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/go-openapi/runtime/client"
-	"github.com/go-openapi/strfmt"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/metal-stack/metal-core/internal/api"
 	"github.com/metal-stack/metal-core/internal/core"
 	"github.com/metal-stack/metal-core/internal/event"
 	"github.com/metal-stack/metal-core/pkg/domain"
-	"github.com/metal-stack/metal-go/api/client/machine"
-	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
+	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/v"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -46,50 +43,25 @@ func Run() {
 
 	log.Info("metal-core version", zap.Any("version", v.V))
 
-	log.Info("configuration",
-		zap.String("CIDR", cfg.CIDR),
-		zap.String("PartitionID", cfg.PartitionID),
-		zap.String("RackID", cfg.RackID),
-		zap.String("BindAddress", cfg.BindAddress),
-		zap.Int("Port", cfg.Port),
-		zap.String("LogLevel", cfg.LogLevel),
-		zap.Bool("ConsoleLogging", cfg.ConsoleLogging),
-		zap.String("API-Protocol", cfg.ApiProtocol),
-		zap.String("API-IP", cfg.ApiIP),
-		zap.Int("API-Port", cfg.ApiPort),
-		zap.String("API-BasePath", cfg.ApiBasePath),
-		zap.String("MQAddress", cfg.MQAddress),
-		zap.String("MQCACertFile", cfg.MQCACertFile),
-		zap.String("MQClientCertFile", cfg.MQClientCertFile),
-		zap.String("MQLogLevel", cfg.MQLogLevel),
-		zap.String("MachineTopic", cfg.MachineTopic),
-		zap.String("LoopbackIP", cfg.LoopbackIP),
-		zap.String("ASN", cfg.ASN),
-		zap.String("SpineUplinks", cfg.SpineUplinks),
-		zap.Bool("ReconfigureSwitch", cfg.ReconfigureSwitch),
-		zap.String("ReconfigureSwitchInterval", cfg.ReconfigureSwitchInterval.String()),
-		zap.String("ManagementGateway", cfg.ManagementGateway),
-		zap.Any("AdditionalBridgeVIDs", cfg.AdditionalBridgeVIDs),
-		zap.Any("AdditionalBridgePorts", cfg.AdditionalBridgePorts),
-		zap.String("gRPC-address", cfg.GrpcAddress),
-		zap.String("gRPC-CACertFile", cfg.GrpcCACertFile),
-		zap.String("gRPC-clientCertFile", cfg.GrpcClientCertFile),
-		zap.String("gRPC-clientKeyFile", cfg.GrpcClientKeyFile),
-	)
+	log.Sugar().Infow("configuration", "cfg", cfg)
 
-	transport := client.New(fmt.Sprintf("%v:%d", cfg.ApiIP, cfg.ApiPort), cfg.ApiBasePath, []string{cfg.ApiProtocol})
+	driver, _, err := metalgo.NewDriver(
+		fmt.Sprintf("%s://%s:%d%s", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort, cfg.ApiBasePath),
+		"", cfg.HMACKey, metalgo.AuthType("Metal-Edit"))
+
+	if err != nil {
+		log.Sugar().Fatalw("unable to create metal-api driver", "error", err)
+	}
 
 	app := &Server{
 		AppContext: &domain.AppContext{
-			Config:        cfg,
-			MachineClient: machine.New(transport, strfmt.Default),
-			SwitchClient:  sw.New(transport, strfmt.Default),
-			Log:           log,
+			Driver: driver,
+			Config: cfg,
+			Log:    log,
 		},
 	}
 	app.SetAPIClient(api.NewClient)
 	app.SetServer(core.NewServer)
-	app.InitHMAC()
 	app.SetEventHandler(event.NewHandler)
 
 	err = app.initConsumer()

@@ -36,7 +36,7 @@ func (c *apiClient) RegisterSwitch() (*models.V1SwitchResponse, error) {
 	}
 
 	for {
-		ok, created, err := c.SwitchClient.RegisterSwitch(params, c.Auth)
+		ok, created, err := c.Driver.SwitchOperations().RegisterSwitch(params, nil)
 		if err == nil {
 			if ok != nil {
 				return ok.Payload, nil //nolint
