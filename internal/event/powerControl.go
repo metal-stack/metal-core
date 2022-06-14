@@ -1,138 +1,83 @@
 package event
 
 import (
-	"github.com/metal-stack/metal-core/internal/ipmi"
-	"go.uber.org/zap"
+	"github.com/metal-stack/metal-core/pkg/domain"
 )
 
-func (h *eventHandler) PowerOnMachine(machineID string) {
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+func (h *eventHandler) PowerOnMachine(event domain.MachineEvent) {
+	outBand, err := outBand(*event.IPMI, h.Log.Sugar())
 	if err != nil {
-		h.Log.Error("unable to read IPMI connection details",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("power on", "error", err)
 		return
 	}
-
-	err = ipmi.PowerOnMachine(h.Log, ipmiCfg)
+	err = outBand.PowerOn()
 	if err != nil {
-		h.Log.Error("unable to power on machine",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("power on", "error", err)
+		return
 	}
 }
 
-func (h *eventHandler) PowerOffMachine(machineID string) {
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+func (h *eventHandler) PowerOffMachine(event domain.MachineEvent) {
+	outBand, err := outBand(*event.IPMI, h.Log.Sugar())
 	if err != nil {
-		h.Log.Error("unable to read IPMI connection details",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("power off", "error", err)
 		return
 	}
-
-	err = ipmi.PowerOffMachine(h.Log, ipmiCfg)
+	err = outBand.PowerOff()
 	if err != nil {
-		h.Log.Error("unable to power off machine",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("power off", "error", err)
+		return
 	}
 }
 
-func (h *eventHandler) PowerResetMachine(machineID string) {
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+func (h *eventHandler) PowerResetMachine(event domain.MachineEvent) {
+	outBand, err := outBand(*event.IPMI, h.Log.Sugar())
 	if err != nil {
-		h.Log.Error("unable to read IPMI connection details",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("power reset", "error", err)
 		return
 	}
-
-	err = ipmi.PowerResetMachine(h.Log, ipmiCfg)
+	err = outBand.PowerReset()
 	if err != nil {
-		h.Log.Error("unable to power reset machine",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("power reset", "error", err)
+		return
 	}
 }
 
-func (h *eventHandler) PowerCycleMachine(machineID string) {
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+func (h *eventHandler) PowerCycleMachine(event domain.MachineEvent) {
+	outBand, err := outBand(*event.IPMI, h.Log.Sugar())
 	if err != nil {
-		h.Log.Error("unable to read IPMI connection details",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("power cycle", "error", err)
 		return
 	}
-
-	err = ipmi.PowerCycleMachine(h.Log, ipmiCfg)
+	err = outBand.PowerCycle()
 	if err != nil {
-		h.Log.Error("unable to power cycle machine",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("power cycle", "error", err)
+		return
 	}
 }
 
-func (h *eventHandler) PowerOnChassisIdentifyLED(machineID, description string) {
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+func (h *eventHandler) PowerOnChassisIdentifyLED(event domain.MachineEvent) {
+	outBand, err := outBand(*event.IPMI, h.Log.Sugar())
 	if err != nil {
-		h.Log.Error("unable to read IPMI connection details",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("power led on", "error", err)
 		return
 	}
-
-	err = ipmi.PowerOnChassisIdentifyLED(h.Log, ipmiCfg)
+	err = outBand.IdentifyLEDOn()
 	if err != nil {
-		h.Log.Error("unable to power on machine chassis identify LED",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("power led on", "error", err)
 		return
-	}
-
-	err = h.APIClient().SetChassisIdentifyLEDStateOn(machineID, description)
-	if err != nil {
-		h.Log.Error("unable to set machine chassis identify LED state to LED-ON",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
 	}
 }
 
-func (h *eventHandler) PowerOffChassisIdentifyLED(machineID, description string) {
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+func (h *eventHandler) PowerOffChassisIdentifyLED(event domain.MachineEvent) {
+	outBand, err := outBand(*event.IPMI, h.Log.Sugar())
 	if err != nil {
-		h.Log.Error("unable to read IPMI connection details",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("power led off", "error", err)
 		return
 	}
-
-	err = ipmi.PowerOffChassisIdentifyLED(h.Log, ipmiCfg)
+	err = outBand.IdentifyLEDOff()
 	if err != nil {
-		h.Log.Error("unable to power off machine chassis identify LED",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("power led off", "error", err)
 		return
-	}
-
-	err = h.APIClient().SetChassisIdentifyLEDStateOff(machineID, description)
-	if err != nil {
-		h.Log.Error("unable to set machine chassis identify LED state to LED-OFF",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
 	}
 }

@@ -1,34 +1,25 @@
 package event
 
 import (
-	"github.com/metal-stack/metal-core/internal/ipmi"
-	"go.uber.org/zap"
+	"github.com/metal-stack/go-hal"
+	"github.com/metal-stack/metal-core/pkg/domain"
 )
 
-func (h *eventHandler) ReinstallMachine(machineID string) {
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+func (h *eventHandler) ReinstallMachine(event domain.MachineEvent) {
+	outBand, err := outBand(*event.IPMI, h.Log.Sugar())
 	if err != nil {
-		h.Log.Error("unable to read IPMI connection details",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("reinstall", "error", err)
+		return
+	}
+	err = outBand.BootFrom(hal.BootTargetPXE)
+	if err != nil {
+		h.Log.Sugar().Errorw("reinstall", "error", err)
 		return
 	}
 
-	err = ipmi.SetBootPXE(h.Log, ipmiCfg)
+	err = outBand.PowerReset()
 	if err != nil {
-		h.Log.Error("unable to change boot order of machine",
-			zap.String("machineID", machineID),
-			zap.String("boot", "PXE"),
-			zap.Error(err),
-		)
-	}
-
-	err = ipmi.PowerResetMachine(h.Log, ipmiCfg)
-	if err != nil {
-		h.Log.Error("unable to power reset machine",
-			zap.String("machineID", machineID),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("reinstall", "error", err)
+		return
 	}
 }

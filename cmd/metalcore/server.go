@@ -13,7 +13,6 @@ import (
 	"github.com/metal-stack/metal-core/internal/event"
 	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-go/api/client/machine"
-	"github.com/metal-stack/metal-go/api/client/partition"
 	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
 	"github.com/metal-stack/v"
 	"go.uber.org/zap"
@@ -82,11 +81,10 @@ func Run() {
 
 	app := &Server{
 		AppContext: &domain.AppContext{
-			Config:          cfg,
-			MachineClient:   machine.New(transport, strfmt.Default),
-			PartitionClient: partition.New(transport, strfmt.Default),
-			SwitchClient:    sw.New(transport, strfmt.Default),
-			Log:             log,
+			Config:        cfg,
+			MachineClient: machine.New(transport, strfmt.Default),
+			SwitchClient:  sw.New(transport, strfmt.Default),
+			Log:           log,
 		},
 	}
 	app.SetAPIClient(api.NewClient)

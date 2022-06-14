@@ -1,67 +1,45 @@
 package event
 
 import (
-	"github.com/metal-stack/metal-core/internal/ipmi"
-	"go.uber.org/zap"
+	"github.com/metal-stack/go-hal"
+	"github.com/metal-stack/metal-core/pkg/domain"
 )
 
-func (h *eventHandler) PowerBootBiosMachine(machineID string) {
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+func (h *eventHandler) PowerBootBiosMachine(event domain.MachineEvent) {
+	outBand, err := outBand(*event.IPMI, h.Log.Sugar())
 	if err != nil {
-		h.Log.Error("unable to read IPMI connection details",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("power boot bios", "error", err)
 		return
 	}
-
-	err = ipmi.SetBootBios(h.Log, ipmiCfg)
+	err = outBand.BootFrom(hal.BootTargetBIOS)
 	if err != nil {
-		h.Log.Error("unable to set boot order of machine to BIOS",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("power boot bios", "error", err)
 		return
 	}
 }
 
-func (h *eventHandler) PowerBootDiskMachine(machineID string) {
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+func (h *eventHandler) PowerBootDiskMachine(event domain.MachineEvent) {
+	outBand, err := outBand(*event.IPMI, h.Log.Sugar())
 	if err != nil {
-		h.Log.Error("unable to read IPMI connection details",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("power boot disk", "error", err)
 		return
 	}
-
-	err = ipmi.SetBootDisk(h.Log, ipmiCfg)
+	err = outBand.BootFrom(hal.BootTargetDisk)
 	if err != nil {
-		h.Log.Error("unable to set boot order of machine to disk",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("power boot disk", "error", err)
 		return
 	}
 }
 
-func (h *eventHandler) PowerBootPxeMachine(machineID string) {
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+func (h *eventHandler) PowerBootPxeMachine(event domain.MachineEvent) {
+	outBand, err := outBand(*event.IPMI, h.Log.Sugar())
 	if err != nil {
-		h.Log.Error("unable to read IPMI connection details",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("power boot pxe", "error", err)
 		return
 	}
-
-	err = ipmi.SetBootPXE(h.Log, ipmiCfg)
+	err = outBand.BootFrom(hal.BootTargetPXE)
 	if err != nil {
-		h.Log.Error("unable to set boot order of machine to PXE",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("power boot pxe", "error", err)
 		return
 	}
-
 }

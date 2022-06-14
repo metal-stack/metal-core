@@ -6,10 +6,13 @@ import (
 	"time"
 
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
-	"github.com/metal-stack/metal-core/pkg/domain"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"go.uber.org/zap"
+)
+
+const (
+	ProvisioningEventPhonedHome = "Phoned Home"
 )
 
 func (c *apiClient) Send(event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error) {
@@ -33,7 +36,7 @@ func (c *apiClient) PhoneHome(msgs []phoneHomeMessage) {
 		zap.Int("machines", len(msgs)),
 	)
 	events := make(map[string]*v1.MachineProvisioningEvent)
-	phonedHomeEvent := string(domain.ProvisioningEventPhonedHome)
+	phonedHomeEvent := string(ProvisioningEventPhonedHome)
 	for i := range msgs {
 		msg := msgs[i]
 		event := &v1.MachineProvisioningEvent{

@@ -60,37 +60,38 @@ func (s *Server) initConsumer() error {
 			)
 			switch evt.Type {
 			case domain.Delete:
-				s.EventHandler().FreeMachine(evt.OldMachineID)
+				// MachineID should be taken from evt.Cmd.TargetMachineID
+				s.EventHandler().FreeMachine(*evt)
 			case domain.Command:
 				switch evt.Cmd.Command {
 				case domain.MachineOnCmd:
-					s.EventHandler().PowerOnMachine(evt.Cmd.TargetMachineID)
+					s.EventHandler().PowerOnMachine(*evt)
 				case domain.MachineOffCmd:
-					s.EventHandler().PowerOffMachine(evt.Cmd.TargetMachineID)
+					s.EventHandler().PowerOffMachine(*evt)
 				case domain.MachineResetCmd:
-					s.EventHandler().PowerResetMachine(evt.Cmd.TargetMachineID)
+					s.EventHandler().PowerResetMachine(*evt)
 				case domain.MachineCycleCmd:
-					s.EventHandler().PowerCycleMachine(evt.Cmd.TargetMachineID)
+					s.EventHandler().PowerCycleMachine(*evt)
 				case domain.MachineBiosCmd:
-					s.EventHandler().PowerBootBiosMachine(evt.Cmd.TargetMachineID)
+					s.EventHandler().PowerBootBiosMachine(*evt)
 				case domain.MachineDiskCmd:
-					s.EventHandler().PowerBootDiskMachine(evt.Cmd.TargetMachineID)
+					s.EventHandler().PowerBootDiskMachine(*evt)
 				case domain.MachinePxeCmd:
-					s.EventHandler().PowerBootPxeMachine(evt.Cmd.TargetMachineID)
+					s.EventHandler().PowerBootPxeMachine(*evt)
 				case domain.MachineReinstallCmd:
-					s.EventHandler().ReinstallMachine(evt.Cmd.TargetMachineID)
+					s.EventHandler().ReinstallMachine(*evt)
 				case domain.ChassisIdentifyLEDOnCmd:
 					description := strings.TrimSpace(strings.Join(evt.Cmd.Params, " "))
 					if len(description) == 0 {
 						description = "unknown"
 					}
-					s.EventHandler().PowerOnChassisIdentifyLED(evt.Cmd.TargetMachineID, description)
+					s.EventHandler().PowerOnChassisIdentifyLED(*evt)
 				case domain.ChassisIdentifyLEDOffCmd:
 					description := strings.TrimSpace(strings.Join(evt.Cmd.Params, " "))
 					if len(description) == 0 {
 						description = "unknown"
 					}
-					s.EventHandler().PowerOffChassisIdentifyLED(evt.Cmd.TargetMachineID, description)
+					s.EventHandler().PowerOffChassisIdentifyLED(*evt)
 				case domain.UpdateFirmwareCmd:
 					kind := metalgo.FirmwareKind(evt.Cmd.Params[0])
 					revision := evt.Cmd.Params[1]
@@ -103,9 +104,9 @@ func (s *Server) initConsumer() error {
 					}
 					switch kind {
 					case metalgo.Bios:
-						go s.EventHandler().UpdateBios(evt.Cmd.TargetMachineID, revision, description, s3Cfg)
+						go s.EventHandler().UpdateBios(revision, description, s3Cfg, *evt)
 					case metalgo.Bmc:
-						go s.EventHandler().UpdateBmc(evt.Cmd.TargetMachineID, revision, description, s3Cfg)
+						go s.EventHandler().UpdateBmc(revision, description, s3Cfg, *evt)
 					default:
 						s.Log.Warn("unknown firmware kind",
 							zap.String("topic", s.Config.MachineTopic),

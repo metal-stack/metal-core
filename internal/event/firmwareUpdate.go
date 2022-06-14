@@ -2,58 +2,41 @@ package event
 
 import (
 	"github.com/metal-stack/go-hal/pkg/api"
-	"github.com/metal-stack/metal-core/internal/ipmi"
-	"go.uber.org/zap"
+	"github.com/metal-stack/metal-core/pkg/domain"
 )
 
-func (h *eventHandler) UpdateBios(machineID, revision, description string, s3Cfg *api.S3Config) {
-	h.Log.Info("update bios",
-		zap.String("machine", machineID),
-		zap.String("revision", revision),
-		zap.String("description", description),
-	)
-
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+func (h *eventHandler) UpdateBios(revision, description string, s3Cfg *api.S3Config, event domain.MachineEvent) {
+	outBand, err := outBand(*event.IPMI, h.Log.Sugar())
 	if err != nil {
-		h.Log.Error("unable to read IPMI connection details",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("updatebios", "error", err)
+		return
+	}
+	if event.IPMI == nil {
+		h.Log.Sugar().Errorw("updatebios ipmi config is nil")
 		return
 	}
 
-	err = ipmi.UpdateBios(h.Log, ipmiCfg, revision, s3Cfg)
+	err = outBand.UpdateBIOS(event.IPMI.Fru.BoardPartNumber, revision, s3Cfg)
 	if err != nil {
-		h.Log.Error("unable to update BIOS of machine",
-			zap.String("machineID", machineID),
-			zap.String("bios", revision),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("updatebios", "error", err)
+		return
 	}
 }
 
-func (h *eventHandler) UpdateBmc(machineID, revision, description string, s3Cfg *api.S3Config) {
-	h.Log.Info("update bmc",
-		zap.String("machine", machineID),
-		zap.String("revision", revision),
-		zap.String("description", description),
-	)
-
-	ipmiCfg, err := h.APIClient().IPMIConfig(machineID)
+func (h *eventHandler) UpdateBmc(revision, description string, s3Cfg *api.S3Config, event domain.MachineEvent) {
+	outBand, err := outBand(*event.IPMI, h.Log.Sugar())
 	if err != nil {
-		h.Log.Error("unable to read IPMI connection details",
-			zap.String("machine", machineID),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("updatebios", "error", err)
+		return
+	}
+	if event.IPMI == nil {
+		h.Log.Sugar().Errorw("updatebios ipmi config is nil")
 		return
 	}
 
-	err = ipmi.UpdateBmc(h.Log, ipmiCfg, revision, s3Cfg)
+	err = outBand.UpdateBMC(event.IPMI.Fru.BoardPartNumber, revision, s3Cfg)
 	if err != nil {
-		h.Log.Error("unable to update BMC of machine",
-			zap.String("machineID", machineID),
-			zap.String("bmc", revision),
-			zap.Error(err),
-		)
+		h.Log.Sugar().Errorw("updatebios", "error", err)
+		return
 	}
 }

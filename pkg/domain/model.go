@@ -10,7 +10,6 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 	"github.com/metal-stack/metal-go/api/client/machine"
-	"github.com/metal-stack/metal-go/api/client/partition"
 	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
 	"github.com/metal-stack/metal-go/api/models"
 	"github.com/metal-stack/security"
@@ -43,8 +42,20 @@ type MachineExecCommand struct {
 type MachineEvent struct {
 	Type         EventType           `json:"type,omitempty"`
 	OldMachineID string              `json:"old,omitempty"`
-	NewMachineID string              `json:"new,omitempty"`
 	Cmd          *MachineExecCommand `json:"cmd,omitempty"`
+	IPMI         *IPMI               `json:"ipmi,omitempty"`
+}
+
+type IPMI struct {
+	// Address is host:port of the connection to the ipmi BMC, host can be either a ip address or a hostname
+	Address  string `json:"address"`
+	User     string `json:"user"`
+	Password string `json:"password"`
+	Fru      Fru    `json:"fru"`
+}
+
+type Fru struct {
+	BoardPartNumber string `json:"board_part_number"`
 }
 
 // Some EventType enums.
@@ -56,11 +67,8 @@ const (
 )
 
 type APIClient interface {
-	IPMIConfig(machineID string) (*IPMIConfig, error)
 	RegisterSwitch() (*models.V1SwitchResponse, error)
 	ConstantlyPhoneHome()
-	SetChassisIdentifyLEDStateOn(machineID, description string) error
-	SetChassisIdentifyLEDStateOff(machineID, description string) error
 	Send(event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error)
 }
 
@@ -69,21 +77,21 @@ type Server interface {
 }
 
 type EventHandler interface {
-	FreeMachine(machineID string)
-	PowerOnMachine(machineID string)
-	PowerOffMachine(machineID string)
-	PowerResetMachine(machineID string)
-	PowerCycleMachine(machineID string)
-	PowerBootBiosMachine(machineID string)
-	PowerBootDiskMachine(machineID string)
-	PowerBootPxeMachine(machineID string)
-	ReinstallMachine(machineID string)
+	FreeMachine(event MachineEvent)
+	PowerOnMachine(event MachineEvent)
+	PowerOffMachine(event MachineEvent)
+	PowerResetMachine(event MachineEvent)
+	PowerCycleMachine(event MachineEvent)
+	PowerBootBiosMachine(event MachineEvent)
+	PowerBootDiskMachine(event MachineEvent)
+	PowerBootPxeMachine(event MachineEvent)
+	ReinstallMachine(event MachineEvent)
 
-	PowerOnChassisIdentifyLED(machineID, description string)
-	PowerOffChassisIdentifyLED(machineID, description string)
+	PowerOnChassisIdentifyLED(event MachineEvent)
+	PowerOffChassisIdentifyLED(event MachineEvent)
 
-	UpdateBios(machineID, revision, description string, s3Cfg *api.S3Config)
-	UpdateBmc(machineID, revision, description string, s3Cfg *api.S3Config)
+	UpdateBios(revision, description string, s3Cfg *api.S3Config, event MachineEvent)
+	UpdateBmc(revision, description string, s3Cfg *api.S3Config, event MachineEvent)
 
 	ReconfigureSwitch()
 }
@@ -133,36 +141,6 @@ type BootConfig struct {
 	MetalHammerCommandLine string
 }
 
-type IPMIConfig struct {
-	Hostname string
-	Port     int
-	Ipmi     *models.V1MachineIPMI
-}
-
-func (i *IPMIConfig) Address() string {
-	return IPMIAddress(i.Ipmi)
-}
-
-func (i *IPMIConfig) Interface() string {
-	return IPMIInterface(i.Ipmi)
-}
-
-func (i *IPMIConfig) Mac() string {
-	return IPMIMAC(i.Ipmi)
-}
-
-func (i *IPMIConfig) User() string {
-	return IPMIUser(i.Ipmi)
-}
-
-func (i *IPMIConfig) Password() string {
-	return IPMIPassword(i.Ipmi)
-}
-
-func (i *IPMIConfig) IPMIConnection() (string, int, string, string) {
-	return i.Hostname, i.Port, i.User(), i.Password()
-}
-
 type AppContext struct {
 	*Config
 	*BootConfig
@@ -171,7 +149,6 @@ type AppContext struct {
 	eventHandler       func(*AppContext) EventHandler
 	MachineClient      machine.ClientService
 	SwitchClient       sw.ClientService
-	PartitionClient    partition.ClientService
 	hmac               security.HMACAuth
 	Auth               runtime.ClientAuthInfoWriter
 	EventServiceClient v1.EventServiceClient
