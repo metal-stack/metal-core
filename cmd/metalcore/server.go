@@ -8,7 +8,6 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/metal-stack/metal-core/internal/api"
 	"github.com/metal-stack/metal-core/internal/bmc"
-	"github.com/metal-stack/metal-core/pkg/domain"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/v"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -19,12 +18,8 @@ import (
 	httppprof "net/http/pprof"
 )
 
-type Server struct {
-	*domain.AppContext
-}
-
 func Run() {
-	cfg := &domain.Config{}
+	cfg := &Config{}
 	if err := envconfig.Process("METAL_CORE", cfg); err != nil {
 		panic(fmt.Errorf("bad configuration:\n%+v", cfg))
 	}

@@ -1,23 +1,6 @@
-package domain
+package metalcore
 
-import (
-	"time"
-
-	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
-	metalgo "github.com/metal-stack/metal-go"
-	"go.uber.org/zap"
-)
-
-type APIClient interface {
-	RegisterSwitch() error
-	ReconfigureSwitch()
-	ConstantlyPhoneHome()
-	Send(event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error)
-}
-
-type Server interface {
-	Run()
-}
+import "time"
 
 type Config struct {
 	// Valid log levels are: DEBUG, INFO, WARN, ERROR, FATAL and PANIC
@@ -53,33 +36,4 @@ type Config struct {
 	GrpcCACertFile            string        `required:"false" desc:"the gRPC CA certificate file" envconfig:"grpc_ca_cert_file"`
 	GrpcClientCertFile        string        `required:"false" desc:"the gRPC client certificate file" envconfig:"grpc_client_cert_file"`
 	GrpcClientKeyFile         string        `required:"false" desc:"the gRPC client key file" envconfig:"grpc_client_key_file"`
-}
-
-type AppContext struct {
-	*Config
-	apiClient          func(*AppContext) APIClient
-	server             func(*AppContext) Server
-	Driver             metalgo.Client
-	EventServiceClient v1.EventServiceClient
-	Log                *zap.Logger
-}
-
-func (a *AppContext) APIClient() APIClient {
-	return a.apiClient(a)
-}
-
-func (a *AppContext) SetAPIClient(apiClient func(*AppContext) APIClient) {
-	a.apiClient = apiClient
-}
-
-func (a *AppContext) SetEventServiceClient(eventServiceClient v1.EventServiceClient) {
-	a.EventServiceClient = eventServiceClient
-}
-
-func (a *AppContext) Server() Server {
-	return a.server(a)
-}
-
-func (a *AppContext) SetServer(server func(*AppContext) Server) {
-	a.server = server
 }
