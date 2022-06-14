@@ -69,7 +69,7 @@ func Run() {
 		log.Fatal("failed to init NSQ consumer", zap.Error(err))
 	}
 
-	s, err := app.APIClient().RegisterSwitch()
+	err = app.APIClient().RegisterSwitch()
 	if err != nil {
 		log.Fatal("failed to register switch", zap.Error(err))
 	}
@@ -94,12 +94,6 @@ func Run() {
 
 	app.initSwitchReconfiguration()
 	app.APIClient().ConstantlyPhoneHome()
-
-	app.BootConfig = &domain.BootConfig{
-		MetalHammerImageURL:    s.Partition.Bootconfig.Imageurl,
-		MetalHammerKernelURL:   s.Partition.Bootconfig.Kernelurl,
-		MetalHammerCommandLine: s.Partition.Bootconfig.Commandline,
-	}
 
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
 		_ = os.Setenv("DEBUG", "1")

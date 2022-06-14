@@ -7,8 +7,6 @@ import (
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 	metalgo "github.com/metal-stack/metal-go"
 	"go.uber.org/zap"
-
-	"github.com/metal-stack/metal-go/api/models"
 )
 
 type EventType string
@@ -63,7 +61,7 @@ const (
 )
 
 type APIClient interface {
-	RegisterSwitch() (*models.V1SwitchResponse, error)
+	RegisterSwitch() error
 	ConstantlyPhoneHome()
 	Send(event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error)
 }
@@ -131,15 +129,8 @@ type Config struct {
 	GrpcClientKeyFile         string        `required:"false" desc:"the gRPC client key file" envconfig:"grpc_client_key_file"`
 }
 
-type BootConfig struct {
-	MetalHammerImageURL    string
-	MetalHammerKernelURL   string
-	MetalHammerCommandLine string
-}
-
 type AppContext struct {
 	*Config
-	*BootConfig
 	apiClient          func(*AppContext) APIClient
 	server             func(*AppContext) Server
 	eventHandler       func(*AppContext) EventHandler
