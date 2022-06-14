@@ -36,28 +36,28 @@ func Run() {
 	zcfg.EncoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
 	zcfg.Level = level
 
-	log, err := zcfg.Build()
+	l, err := zcfg.Build()
 	if err != nil {
 		panic(fmt.Errorf("can't initialize zap logger: %w", err))
 	}
 
-	log.Info("metal-core version", zap.Any("version", v.V))
-
-	log.Sugar().Infow("configuration", "cfg", cfg)
+	log := l.Sugar()
+	log.Infow("metal-core version", "version", v.V)
+	log.Infow("configuration", "cfg", cfg)
 
 	driver, _, err := metalgo.NewDriver(
 		fmt.Sprintf("%s://%s:%d%s", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort, cfg.ApiBasePath),
 		"", cfg.HMACKey, metalgo.AuthType("Metal-Edit"))
 
 	if err != nil {
-		log.Sugar().Fatalw("unable to create metal-api driver", "error", err)
+		log.Fatalw("unable to create metal-api driver", "error", err)
 	}
 
 	app := &Server{
 		AppContext: &domain.AppContext{
 			Driver: driver,
 			Config: cfg,
-			Log:    log,
+			Log:    l,
 		},
 	}
 	app.SetAPIClient(api.NewClient)
@@ -66,29 +66,29 @@ func Run() {
 
 	err = app.initConsumer()
 	if err != nil {
-		log.Fatal("failed to init NSQ consumer", zap.Error(err))
+		log.Fatalw("failed to init NSQ consumer", "error", err)
 	}
 
 	err = app.APIClient().RegisterSwitch()
 	if err != nil {
-		log.Fatal("failed to register switch", zap.Error(err))
+		log.Fatalw("failed to register switch", "error", err)
 	}
 	cert, err := os.ReadFile(cfg.GrpcClientCertFile)
 	if err != nil {
-		log.Fatal("failed to read cert", zap.Error(err))
+		log.Fatalw("failed to read cert", "error", err)
 	}
 	cacert, err := os.ReadFile(cfg.GrpcCACertFile)
 	if err != nil {
-		log.Fatal("failed to read ca cert", zap.Error(err))
+		log.Fatalw("failed to read ca cert", "error", err)
 	}
 	key, err := os.ReadFile(cfg.GrpcClientKeyFile)
 	if err != nil {
-		log.Fatal("failed to read key", zap.Error(err))
+		log.Fatalw("failed to read key", "error", err)
 	}
 
-	grpcClient, err := NewGrpcClient(log.Sugar(), cfg.GrpcAddress, cert, key, cacert)
+	grpcClient, err := NewGrpcClient(log, cfg.GrpcAddress, cert, key, cacert)
 	if err != nil {
-		log.Fatal("failed to create grpc client", zap.Error(err))
+		log.Fatalw("failed to create grpc client", "error", err)
 	}
 	app.SetEventServiceClient(grpcClient.NewEventClient())
 

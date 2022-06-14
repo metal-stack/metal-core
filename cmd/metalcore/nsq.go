@@ -9,7 +9,6 @@ import (
 
 	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-lib/bus"
-	"go.uber.org/zap"
 )
 
 // timeout for the nsq handler methods
@@ -31,7 +30,7 @@ func mapLogLevel(level string) bus.Level {
 }
 
 func (s *Server) timeoutHandler(err bus.TimeoutError) error {
-	s.Log.Error("timeout processing event", zap.Any("event", err.Event()))
+	s.Log.Sugar().Errorw("timeout processing event", "event", err.Event())
 	return nil
 }
 
@@ -53,11 +52,7 @@ func (s *Server) initConsumer() error {
 		MustRegister(s.Config.MachineTopic, "core").
 		Consume(domain.MachineEvent{}, func(message interface{}) error {
 			evt := message.(*domain.MachineEvent)
-			s.Log.Debug("got message",
-				zap.String("topic", s.Config.MachineTopic),
-				zap.String("channel", "core"),
-				zap.Any("event", evt),
-			)
+			s.Log.Sugar().Debugw("got message", "topic", s.Config.MachineTopic, "channel", "core", "event", evt)
 			switch evt.Type {
 			case domain.Delete:
 				s.EventHandler().FreeMachine(*evt)
@@ -80,16 +75,8 @@ func (s *Server) initConsumer() error {
 				case domain.MachineReinstallCmd:
 					s.EventHandler().ReinstallMachine(*evt)
 				case domain.ChassisIdentifyLEDOnCmd:
-					description := strings.TrimSpace(strings.Join(evt.Cmd.Params, " "))
-					if len(description) == 0 {
-						description = "unknown"
-					}
 					s.EventHandler().PowerOnChassisIdentifyLED(*evt)
 				case domain.ChassisIdentifyLEDOffCmd:
-					description := strings.TrimSpace(strings.Join(evt.Cmd.Params, " "))
-					if len(description) == 0 {
-						description = "unknown"
-					}
 					s.EventHandler().PowerOffChassisIdentifyLED(*evt)
 				case domain.UpdateFirmwareCmd:
 					kind := metalgo.FirmwareKind(evt.Cmd.Params[0])
@@ -107,27 +94,27 @@ func (s *Server) initConsumer() error {
 					case metalgo.Bmc:
 						go s.EventHandler().UpdateBmc(revision, description, s3Cfg, *evt)
 					default:
-						s.Log.Warn("unknown firmware kind",
-							zap.String("topic", s.Config.MachineTopic),
-							zap.String("channel", "core"),
-							zap.String("firmware kind", string(kind)),
-							zap.Any("event", evt),
+						s.Log.Sugar().Warnw("unknown firmware kind",
+							"topic", s.Config.MachineTopic,
+							"channel", "core",
+							"firmware kind", string(kind),
+							"event", evt,
 						)
 					}
 				default:
-					s.Log.Warn("unhandled command",
-						zap.String("topic", s.Config.MachineTopic),
-						zap.String("channel", "core"),
-						zap.Any("event", evt),
+					s.Log.Sugar().Warnw("unhandled command",
+						"topic", s.Config.MachineTopic,
+						"channel", "core",
+						"event", evt,
 					)
 				}
 			case domain.Create, domain.Update:
 				fallthrough
 			default:
-				s.Log.Warn("unhandled event",
-					zap.String("topic", s.Config.MachineTopic),
-					zap.String("channel", "core"),
-					zap.Any("event", evt),
+				s.Log.Sugar().Warn("unhandled event",
+					"topic", s.Config.MachineTopic,
+					"channel", "core",
+					"event", evt,
 				)
 			}
 			return nil
