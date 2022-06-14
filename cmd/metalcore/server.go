@@ -7,6 +7,7 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/metal-stack/metal-core/internal/api"
+	"github.com/metal-stack/metal-core/internal/bmc"
 	"github.com/metal-stack/metal-core/internal/core"
 	"github.com/metal-stack/metal-core/pkg/domain"
 	metalgo "github.com/metal-stack/metal-go"
@@ -62,11 +63,6 @@ func Run() {
 	app.SetAPIClient(api.NewClient)
 	app.SetServer(core.NewServer)
 
-	err = app.initConsumer()
-	if err != nil {
-		log.Fatalw("failed to init NSQ consumer", "error", err)
-	}
-
 	err = app.APIClient().RegisterSwitch()
 	if err != nil {
 		log.Fatalw("failed to register switch", "error", err)
@@ -92,6 +88,20 @@ func Run() {
 
 	go app.APIClient().ReconfigureSwitch()
 	app.APIClient().ConstantlyPhoneHome()
+
+	b := bmc.New(bmc.Config{
+		Log:              l,
+		MQAddress:        cfg.MQAddress,
+		MQCACertFile:     cfg.MQCACertFile,
+		MQClientCertFile: cfg.MQClientCertFile,
+		MQLogLevel:       cfg.MQLogLevel,
+		MachineTopic:     cfg.MachineTopic,
+		MachineTopicTTL:  cfg.MachineTopicTTL,
+	})
+	err = b.InitConsumer()
+	if err != nil {
+		log.Fatalw("unable to create bmcservice", "error", err)
+	}
 
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
 		_ = os.Setenv("DEBUG", "1")

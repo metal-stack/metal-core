@@ -1,17 +1,49 @@
-package event
+package bmc
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
+
+	"github.com/metal-stack/go-hal"
+	"github.com/metal-stack/go-hal/connect"
+	halzap "github.com/metal-stack/go-hal/pkg/logger/zap"
+
 	"go.uber.org/zap"
 )
 
-type EventService struct {
+type BMCService struct {
 	log *zap.Logger
+	// NSQ related config options
+	mqAddress        string
+	mqCACertFile     string
+	mqClientCertFile string
+	mqLogLevel       string
+	machineTopic     string
+	machineTopicTTL  int
 }
 
-func NewHandler(log *zap.Logger) *EventService {
-	return &EventService{
-		log: log,
+type Config struct {
+	Log              *zap.Logger
+	MQAddress        string
+	MQCACertFile     string
+	MQClientCertFile string
+	MQLogLevel       string
+	MachineTopic     string
+	MachineTopicTTL  int
+}
+
+func New(c Config) *BMCService {
+	b := &BMCService{
+		log:              c.Log,
+		mqAddress:        c.MQAddress,
+		mqCACertFile:     c.MQCACertFile,
+		mqClientCertFile: c.MQClientCertFile,
+		mqLogLevel:       c.MQLogLevel,
+		machineTopic:     c.MachineTopic,
+		machineTopicTTL:  c.MachineTopicTTL,
 	}
+	return b
 }
 
 type MachineEvent struct {
@@ -64,3 +96,20 @@ const (
 	Delete  EventType = "delete"
 	Command EventType = "command"
 )
+
+func outBand(ipmi IPMI, log *zap.SugaredLogger) (hal.OutBand, error) {
+	host, portString, found := strings.Cut(ipmi.Address, ":")
+	if !found {
+		portString = "623"
+
+	}
+	port, err := strconv.Atoi(portString)
+	if err != nil {
+		return nil, fmt.Errorf("unable to convert port to an int %w", err)
+	}
+	outBand, err := connect.OutBand(host, port, ipmi.User, ipmi.Password, halzap.New(log))
+	if err != nil {
+		return nil, err
+	}
+	return outBand, nil
+}
