@@ -9,7 +9,6 @@ import (
 
 	"github.com/metal-stack/metal-core/internal/switcher"
 	"github.com/metal-stack/metal-core/internal/vlan"
-	"github.com/metal-stack/metal-core/pkg/domain"
 	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
 	"github.com/metal-stack/metal-go/api/models"
 	"github.com/vishvananda/netlink"
@@ -17,15 +16,15 @@ import (
 )
 
 // ReconfigureSwitch reconfigures the switch.
-func (c *apiClient) ReconfigureSwitch() {
-	t := time.NewTicker(c.Config.ReconfigureSwitchInterval)
+func (c *ApiClient) ReconfigureSwitch() {
+	t := time.NewTicker(c.reconfigureSwitchInterval)
 	host, _ := os.Hostname()
 	for range t.C {
-		c.Log.Info("trigger reconfiguration")
+		c.log.Info("trigger reconfiguration")
 		start := time.Now()
 		err := c.reconfigureSwitch(host)
 		elapsed := time.Since(start)
-		c.Log.Info("reconfiguration took", zap.Duration("elapsed", elapsed))
+		c.log.Info("reconfiguration took", zap.Duration("elapsed", elapsed))
 
 		params := sw.NewNotifySwitchParams()
 		params.ID = host
@@ -36,42 +35,42 @@ func (c *apiClient) ReconfigureSwitch() {
 		if err != nil {
 			errStr := err.Error()
 			nr.Error = &errStr
-			c.Log.Error("reconfiguration failed", zap.Error(err))
+			c.log.Error("reconfiguration failed", zap.Error(err))
 		} else {
-			c.Log.Info("reconfiguration succeeded")
+			c.log.Info("reconfiguration succeeded")
 		}
 
 		params.Body = nr
-		_, err = c.Driver.SwitchOperations().NotifySwitch(params, nil)
+		_, err = c.driver.SwitchOperations().NotifySwitch(params, nil)
 		if err != nil {
-			c.Log.Error("notification about switch reconfiguration failed", zap.Error(err))
+			c.log.Error("notification about switch reconfiguration failed", zap.Error(err))
 		}
 	}
 }
 
-func (c *apiClient) reconfigureSwitch(switchName string) error {
+func (c *ApiClient) reconfigureSwitch(switchName string) error {
 	params := sw.NewFindSwitchParams()
 	params.ID = switchName
-	fsr, err := c.Driver.SwitchOperations().FindSwitch(params, nil)
+	fsr, err := c.driver.SwitchOperations().FindSwitch(params, nil)
 	if err != nil {
 		return fmt.Errorf("could not fetch switch from metal-api: %w", err)
 	}
 
 	s := fsr.Payload
-	switchConfig, err := buildSwitcherConfig(c.Config, s)
+	switchConfig, err := c.buildSwitcherConfig(s)
 	if err != nil {
 		return fmt.Errorf("could not build switcher config: %w", err)
 	}
 
-	err = fillEth0Info(switchConfig, c.Config.ManagementGateway)
+	err = fillEth0Info(switchConfig, c.managementGateway)
 	if err != nil {
 		return fmt.Errorf("could not gather information about eth0 nic: %w", err)
 	}
 
-	c.Log.Info("assembled new config for switch",
+	c.log.Info("assembled new config for switch",
 		zap.Any("config", c))
-	if !c.Config.ReconfigureSwitch {
-		c.Log.Debug("skip config application because of environment setting")
+	if !c.enableReconfigureSwitch {
+		c.log.Debug("skip config application because of environment setting")
 		return nil
 	}
 
@@ -83,39 +82,40 @@ func (c *apiClient) reconfigureSwitch(switchName string) error {
 	return nil
 }
 
-func buildSwitcherConfig(conf *domain.Config, s *models.V1SwitchResponse) (*switcher.Conf, error) {
-	c := &switcher.Conf{}
-	c.Name = s.Name
-	c.LogLevel = mapLogLevel(conf.LogLevel)
-	asn64, err := strconv.ParseUint(conf.ASN, 10, 32)
+func (c *ApiClient) buildSwitcherConfig(s *models.V1SwitchResponse) (*switcher.Conf, error) {
+	asn64, err := strconv.ParseUint(c.asn, 10, 32)
 	asn := uint32(asn64)
 	if err != nil {
 		return nil, err
 	}
+	switcherConfig := &switcher.Conf{
+		Name:                 s.Name,
+		LogLevel:             mapLogLevel(c.logLevel),
+		ASN:                  asn,
+		Loopback:             c.loopbackIP,
+		MetalCoreCIDR:        c.cidr,
+		AdditionalBridgeVIDs: c.additionalBridgeVIDs,
+	}
 
-	c.ASN = asn
-	c.Loopback = conf.LoopbackIP
-	c.MetalCoreCIDR = conf.CIDR
-	if conf.InterfacesTplFile != "" {
-		c.InterfacesTplFile = conf.InterfacesTplFile
+	if c.interfacesTplFile != "" {
+		switcherConfig.InterfacesTplFile = c.interfacesTplFile
 	}
-	if conf.FrrTplFile != "" {
-		c.FrrTplFile = conf.FrrTplFile
+	if c.frrTplFile != "" {
+		switcherConfig.FrrTplFile = c.frrTplFile
 	}
-	c.AdditionalBridgeVIDs = conf.AdditionalBridgeVIDs
 	p := switcher.Ports{
-		Underlay:      strings.Split(conf.SpineUplinks, ","),
+		Underlay:      strings.Split(c.spineUplinks, ","),
 		Unprovisioned: []string{},
 		Vrfs:          map[string]*switcher.Vrf{},
 		Firewalls:     map[string]*switcher.Firewall{},
 	}
-	p.BladePorts = conf.AdditionalBridgePorts
+	p.BladePorts = c.additionalBridgePorts
 	for _, nic := range s.Nics {
 		port := *nic.Name
 		if contains(p.Underlay, port) {
 			continue
 		}
-		if contains(conf.AdditionalBridgePorts, port) {
+		if contains(c.additionalBridgePorts, port) {
 			continue
 		}
 		if nic.Vrf == "" {
@@ -152,17 +152,17 @@ func buildSwitcherConfig(conf *domain.Config, s *models.V1SwitchResponse) (*swit
 		}
 		p.Vrfs[nic.Vrf] = vrf
 	}
-	c.Ports = p
-	c.FillRouteMapsAndIPPrefixLists()
+	switcherConfig.Ports = p
+	switcherConfig.FillRouteMapsAndIPPrefixLists()
 	m, err := vlan.ReadMapping()
 	if err != nil {
 		return nil, err
 	}
-	err = c.FillVLANIDs(m)
+	err = switcherConfig.FillVLANIDs(m)
 	if err != nil {
 		return nil, err
 	}
-	return c, nil
+	return switcherConfig, nil
 }
 
 // mapLogLevel maps the metal-core log level to an appropriate FRR log level

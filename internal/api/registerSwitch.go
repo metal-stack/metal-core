@@ -13,12 +13,12 @@ import (
 	"go.uber.org/zap"
 )
 
-func (c *apiClient) RegisterSwitch() error {
+func (c *ApiClient) RegisterSwitch() error {
 	var err error
 	var nics []*models.V1SwitchNic
 	var hostname string
 
-	if nics, err = getNics(c.Log, c.AdditionalBridgePorts); err != nil {
+	if nics, err = getNics(c.log, c.additionalBridgePorts); err != nil {
 		return fmt.Errorf("unable to get nics: %w", err)
 	}
 
@@ -30,17 +30,17 @@ func (c *apiClient) RegisterSwitch() error {
 	params.Body = &models.V1SwitchRegisterRequest{
 		ID:          &hostname,
 		Name:        hostname,
-		PartitionID: &c.PartitionID,
-		RackID:      &c.RackID,
+		PartitionID: &c.partitionID,
+		RackID:      &c.rackID,
 		Nics:        nics,
 	}
 
 	for {
-		_, _, err := c.Driver.SwitchOperations().RegisterSwitch(params, nil)
+		_, _, err := c.driver.SwitchOperations().RegisterSwitch(params, nil)
 		if err == nil {
 			return nil
 		}
-		c.Log.Error("unable to register at metal-api", zap.Error(err))
+		c.log.Error("unable to register at metal-api", zap.Error(err))
 		time.Sleep(time.Second)
 	}
 }

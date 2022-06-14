@@ -20,7 +20,7 @@ const (
 // provisioning event to metal-api for each machine that sent at least one
 // phone-home LLDP package to any interface of the host machine
 // during this interval.
-func (c *apiClient) ConstantlyPhoneHome() {
+func (c *ApiClient) ConstantlyPhoneHome() {
 	// FIXME this list of interfaces is only read on startup
 	// if additional interfaces are configured, no new lldpd client is started and therefore no
 	// phoned home events are sent for these interfaces.
@@ -29,7 +29,7 @@ func (c *apiClient) ConstantlyPhoneHome() {
 	// - dynamically detect changes and stop/start goroutines for the lldpd client per interface
 	ifs, err := net.Interfaces()
 	if err != nil {
-		c.Log.Error("unable to find interfaces",
+		c.log.Error("unable to find interfaces",
 			zap.Error(err),
 		)
 		os.Exit(1)
@@ -48,13 +48,13 @@ func (c *apiClient) ConstantlyPhoneHome() {
 		}
 		lldpcli, err := lldp.NewClient(ctx, iface)
 		if err != nil {
-			c.Log.Error("unable to start LLDP client",
+			c.log.Error("unable to start LLDP client",
 				zap.String("interface", iface.Name),
 				zap.Error(err),
 			)
 			continue
 		}
-		c.Log.Info("start lldp client",
+		c.log.Info("start lldp client",
 			zap.String("interface", iface.Name),
 		)
 

@@ -15,24 +15,24 @@ const (
 	ProvisioningEventPhonedHome = "Phoned Home"
 )
 
-func (c *apiClient) Send(event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error) {
+func (c *ApiClient) Send(event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	s, err := c.EventServiceClient.Send(ctx, event)
+	s, err := c.eventServiceClient.Send(ctx, event)
 	if err != nil {
 		return nil, err
 	}
 	if s != nil {
-		c.Log.Sugar().Infow("event", "send", s.Events, "failed", s.Failed)
+		c.log.Sugar().Infow("event", "send", s.Events, "failed", s.Failed)
 	}
 	return s, err
 }
 
-func (c *apiClient) PhoneHome(msgs []phoneHomeMessage) {
-	c.Log.Debug("phonehome",
+func (c *ApiClient) PhoneHome(msgs []phoneHomeMessage) {
+	c.log.Debug("phonehome",
 		zap.String("machines", fmt.Sprintf("%v", msgs)),
 	)
-	c.Log.Info("phonehome",
+	c.log.Info("phonehome",
 		zap.Int("machines", len(msgs)),
 	)
 	events := make(map[string]*v1.MachineProvisioningEvent)
@@ -49,12 +49,12 @@ func (c *apiClient) PhoneHome(msgs []phoneHomeMessage) {
 
 	s, err := c.Send(&v1.EventServiceSendRequest{Events: events})
 	if err != nil {
-		c.Log.Error("unable to send provisioning event back to API",
+		c.log.Error("unable to send provisioning event back to API",
 			zap.Error(err),
 		)
 	}
 	if s != nil {
-		c.Log.Info("phonehome sent",
+		c.log.Info("phonehome sent",
 			zap.Uint64("machines", s.Events),
 		)
 	}

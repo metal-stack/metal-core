@@ -4,21 +4,21 @@ import (
 	"testing"
 
 	"github.com/metal-stack/metal-core/internal/switcher"
-	"github.com/metal-stack/metal-core/pkg/domain"
 	"github.com/metal-stack/metal-go/api/models"
 	"github.com/stretchr/testify/require"
 )
 
 func TestBuildSwitcherConfig(t *testing.T) {
-	config := &domain.Config{
-		CIDR:                 "10.255.255.2/24",
-		PartitionID:          "fra-equ01",
-		RackID:               "rack01",
-		ASN:                  "420000001",
-		LoopbackIP:           "10.0.0.1",
-		SpineUplinks:         "swp31,swp32",
-		AdditionalBridgeVIDs: []string{"201-256", "301-356"},
+	c := &ApiClient{
+		cidr:                 "10.255.255.2/24",
+		partitionID:          "fra-equ01",
+		rackID:               "rack01",
+		asn:                  "420000001",
+		loopbackIP:           "10.0.0.1",
+		spineUplinks:         "swp31,swp32",
+		additionalBridgeVIDs: []string{"201-256", "301-356"},
 	}
+
 	n1 := "swp1"
 	m1 := "00:00:00:00:00:01"
 	swp1 := models.V1SwitchNic{
@@ -46,7 +46,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 			&swp3,
 		},
 	}
-	actual, err := buildSwitcherConfig(config, s)
+	actual, err := c.buildSwitcherConfig(s)
 	require.NoError(t, err)
 	require.NotNil(t, actual)
 	expected := &switcher.Conf{

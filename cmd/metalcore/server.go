@@ -8,12 +8,15 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/metal-stack/metal-core/internal/api"
 	"github.com/metal-stack/metal-core/internal/bmc"
-	"github.com/metal-stack/metal-core/internal/core"
 	"github.com/metal-stack/metal-core/pkg/domain"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/v"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"net/http"
+	httppprof "net/http/pprof"
 )
 
 type Server struct {
@@ -53,20 +56,6 @@ func Run() {
 		log.Fatalw("unable to create metal-api driver", "error", err)
 	}
 
-	app := &Server{
-		AppContext: &domain.AppContext{
-			Driver: driver,
-			Config: cfg,
-			Log:    l,
-		},
-	}
-	app.SetAPIClient(api.NewClient)
-	app.SetServer(core.NewServer)
-
-	err = app.APIClient().RegisterSwitch()
-	if err != nil {
-		log.Fatalw("failed to register switch", "error", err)
-	}
 	cert, err := os.ReadFile(cfg.GrpcClientCertFile)
 	if err != nil {
 		log.Fatalw("failed to read cert", "error", err)
@@ -84,10 +73,33 @@ func Run() {
 	if err != nil {
 		log.Fatalw("failed to create grpc client", "error", err)
 	}
-	app.SetEventServiceClient(grpcClient.NewEventClient())
 
-	go app.APIClient().ReconfigureSwitch()
-	app.APIClient().ConstantlyPhoneHome()
+	c := api.New(api.Config{
+		Log:                       l,
+		LogLevel:                  cfg.LogLevel,
+		CIDR:                      cfg.CIDR,
+		LoopbackIP:                cfg.LoopbackIP,
+		ASN:                       cfg.ASN,
+		PartitionID:               cfg.PartitionID,
+		RackID:                    cfg.RackID,
+		ReconfigureSwitch:         cfg.ReconfigureSwitch,
+		ReconfigureSwitchInterval: cfg.ReconfigureSwitchInterval,
+		ManagementGateway:         cfg.ManagementGateway,
+		AdditionalBridgePorts:     cfg.AdditionalBridgePorts,
+		AdditionalBridgeVIDs:      cfg.AdditionalBridgeVIDs,
+		SpineUplinks:              cfg.SpineUplinks,
+		InterfacesTplFile:         cfg.InterfacesTplFile,
+		FrrTplFile:                cfg.FrrTplFile,
+		Driver:                    driver,
+		EventServiceClient:        grpcClient.NewEventClient(),
+	})
+	err = c.RegisterSwitch()
+	if err != nil {
+		log.Fatalw("failed to register switch", "error", err)
+	}
+
+	go c.ReconfigureSwitch()
+	c.ConstantlyPhoneHome()
 
 	b := bmc.New(bmc.Config{
 		Log:              l,
@@ -107,5 +119,17 @@ func Run() {
 		_ = os.Setenv("DEBUG", "1")
 	}
 
-	app.Server().Run()
+	metricsAddr := fmt.Sprintf("%v:%d", cfg.MetricsServerBindAddress, cfg.MetricsServerPort)
+
+	log.Infow("starting metrics endpoint", "addr", metricsAddr)
+	metricsServer := http.NewServeMux()
+	metricsServer.Handle("/metrics", promhttp.Handler())
+	// see: https://dev.to/davidsbond/golang-debugging-memory-leaks-using-pprof-5di8
+	// inspect via
+	// go tool pprof -http :8080 localhost:2112/pprof/heap
+	// go tool pprof -http :8080 localhost:2112/pprof/goroutine
+	metricsServer.Handle("/pprof/heap", httppprof.Handler("heap"))
+	metricsServer.Handle("/pprof/goroutine", httppprof.Handler("goroutine"))
+
+	log.Fatal(http.ListenAndServe(metricsAddr, metricsServer))
 }
