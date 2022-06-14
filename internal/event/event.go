@@ -4,12 +4,12 @@ import (
 	"go.uber.org/zap"
 )
 
-type EventHandler struct {
+type EventService struct {
 	log *zap.Logger
 }
 
-func NewHandler(log *zap.Logger) *EventHandler {
-	return &EventHandler{
+func NewHandler(log *zap.Logger) *EventService {
+	return &EventService{
 		log: log,
 	}
 }

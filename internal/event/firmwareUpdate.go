@@ -4,7 +4,7 @@ import (
 	"github.com/metal-stack/go-hal/pkg/api"
 )
 
-func (h *EventHandler) UpdateBios(revision, description string, s3Cfg *api.S3Config, event MachineEvent) {
+func (h *EventService) UpdateBios(revision, description string, s3Cfg *api.S3Config, event MachineEvent) {
 	outBand, err := outBand(*event.IPMI, h.log.Sugar())
 	if err != nil {
 		h.log.Sugar().Errorw("updatebios", "error", err)
@@ -22,7 +22,7 @@ func (h *EventHandler) UpdateBios(revision, description string, s3Cfg *api.S3Con
 	}
 }
 
-func (h *EventHandler) UpdateBmc(revision, description string, s3Cfg *api.S3Config, event MachineEvent) {
+func (h *EventService) UpdateBmc(revision, description string, s3Cfg *api.S3Config, event MachineEvent) {
 	outBand, err := outBand(*event.IPMI, h.log.Sugar())
 	if err != nil {
 		h.log.Sugar().Errorw("updatebios", "error", err)

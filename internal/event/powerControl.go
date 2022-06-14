@@ -1,6 +1,6 @@
 package event
 
-func (h *EventHandler) PowerOnMachine(event MachineEvent) {
+func (h *EventService) PowerOnMachine(event MachineEvent) {
 	outBand, err := outBand(*event.IPMI, h.log.Sugar())
 	if err != nil {
 		h.log.Sugar().Errorw("power on", "error", err)
@@ -13,7 +13,7 @@ func (h *EventHandler) PowerOnMachine(event MachineEvent) {
 	}
 }
 
-func (h *EventHandler) PowerOffMachine(event MachineEvent) {
+func (h *EventService) PowerOffMachine(event MachineEvent) {
 	outBand, err := outBand(*event.IPMI, h.log.Sugar())
 	if err != nil {
 		h.log.Sugar().Errorw("power off", "error", err)
@@ -26,7 +26,7 @@ func (h *EventHandler) PowerOffMachine(event MachineEvent) {
 	}
 }
 
-func (h *EventHandler) PowerResetMachine(event MachineEvent) {
+func (h *EventService) PowerResetMachine(event MachineEvent) {
 	outBand, err := outBand(*event.IPMI, h.log.Sugar())
 	if err != nil {
 		h.log.Sugar().Errorw("power reset", "error", err)
@@ -39,7 +39,7 @@ func (h *EventHandler) PowerResetMachine(event MachineEvent) {
 	}
 }
 
-func (h *EventHandler) PowerCycleMachine(event MachineEvent) {
+func (h *EventService) PowerCycleMachine(event MachineEvent) {
 	outBand, err := outBand(*event.IPMI, h.log.Sugar())
 	if err != nil {
 		h.log.Sugar().Errorw("power cycle", "error", err)
@@ -52,7 +52,7 @@ func (h *EventHandler) PowerCycleMachine(event MachineEvent) {
 	}
 }
 
-func (h *EventHandler) PowerOnChassisIdentifyLED(event MachineEvent) {
+func (h *EventService) PowerOnChassisIdentifyLED(event MachineEvent) {
 	outBand, err := outBand(*event.IPMI, h.log.Sugar())
 	if err != nil {
 		h.log.Sugar().Errorw("power led on", "error", err)
@@ -65,7 +65,7 @@ func (h *EventHandler) PowerOnChassisIdentifyLED(event MachineEvent) {
 	}
 }
 
-func (h *EventHandler) PowerOffChassisIdentifyLED(event MachineEvent) {
+func (h *EventService) PowerOffChassisIdentifyLED(event MachineEvent) {
 	outBand, err := outBand(*event.IPMI, h.log.Sugar())
 	if err != nil {
 		h.log.Sugar().Errorw("power led off", "error", err)

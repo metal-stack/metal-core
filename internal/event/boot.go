@@ -4,7 +4,7 @@ import (
 	"github.com/metal-stack/go-hal"
 )
 
-func (h *EventHandler) PowerBootBiosMachine(event MachineEvent) {
+func (h *EventService) PowerBootBiosMachine(event MachineEvent) {
 	outBand, err := outBand(*event.IPMI, h.log.Sugar())
 	if err != nil {
 		h.log.Sugar().Errorw("power boot bios", "error", err)
@@ -17,7 +17,7 @@ func (h *EventHandler) PowerBootBiosMachine(event MachineEvent) {
 	}
 }
 
-func (h *EventHandler) PowerBootDiskMachine(event MachineEvent) {
+func (h *EventService) PowerBootDiskMachine(event MachineEvent) {
 	outBand, err := outBand(*event.IPMI, h.log.Sugar())
 	if err != nil {
 		h.log.Sugar().Errorw("power boot disk", "error", err)
@@ -30,7 +30,7 @@ func (h *EventHandler) PowerBootDiskMachine(event MachineEvent) {
 	}
 }
 
-func (h *EventHandler) PowerBootPxeMachine(event MachineEvent) {
+func (h *EventService) PowerBootPxeMachine(event MachineEvent) {
 	outBand, err := outBand(*event.IPMI, h.log.Sugar())
 	if err != nil {
 		h.log.Sugar().Errorw("power boot pxe", "error", err)
