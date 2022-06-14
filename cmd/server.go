@@ -1,4 +1,4 @@
-package metalcore
+package cmd
 
 import (
 	"fmt"
@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/kelseyhightower/envconfig"
-	"github.com/metal-stack/metal-core/internal/api"
 	"github.com/metal-stack/metal-core/internal/bmc"
+	"github.com/metal-stack/metal-core/internal/core"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/v"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -69,7 +69,7 @@ func Run() {
 		log.Fatalw("failed to create grpc client", "error", err)
 	}
 
-	c := api.New(api.Config{
+	c := core.New(core.Config{
 		Log:                       l,
 		LogLevel:                  cfg.LogLevel,
 		CIDR:                      cfg.CIDR,

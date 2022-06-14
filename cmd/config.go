@@ -1,4 +1,4 @@
-package metalcore
+package cmd
 
 import "time"
 

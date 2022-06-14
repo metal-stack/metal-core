@@ -1,4 +1,4 @@
-package api
+package core
 
 import (
 	"fmt"
@@ -16,7 +16,7 @@ import (
 )
 
 // ReconfigureSwitch reconfigures the switch.
-func (c *ApiClient) ReconfigureSwitch() {
+func (c *Core) ReconfigureSwitch() {
 	t := time.NewTicker(c.reconfigureSwitchInterval)
 	host, _ := os.Hostname()
 	for range t.C {
@@ -48,7 +48,7 @@ func (c *ApiClient) ReconfigureSwitch() {
 	}
 }
 
-func (c *ApiClient) reconfigureSwitch(switchName string) error {
+func (c *Core) reconfigureSwitch(switchName string) error {
 	params := sw.NewFindSwitchParams()
 	params.ID = switchName
 	fsr, err := c.driver.SwitchOperations().FindSwitch(params, nil)
@@ -82,7 +82,7 @@ func (c *ApiClient) reconfigureSwitch(switchName string) error {
 	return nil
 }
 
-func (c *ApiClient) buildSwitcherConfig(s *models.V1SwitchResponse) (*switcher.Conf, error) {
+func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*switcher.Conf, error) {
 	asn64, err := strconv.ParseUint(c.asn, 10, 32)
 	asn := uint32(asn64)
 	if err != nil {

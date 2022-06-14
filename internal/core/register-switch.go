@@ -1,4 +1,4 @@
-package api
+package core
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (c *ApiClient) RegisterSwitch() error {
+func (c *Core) RegisterSwitch() error {
 	var err error
 	var nics []*models.V1SwitchNic
 	var hostname string

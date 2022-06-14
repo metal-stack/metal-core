@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/metal-stack/metal-core/cmd/metalcore"
+	"github.com/metal-stack/metal-core/cmd"
 )
 
 func main() {
-	metalcore.Run()
+	cmd.Run()
 }

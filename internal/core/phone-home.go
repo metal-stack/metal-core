@@ -1,7 +1,8 @@
-package api
+package core
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"os"
 	"strings"
@@ -9,18 +10,21 @@ import (
 	"time"
 
 	"github.com/metal-stack/go-lldpd/pkg/lldp"
+	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 const (
-	phonedHomeInterval = time.Minute // lldpd sends messages every two seconds
+	phonedHomeInterval          = time.Minute // lldpd sends messages every two seconds
+	provisioningEventPhonedHome = "Phoned Home"
 )
 
 // ConstantlyPhoneHome sends every minute a single phone-home
 // provisioning event to metal-api for each machine that sent at least one
 // phone-home LLDP package to any interface of the host machine
 // during this interval.
-func (c *ApiClient) ConstantlyPhoneHome() {
+func (c *Core) ConstantlyPhoneHome() {
 	// FIXME this list of interfaces is only read on startup
 	// if additional interfaces are configured, no new lldpd client is started and therefore no
 	// phoned home events are sent for these interfaces.
@@ -93,10 +97,55 @@ func (c *ApiClient) ConstantlyPhoneHome() {
 					msgs = append(msgs, msg)
 					return true
 				})
-				c.PhoneHome(msgs)
+				c.phoneHome(msgs)
 			}
 		}
 	}()
+}
+
+func (c *Core) send(event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	s, err := c.eventServiceClient.Send(ctx, event)
+	if err != nil {
+		return nil, err
+	}
+	if s != nil {
+		c.log.Sugar().Infow("event", "send", s.Events, "failed", s.Failed)
+	}
+	return s, err
+}
+
+func (c *Core) phoneHome(msgs []phoneHomeMessage) {
+	c.log.Debug("phonehome",
+		zap.String("machines", fmt.Sprintf("%v", msgs)),
+	)
+	c.log.Info("phonehome",
+		zap.Int("machines", len(msgs)),
+	)
+	events := make(map[string]*v1.MachineProvisioningEvent)
+	phonedHomeEvent := string(provisioningEventPhonedHome)
+	for i := range msgs {
+		msg := msgs[i]
+		event := &v1.MachineProvisioningEvent{
+			Event:   phonedHomeEvent,
+			Message: msg.payload,
+			Time:    timestamppb.New(msg.time),
+		}
+		events[msg.machineID] = event
+	}
+
+	s, err := c.send(&v1.EventServiceSendRequest{Events: events})
+	if err != nil {
+		c.log.Error("unable to send provisioning event back to API",
+			zap.Error(err),
+		)
+	}
+	if s != nil {
+		c.log.Info("phonehome sent",
+			zap.Uint64("machines", s.Events),
+		)
+	}
 }
 
 // phoneHomeMessage contains a phone-home message.

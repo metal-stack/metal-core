@@ -1,4 +1,4 @@
-package api
+package core
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ import (
 )
 
 func TestBuildSwitcherConfig(t *testing.T) {
-	c := &ApiClient{
+	c := &Core{
 		cidr:                 "10.255.255.2/24",
 		partitionID:          "fra-equ01",
 		rackID:               "rack01",

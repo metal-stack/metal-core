@@ -1,4 +1,4 @@
-package api
+package core
 
 import (
 	"time"
@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type ApiClient struct {
+type Core struct {
 	log      *zap.Logger
 	logLevel string
 
@@ -54,10 +54,24 @@ type Config struct {
 	EventServiceClient v1.EventServiceClient
 }
 
-func New(c Config) *ApiClient {
-	return &ApiClient{
-		log:                c.Log,
-		driver:             c.Driver,
-		eventServiceClient: c.EventServiceClient,
+func New(c Config) *Core {
+	return &Core{
+		log:                       c.Log,
+		logLevel:                  c.LogLevel,
+		cidr:                      c.CIDR,
+		loopbackIP:                c.LoopbackIP,
+		asn:                       c.ASN,
+		partitionID:               c.PartitionID,
+		rackID:                    c.RackID,
+		enableReconfigureSwitch:   c.ReconfigureSwitch,
+		reconfigureSwitchInterval: c.ReconfigureSwitchInterval,
+		managementGateway:         c.ManagementGateway,
+		additionalBridgePorts:     c.AdditionalBridgePorts,
+		additionalBridgeVIDs:      c.AdditionalBridgeVIDs,
+		spineUplinks:              c.SpineUplinks,
+		interfacesTplFile:         c.InterfacesTplFile,
+		frrTplFile:                c.FrrTplFile,
+		driver:                    c.Driver,
+		eventServiceClient:        c.EventServiceClient,
 	}
 }
