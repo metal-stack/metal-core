@@ -97,9 +97,7 @@ type Config struct {
 	BindAddress               string        `required:"false" default:"0.0.0.0" desc:"set server bind address" split_words:"true"`
 	MetricsServerPort         int           `required:"false" default:"2112" desc:"the port of the metrics server" split_words:"true"`
 	MetricsServerBindAddress  string        `required:"false" default:"0.0.0.0" desc:"the bind addr of the metrics server" split_words:"true"`
-	Port                      int           `required:"false" default:"4242" desc:"set server port"`
 	LogLevel                  string        `required:"false" default:"info" desc:"set log level" split_words:"true"`
-	ConsoleLogging            bool          `required:"false" default:"true" desc:"enable/disable console logging" split_words:"true"`
 	ApiProtocol               string        `required:"false" default:"http" desc:"set metal api protocol" envconfig:"metal_api_protocol"`
 	ApiIP                     string        `required:"false" default:"localhost" desc:"set metal api address" envconfig:"metal_api_ip"`
 	ApiPort                   int           `required:"false" default:"8080" desc:"set metal api port" envconfig:"metal_api_port"`
@@ -118,7 +116,6 @@ type Config struct {
 	ReconfigureSwitchInterval time.Duration `required:"false" default:"10s" desc:"pull interval to fetch and apply switch configuration" split_words:"true"`
 	AdditionalBridgeVIDs      []string      `required:"false" desc:"additional vlan ids that should be configured at the vlan-aware bridge" envconfig:"additional_bridge_vids"`
 	AdditionalBridgePorts     []string      `required:"false" desc:"additional switch ports that should be configured at the vlan-aware bridge" envconfig:"additional_bridge_ports"`
-	ChangeBootOrder           bool          `required:"false" default:"true" desc:"issue ipmi commands to change boot order" split_words:"true"`
 	InterfacesTplFile         string        `required:"false" default:"" desc:"the golang template file used to render /etc/network/interfaces, a default template is included" envconfig:"interfaces_tpl_file"`
 	FrrTplFile                string        `required:"false" default:"" desc:"the golang template file used to render /etc/frr/frr.conf, a default template is included" envconfig:"frr_tpl_file"`
 	HMACKey                   string        `required:"true" desc:"the preshared key for the hmac calculation" envconfig:"hmac_key"`

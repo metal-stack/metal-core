@@ -3,13 +3,10 @@ package core
 import (
 	"fmt"
 	"net/http"
-	"os"
 
 	httppprof "net/http/pprof"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-
-	"go.uber.org/zap"
 )
 
 func (s *coreServer) Run() {
@@ -27,20 +24,5 @@ func (s *coreServer) Run() {
 	metricsServer.Handle("/pprof/heap", httppprof.Handler("heap"))
 	metricsServer.Handle("/pprof/goroutine", httppprof.Handler("goroutine"))
 
-	go func() {
-		err := http.ListenAndServe(metricsAddr, metricsServer)
-		if err != nil {
-			logger.Errorw("failed to start metrics endpoint, exiting...", "error", err)
-			os.Exit(1)
-		}
-		logger.Errorw("metrics server has stopped unexpectedly without an error")
-	}()
-
-	addr := fmt.Sprintf("%v:%d", s.Config.BindAddress, s.Config.Port)
-
-	s.Log.Info("starting metal-core",
-		zap.String("address", addr),
-	)
-
-	s.Log.Sugar().Fatal(http.ListenAndServe(addr, nil))
+	s.Log.Sugar().Fatal(http.ListenAndServe(metricsAddr, metricsServer))
 }
