@@ -50,29 +50,29 @@ func (b *BMCService) InitConsumer() error {
 			b.log.Sugar().Debugw("got message", "topic", b.machineTopic, "channel", "core", "event", evt)
 			switch evt.Type {
 			case Delete:
-				b.FreeMachine(*evt)
+				b.FreeMachine(evt)
 			case Command:
 				switch evt.Cmd.Command {
 				case MachineOnCmd:
-					b.PowerOnMachine(*evt)
+					b.PowerOnMachine(evt)
 				case MachineOffCmd:
-					b.PowerOffMachine(*evt)
+					b.PowerOffMachine(evt)
 				case MachineResetCmd:
-					b.PowerResetMachine(*evt)
+					b.PowerResetMachine(evt)
 				case MachineCycleCmd:
-					b.PowerCycleMachine(*evt)
+					b.PowerCycleMachine(evt)
 				case MachineBiosCmd:
-					b.PowerBootBiosMachine(*evt)
+					b.PowerBootBiosMachine(evt)
 				case MachineDiskCmd:
-					b.PowerBootDiskMachine(*evt)
+					b.PowerBootDiskMachine(evt)
 				case MachinePxeCmd:
-					b.PowerBootPxeMachine(*evt)
+					b.PowerBootPxeMachine(evt)
 				case MachineReinstallCmd:
-					b.ReinstallMachine(*evt)
+					b.ReinstallMachine(evt)
 				case ChassisIdentifyLEDOnCmd:
-					b.PowerOnChassisIdentifyLED(*evt)
+					b.PowerOnChassisIdentifyLED(evt)
 				case ChassisIdentifyLEDOffCmd:
-					b.PowerOffChassisIdentifyLED(*evt)
+					b.PowerOffChassisIdentifyLED(evt)
 				case UpdateFirmwareCmd:
 					kind := metalgo.FirmwareKind(evt.Cmd.Params[0])
 					revision := evt.Cmd.Params[1]
@@ -85,9 +85,9 @@ func (b *BMCService) InitConsumer() error {
 					}
 					switch kind {
 					case metalgo.Bios:
-						go b.UpdateBios(revision, description, s3Cfg, *evt)
+						go b.UpdateBios(revision, description, s3Cfg, evt)
 					case metalgo.Bmc:
-						go b.UpdateBmc(revision, description, s3Cfg, *evt)
+						go b.UpdateBmc(revision, description, s3Cfg, evt)
 					default:
 						b.log.Sugar().Warnw("unknown firmware kind",
 							"topic", b.machineTopic,

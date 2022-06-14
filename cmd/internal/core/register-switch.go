@@ -14,9 +14,12 @@ import (
 )
 
 func (c *Core) RegisterSwitch() error {
-	var err error
-	var nics []*models.V1SwitchNic
-	var hostname string
+	c.log.Sugar().Infow("register switch")
+	var (
+		err      error
+		nics     []*models.V1SwitchNic
+		hostname string
+	)
 
 	if nics, err = getNics(c.log, c.additionalBridgePorts); err != nil {
 		return fmt.Errorf("unable to get nics: %w", err)
@@ -38,11 +41,13 @@ func (c *Core) RegisterSwitch() error {
 	for {
 		_, _, err := c.driver.SwitchOperations().RegisterSwitch(params, nil)
 		if err == nil {
-			return nil
+			break
 		}
-		c.log.Error("unable to register at metal-api", zap.Error(err))
-		time.Sleep(time.Second)
+		c.log.Error("unable to register at metal-api, retrying", zap.Error(err))
+		time.Sleep(30 * time.Second)
 	}
+	c.log.Sugar().Infow("register switch completed")
+	return nil
 }
 
 func getNics(log *zap.Logger, blacklist []string) ([]*models.V1SwitchNic, error) {

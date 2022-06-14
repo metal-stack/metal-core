@@ -4,14 +4,10 @@ import (
 	"github.com/metal-stack/go-hal/pkg/api"
 )
 
-func (h *BMCService) UpdateBios(revision, description string, s3Cfg *api.S3Config, event MachineEvent) {
+func (h *BMCService) UpdateBios(revision, description string, s3Cfg *api.S3Config, event *MachineEvent) {
 	outBand, err := outBand(*event.IPMI, h.log.Sugar())
 	if err != nil {
 		h.log.Sugar().Errorw("updatebios", "error", err)
-		return
-	}
-	if event.IPMI == nil {
-		h.log.Sugar().Errorw("updatebios ipmi config is nil")
 		return
 	}
 
@@ -22,20 +18,16 @@ func (h *BMCService) UpdateBios(revision, description string, s3Cfg *api.S3Confi
 	}
 }
 
-func (h *BMCService) UpdateBmc(revision, description string, s3Cfg *api.S3Config, event MachineEvent) {
+func (h *BMCService) UpdateBmc(revision, description string, s3Cfg *api.S3Config, event *MachineEvent) {
 	outBand, err := outBand(*event.IPMI, h.log.Sugar())
 	if err != nil {
-		h.log.Sugar().Errorw("updatebios", "error", err)
-		return
-	}
-	if event.IPMI == nil {
-		h.log.Sugar().Errorw("updatebios ipmi config is nil")
+		h.log.Sugar().Errorw("updatebmc", "error", err)
 		return
 	}
 
 	err = outBand.UpdateBMC(event.IPMI.Fru.BoardPartNumber, revision, s3Cfg)
 	if err != nil {
-		h.log.Sugar().Errorw("updatebios", "error", err)
+		h.log.Sugar().Errorw("updatebmc", "error", err)
 		return
 	}
 }

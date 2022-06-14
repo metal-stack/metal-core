@@ -68,7 +68,7 @@ func (c *Core) reconfigureSwitch(switchName string) error {
 	}
 
 	c.log.Info("assembled new config for switch",
-		zap.Any("config", c))
+		zap.Any("config", switchConfig))
 	if !c.enableReconfigureSwitch {
 		c.log.Debug("skip config application because of environment setting")
 		return nil
