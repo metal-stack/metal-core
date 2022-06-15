@@ -10,6 +10,7 @@ import (
 
 	"github.com/metal-stack/go-lldpd/pkg/lldp"
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
+	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -108,7 +109,7 @@ func (c *Core) send(event *v1.EventServiceSendRequest) (*v1.EventServiceSendResp
 }
 
 func (c *Core) phoneHome(msgs []phoneHomeMessage) {
-	c.log.Debugw("phonehome", "machines", msgs)
+	c.log.Debug("phonehome", zap.Any("machines", msgs))
 	c.log.Infow("phonehome", "machines", len(msgs))
 
 	events := make(map[string]*v1.MachineProvisioningEvent)
