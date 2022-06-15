@@ -9,19 +9,25 @@ import (
 )
 
 type Sonic struct {
-	bgpApplier *networkApplier
-	log        *zap.SugaredLogger
+	bgpApplier     *networkApplier
+	confidbApplier *networkApplier
+	log            *zap.SugaredLogger
 }
 
 func NewSonic(log *zap.SugaredLogger) *Sonic {
 	return &Sonic{
-		bgpApplier: newBgpApplier(),
-		log:        log,
+		bgpApplier:     newBgpApplier(),
+		confidbApplier: newConfigdbApplier(),
+		log:            log,
 	}
 }
 
 func (s *Sonic) Apply(cfg *Conf) error {
-	return s.bgpApplier.Apply(cfg)
+	err := s.bgpApplier.Apply(cfg)
+	if err != nil {
+		return err
+	}
+	return s.confidbApplier.Apply(cfg)
 }
 
 func (s *Sonic) GetSwitchPorts() ([]*net.Interface, error) {
