@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"os"
 	"strings"
@@ -109,7 +108,7 @@ func (c *Core) send(event *v1.EventServiceSendRequest) (*v1.EventServiceSendResp
 }
 
 func (c *Core) phoneHome(msgs []phoneHomeMessage) {
-	c.log.Debugw("phonehome", "machines", fmt.Sprintf("%v", msgs))
+	c.log.Debugw("phonehome", "machines", msgs)
 	c.log.Infow("phonehome", "machines", len(msgs))
 
 	events := make(map[string]*v1.MachineProvisioningEvent)

@@ -5,8 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/metal-stack/go-hal/pkg/api"
-	metalgo "github.com/metal-stack/metal-go"
+	"github.com/metal-stack/go-hal"
 
 	"github.com/metal-stack/metal-lib/bus"
 )
@@ -51,78 +50,56 @@ func (b *BMCService) InitConsumer() error {
 			b.log.Debugw("got message", "topic", b.machineTopic, "channel", "core", "event", event)
 
 			if event.Cmd.IPMI == nil {
-				b.log.Errorw("event does not contain ipmi details", "event", event)
 				return fmt.Errorf("event does not contain ipmi details:%v", event)
 			}
 			outBand, err := b.outBand(event.Cmd.IPMI)
 			if err != nil {
-				b.log.Errorw("power boot disk", "error", err)
+				b.log.Errorw("error creating outband connection", "error", err)
 				return err
 			}
 
 			switch event.Type {
 			case Delete:
-				b.FreeMachine(outBand)
+				err := outBand.BootFrom(hal.BootTargetPXE)
+				if err != nil {
+					return err
+				}
+				return outBand.PowerCycle()
 			case Command:
 				switch event.Cmd.Command {
 				case MachineOnCmd:
-					b.PowerOnMachine(outBand)
+					return outBand.PowerOn()
 				case MachineOffCmd:
-					b.PowerOffMachine(outBand)
+					return outBand.PowerOff()
 				case MachineResetCmd:
-					b.PowerResetMachine(outBand)
+					return outBand.PowerReset()
 				case MachineCycleCmd:
-					b.PowerCycleMachine(outBand)
+					return outBand.PowerCycle()
 				case MachineBiosCmd:
-					b.PowerBootBiosMachine(outBand)
+					return outBand.BootFrom(hal.BootTargetBIOS)
 				case MachineDiskCmd:
-					b.PowerBootDiskMachine(outBand)
+					return outBand.BootFrom(hal.BootTargetDisk)
 				case MachinePxeCmd:
-					b.PowerBootPxeMachine(outBand)
+					return outBand.BootFrom(hal.BootTargetPXE)
 				case MachineReinstallCmd:
-					b.ReinstallMachine(outBand)
+					err := outBand.BootFrom(hal.BootTargetPXE)
+					if err != nil {
+						return err
+					}
+					return outBand.PowerReset()
 				case ChassisIdentifyLEDOnCmd:
-					b.PowerOnChassisIdentifyLED(outBand)
+					return outBand.IdentifyLEDOn()
 				case ChassisIdentifyLEDOffCmd:
-					b.PowerOffChassisIdentifyLED(outBand)
+					return outBand.IdentifyLEDOff()
 				case UpdateFirmwareCmd:
-					kind := metalgo.FirmwareKind(event.Cmd.Params[0])
-					revision := event.Cmd.Params[1]
-					description := event.Cmd.Params[2]
-					s3Cfg := &api.S3Config{
-						Url:            event.Cmd.Params[3],
-						Key:            event.Cmd.Params[4],
-						Secret:         event.Cmd.Params[5],
-						FirmwareBucket: event.Cmd.Params[6],
-					}
-					switch kind {
-					case metalgo.Bios:
-						go b.UpdateBios(revision, description, s3Cfg, event.Cmd.IPMI.Fru, outBand)
-					case metalgo.Bmc:
-						go b.UpdateBmc(revision, description, s3Cfg, event.Cmd.IPMI.Fru, outBand)
-					default:
-						b.log.Warnw("unknown firmware kind",
-							"topic", b.machineTopic,
-							"channel", "core",
-							"firmware kind", string(kind),
-							"event", event,
-						)
-					}
+					b.UpdateFirmware(outBand, event)
 				default:
-					b.log.Warnw("unhandled command",
-						"topic", b.machineTopic,
-						"channel", "core",
-						"event", event,
-					)
+					b.log.Errorw("unhandled command", "topic", b.machineTopic, "channel", "core", "event", event)
 				}
 			case Create, Update:
 				fallthrough
 			default:
-				b.log.Warnw("unhandled event",
-					"topic", b.machineTopic,
-					"channel", "core",
-					"event", event,
-				)
+				b.log.Warnw("unhandled event", "topic", b.machineTopic, "channel", "core", "event", event)
 			}
 			return nil
 			// FIXME machineTopicTTL should be configured as Duration in config.go
