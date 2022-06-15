@@ -2,7 +2,6 @@ package switcher
 
 const (
 	interfaces                  = "/etc/network/interfaces"
-	interfacesTmp               = "/etc/network/interfaces.tmp"
 	interfacesTpl               = "interfaces.tpl"
 	interfacesReloadService     = "ifreload.service"
 	interfacesValidationService = "interfaces-validation"
@@ -16,14 +15,13 @@ func newInterfacesRenderer(tplPath string) *templateRenderer {
 }
 
 func newInterfacesApplier(tplPath string) *networkApplier {
+	d := newDestConfig(interfaces, newInterfacesRenderer(tplPath))
 	r := dbusStartReloader{interfacesReloadService}
 	v := dbusTemplateValidator{interfacesValidationService}
 
 	return &networkApplier{
-		dest:      interfaces,
-		reloader:  &r,
-		renderer:  newInterfacesRenderer(tplPath),
-		tmpFile:   interfacesTmp,
-		validator: &v,
+		destConfigs: []*destConfig{d},
+		reloader:    &r,
+		validator:   &v,
 	}
 }
