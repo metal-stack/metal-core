@@ -18,6 +18,8 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+const sonicVersionFile = "/etc/sonic/sonic_version.yml"
+
 func Run() {
 	cfg := &Config{}
 	if err := envconfig.Process("METAL_CORE", cfg); err != nil {
@@ -69,7 +71,12 @@ func Run() {
 		log.Fatalw("failed to create grpc client", "error", err)
 	}
 
-	nos := switcher.NewCumulus(log, cfg.FrrTplFile, cfg.InterfacesTplFile)
+	var nos core.NOS
+	if _, err := os.Stat(sonicVersionFile); err == nil {
+		nos = switcher.NewSonic(log)
+	} else {
+		nos = switcher.NewCumulus(log, cfg.FrrTplFile, cfg.InterfacesTplFile)
+	}
 
 	c := core.New(core.Config{
 		Log:                       log,
