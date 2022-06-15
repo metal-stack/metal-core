@@ -50,11 +50,11 @@ func (b *BMCService) InitConsumer() error {
 			event := message.(*MachineEvent)
 			b.log.Debugw("got message", "topic", b.machineTopic, "channel", "core", "event", event)
 
-			if event.IPMI == nil {
+			if event.Cmd.IPMI == nil {
 				b.log.Errorw("event does not contain ipmi details", "event", event)
 				return fmt.Errorf("event does not contain ipmi details:%v", event)
 			}
-			outBand, err := b.outBand(event.IPMI)
+			outBand, err := b.outBand(event.Cmd.IPMI)
 			if err != nil {
 				b.log.Errorw("power boot disk", "error", err)
 				return err
@@ -97,9 +97,9 @@ func (b *BMCService) InitConsumer() error {
 					}
 					switch kind {
 					case metalgo.Bios:
-						go b.UpdateBios(revision, description, s3Cfg, event, outBand)
+						go b.UpdateBios(revision, description, s3Cfg, event.Cmd.IPMI.Fru, outBand)
 					case metalgo.Bmc:
-						go b.UpdateBmc(revision, description, s3Cfg, event, outBand)
+						go b.UpdateBmc(revision, description, s3Cfg, event.Cmd.IPMI.Fru, outBand)
 					default:
 						b.log.Warnw("unknown firmware kind",
 							"topic", b.machineTopic,

@@ -50,13 +50,13 @@ type MachineEvent struct {
 	Type         EventType           `json:"type,omitempty"`
 	OldMachineID string              `json:"old,omitempty"`
 	Cmd          *MachineExecCommand `json:"cmd,omitempty"`
-	IPMI         *IPMI               `json:"ipmi,omitempty"`
 }
 
 type MachineExecCommand struct {
 	TargetMachineID string         `json:"target,omitempty"`
 	Command         MachineCommand `json:"cmd,omitempty"`
 	Params          []string       `json:"params,omitempty"`
+	IPMI            *IPMI          `json:"ipmi,omitempty"`
 }
 
 type IPMI struct {
