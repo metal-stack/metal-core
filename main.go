@@ -1,17 +1,9 @@
 package main
 
 import (
-	"github.com/metal-stack/metal-core/cmd/build"
-	"github.com/metal-stack/metal-core/cmd/metalcore"
-	"os"
+	"github.com/metal-stack/metal-core/cmd"
 )
 
 func main() {
-	if len(os.Args) > 1 && os.Args[1] == "spec" {
-		build.Spec()
-		return
-	}
-
-	server := metalcore.Create()
-	server.Run()
+	cmd.Run()
 }
