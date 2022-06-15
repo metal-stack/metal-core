@@ -96,7 +96,7 @@ const (
 	Command EventType = "command"
 )
 
-func outBand(ipmi IPMI, log *zap.SugaredLogger) (hal.OutBand, error) {
+func (b *BMCService) outBand(ipmi *IPMI) (hal.OutBand, error) {
 	host, portString, found := strings.Cut(ipmi.Address, ":")
 	if !found {
 		portString = "623"
@@ -106,7 +106,7 @@ func outBand(ipmi IPMI, log *zap.SugaredLogger) (hal.OutBand, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert port to an int %w", err)
 	}
-	outBand, err := connect.OutBand(host, port, ipmi.User, ipmi.Password, halzap.New(log))
+	outBand, err := connect.OutBand(host, port, ipmi.User, ipmi.Password, halzap.New(b.log))
 	if err != nil {
 		return nil, err
 	}

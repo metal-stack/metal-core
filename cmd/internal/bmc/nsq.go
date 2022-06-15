@@ -1,6 +1,7 @@
 package bmc
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -46,61 +47,72 @@ func (b *BMCService) InitConsumer() error {
 	err = c.With(bus.LogLevel(mapLogLevel(b.mqLogLevel))).
 		MustRegister(b.machineTopic, "core").
 		Consume(MachineEvent{}, func(message interface{}) error {
-			evt := message.(*MachineEvent)
-			b.log.Debugw("got message", "topic", b.machineTopic, "channel", "core", "event", evt)
-			switch evt.Type {
+			event := message.(*MachineEvent)
+			b.log.Debugw("got message", "topic", b.machineTopic, "channel", "core", "event", event)
+
+			if event.IPMI == nil {
+				b.log.Errorw("event does not contain ipmi details", "event", event)
+				return fmt.Errorf("event does not contain ipmi details:%v", event)
+			}
+			outBand, err := b.outBand(event.IPMI)
+			if err != nil {
+				b.log.Errorw("power boot disk", "error", err)
+				return err
+			}
+
+			switch event.Type {
 			case Delete:
-				b.FreeMachine(evt)
+				b.FreeMachine(outBand)
 			case Command:
-				switch evt.Cmd.Command {
+				switch event.Cmd.Command {
 				case MachineOnCmd:
-					b.PowerOnMachine(evt)
+					b.PowerOnMachine(outBand)
 				case MachineOffCmd:
-					b.PowerOffMachine(evt)
+					b.PowerOffMachine(outBand)
 				case MachineResetCmd:
-					b.PowerResetMachine(evt)
+					b.PowerResetMachine(outBand)
 				case MachineCycleCmd:
-					b.PowerCycleMachine(evt)
+					b.PowerCycleMachine(outBand)
 				case MachineBiosCmd:
-					b.PowerBootBiosMachine(evt)
+					b.PowerBootBiosMachine(outBand)
 				case MachineDiskCmd:
-					b.PowerBootDiskMachine(evt)
+					b.PowerBootDiskMachine(outBand)
 				case MachinePxeCmd:
-					b.PowerBootPxeMachine(evt)
+					b.PowerBootPxeMachine(outBand)
 				case MachineReinstallCmd:
-					b.ReinstallMachine(evt)
+					b.ReinstallMachine(outBand)
 				case ChassisIdentifyLEDOnCmd:
-					b.PowerOnChassisIdentifyLED(evt)
+					b.PowerOnChassisIdentifyLED(outBand)
 				case ChassisIdentifyLEDOffCmd:
-					b.PowerOffChassisIdentifyLED(evt)
+					b.PowerOffChassisIdentifyLED(outBand)
 				case UpdateFirmwareCmd:
-					kind := metalgo.FirmwareKind(evt.Cmd.Params[0])
-					revision := evt.Cmd.Params[1]
-					description := evt.Cmd.Params[2]
+					kind := metalgo.FirmwareKind(event.Cmd.Params[0])
+					revision := event.Cmd.Params[1]
+					description := event.Cmd.Params[2]
 					s3Cfg := &api.S3Config{
-						Url:            evt.Cmd.Params[3],
-						Key:            evt.Cmd.Params[4],
-						Secret:         evt.Cmd.Params[5],
-						FirmwareBucket: evt.Cmd.Params[6],
+						Url:            event.Cmd.Params[3],
+						Key:            event.Cmd.Params[4],
+						Secret:         event.Cmd.Params[5],
+						FirmwareBucket: event.Cmd.Params[6],
 					}
 					switch kind {
 					case metalgo.Bios:
-						go b.UpdateBios(revision, description, s3Cfg, evt)
+						go b.UpdateBios(revision, description, s3Cfg, event, outBand)
 					case metalgo.Bmc:
-						go b.UpdateBmc(revision, description, s3Cfg, evt)
+						go b.UpdateBmc(revision, description, s3Cfg, event, outBand)
 					default:
 						b.log.Warnw("unknown firmware kind",
 							"topic", b.machineTopic,
 							"channel", "core",
 							"firmware kind", string(kind),
-							"event", evt,
+							"event", event,
 						)
 					}
 				default:
 					b.log.Warnw("unhandled command",
 						"topic", b.machineTopic,
 						"channel", "core",
-						"event", evt,
+						"event", event,
 					)
 				}
 			case Create, Update:
@@ -109,10 +121,11 @@ func (b *BMCService) InitConsumer() error {
 				b.log.Warnw("unhandled event",
 					"topic", b.machineTopic,
 					"channel", "core",
-					"event", evt,
+					"event", event,
 				)
 			}
 			return nil
+			// FIXME machineTopicTTL should be configured as Duration in config.go
 		}, 5, bus.Timeout(receiverHandlerTimeout, b.timeoutHandler), bus.TTL(time.Duration(b.machineTopicTTL)*time.Millisecond))
 
 	return err
