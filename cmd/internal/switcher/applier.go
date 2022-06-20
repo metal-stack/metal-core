@@ -58,9 +58,9 @@ func (n *networkApplier) Apply(c *Conf) error {
 		return err
 	}
 
-	equal := areEqual(n.tmpFile, n.dest)
-	if equal {
-		return nil
+	equal, err := areEqual(n.tmpFile, n.dest)
+	if err != nil || equal {
+		return err
 	}
 
 	err = os.Rename(n.tmpFile, n.dest)
@@ -71,18 +71,18 @@ func (n *networkApplier) Apply(c *Conf) error {
 	return n.reloader.Reload()
 }
 
-func areEqual(source, target string) bool {
+func areEqual(source, target string) (bool, error) {
 	sourceChecksum, err := checksum(source)
 	if err != nil {
-		return false
+		return false, err
 	}
 
 	targetChecksum, err := checksum(target)
 	if err != nil {
-		return false
+		return false, err
 	}
 
-	return bytes.Equal(sourceChecksum, targetChecksum)
+	return bytes.Equal(sourceChecksum, targetChecksum), nil
 }
 
 func checksum(file string) ([]byte, error) {
