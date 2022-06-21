@@ -25,6 +25,7 @@
     }
   },
   "VLAN_INTERFACE": {
+    "Vlan4000": {},
     "Vlan4000|10.255.255.2/24": {}
   },
   "VLAN_MEMBER": {

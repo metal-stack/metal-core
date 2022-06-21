@@ -97,6 +97,7 @@ func buildConfigdb(cfg *Conf) *configdb {
 	}
 	pxeIfaceName := "Vlan4000|" + cfg.MetalCoreCIDR
 	c.Vlans["Vlan4000"] = &vlan2{"4000"}
+	c.VlanIfaces["Vlan4000"] = &iface{}
 	c.VlanIfaces[pxeIfaceName] = &iface{}
 	c.VxlanTunnelMap["vtep|map_104000_Vlan4000"] = &vxlanTunnelMap{"Vlan4000", "104000"}
 	for _, p := range cfg.Ports.Unprovisioned {
