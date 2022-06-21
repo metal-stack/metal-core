@@ -133,7 +133,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*switcher.Conf, 
 		if v, has := p.Vrfs[nic.Vrf]; has {
 			vrf = v
 		}
-		vni64, err := strconv.ParseUint(strings.TrimPrefix(nic.Vrf, "vrf"), 10, 32)
+		vni64, err := strconv.ParseUint(strings.TrimPrefix(nic.Vrf, "Vrf"), 10, 32)
 		if err != nil {
 			return nil, err
 		}

@@ -30,7 +30,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 	swp2 := models.V1SwitchNic{
 		Name: &n2,
 		Mac:  &m2,
-		Vrf:  "vrf104001",
+		Vrf:  "Vrf104001",
 	}
 	n3 := "swp3"
 	m3 := "00:00:00:00:00:03"
@@ -62,21 +62,21 @@ func TestBuildSwitcherConfig(t *testing.T) {
 					Port: "swp3",
 				},
 			},
-			Vrfs: map[string]*switcher.Vrf{"vrf104001": {
+			Vrfs: map[string]*switcher.Vrf{"Vrf104001": {
 				VNI:       104001,
 				VLANID:    1001,
 				Neighbors: []string{"swp2"},
 				Filter: switcher.Filter{
 					IPPrefixLists: []switcher.IPPrefixList{
 						{
-							Name: "vrf104001-in-prefixes",
+							Name: "Vrf104001-in-prefixes",
 							Spec: "permit 10.244.0.0/16 le 32",
 						},
 					},
 					RouteMaps: []switcher.RouteMap{
 						{
-							Name:    "vrf104001-in",
-							Entries: []string{"match ip address prefix-list vrf104001-in-prefixes"},
+							Name:    "Vrf104001-in",
+							Entries: []string{"match ip address prefix-list Vrf104001-in-prefixes"},
 							Policy:  "permit",
 							Order:   10,
 						},
