@@ -1,29 +1,26 @@
 package switcher
 
 import (
-	"bufio"
 	"bytes"
 	"log"
 	"os"
 	"testing"
+	"text/template"
 
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
 )
 
-func testRenderer(t *testing.T, r Renderer, c *Conf, expectedFilename string) {
-	actual := renderToString(t, r, c)
+func testRenderer(t *testing.T, tpl *template.Template, c *Conf, expectedFilename string) {
+	actual := renderToString(t, tpl, c)
 	expected := readExpected(t, expectedFilename)
 	require.Equal(t, expected, actual, "Wanted: %s, Got: %s", expected, actual)
 }
 
-func renderToString(t *testing.T, r Renderer, c *Conf) string {
+func renderToString(t *testing.T, tpl *template.Template, c *Conf) string {
 	var b bytes.Buffer
-	w := bufio.NewWriter(&b)
-	err := r.Render(w, c)
+	err := tpl.Execute(&b, c)
 	require.NoError(t, err, "Couldn't render configuration")
-	err = w.Flush()
-	require.NoError(t, err, "Couldn't flush writer")
 	return b.String()
 }
 

@@ -2,19 +2,19 @@ package cmd
 
 import (
 	"fmt"
+	"net/http"
+	httppprof "net/http/pprof"
 	"os"
 	"strings"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/metal-stack/metal-core/cmd/internal/core"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/v"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-
-	"net/http"
-	httppprof "net/http/pprof"
 )
 
 func Run() {
@@ -82,8 +82,8 @@ func Run() {
 		AdditionalBridgePorts:     cfg.AdditionalBridgePorts,
 		AdditionalBridgeVIDs:      cfg.AdditionalBridgeVIDs,
 		SpineUplinks:              cfg.SpineUplinks,
-		InterfacesTplFile:         cfg.InterfacesTplFile,
-		FrrTplFile:                cfg.FrrTplFile,
+		InterfacesApplier:         switcher.NewInterfacesApplier(cfg.InterfacesTplFile),
+		FrrApplier:                switcher.NewFrrApplier(cfg.FrrTplFile),
 		Driver:                    driver,
 		EventServiceClient:        grpcClient.NewEventClient(),
 	})

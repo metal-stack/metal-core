@@ -37,27 +37,3 @@ func (c *Conf) FillRouteMapsAndIPPrefixLists() {
 		t.Assemble(vrf, []string{}, t.Cidrs)
 	}
 }
-
-func (c *Conf) applyFrr() error {
-	a := newFrrApplier(c.FrrTplFile)
-	return a.Apply(c)
-}
-
-func (c *Conf) applyInterfaces() error {
-	a := newInterfacesApplier(c.InterfacesTplFile)
-	return a.Apply(c)
-}
-
-// Apply applies the configuration to the switch
-func (c *Conf) Apply() error {
-	err := c.applyInterfaces()
-	if err != nil {
-		return err
-	}
-
-	err = c.applyFrr()
-	if err != nil {
-		return err
-	}
-	return nil
-}

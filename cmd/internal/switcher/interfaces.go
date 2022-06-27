@@ -1,5 +1,11 @@
 package switcher
 
+import (
+	"text/template"
+
+	"github.com/metal-stack/metal-core/cmd/internal/dbus"
+)
+
 const (
 	interfaces                  = "/etc/network/interfaces"
 	interfacesTmp               = "/etc/network/interfaces.tmp"
@@ -8,22 +14,28 @@ const (
 	interfacesValidationService = "interfaces-validation"
 )
 
-func newInterfacesRenderer(tplPath string) *templateRenderer {
-	if tplPath != "" {
-		return &templateRenderer{mustParseFile(tplPath)}
-	}
-	return &templateRenderer{mustParseFS(interfacesTpl)}
+type InterfacesApplier struct {
+	tpl *template.Template
 }
 
-func newInterfacesApplier(tplPath string) *networkApplier {
-	r := dbusStartReloader{interfacesReloadService}
-	v := dbusTemplateValidator{interfacesValidationService}
+func NewInterfacesApplier(tplPath string) *InterfacesApplier {
+	return &InterfacesApplier{parseFileOrFallback(tplPath, frrTpl)}
+}
 
-	return &networkApplier{
-		dest:      interfaces,
-		reloader:  &r,
-		renderer:  newInterfacesRenderer(tplPath),
-		tmpFile:   interfacesTmp,
-		validator: &v,
+func (a *InterfacesApplier) Apply(c *Conf) error {
+	err := write(c, a.tpl, interfacesTmp)
+	if err != nil {
+		return err
 	}
+
+	err = validate(interfacesValidationService, interfacesTmp)
+	if err != nil {
+		return err
+	}
+
+	moved, err := move(interfacesTmp, interfaces)
+	if err == nil && moved {
+		return dbus.Start(interfacesReloadService)
+	}
+	return err
 }
