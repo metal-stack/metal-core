@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	httppprof "net/http/pprof"
@@ -18,7 +19,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-const sonicVersionFile = "/etc/sonic/sonic_version.yml"
+const sonicDatabaseConfigFile = "/var/run/redis/sonic-db/database_config.json"
 
 func Run() {
 	cfg := &Config{}
@@ -72,8 +73,12 @@ func Run() {
 	}
 
 	var nos core.NOS
-	if _, err := os.Stat(sonicVersionFile); err == nil {
-		nos = switcher.NewSonic(log)
+	if _, err := os.Stat(sonicDatabaseConfigFile); err == nil {
+		dbCfg, err := loadSonicDatabaseConfig(sonicDatabaseConfigFile)
+		if err != nil {
+			log.Fatalw("failed to load database config for SONiC", err)
+		}
+		nos = switcher.NewSonic(dbCfg, log)
 	} else {
 		nos = switcher.NewCumulus(log, cfg.FrrTplFile, cfg.InterfacesTplFile)
 	}
@@ -136,4 +141,17 @@ func Run() {
 	metricsServer.Handle("/pprof/goroutine", httppprof.Handler("goroutine"))
 
 	log.Fatal(http.ListenAndServe(metricsAddr, metricsServer))
+}
+
+func loadSonicDatabaseConfig(path string) (*switcher.SonicDatabaseConfig, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	cfg := &switcher.SonicDatabaseConfig{}
+	err = json.Unmarshal(data, cfg)
+	if err != nil {
+		return nil, err
+	}
+	return cfg, nil
 }

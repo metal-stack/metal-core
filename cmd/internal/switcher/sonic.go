@@ -11,22 +11,28 @@ import (
 )
 
 type Sonic struct {
-	bgpApplier     *networkApplier
-	confidbApplier *networkApplier
-	log            *zap.SugaredLogger
+	bgpApplier           *networkApplier
+	confidbApplier       *networkApplier
+	log                  *zap.SugaredLogger
+	redisConfigDBApplier *ConfigDBApplier
 }
 
-func NewSonic(log *zap.SugaredLogger) *Sonic {
+func NewSonic(cfg *SonicDatabaseConfig, log *zap.SugaredLogger) *Sonic {
 	return &Sonic{
-		bgpApplier:     newBgpApplier(),
-		confidbApplier: newConfigdbApplier(),
-		log:            log,
+		bgpApplier:           newBgpApplier(),
+		confidbApplier:       newConfigdbApplier(),
+		log:                  log,
+		redisConfigDBApplier: NewConfigDBApplier(cfg),
 	}
 }
 
 func (s *Sonic) Apply(cfg *Conf) error {
 	c := capitalizeVrfName(cfg)
 	err := s.bgpApplier.Apply(c)
+	if err != nil {
+		return err
+	}
+	err = s.redisConfigDBApplier.Apply(cfg)
 	if err != nil {
 		return err
 	}
