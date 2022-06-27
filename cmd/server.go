@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/kelseyhightower/envconfig"
-	"github.com/metal-stack/metal-core/cmd/internal/bmc"
 	"github.com/metal-stack/metal-core/cmd/internal/core"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/v"
@@ -95,20 +94,6 @@ func Run() {
 
 	go c.ReconfigureSwitch()
 	c.ConstantlyPhoneHome()
-
-	b := bmc.New(bmc.Config{
-		Log:              log,
-		MQAddress:        cfg.MQAddress,
-		MQCACertFile:     cfg.MQCACertFile,
-		MQClientCertFile: cfg.MQClientCertFile,
-		MQLogLevel:       cfg.MQLogLevel,
-		MachineTopic:     cfg.MachineTopic,
-		MachineTopicTTL:  cfg.MachineTopicTTL,
-	})
-	err = b.InitConsumer()
-	if err != nil {
-		log.Fatalw("unable to create bmcservice", "error", err)
-	}
 
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
 		_ = os.Setenv("DEBUG", "1")
