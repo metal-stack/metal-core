@@ -58,7 +58,11 @@ func (n *networkApplier) Apply(c *Conf) error {
 
 	equals := true
 	for _, d := range n.destConfigs {
-		equals = equals && areEqual(d.tmpFile, d.dest)
+		equal, err := areEqual(d.tmpFile, d.dest)
+		if err != nil {
+			return err
+		}
+		equals = equals && equal
 	}
 
 	if equals {
@@ -97,18 +101,18 @@ func write(c *Conf, d *destConfig) error {
 	return f.Close()
 }
 
-func areEqual(source, target string) bool {
+func areEqual(source, target string) (bool, error) {
 	sourceChecksum, err := checksum(source)
 	if err != nil {
-		return false
+		return false, err
 	}
 
 	targetChecksum, err := checksum(target)
 	if err != nil {
-		return false
+		return false, err
 	}
 
-	return bytes.Equal(sourceChecksum, targetChecksum)
+	return bytes.Equal(sourceChecksum, targetChecksum), nil
 }
 
 func checksum(file string) ([]byte, error) {
