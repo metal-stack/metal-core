@@ -64,16 +64,13 @@ func (a *ConfigDBApplier) Apply(cfg *Conf) error {
 	toBeDeleted := make([]string, 0)
 	for _, key := range keys {
 		s := strings.Split(key, "|")
-		if s[2] != "Loopback0" {
-			toBeDeleted = append(toBeDeleted, key)
-			continue
-		}
-		if len(s) == 2 {
+		if len(s) == 2 && s[1] == "Loopback0" {
 			infAlreadyConfigured = true
-		}
-		if len(s) == 3 && s[3] != cfg.Loopback {
+		} else if len(s) == 2 && s[1] != "Loopback0" {
 			toBeDeleted = append(toBeDeleted, key)
-		} else if len(s) == 3 && s[3] == cfg.Loopback {
+		} else if len(s) == 3 && s[2] != cfg.Loopback {
+			toBeDeleted = append(toBeDeleted, key)
+		} else if len(s) == 3 && s[2] == cfg.Loopback {
 			ipAlreadyConfigured = true
 		}
 	}
