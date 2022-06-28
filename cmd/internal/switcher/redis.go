@@ -59,6 +59,7 @@ func (a *ConfigDBApplier) Apply(cfg *Conf) error {
 		return err
 	}
 
+	lo := cfg.Loopback + "/32"
 	infAlreadyConfigured := false
 	ipAlreadyConfigured := false
 	toBeDeleted := make([]string, 0)
@@ -68,9 +69,9 @@ func (a *ConfigDBApplier) Apply(cfg *Conf) error {
 			infAlreadyConfigured = true
 		} else if len(s) == 2 && s[1] != "Loopback0" {
 			toBeDeleted = append(toBeDeleted, key)
-		} else if len(s) == 3 && s[2] != cfg.Loopback {
+		} else if len(s) == 3 && s[2] != lo {
 			toBeDeleted = append(toBeDeleted, key)
-		} else if len(s) == 3 && s[2] == cfg.Loopback {
+		} else if len(s) == 3 && s[2] == lo {
 			ipAlreadyConfigured = true
 		}
 	}
@@ -85,13 +86,13 @@ func (a *ConfigDBApplier) Apply(cfg *Conf) error {
 	}
 
 	if !infAlreadyConfigured {
-		err = a.rdb.HSet(context.Background(), "LOOPBACK_INTERFACE|Loodback0", "NULL", "NULL").Err()
+		err = a.rdb.HSet(context.Background(), "LOOPBACK_INTERFACE|Loopback0", "NULL", "NULL").Err()
 		if err != nil {
 			return err
 		}
 	}
 	if !ipAlreadyConfigured {
-		err = a.rdb.HSet(context.Background(), "LOOPBACK_INTERFACE|Loodback0|"+cfg.Loopback, "NULL", "NULL").Err()
+		err = a.rdb.HSet(context.Background(), "LOOPBACK_INTERFACE|Loopback0|"+lo, "NULL", "NULL").Err()
 		if err != nil {
 			return err
 		}
