@@ -2,9 +2,9 @@ package switcher
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"strconv"
-	"strings"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -59,20 +59,19 @@ func (a *ConfigDBApplier) Apply(cfg *Conf) error {
 		return err
 	}
 
-	lo := cfg.Loopback + "/32"
+	infKey := "LOOPBACK_INTERFACE|Loopback0"
+	ipKey := fmt.Sprintf("LOOPBACK_INTERFACE|Loopback0|%s/32", cfg.Loopback)
 	infAlreadyConfigured := false
 	ipAlreadyConfigured := false
 	toBeDeleted := make([]string, 0)
 	for _, key := range keys {
-		s := strings.Split(key, "|")
-		if len(s) == 2 && s[1] == "Loopback0" {
+		switch key {
+		case infKey:
 			infAlreadyConfigured = true
-		} else if len(s) == 2 && s[1] != "Loopback0" {
-			toBeDeleted = append(toBeDeleted, key)
-		} else if len(s) == 3 && s[2] != lo {
-			toBeDeleted = append(toBeDeleted, key)
-		} else if len(s) == 3 && s[2] == lo {
+		case ipKey:
 			ipAlreadyConfigured = true
+		default:
+			toBeDeleted = append(toBeDeleted, key)
 		}
 	}
 
@@ -86,13 +85,13 @@ func (a *ConfigDBApplier) Apply(cfg *Conf) error {
 	}
 
 	if !infAlreadyConfigured {
-		err = a.rdb.HSet(context.Background(), "LOOPBACK_INTERFACE|Loopback0", "NULL", "NULL").Err()
+		err = a.rdb.HSet(context.Background(), infKey, "NULL", "NULL").Err()
 		if err != nil {
 			return err
 		}
 	}
 	if !ipAlreadyConfigured {
-		err = a.rdb.HSet(context.Background(), "LOOPBACK_INTERFACE|Loopback0|"+lo, "NULL", "NULL").Err()
+		err = a.rdb.HSet(context.Background(), ipKey, "NULL", "NULL").Err()
 		if err != nil {
 			return err
 		}
