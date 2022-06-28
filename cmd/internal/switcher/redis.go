@@ -2,9 +2,9 @@ package switcher
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"strconv"
+	"strings"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -31,142 +31,179 @@ type Database struct {
 	Instance  string `json:"instance"`
 }
 
-func NewClient(cfg *SonicDatabaseConfig) *redis.Client {
-	i := cfg.Instances[cfg.Databases[configDB].Instance]
+type ConfigDB struct {
+	rdb       *redis.Client
+	separator string
+}
+
+func NewConfigDB(cfg *SonicDatabaseConfig) *ConfigDB {
+	db := cfg.Databases[configDB]
+	i := cfg.Instances[db.Instance]
 	rdb := redis.NewClient(&redis.Options{
 		Addr: net.JoinHostPort(i.Hostname, strconv.Itoa(i.Port)),
-		DB:   cfg.Databases[configDB].Id,
+		DB:   db.Id,
 	})
+	return &ConfigDB{
+		rdb:       rdb,
+		separator: db.Separator,
+	}
+}
 
-	return rdb
+func (c *ConfigDB) SetEntry(key []string, values ...string) error {
+	k := strings.Join(key, c.separator)
+	if values == nil {
+		return c.rdb.HSet(context.Background(), k, "NULL", "NULL").Err()
+	}
+	return c.rdb.HSet(context.Background(), k, values).Err()
+}
+
+func (c *ConfigDB) GetEntry(key []string) (map[string]string, error) {
+	k := strings.Join(key, c.separator)
+	return c.rdb.HGetAll(context.Background(), k).Result()
+}
+
+func (c *ConfigDB) DeleteEntry(key []string) error {
+	k := strings.Join(key, c.separator)
+	return c.rdb.Del(context.Background(), k).Err()
+}
+
+type View struct {
+	keys      map[string]bool
+	rdb       *redis.Client
+	separator string
+	table     string
+}
+
+func (c *ConfigDB) GetView(table string) (*View, error) {
+	p := table + c.separator
+	keys, err := c.rdb.Keys(context.Background(), p+"*").Result()
+	if err != nil {
+		return nil, err
+	}
+	set := make(map[string]bool, len(keys))
+	for _, key := range keys {
+		set[key] = false
+	}
+	return &View{
+		keys:      set,
+		rdb:       c.rdb,
+		separator: c.separator,
+		table:     table,
+	}, nil
+}
+
+func (v *View) Contains(key []string) bool {
+	k := v.table + v.separator + strings.Join(key, v.separator)
+	_, ok := v.keys[k]
+	return ok
+}
+
+func (v *View) Mask(key []string) {
+	k := v.table + v.separator + strings.Join(key, v.separator)
+	if _, ok := v.keys[k]; ok {
+		v.keys[k] = true
+	}
+}
+
+func (v *View) DeleteUnmasked() error {
+	keys := make(map[string]bool)
+	for key, masked := range v.keys {
+		if masked {
+			keys[key] = true
+			continue
+		}
+		err := v.rdb.Del(context.Background(), key).Err()
+		if err != nil {
+			return err
+		}
+	}
+	v.keys = keys
+	return nil
 }
 
 type ConfigDBApplier struct {
-	rdb *redis.Client
-	cfg *SonicDatabaseConfig
+	db *ConfigDB
 }
 
 func NewConfigDBApplier(cfg *SonicDatabaseConfig) *ConfigDBApplier {
-	return &ConfigDBApplier{
-		rdb: NewClient(cfg),
-		cfg: cfg,
-	}
+	return &ConfigDBApplier{NewConfigDB(cfg)}
 }
 
 func (a *ConfigDBApplier) Apply(cfg *Conf) error {
-	err := configureVxlan(a.rdb, cfg.Loopback)
+	err := configureVxlan(a.db, cfg.Loopback)
 	if err != nil {
 		return err
 	}
-	err = applyVlan4000(a.rdb, cfg.MetalCoreCIDR)
+	err = applyVlan4000(a.db, cfg.MetalCoreCIDR)
 	if err != nil {
 		return err
 	}
-	return applyLoopback(a.rdb, cfg.Loopback)
+	return applyLoopback(a.db, cfg.Loopback)
 }
 
-func configureVxlan(rdb *redis.Client, ip string) error {
-	src_ip, err := rdb.HGet(context.Background(), "VXLAN_TUNNEL|vtep", "src_ip").Result()
+func configureVxlan(db *ConfigDB, ip string) error {
+	key := []string{"VXLAN_TUNNEL", "vtep"}
+	entry, err := db.GetEntry(key)
 	if err == redis.Nil {
-		return rdb.HSet(context.Background(), "VXLAN_TUNNEL|vtep", "src_ip", ip).Err()
+		return db.SetEntry(key, "src_ip", ip)
 	}
 	if err != nil {
 		return err
 	}
-	if src_ip != ip {
-		return rdb.HSet(context.Background(), "VXLAN_TUNNEL|vtep", "src_ip", ip).Err()
+	if entry["src_ip"] != ip {
+		return db.SetEntry(key, "src_ip", ip)
 	}
 	return nil
 }
 
-func applyVlan4000(rdb *redis.Client, cidr string) error {
-	keys, err := rdb.Keys(context.Background(), "VLAN_INTERFACE|*").Result()
+func applyVlan4000(db *ConfigDB, cidr string) error {
+	view, err := db.GetView("VLAN_INTERFACE")
 	if err != nil {
 		return err
 	}
 
-	infKey := "VLAN_INTERFACE|Vlan4000"
-	ipKey := "VLAN_INTERFACE|Vlan4000|" + cidr
-	infAlreadyConfigured := false
-	ipAlreadyConfigured := false
-	toBeDeleted := make([]string, 0)
-	for _, key := range keys {
-		switch key {
-		case infKey:
-			infAlreadyConfigured = true
-		case ipKey:
-			ipAlreadyConfigured = true
-		default:
-			toBeDeleted = append(toBeDeleted, key)
-		}
-	}
-
-	if len(toBeDeleted) > 0 {
-		for _, key := range toBeDeleted {
-			err = rdb.Del(context.Background(), key).Err()
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	if !infAlreadyConfigured {
-		err = rdb.HSet(context.Background(), infKey, "NULL", "NULL").Err()
+	infKey := []string{"VLAN_INTERFACE", "Vlan4000"}
+	ipKey := []string{"VLAN_INTERFACE", "Vlan4000", cidr}
+	if !view.Contains(infKey) {
+		err = db.SetEntry(infKey)
 		if err != nil {
 			return err
 		}
 	}
-	if !ipAlreadyConfigured {
-		err = rdb.HSet(context.Background(), ipKey, "NULL", "NULL").Err()
+	if !view.Contains(ipKey) {
+		err = db.SetEntry(ipKey)
 		if err != nil {
 			return err
 		}
 	}
-	return nil
+
+	view.Mask(infKey)
+	view.Mask(ipKey)
+	return view.DeleteUnmasked()
 }
 
-func applyLoopback(rdb *redis.Client, ip string) error {
-	keys, err := rdb.Keys(context.Background(), "LOOPBACK_INTERFACE|*").Result()
+func applyLoopback(db *ConfigDB, ip string) error {
+	view, err := db.GetView("LOOPBACK_INTERFACE")
 	if err != nil {
 		return err
 	}
 
-	infKey := "LOOPBACK_INTERFACE|Loopback0"
-	ipKey := fmt.Sprintf("LOOPBACK_INTERFACE|Loopback0|%s/32", ip)
-	infAlreadyConfigured := false
-	ipAlreadyConfigured := false
-	toBeDeleted := make([]string, 0)
-	for _, key := range keys {
-		switch key {
-		case infKey:
-			infAlreadyConfigured = true
-		case ipKey:
-			ipAlreadyConfigured = true
-		default:
-			toBeDeleted = append(toBeDeleted, key)
-		}
-	}
-
-	if len(toBeDeleted) > 0 {
-		for _, key := range toBeDeleted {
-			err = rdb.Del(context.Background(), key).Err()
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	if !infAlreadyConfigured {
-		err = rdb.HSet(context.Background(), infKey, "NULL", "NULL").Err()
+	infKey := []string{"LOOPBACK_INTERFACE", "Loopback0"}
+	ipKey := []string{"LOOPBACK_INTERFACE", "Loopback0", ip + "/32"}
+	if !view.Contains(infKey) {
+		err = db.SetEntry(infKey)
 		if err != nil {
 			return err
 		}
 	}
-	if !ipAlreadyConfigured {
-		err = rdb.HSet(context.Background(), ipKey, "NULL", "NULL").Err()
+	if !view.Contains(ipKey) {
+		err = db.SetEntry(ipKey)
 		if err != nil {
 			return err
 		}
 	}
-	return nil
+
+	view.Mask(infKey)
+	view.Mask(ipKey)
+	return view.DeleteUnmasked()
 }

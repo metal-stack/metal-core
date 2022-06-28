@@ -40,6 +40,7 @@ require (
 	github.com/go-openapi/strfmt v0.21.2 // indirect
 	github.com/go-openapi/swag v0.21.1 // indirect
 	github.com/go-openapi/validate v0.22.0 // indirect
+	github.com/go-redis/redismock/v8 v8.0.6 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/goccy/go-json v0.9.6 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
