@@ -54,13 +54,39 @@ func NewConfigDBApplier(cfg *SonicDatabaseConfig) *ConfigDBApplier {
 }
 
 func (a *ConfigDBApplier) Apply(cfg *Conf) error {
-	keys, err := a.rdb.Keys(context.Background(), "LOOPBACK_INTERFACE|*").Result()
+	err := configureVxlan(a.rdb, cfg.Loopback)
+	if err != nil {
+		return err
+	}
+	err = applyVlan4000(a.rdb, cfg.MetalCoreCIDR)
+	if err != nil {
+		return err
+	}
+	return applyLoopback(a.rdb, cfg.Loopback)
+}
+
+func configureVxlan(rdb *redis.Client, ip string) error {
+	src_ip, err := rdb.HGet(context.Background(), "VXLAN_TUNNEL|vtep", "src_ip").Result()
+	if err == redis.Nil {
+		return rdb.HSet(context.Background(), "VXLAN_TUNNEL|vtep", "src_ip", ip).Err()
+	}
+	if err != nil {
+		return err
+	}
+	if src_ip != ip {
+		return rdb.HSet(context.Background(), "VXLAN_TUNNEL|vtep", "src_ip", ip).Err()
+	}
+	return nil
+}
+
+func applyVlan4000(rdb *redis.Client, cidr string) error {
+	keys, err := rdb.Keys(context.Background(), "VLAN_INTERFACE|*").Result()
 	if err != nil {
 		return err
 	}
 
-	infKey := "LOOPBACK_INTERFACE|Loopback0"
-	ipKey := fmt.Sprintf("LOOPBACK_INTERFACE|Loopback0|%s/32", cfg.Loopback)
+	infKey := "VLAN_INTERFACE|Vlan4000"
+	ipKey := "VLAN_INTERFACE|Vlan4000|" + cidr
 	infAlreadyConfigured := false
 	ipAlreadyConfigured := false
 	toBeDeleted := make([]string, 0)
@@ -77,7 +103,7 @@ func (a *ConfigDBApplier) Apply(cfg *Conf) error {
 
 	if len(toBeDeleted) > 0 {
 		for _, key := range toBeDeleted {
-			err = a.rdb.Del(context.Background(), key).Err()
+			err = rdb.Del(context.Background(), key).Err()
 			if err != nil {
 				return err
 			}
@@ -85,13 +111,59 @@ func (a *ConfigDBApplier) Apply(cfg *Conf) error {
 	}
 
 	if !infAlreadyConfigured {
-		err = a.rdb.HSet(context.Background(), infKey, "NULL", "NULL").Err()
+		err = rdb.HSet(context.Background(), infKey, "NULL", "NULL").Err()
 		if err != nil {
 			return err
 		}
 	}
 	if !ipAlreadyConfigured {
-		err = a.rdb.HSet(context.Background(), ipKey, "NULL", "NULL").Err()
+		err = rdb.HSet(context.Background(), ipKey, "NULL", "NULL").Err()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func applyLoopback(rdb *redis.Client, ip string) error {
+	keys, err := rdb.Keys(context.Background(), "LOOPBACK_INTERFACE|*").Result()
+	if err != nil {
+		return err
+	}
+
+	infKey := "LOOPBACK_INTERFACE|Loopback0"
+	ipKey := fmt.Sprintf("LOOPBACK_INTERFACE|Loopback0|%s/32", ip)
+	infAlreadyConfigured := false
+	ipAlreadyConfigured := false
+	toBeDeleted := make([]string, 0)
+	for _, key := range keys {
+		switch key {
+		case infKey:
+			infAlreadyConfigured = true
+		case ipKey:
+			ipAlreadyConfigured = true
+		default:
+			toBeDeleted = append(toBeDeleted, key)
+		}
+	}
+
+	if len(toBeDeleted) > 0 {
+		for _, key := range toBeDeleted {
+			err = rdb.Del(context.Background(), key).Err()
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if !infAlreadyConfigured {
+		err = rdb.HSet(context.Background(), infKey, "NULL", "NULL").Err()
+		if err != nil {
+			return err
+		}
+	}
+	if !ipAlreadyConfigured {
+		err = rdb.HSet(context.Background(), ipKey, "NULL", "NULL").Err()
 		if err != nil {
 			return err
 		}
