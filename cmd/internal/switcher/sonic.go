@@ -10,29 +10,42 @@ import (
 	"golang.org/x/text/language"
 )
 
+const configDB = "CONFIG_DB"
+
+type SonicDatabaseConfig struct {
+	Instances map[string]Instance `json:"INSTANCES"`
+	Databases map[string]Database `json:"DATABASES"`
+	Version   string              `json:"VERSION"`
+}
+
+type Instance struct {
+	Hostname string `json:"hostname"`
+	Port     int    `json:"port"`
+}
+
+type Database struct {
+	Id        int    `json:"id"`
+	Separator string `json:"separator"`
+	Instance  string `json:"instance"`
+}
+
 type Sonic struct {
-	bgpApplier           *networkApplier
-	confidbApplier       *networkApplier
-	log                  *zap.SugaredLogger
-	redisConfigDBApplier *ConfigDBApplier
+	bgpApplier     *networkApplier
+	confidbApplier *ConfigDBApplier
+	log            *zap.SugaredLogger
 }
 
 func NewSonic(cfg *SonicDatabaseConfig, log *zap.SugaredLogger) *Sonic {
 	return &Sonic{
-		bgpApplier:           newBgpApplier(),
-		confidbApplier:       newConfigdbApplier(),
-		log:                  log,
-		redisConfigDBApplier: NewConfigDBApplier(cfg),
+		bgpApplier:     newBgpApplier(),
+		confidbApplier: NewConfigDBApplier(cfg),
+		log:            log,
 	}
 }
 
 func (s *Sonic) Apply(cfg *Conf) error {
 	c := capitalizeVrfName(cfg)
 	err := s.bgpApplier.Apply(c)
-	if err != nil {
-		return err
-	}
-	err = s.redisConfigDBApplier.Apply(cfg)
 	if err != nil {
 		return err
 	}

@@ -85,7 +85,6 @@ func TestConfigDB_GetView(t *testing.T) {
 		keys:      map[string]bool{"key1": false, "key2": false},
 		rdb:       rdb,
 		separator: "|",
-		table:     "table",
 	}
 	mock.ExpectKeys("table|*").SetVal([]string{"key1", "key2"})
 

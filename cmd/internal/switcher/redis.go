@@ -9,28 +9,6 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-const (
-	configDB = "CONFIG_DB"
-	stateDB  = "STATE_DB"
-)
-
-type SonicDatabaseConfig struct {
-	Instances map[string]Instance `json:"INSTANCES"`
-	Databases map[string]Database `json:"DATABASES"`
-	Version   string              `json:"VERSION"`
-}
-
-type Instance struct {
-	Hostname string `json:"hostname"`
-	Port     int    `json:"port"`
-}
-
-type Database struct {
-	Id        int    `json:"id"`
-	Separator string `json:"separator"`
-	Instance  string `json:"instance"`
-}
-
 type ConfigDB struct {
 	rdb       *redis.Client
 	separator string
@@ -57,6 +35,18 @@ func (c *ConfigDB) SetEntry(key []string, values ...string) error {
 	return c.rdb.HSet(context.Background(), k, values).Err()
 }
 
+func (c *ConfigDB) ModEntry(key []string, field string, value string) error {
+	k := strings.Join(key, c.separator)
+	val, err := c.rdb.HGet(context.Background(), k, field).Result()
+	if err != nil && err != redis.Nil {
+		return err
+	}
+	if err == redis.Nil || val != value {
+		return c.rdb.HSet(context.Background(), k, field, value).Err()
+	}
+	return nil
+}
+
 func (c *ConfigDB) GetEntry(key []string) (map[string]string, error) {
 	k := strings.Join(key, c.separator)
 	return c.rdb.HGetAll(context.Background(), k).Result()
@@ -71,7 +61,6 @@ type View struct {
 	keys      map[string]bool
 	rdb       *redis.Client
 	separator string
-	table     string
 }
 
 func (c *ConfigDB) GetView(table string) (*View, error) {
@@ -88,18 +77,17 @@ func (c *ConfigDB) GetView(table string) (*View, error) {
 		keys:      set,
 		rdb:       c.rdb,
 		separator: c.separator,
-		table:     table,
 	}, nil
 }
 
 func (v *View) Contains(key []string) bool {
-	k := v.table + v.separator + strings.Join(key, v.separator)
+	k := strings.Join(key, v.separator)
 	_, ok := v.keys[k]
 	return ok
 }
 
 func (v *View) Mask(key []string) {
-	k := v.table + v.separator + strings.Join(key, v.separator)
+	k := strings.Join(key, v.separator)
 	if _, ok := v.keys[k]; ok {
 		v.keys[k] = true
 	}
@@ -119,91 +107,4 @@ func (v *View) DeleteUnmasked() error {
 	}
 	v.keys = keys
 	return nil
-}
-
-type ConfigDBApplier struct {
-	db *ConfigDB
-}
-
-func NewConfigDBApplier(cfg *SonicDatabaseConfig) *ConfigDBApplier {
-	return &ConfigDBApplier{NewConfigDB(cfg)}
-}
-
-func (a *ConfigDBApplier) Apply(cfg *Conf) error {
-	err := configureVxlan(a.db, cfg.Loopback)
-	if err != nil {
-		return err
-	}
-	err = applyVlan4000(a.db, cfg.MetalCoreCIDR)
-	if err != nil {
-		return err
-	}
-	return applyLoopback(a.db, cfg.Loopback)
-}
-
-func configureVxlan(db *ConfigDB, ip string) error {
-	key := []string{"VXLAN_TUNNEL", "vtep"}
-	entry, err := db.GetEntry(key)
-	if err == redis.Nil {
-		return db.SetEntry(key, "src_ip", ip)
-	}
-	if err != nil {
-		return err
-	}
-	if entry["src_ip"] != ip {
-		return db.SetEntry(key, "src_ip", ip)
-	}
-	return nil
-}
-
-func applyVlan4000(db *ConfigDB, cidr string) error {
-	view, err := db.GetView("VLAN_INTERFACE")
-	if err != nil {
-		return err
-	}
-
-	infKey := []string{"VLAN_INTERFACE", "Vlan4000"}
-	ipKey := []string{"VLAN_INTERFACE", "Vlan4000", cidr}
-	if !view.Contains(infKey) {
-		err = db.SetEntry(infKey)
-		if err != nil {
-			return err
-		}
-	}
-	if !view.Contains(ipKey) {
-		err = db.SetEntry(ipKey)
-		if err != nil {
-			return err
-		}
-	}
-
-	view.Mask(infKey)
-	view.Mask(ipKey)
-	return view.DeleteUnmasked()
-}
-
-func applyLoopback(db *ConfigDB, ip string) error {
-	view, err := db.GetView("LOOPBACK_INTERFACE")
-	if err != nil {
-		return err
-	}
-
-	infKey := []string{"LOOPBACK_INTERFACE", "Loopback0"}
-	ipKey := []string{"LOOPBACK_INTERFACE", "Loopback0", ip + "/32"}
-	if !view.Contains(infKey) {
-		err = db.SetEntry(infKey)
-		if err != nil {
-			return err
-		}
-	}
-	if !view.Contains(ipKey) {
-		err = db.SetEntry(ipKey)
-		if err != nil {
-			return err
-		}
-	}
-
-	view.Mask(infKey)
-	view.Mask(ipKey)
-	return view.DeleteUnmasked()
 }

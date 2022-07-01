@@ -1,81 +1,94 @@
 {
-  "INTERFACE": {
-    "swp1": {
-      "vrf_name": "vrf104001"
-    },
-    "swp2": {
-      "vrf_name": "vrf104001"
-    },
-    "swp3": {},
-    "swp31": {},
-    "swp32": {},
-    "swp4": {},
-    "swp5": {}
-  },
-  "PORT": {
-    "swp1": {
-      "mtu": "9000"
-    },
-    "swp2": {
-      "mtu": "9000"
-    },
-    "swp3": {
-      "mtu": "9216"
-    },
-    "swp31": {
-      "mtu": "9216"
-    },
-    "swp32": {
-      "mtu": "9216"
-    },
-    "swp4": {
-      "mtu": "9000"
-    },
-    "swp5": {
-      "mtu": "9000"
-    }
-  },
-  "VLAN": {
-    "Vlan4000": {
-      "vlanid": "4000"
-    },
-    "Vlan4001": {
-      "vlanid": "4001"
-    }
-  },
-  "VLAN_INTERFACE": {
-    "Vlan4000": {},
-    "Vlan4000|10.255.255.2/24": {},
-    "Vlan4001": {
-      "vrf_name": "vrf104001"
-    }
-  },
-  "VLAN_MEMBER": {
-    "Vlan4000|swp4": {
-      "tagging_mode": "untagged"
-    },
-    "Vlan4000|swp5": {
-      "tagging_mode": "untagged"
-    }
-  },
-  "VRF": {
-    "vrf104001": {
-      "vni": "104001"
-    }
-  },
-  "VXLAN_TUNNEL": {
-    "vtep": {
-      "src_ip": "10.0.0.10"
-    }
-  },
-  "VXLAN_TUNNEL_MAP": {
-    "vtep|map_104000_Vlan4000": {
-      "vlan": "Vlan4000",
-      "vni": "104000"
-    },
-    "vtep|map_104001_Vlan4001": {
-      "vlan": "Vlan4001",
-      "vni": "104001"
-    }
-  }
+  "INTERFACE|swp1": [
+    "vrf_name",
+    "vrf104001"
+  ],
+  "INTERFACE|swp2": [
+    "vrf_name",
+    "vrf104001"
+  ],
+  "LOOPBACK_INTERFACE|Loopback0": [
+    "NULL",
+    "NULL"
+  ],
+  "LOOPBACK_INTERFACE|Loopback0|10.0.0.10/32": [
+    "NULL",
+    "NULL"
+  ],
+  "PORT|swp1": [
+    "mtu",
+    "9000"
+  ],
+  "PORT|swp2": [
+    "mtu",
+    "9000"
+  ],
+  "PORT|swp3": [
+    "mtu",
+    "9216"
+  ],
+  "PORT|swp31": [
+    "mtu",
+    "9216"
+  ],
+  "PORT|swp32": [
+    "mtu",
+    "9216"
+  ],
+  "PORT|swp4": [
+    "mtu",
+    "9000"
+  ],
+  "PORT|swp5": [
+    "mtu",
+    "9000"
+  ],
+  "VLAN|Vlan4000": [
+    "vlanid",
+    "4000"
+  ],
+  "VLAN|Vlan4001": [
+    "vlanid",
+    "4001"
+  ],
+  "VLAN_INTERFACE|Vlan4000": [
+    "NULL",
+    "NULL"
+  ],
+  "VLAN_INTERFACE|Vlan4000|10.255.255.2/24": [
+    "NULL",
+    "NULL"
+  ],
+  "VLAN_INTERFACE|Vlan4001": [
+    "vrf_name",
+    "vrf104001"
+  ],
+  "VLAN_MEMBER|Vlan4000|swp4": [
+    "tagging_mode",
+    "untagged"
+  ],
+  "VLAN_MEMBER|Vlan4000|swp5": [
+    "tagging_mode",
+    "untagged"
+  ],
+  "VRF|vrf104001": [
+    "vni",
+    "104001"
+  ],
+  "VXLAN_TUNNEL|vtep": [
+    "src_ip",
+    "10.0.0.10"
+  ],
+  "VXLAN_TUNNEL_MAP|vtep|map_104000_Vlan4000": [
+    "vlan",
+    "Vlan4000",
+    "vni",
+    "104000"
+  ],
+  "VXLAN_TUNNEL_MAP|vtep|map_104001_Vlan4001": [
+    "vlan",
+    "Vlan4001",
+    "vni",
+    "104001"
+  ]
 }
