@@ -20,6 +20,8 @@ func Test_applyMtus(t *testing.T) {
 		"unchanged":    {mtu: "unchanged"},
 	}
 
+	mock.MatchExpectationsInOrder(false)
+
 	mock.ExpectHGet("PORT|non-existing", "mtu").SetErr(redis.Nil)
 	mock.ExpectHSet("PORT|non-existing", "mtu", "9000").SetVal(1)
 
@@ -30,6 +32,10 @@ func Test_applyMtus(t *testing.T) {
 
 	if err := applyMtus(db, given); err != nil {
 		t.Errorf("applyMtus() unexpected error %v", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Error(err)
 	}
 }
 
@@ -46,6 +52,8 @@ func Test_applyPorts(t *testing.T) {
 		"unchanged":    {vrfName: "unchanged"},
 	}
 
+	mock.MatchExpectationsInOrder(false)
+
 	mock.ExpectKeys("INTERFACE|*").SetVal([]string{"INTERFACE|changed", "INTERFACE|unchanged", "leftover"})
 
 	mock.ExpectHSet("INTERFACE|non-existing", "vrf_name", "vrf1").SetVal(1)
@@ -59,6 +67,10 @@ func Test_applyPorts(t *testing.T) {
 
 	if err := applyPorts(db, given); err != nil {
 		t.Errorf("applyPorts() unexpected error %v", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Error(err)
 	}
 }
 
