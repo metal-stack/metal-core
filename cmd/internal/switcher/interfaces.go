@@ -19,7 +19,10 @@ type InterfacesApplier struct {
 }
 
 func NewInterfacesApplier(tplPath string) *InterfacesApplier {
-	return &InterfacesApplier{parseFileOrFallback(tplPath, frrTpl)}
+	if tplPath != "" {
+		return &InterfacesApplier{mustParseFile(tplPath)}
+	}
+	return &InterfacesApplier{mustParseFS(frrTpl)}
 }
 
 func (a *InterfacesApplier) Apply(c *Conf) error {

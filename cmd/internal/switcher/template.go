@@ -9,12 +9,8 @@ import (
 //go:embed tpl
 var templates embed.FS
 
-func parseFileOrFallback(path string, fallbackFS string) *template.Template {
-	tpl, err := template.ParseFiles(path)
-	if err != nil {
-		return mustParseFS(fallbackFS)
-	}
-	return tpl
+func mustParseFile(path string) *template.Template {
+	return template.Must(template.ParseFiles(path))
 }
 
 func mustParseFS(name string) *template.Template {

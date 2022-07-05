@@ -19,7 +19,10 @@ type FrrApplier struct {
 }
 
 func NewFrrApplier(tplPath string) *FrrApplier {
-	return &FrrApplier{parseFileOrFallback(tplPath, frrTpl)}
+	if tplPath != "" {
+		return &FrrApplier{mustParseFile(tplPath)}
+	}
+	return &FrrApplier{mustParseFS(frrTpl)}
 }
 
 func (a *FrrApplier) Apply(c *Conf) error {
