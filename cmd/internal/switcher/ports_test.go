@@ -63,7 +63,7 @@ func Test_applyPorts(t *testing.T) {
 
 	mock.ExpectHGetAll("INTERFACE|unchanged").SetVal(map[string]string{"vrf_name": "unchanged"})
 
-	mock.ExpectDel("leftover").SetVal(1)
+	//mock.ExpectDel("leftover").SetVal(1)
 
 	if err := applyPorts(db, given); err != nil {
 		t.Errorf("applyPorts() unexpected error %v", err)

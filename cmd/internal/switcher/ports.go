@@ -68,5 +68,5 @@ func applyPorts(db *ConfigDB, ports map[string]*port) error {
 			return err
 		}
 	}
-	return view.DeleteUnmasked()
+	return nil //view.DeleteUnmasked()
 }
