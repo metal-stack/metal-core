@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -93,7 +94,8 @@ func Run() {
 	}
 
 	go c.ReconfigureSwitch()
-	c.ConstantlyPhoneHome()
+	// FIXME create context with cancel
+	go c.ConstantlyPhoneHome(context.Background())
 
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
 		_ = os.Setenv("DEBUG", "1")
