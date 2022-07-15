@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 
 	"github.com/metal-stack/go-lldpd/pkg/lldp"
@@ -36,7 +35,7 @@ func (c *Core) ConstantlyPhoneHome(ctx context.Context) {
 	discoveryResultChan := make(chan lldp.DiscoveryResult)
 
 	phoneHomeMessages := sync.Map{}
-	// initial interface discoveries
+	// initial interface discovery
 	for _, iface := range ifs {
 		c.startLLDPDiscovery(ctx, discoveryResultChan, iface.Name)
 	}
@@ -89,7 +88,11 @@ func (c *Core) ConstantlyPhoneHome(ctx context.Context) {
 					continue
 				}
 				interfaces := []string{}
-				existing := maps.Keys(c.interfaceCancelFuncs)
+				existing := []string{}
+				c.interfaces.Range(func(key, value any) bool {
+					existing = append(existing, key.(string))
+					return true
+				})
 				for _, iface := range ifs {
 					interfaces = append(interfaces, iface.Name)
 				}
@@ -109,7 +112,7 @@ func (c *Core) ConstantlyPhoneHome(ctx context.Context) {
 					}
 				}
 				for _, i := range removedInterfaces {
-					c.stopLLDBDiscovery(i)
+					c.stopLLDPDiscovery(i)
 				}
 				for _, i := range newInterfaces {
 					c.startLLDPDiscovery(ctx, discoveryResultChan, i)
@@ -180,16 +183,15 @@ func toPhoneHomeMessage(discoveryResult lldp.DiscoveryResult) *phoneHomeMessage 
 }
 
 func (c *Core) startLLDPDiscovery(ctx context.Context, discoveryResultChan chan lldp.DiscoveryResult, i string) {
-	iface, ok := c.interfaces[i]
+	value, ok := c.interfaces.Load(i)
 	if !ok {
 		return
 	}
+	iface := value.(net.Interface)
 	// consider only switch port interfaces
 	if !strings.HasPrefix(iface.Name, "swp") {
 		return
 	}
-	c.interfaceMu.Lock()
-	defer c.interfaceMu.Unlock()
 	ifacectx, cancel := context.WithCancel(ctx)
 	lldpcli, err := lldp.NewClient(ifacectx, iface)
 	if err != nil {
@@ -201,19 +203,17 @@ func (c *Core) startLLDPDiscovery(ctx context.Context, discoveryResultChan chan 
 	// constantly observe LLDP traffic on current machine and current interface
 	go lldpcli.Start(discoveryResultChan)
 
-	c.interfaces[iface.Name] = iface
-	c.interfaceCancelFuncs[iface.Name] = cancel
+	c.interfaces.Store(iface.Name, iface)
+	c.interfaceCancelFuncs.Store(iface.Name, cancel)
 }
 
-func (c *Core) stopLLDBDiscovery(iface string) {
-	f, ok := c.interfaceCancelFuncs[iface]
+func (c *Core) stopLLDPDiscovery(iface string) {
+	value, ok := c.interfaceCancelFuncs.Load(iface)
 	if !ok {
 		return
 	}
-
-	c.interfaceMu.Lock()
+	f := value.(context.CancelFunc)
 	f()
-	delete(c.interfaceCancelFuncs, iface)
-	delete(c.interfaces, iface)
-	c.interfaceMu.Unlock()
+	c.interfaceCancelFuncs.Delete(iface)
+	c.interfaces.Delete(iface)
 }

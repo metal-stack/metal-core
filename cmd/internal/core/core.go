@@ -1,8 +1,6 @@
 package core
 
 import (
-	"context"
-	"net"
 	"sync"
 	"time"
 
@@ -33,9 +31,8 @@ type Core struct {
 	driver             metalgo.Client
 	eventServiceClient v1.EventServiceClient
 
-	interfaces           map[string]net.Interface
-	interfaceCancelFuncs map[string]context.CancelFunc
-	interfaceMu          sync.Mutex
+	interfaces           sync.Map
+	interfaceCancelFuncs sync.Map
 }
 
 type Config struct {
@@ -80,8 +77,7 @@ func New(c Config) *Core {
 		frrTplFile:                c.FrrTplFile,
 		driver:                    c.Driver,
 		eventServiceClient:        c.EventServiceClient,
-		interfaces:                make(map[string]net.Interface),
-		interfaceCancelFuncs:      make(map[string]context.CancelFunc),
-		interfaceMu:               sync.Mutex{},
+		interfaces:                sync.Map{},
+		interfaceCancelFuncs:      sync.Map{},
 	}
 }
