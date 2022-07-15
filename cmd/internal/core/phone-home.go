@@ -38,7 +38,7 @@ func (c *Core) ConstantlyPhoneHome(ctx context.Context) {
 	phoneHomeMessages := sync.Map{}
 	// initial interface discoveries
 	for _, iface := range ifs {
-		c.startLLDPDiscovery(ctx, discoveryResultChan, iface)
+		c.startLLDPDiscovery(ctx, discoveryResultChan, iface.Name)
 	}
 	// extract phone home messages from fetched LLDP packages
 	go func() {
@@ -109,22 +109,10 @@ func (c *Core) ConstantlyPhoneHome(ctx context.Context) {
 					}
 				}
 				for _, i := range removedInterfaces {
-					f, ok := c.interfaceCancelFuncs[i]
-					if !ok {
-						continue
-					}
-					c.interfaceMu.Lock()
-					f()
-					delete(c.interfaceCancelFuncs, i)
-					delete(c.interfaces, i)
-					c.interfaceMu.Unlock()
+					c.stopLLDBDiscovery(i)
 				}
 				for _, i := range newInterfaces {
-					iface, ok := c.interfaces[i]
-					if !ok {
-						continue
-					}
-					c.startLLDPDiscovery(ctx, discoveryResultChan, iface)
+					c.startLLDPDiscovery(ctx, discoveryResultChan, i)
 				}
 			}
 		}
@@ -191,7 +179,11 @@ func toPhoneHomeMessage(discoveryResult lldp.DiscoveryResult) *phoneHomeMessage 
 	return nil
 }
 
-func (c *Core) startLLDPDiscovery(ctx context.Context, discoveryResultChan chan lldp.DiscoveryResult, iface net.Interface) {
+func (c *Core) startLLDPDiscovery(ctx context.Context, discoveryResultChan chan lldp.DiscoveryResult, i string) {
+	iface, ok := c.interfaces[i]
+	if !ok {
+		return
+	}
 	// consider only switch port interfaces
 	if !strings.HasPrefix(iface.Name, "swp") {
 		return
@@ -211,4 +203,17 @@ func (c *Core) startLLDPDiscovery(ctx context.Context, discoveryResultChan chan 
 
 	c.interfaces[iface.Name] = iface
 	c.interfaceCancelFuncs[iface.Name] = cancel
+}
+
+func (c *Core) stopLLDBDiscovery(iface string) {
+	f, ok := c.interfaceCancelFuncs[iface]
+	if !ok {
+		return
+	}
+
+	c.interfaceMu.Lock()
+	f()
+	delete(c.interfaceCancelFuncs, iface)
+	delete(c.interfaces, iface)
+	c.interfaceMu.Unlock()
 }
