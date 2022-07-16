@@ -87,34 +87,23 @@ func (c *Core) ConstantlyPhoneHome(ctx context.Context) {
 					c.log.Errorw("unable to gather interfaces, ignoring", "error", err)
 					continue
 				}
-				interfaces := []string{}
-				existing := []string{}
+				actualInterfaces := []string{}
+				for _, iface := range ifs {
+					actualInterfaces = append(actualInterfaces, iface.Name)
+				}
+				existingInterfaces := []string{}
 				c.interfaces.Range(func(key, value any) bool {
-					existing = append(existing, key.(string))
+					existingInterfaces = append(existingInterfaces, key.(string))
 					return true
 				})
-				for _, iface := range ifs {
-					interfaces = append(interfaces, iface.Name)
-				}
-				newInterfaces := interfaces
-				for _, i := range existing {
-					index := slices.Index(existing, i)
-					if index < 0 {
-						continue
-					}
-					newInterfaces = slices.Delete(newInterfaces, index, index)
-				}
-				removedInterfaces := interfaces
-				for _, i := range interfaces {
-					index := slices.Index(existing, i)
-					if index < 0 {
-						removedInterfaces = slices.Delete(removedInterfaces, index, index)
-					}
-				}
+
+				addedInterfaces, removedInterfaces := difference(existingInterfaces, actualInterfaces)
 				for _, i := range removedInterfaces {
+					c.log.Infow("remove lldp discovery for", "interfaces", i)
 					c.stopLLDPDiscovery(i)
 				}
-				for _, i := range newInterfaces {
+				for _, i := range addedInterfaces {
+					c.log.Infow("add lldp discovery for", "interfaces", i)
 					c.startLLDPDiscovery(ctx, discoveryResultChan, i)
 				}
 			}
@@ -216,4 +205,19 @@ func (c *Core) stopLLDPDiscovery(iface string) {
 	f()
 	c.interfaceCancelFuncs.Delete(iface)
 	c.interfaces.Delete(iface)
+}
+
+func difference[E comparable](old, new []E) (added, removed []E) {
+	for _, n := range new {
+		if !slices.Contains(old, n) {
+			added = append(added, n)
+		}
+	}
+
+	for _, o := range old {
+		if !slices.Contains(new, o) {
+			removed = append(removed, o)
+		}
+	}
+	return added, removed
 }
