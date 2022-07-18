@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/metal-stack/go-lldpd/pkg/lldp"
@@ -27,6 +28,10 @@ func (c *Core) DetectInterfaceChanges(ctx context.Context, discoveryResultChan c
 			}
 			actualInterfaces := []string{}
 			for _, iface := range ifs {
+				// consider only switch port interfaces
+				if !strings.HasPrefix(iface.Name, "swp") {
+					continue
+				}
 				actualInterfaces = append(actualInterfaces, iface.Name)
 			}
 			existingInterfaces := []string{}
