@@ -50,8 +50,13 @@ func (c *Core) DetectInterfaceChanges(ctx context.Context, discoveryResultChan c
 				c.stopLLDPDiscovery(i)
 			}
 			for _, i := range addedInterfaces {
-				c.log.Infow("add lldp discovery for", "interfaces", i)
-				c.startLLDPDiscovery(ctx, discoveryResultChan, i)
+				iface, err := net.InterfaceByName(i)
+				if err != nil {
+					c.log.Errorw("unable to get interface by name", "interface", i, "error", err)
+					continue
+				}
+				c.log.Infow("add lldp discovery for", "interfaces", *iface)
+				c.startLLDPDiscovery(ctx, discoveryResultChan, *iface)
 			}
 		}
 	}
