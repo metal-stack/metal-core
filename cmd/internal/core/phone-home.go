@@ -25,14 +25,12 @@ const (
 // provisioning event to metal-api for each machine that sent at least one
 // phone-home LLDP package to any interface of the host machine
 // during this interval.
-func (c *Core) ConstantlyPhoneHome(ctx context.Context) {
+func (c *Core) ConstantlyPhoneHome(ctx context.Context, discoveryResultChan chan lldp.DiscoveryResult) {
 	ifs, err := net.Interfaces()
 	if err != nil {
 		c.log.Errorw("unable to find interfaces", "error", err)
 		os.Exit(1)
 	}
-
-	discoveryResultChan := make(chan lldp.DiscoveryResult)
 
 	phoneHomeMessages := sync.Map{}
 	// initial interface discovery
@@ -54,63 +52,24 @@ func (c *Core) ConstantlyPhoneHome(ctx context.Context) {
 
 	// send arrived messages on a ticker basis
 	ticker := time.NewTicker(phonedHomeInterval)
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-				msgs := []phoneHomeMessage{}
-				phoneHomeMessages.Range(func(key, value any) bool {
-					msg, ok := value.(phoneHomeMessage)
-					if !ok {
-						return true
-					}
-					phoneHomeMessages.Delete(key)
-					msgs = append(msgs, msg)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			msgs := []phoneHomeMessage{}
+			phoneHomeMessages.Range(func(key, value any) bool {
+				msg, ok := value.(phoneHomeMessage)
+				if !ok {
 					return true
-				})
-				c.phoneHome(msgs)
-			}
+				}
+				phoneHomeMessages.Delete(key)
+				msgs = append(msgs, msg)
+				return true
+			})
+			c.phoneHome(msgs)
 		}
-	}()
-
-	ifaceTicker := time.NewTicker(5 * time.Minute)
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ifaceTicker.C:
-				ifs, err := net.Interfaces()
-				if err != nil {
-					c.log.Errorw("unable to gather interfaces, ignoring", "error", err)
-					continue
-				}
-				actualInterfaces := []string{}
-				for _, iface := range ifs {
-					actualInterfaces = append(actualInterfaces, iface.Name)
-				}
-				existingInterfaces := []string{}
-				c.interfaces.Range(func(key, value any) bool {
-					existingInterfaces = append(existingInterfaces, key.(string))
-					return true
-				})
-
-				addedInterfaces, removedInterfaces := difference(existingInterfaces, actualInterfaces)
-				for _, i := range removedInterfaces {
-					c.log.Infow("remove lldp discovery for", "interfaces", i)
-					c.stopLLDPDiscovery(i)
-				}
-				for _, i := range addedInterfaces {
-					c.log.Infow("add lldp discovery for", "interfaces", i)
-					c.startLLDPDiscovery(ctx, discoveryResultChan, i)
-				}
-			}
-		}
-	}()
-
-	<-ctx.Done()
+	}
 }
 
 func (c *Core) send(event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error) {

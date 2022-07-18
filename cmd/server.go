@@ -7,7 +7,9 @@ import (
 	"strings"
 
 	"github.com/kelseyhightower/envconfig"
+	"github.com/metal-stack/go-lldpd/pkg/lldp"
 	"github.com/metal-stack/metal-core/cmd/internal/core"
+
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/v"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -95,7 +97,12 @@ func Run() {
 
 	go c.ReconfigureSwitch()
 	// FIXME create context with cancel
-	go c.ConstantlyPhoneHome(context.Background())
+	ctx := context.Background()
+	discoveryResultChan := make(chan lldp.DiscoveryResult)
+	go c.ConstantlyPhoneHome(ctx, discoveryResultChan)
+
+	// detect changes of switch ports, register switch and start/stop lldp discovery if required
+	go c.DetectInterfaceChanges(ctx, discoveryResultChan)
 
 	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
 		_ = os.Setenv("DEBUG", "1")
