@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/metal-stack/go-lldpd/pkg/lldp"
-	"golang.org/x/exp/slices"
 )
 
 const (
@@ -20,6 +19,7 @@ func (c *Core) DetectInterfaceChanges(ctx context.Context, discoveryResultChan c
 		case <-ctx.Done():
 			return
 		case <-ifaceTicker.C:
+			c.log.Info("checking for port changes")
 			ifs, err := net.Interfaces()
 			if err != nil {
 				c.log.Errorw("unable to gather interfaces, ignoring", "error", err)
@@ -35,12 +35,16 @@ func (c *Core) DetectInterfaceChanges(ctx context.Context, discoveryResultChan c
 				return true
 			})
 
-			if !slices.Equal(existingInterfaces, actualInterfaces) {
-				c.log.Infow("switch interfaces changed, reregister switch")
+			addedInterfaces, removedInterfaces := difference(existingInterfaces, actualInterfaces)
+
+			if len(addedInterfaces) == 0 && len(removedInterfaces) == 0 {
+				c.log.Infow("switch interfaces changed, re-register switch")
 				c.RegisterSwitch()
+			} else {
+				c.log.Info("no port changes detected")
+				continue
 			}
 
-			addedInterfaces, removedInterfaces := difference(existingInterfaces, actualInterfaces)
 			for _, i := range removedInterfaces {
 				c.log.Infow("remove lldp discovery for", "interfaces", i)
 				c.stopLLDPDiscovery(i)
