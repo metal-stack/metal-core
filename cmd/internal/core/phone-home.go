@@ -35,6 +35,10 @@ func (c *Core) ConstantlyPhoneHome(ctx context.Context, discoveryResultChan chan
 	phoneHomeMessages := sync.Map{}
 	// initial interface discovery
 	for _, iface := range ifs {
+		// consider only switch port interfaces
+		if !strings.HasPrefix(iface.Name, "swp") {
+			return
+		}
 		c.startLLDPDiscovery(ctx, discoveryResultChan, iface)
 	}
 	// extract phone home messages from fetched LLDP packages
@@ -131,14 +135,11 @@ func toPhoneHomeMessage(discoveryResult lldp.DiscoveryResult) *phoneHomeMessage 
 }
 
 func (c *Core) startLLDPDiscovery(ctx context.Context, discoveryResultChan chan lldp.DiscoveryResult, iface net.Interface) {
-	// consider only switch port interfaces
-	if !strings.HasPrefix(iface.Name, "swp") {
-		return
-	}
 	ifacectx, cancel := context.WithCancel(ctx)
 	lldpcli, err := lldp.NewClient(ifacectx, iface)
 	if err != nil {
 		c.log.Errorw("unable to start LLDP client", "interface", iface.Name, "error", err)
+		cancel()
 		return
 	}
 	c.log.Infow("start lldp client", "interface", iface.Name)

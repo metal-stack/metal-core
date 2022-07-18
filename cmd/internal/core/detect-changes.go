@@ -13,12 +13,12 @@ const (
 )
 
 func (c *Core) DetectInterfaceChanges(ctx context.Context, discoveryResultChan chan lldp.DiscoveryResult) {
-	ifaceTicker := time.NewTicker(detectChangesInterval)
+	ticker := time.NewTicker(detectChangesInterval)
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-ifaceTicker.C:
+		case <-ticker.C:
 			c.log.Info("checking for port changes")
 			ifs, err := net.Interfaces()
 			if err != nil {
