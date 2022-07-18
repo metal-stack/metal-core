@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	detectChangesInterval = 5 * time.Minute
+	detectChangesInterval = time.Minute
 )
 
 func (c *Core) DetectInterfaceChanges(ctx context.Context, discoveryResultChan chan lldp.DiscoveryResult) {
