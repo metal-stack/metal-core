@@ -38,11 +38,11 @@ func (c *Core) DetectInterfaceChanges(ctx context.Context, discoveryResultChan c
 			addedInterfaces, removedInterfaces := difference(existingInterfaces, actualInterfaces)
 
 			if len(addedInterfaces) == 0 && len(removedInterfaces) == 0 {
-				c.log.Infow("switch interfaces changed, re-register switch")
-				c.RegisterSwitch()
-			} else {
 				c.log.Info("no port changes detected")
 				continue
+			} else {
+				c.log.Infow("switch interfaces changed, re-register switch", "added", addedInterfaces, "removed", removedInterfaces)
+				c.RegisterSwitch()
 			}
 
 			for _, i := range removedInterfaces {
