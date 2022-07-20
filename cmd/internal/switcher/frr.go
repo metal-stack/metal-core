@@ -27,13 +27,13 @@ type FrrApplier struct {
 }
 
 // NewFrrApplier creates a new FrrApplier
-func NewFrrApplier(c *Conf) Applier {
+func NewFrrApplier(c *Conf, tplFile string) Applier {
 	v := net.DBusTemplateValidator{TemplateName: FrrValidationService, InstanceName: FrrTmp}
 	r := net.DBusReloader{ServiceFilename: FrrReloadService}
 	a := net.NewNetworkApplier(c, v, r)
 	return FrrApplier{
 		applier: a,
-		tplFile: c.FrrTplFile,
+		tplFile: tplFile,
 	}
 }
 

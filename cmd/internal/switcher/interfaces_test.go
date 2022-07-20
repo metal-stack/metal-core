@@ -11,7 +11,7 @@ func TestInterfacesApplier(t *testing.T) {
 		tt := tests[i]
 		t.Run(tt, func(t *testing.T) {
 			c := readConf(t, path.Join("test_data", tt, "conf.yaml"))
-			a := NewInterfacesApplier(&c)
+			a := NewInterfacesApplier(&c, "")
 			testApplier(t, a, path.Join("test_data", tt, "interfaces"))
 		})
 	}
@@ -20,7 +20,7 @@ func TestInterfacesApplier(t *testing.T) {
 func TestCustomInterfacesTpl(t *testing.T) {
 	t.Run("customtpl", func(t *testing.T) {
 		c := readConf(t, "test_data/dev/conf.yaml")
-		r := newInterfacesRenderer("test_data/dev/customtpl/interfaces.tpl")
-		testRenderer(t, r, &c, "test_data/dev/customtpl/interfaces")
+		a := NewInterfacesApplier(&c, "test_data/dev/customtpl/interfaces.tpl")
+		testApplier(t, a, "test_data/dev/customtpl/interfaces")
 	})
 }

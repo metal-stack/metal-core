@@ -27,13 +27,13 @@ type InterfacesApplier struct {
 }
 
 // NewInterfacesApplier creates a new InterfacesApplier
-func NewInterfacesApplier(c *Conf) Applier {
+func NewInterfacesApplier(c *Conf, tplFile string) Applier {
 	v := net.DBusTemplateValidator{TemplateName: InterfacesValidationService, InstanceName: InterfacesTmp}
 	r := net.DBusStartReloader{ServiceFilename: InterfacesReloadService}
 	a := net.NewNetworkApplier(c, v, r)
 	return InterfacesApplier{
 		applier: a,
-		tplFile: c.InterfacesTplFile,
+		tplFile: tplFile,
 	}
 }
 

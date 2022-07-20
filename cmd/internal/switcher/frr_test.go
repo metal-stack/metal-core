@@ -12,7 +12,7 @@ func TestFrrApplier(t *testing.T) {
 		t.Run(tt, func(t *testing.T) {
 			c := readConf(t, path.Join("test_data", tt, "conf.yaml"))
 			c.FillRouteMapsAndIPPrefixLists()
-			a := NewFrrApplier(&c)
+			a := NewFrrApplier(&c, "")
 			testApplier(t, a, path.Join("test_data", tt, "frr.conf"))
 		})
 	}
@@ -22,7 +22,7 @@ func TestCustomFrrTpl(t *testing.T) {
 	t.Run("customtpl", func(t *testing.T) {
 		c := readConf(t, "test_data/dev/conf.yaml")
 		c.FillRouteMapsAndIPPrefixLists()
-		r := newFrrRenderer("test_data/dev/customtpl/frr.tpl")
-		testRenderer(t, r, &c, "test_data/dev/customtpl/frr.conf")
+		a := NewFrrApplier(&c, "test_data/dev/customtpl/frr.tpl")
+		testApplier(t, a, "test_data/dev/customtpl/frr.conf")
 	})
 }
