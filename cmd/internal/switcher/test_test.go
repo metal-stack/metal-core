@@ -11,7 +11,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func testRenderer(t *testing.T, tpl *template.Template, c *Conf, expectedFilename string) {
+func testTemplate(t *testing.T, tpl *template.Template, c *Conf, expectedFilename string) {
 	actual := renderToString(t, tpl, c)
 	expected := readExpected(t, expectedFilename)
 	require.Equal(t, expected, actual, "Wanted: %s, Got: %s", expected, actual)
