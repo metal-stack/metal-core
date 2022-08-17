@@ -11,7 +11,7 @@ in-docker: gofmt test all;
 
 release:: gofmt test all;
 
-LINKMODE := -linkmode external -extldflags '-static -s -w' \
+LINKMODE := -linkmode external -extldflags '-s -w' \
 		 -X 'github.com/metal-stack/v.Version=$(VERSION)' \
 		 -X 'github.com/metal-stack/v.Revision=$(GITVERSION)' \
 		 -X 'github.com/metal-stack/v.GitSHA1=$(SHA)' \
