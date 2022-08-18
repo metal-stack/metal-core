@@ -8,6 +8,8 @@ Besides that, it ensures the proper boot order (IPMI) and monitors their livelin
 
 ## Build
 
-```
+Ensure you have `libpcap-dev` installed.
+
+```bash
 make
 ```
