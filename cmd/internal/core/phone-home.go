@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"golang.org/x/exp/slices"
+
 	"github.com/metal-stack/go-lldpd/pkg/lldp"
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 	"go.uber.org/zap"
@@ -23,40 +25,17 @@ const (
 // provisioning event to metal-api for each machine that sent at least one
 // phone-home LLDP package to any interface of the host machine
 // during this interval.
-func (c *Core) ConstantlyPhoneHome() {
-	// FIXME this list of interfaces is only read on startup
-	// if additional interfaces are configured, no new lldpd client is started and therefore no
-	// phoned home events are sent for these interfaces.
-	// Solution:
-	// - either ensure metal-core is restarted on interfaces added/removed
-	// - dynamically detect changes and stop/start goroutines for the lldpd client per interface
+func (c *Core) ConstantlyPhoneHome(ctx context.Context, discoveryResultChan chan lldp.DiscoveryResult) {
 	ifs, err := net.Interfaces()
 	if err != nil {
 		c.log.Errorw("unable to find interfaces", "error", err)
 		os.Exit(1)
 	}
 
-	discoveryResultChan := make(chan lldp.DiscoveryResult)
-
-	// FIXME context should come from caller and canceled on shutdown
-	ctx := context.Background()
-
 	phoneHomeMessages := sync.Map{}
+	// initial interface discovery
 	for _, iface := range ifs {
-		// consider only switch port interfaces
-		if !strings.HasPrefix(iface.Name, "swp") {
-			continue
-		}
-		lldpcli, err := lldp.NewClient(ctx, iface)
-		if err != nil {
-			c.log.Errorw("unable to start LLDP client", "interface", iface.Name, "error", err)
-			continue
-		}
-		c.log.Infow("start lldp client", "interface", iface.Name)
-
-		// constantly observe LLDP traffic on current machine and current interface
-		go lldpcli.Start(discoveryResultChan)
-
+		c.startLLDPDiscovery(ctx, discoveryResultChan, iface)
 	}
 	// extract phone home messages from fetched LLDP packages
 	go func() {
@@ -73,26 +52,24 @@ func (c *Core) ConstantlyPhoneHome() {
 
 	// send arrived messages on a ticker basis
 	ticker := time.NewTicker(phonedHomeInterval)
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-				msgs := []phoneHomeMessage{}
-				phoneHomeMessages.Range(func(key, value interface{}) bool {
-					msg, ok := value.(phoneHomeMessage)
-					if !ok {
-						return true
-					}
-					phoneHomeMessages.Delete(key)
-					msgs = append(msgs, msg)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			msgs := []phoneHomeMessage{}
+			phoneHomeMessages.Range(func(key, value any) bool {
+				msg, ok := value.(phoneHomeMessage)
+				if !ok {
 					return true
-				})
-				c.phoneHome(msgs)
-			}
+				}
+				phoneHomeMessages.Delete(key)
+				msgs = append(msgs, msg)
+				return true
+			})
+			c.phoneHome(msgs)
 		}
-	}()
+	}
 }
 
 func (c *Core) send(event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error) {
@@ -151,4 +128,51 @@ func toPhoneHomeMessage(discoveryResult lldp.DiscoveryResult) *phoneHomeMessage 
 		}
 	}
 	return nil
+}
+
+func (c *Core) startLLDPDiscovery(ctx context.Context, discoveryResultChan chan lldp.DiscoveryResult, iface net.Interface) {
+	// consider only switch port interfaces
+	if !strings.HasPrefix(iface.Name, "swp") {
+		return
+	}
+	ifacectx, cancel := context.WithCancel(ctx)
+	lldpcli, err := lldp.NewClient(ifacectx, iface)
+	if err != nil {
+		c.log.Errorw("unable to start LLDP client", "interface", iface.Name, "error", err)
+		cancel()
+		return
+	}
+	c.log.Infow("start lldp client", "interface", iface.Name)
+
+	// constantly observe LLDP traffic on current machine and current interface
+	go lldpcli.Start(discoveryResultChan)
+
+	c.interfaces.Store(iface.Name, iface)
+	c.interfaceCancelFuncs.Store(iface.Name, cancel)
+}
+
+func (c *Core) stopLLDPDiscovery(iface string) {
+	value, ok := c.interfaceCancelFuncs.Load(iface)
+	if !ok {
+		return
+	}
+	f := value.(context.CancelFunc)
+	f()
+	c.interfaceCancelFuncs.Delete(iface)
+	c.interfaces.Delete(iface)
+}
+
+func difference[E comparable](old, new []E) (added, removed []E) {
+	for _, n := range new {
+		if !slices.Contains(old, n) {
+			added = append(added, n)
+		}
+	}
+
+	for _, o := range old {
+		if !slices.Contains(new, o) {
+			removed = append(removed, o)
+		}
+	}
+	return added, removed
 }

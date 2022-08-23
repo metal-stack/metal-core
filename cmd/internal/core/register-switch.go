@@ -9,8 +9,8 @@ import (
 
 	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
 	"github.com/metal-stack/metal-go/api/models"
-	"github.com/vishvananda/netlink"
 	"go.uber.org/zap"
+	"golang.org/x/exp/slices"
 )
 
 func (c *Core) RegisterSwitch() error {
@@ -46,26 +46,23 @@ func (c *Core) RegisterSwitch() error {
 		c.log.Errorw("unable to register at metal-api, retrying", "error", err)
 		time.Sleep(30 * time.Second)
 	}
-	c.log.Infow("register switch completed")
+	c.log.Infow("register switch completed", "params", params)
 	return nil
 }
 
 func getNics(log *zap.SugaredLogger, blacklist []string) ([]*models.V1SwitchNic, error) {
 	var nics []*models.V1SwitchNic
-	links, err := netlink.LinkList()
+	links, err := net.Interfaces()
 	if err != nil {
 		return nil, fmt.Errorf("unable to get all links: %w", err)
 	}
-links:
 	for _, l := range links {
-		attrs := l.Attrs()
-		name := attrs.Name
-		mac := attrs.HardwareAddr.String()
-		for _, b := range blacklist {
-			if b == name {
-				log.Debugw("skip interface, because it is contained in the blacklist", "interface", name, "blacklist", blacklist)
-				continue links
-			}
+		name := l.Name
+		mac := l.HardwareAddr.String()
+
+		if slices.Contains(blacklist, name) {
+			log.Debugw("skip interface, because it is contained in the blacklist", "interface", name, "blacklist", blacklist)
+			continue
 		}
 		if !strings.HasPrefix(name, "swp") {
 			log.Debugw("skip interface, because only swp* switch ports are reported to metal-api", "interface", name, "MAC", mac)
