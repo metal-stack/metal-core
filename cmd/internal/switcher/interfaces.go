@@ -22,7 +22,7 @@ func NewInterfacesApplier(tplPath string) *InterfacesApplier {
 	if tplPath != "" {
 		return &InterfacesApplier{mustParseFile(tplPath)}
 	}
-	return &InterfacesApplier{mustParseFS(frrTpl)}
+	return &InterfacesApplier{mustParseFS(interfacesTpl)}
 }
 
 func (a *InterfacesApplier) Apply(c *Conf) error {
