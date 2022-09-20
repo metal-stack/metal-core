@@ -68,6 +68,8 @@ func Run() {
 		log.Fatalw("failed to create grpc client", "error", err)
 	}
 
+	nos := switcher.NewCumulus(log, cfg.FrrTplFile, cfg.InterfacesTplFile)
+
 	c := core.New(core.Config{
 		Log:                       log,
 		LogLevel:                  cfg.LogLevel,
@@ -82,8 +84,7 @@ func Run() {
 		AdditionalBridgePorts:     cfg.AdditionalBridgePorts,
 		AdditionalBridgeVIDs:      cfg.AdditionalBridgeVIDs,
 		SpineUplinks:              cfg.SpineUplinks,
-		InterfacesApplier:         switcher.NewInterfacesApplier(cfg.InterfacesTplFile),
-		FrrApplier:                switcher.NewFrrApplier(cfg.FrrTplFile),
+		NOS:                       nos,
 		Driver:                    driver,
 		EventServiceClient:        grpcClient.NewEventClient(),
 	})

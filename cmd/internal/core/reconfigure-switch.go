@@ -72,20 +72,12 @@ func (c *Core) reconfigureSwitch(switchName string) error {
 		return nil
 	}
 
-	err = c.apply(switchConfig)
+	err = c.nos.Apply(switchConfig)
 	if err != nil {
 		return fmt.Errorf("could not apply switch config: %w", err)
 	}
 
 	return nil
-}
-
-func (c *Core) apply(cfg *switcher.Conf) error {
-	err := c.interfacesApplier.Apply(cfg)
-	if err != nil {
-		return err
-	}
-	return c.frrApplier.Apply(cfg)
 }
 
 func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*switcher.Conf, error) {
