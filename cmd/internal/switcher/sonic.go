@@ -30,7 +30,7 @@ type Database struct {
 }
 
 type Sonic struct {
-	bgpApplier     *networkApplier
+	bgpApplier     *BgpApplier
 	confidbApplier *ConfigDBApplier
 	log            *zap.SugaredLogger
 }

@@ -12,8 +12,8 @@ func TestBgpdRenderer(t *testing.T) {
 		t.Run(tt, func(t *testing.T) {
 			c := readConf(t, path.Join("test_data", tt, "conf.yaml"))
 			c.FillRouteMapsAndIPPrefixLists()
-			r := newBgpdRenderer()
-			testRenderer(t, r, &c, path.Join("test_data", tt, "bgpd.conf"))
+			tpl := mustParseFS(bgpdTpl)
+			testTemplate(t, tpl, &c, path.Join("test_data", tt, "bgpd.conf"))
 		})
 	}
 }
@@ -24,8 +24,8 @@ func TestStaticdRenderer(t *testing.T) {
 		tt := tests[i]
 		t.Run(tt, func(t *testing.T) {
 			c := readConf(t, path.Join("test_data", tt, "conf.yaml"))
-			r := newStaticdRenderer()
-			testRenderer(t, r, &c, path.Join("test_data", tt, "staticd.conf"))
+			tpl := mustParseFS(staticdTpl)
+			testTemplate(t, tpl, &c, path.Join("test_data", tt, "staticd.conf"))
 		})
 	}
 }
@@ -36,8 +36,8 @@ func TestZebraRenderer(t *testing.T) {
 		tt := tests[i]
 		t.Run(tt, func(t *testing.T) {
 			c := readConf(t, path.Join("test_data", tt, "conf.yaml"))
-			r := newZebraRenderer()
-			testRenderer(t, r, &c, path.Join("test_data", tt, "zebra.conf"))
+			tpl := mustParseFS(zebraTpl)
+			testTemplate(t, tpl, &c, path.Join("test_data", tt, "zebra.conf"))
 		})
 	}
 }

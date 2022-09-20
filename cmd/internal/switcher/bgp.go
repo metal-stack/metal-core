@@ -1,5 +1,11 @@
 package switcher
 
+import (
+	"text/template"
+
+	"github.com/metal-stack/metal-core/cmd/internal/dbus"
+)
+
 const (
 	bgpd    = "/etc/sonic/frr/bgpd.conf"
 	bgpdTpl = "bgpd.tpl"
@@ -14,31 +20,67 @@ const (
 	bgpValidationService = "bgp-validation"
 )
 
-func newBgpdRenderer() *templateRenderer {
-	return &templateRenderer{mustParseFS(bgpdTpl)}
+type renderer struct {
+	dest string
+	tmp  string
+	tpl  *template.Template
 }
 
-func newStaticdRenderer() *templateRenderer {
-	return &templateRenderer{mustParseFS(staticdTpl)}
+func newRenderer(dest string, tpl *template.Template) *renderer {
+	return &renderer{
+		dest: dest,
+		tmp:  dest + ".tmp",
+		tpl:  tpl,
+	}
 }
 
-func newZebraRenderer() *templateRenderer {
-	return &templateRenderer{mustParseFS(zebraTpl)}
+func (r *renderer) write(c *Conf) error {
+	err := write(c, r.tpl, r.tmp)
+	if err != nil {
+		return err
+	}
+	return validate(bgpValidationService, r.tmp)
 }
 
-func newBgpApplier() *networkApplier {
-	r := dbusReloader{bgpReloadService}
-	v := dbusTemplateValidator{bgpValidationService}
+func (r *renderer) move() (bool, error) {
+	return move(r.tmp, r.dest)
+}
 
-	ds := []*destConfig{
-		newDestConfig(bgpd, newBgpdRenderer()),
-		newDestConfig(staticd, newStaticdRenderer()),
-		newDestConfig(zebra, newZebraRenderer()),
+type BgpApplier struct {
+	renderers []*renderer
+}
+
+func newBgpApplier() *BgpApplier {
+	return &BgpApplier{
+		renderers: []*renderer{
+			newRenderer(bgpd, mustParseFS(bgpdTpl)),
+			newRenderer(staticd, mustParseFS(staticdTpl)),
+			newRenderer(zebra, mustParseFS(zebraTpl)),
+		},
+	}
+}
+
+func (a *BgpApplier) Apply(c *Conf) error {
+	for _, r := range a.renderers {
+		err := r.write(c)
+		if err != nil {
+			return err
+		}
 	}
 
-	return &networkApplier{
-		destConfigs: ds,
-		reloader:    &r,
-		validator:   &v,
+	var anyMoved = false
+	for _, r := range a.renderers {
+		moved, err := r.move()
+		if err != nil {
+			return err
+		}
+		if moved {
+			anyMoved = true
+		}
 	}
+
+	if anyMoved {
+		return dbus.Reload(bgpReloadService)
+	}
+	return nil
 }
