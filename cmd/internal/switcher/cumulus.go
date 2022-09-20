@@ -9,36 +9,26 @@ import (
 )
 
 type Cumulus struct {
-	frrTplFile        string
-	interfacesTplFile string
+	frrApplier        *FrrApplier
+	interfacesApplier *InterfacesApplier
 	log               *zap.SugaredLogger
 }
 
 func NewCumulus(log *zap.SugaredLogger, frrTplFile, interfacesTplFile string) *Cumulus {
 	return &Cumulus{
-		frrTplFile:        frrTplFile,
-		interfacesTplFile: interfacesTplFile,
+		frrApplier:        NewFrrApplier(frrTplFile),
+		interfacesApplier: NewInterfacesApplier(interfacesTplFile),
 		log:               log,
 	}
 }
 
-func (c *Cumulus) applyFrr(cfg *Conf) error {
-	a := NewFrrApplier(cfg, c.frrTplFile)
-	return a.Apply()
-}
-
-func (c *Cumulus) applyInterfaces(cfg *Conf) error {
-	a := NewInterfacesApplier(cfg, c.interfacesTplFile)
-	return a.Apply()
-}
-
 func (c *Cumulus) Apply(cfg *Conf) error {
-	err := c.applyInterfaces(cfg)
+	err := c.interfacesApplier.Apply(cfg)
 	if err != nil {
 		return err
 	}
 
-	err = c.applyFrr(cfg)
+	err = c.frrApplier.Apply(cfg)
 	if err != nil {
 		return err
 	}
