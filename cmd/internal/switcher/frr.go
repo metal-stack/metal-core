@@ -1,27 +1,44 @@
 package switcher
 
+import (
+	"text/template"
+
+	"github.com/metal-stack/metal-core/cmd/internal/dbus"
+)
+
 const (
 	frr                  = "/etc/frr/frr.conf"
+	frrTmp               = "/etc/frr/frr.tmp"
 	frrTpl               = "frr.tpl"
 	frrReloadService     = "frr.service"
 	frrValidationService = "frr-validation"
 )
 
-func newFrrRenderer(tplPath string) *templateRenderer {
-	if tplPath != "" {
-		return &templateRenderer{mustParseFile(tplPath)}
-	}
-	return &templateRenderer{mustParseFS(frrTpl)}
+type FrrApplier struct {
+	tpl *template.Template
 }
 
-func newFrrApplier(tplPath string) *networkApplier {
-	d := newDestConfig(frr, newFrrRenderer(tplPath))
-	r := dbusReloader{frrReloadService}
-	v := dbusTemplateValidator{frrValidationService}
-
-	return &networkApplier{
-		destConfigs: []*destConfig{d},
-		reloader:    &r,
-		validator:   &v,
+func NewFrrApplier(tplPath string) *FrrApplier {
+	if tplPath != "" {
+		return &FrrApplier{mustParseFile(tplPath)}
 	}
+	return &FrrApplier{mustParseFS(frrTpl)}
+}
+
+func (a *FrrApplier) Apply(c *Conf) error {
+	err := write(c, a.tpl, frrTmp)
+	if err != nil {
+		return err
+	}
+
+	err = validate(frrValidationService, frrTmp)
+	if err != nil {
+		return err
+	}
+
+	moved, err := move(frrTmp, frr)
+	if err == nil && moved {
+		return dbus.Reload(frrReloadService)
+	}
+	return err
 }

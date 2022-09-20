@@ -1,27 +1,44 @@
 package switcher
 
+import (
+	"text/template"
+
+	"github.com/metal-stack/metal-core/cmd/internal/dbus"
+)
+
 const (
 	interfaces                  = "/etc/network/interfaces"
+	interfacesTmp               = "/etc/network/interfaces.tmp"
 	interfacesTpl               = "interfaces.tpl"
 	interfacesReloadService     = "ifreload.service"
 	interfacesValidationService = "interfaces-validation"
 )
 
-func newInterfacesRenderer(tplPath string) *templateRenderer {
-	if tplPath != "" {
-		return &templateRenderer{mustParseFile(tplPath)}
-	}
-	return &templateRenderer{mustParseFS(interfacesTpl)}
+type InterfacesApplier struct {
+	tpl *template.Template
 }
 
-func newInterfacesApplier(tplPath string) *networkApplier {
-	d := newDestConfig(interfaces, newInterfacesRenderer(tplPath))
-	r := dbusStartReloader{interfacesReloadService}
-	v := dbusTemplateValidator{interfacesValidationService}
-
-	return &networkApplier{
-		destConfigs: []*destConfig{d},
-		reloader:    &r,
-		validator:   &v,
+func NewInterfacesApplier(tplPath string) *InterfacesApplier {
+	if tplPath != "" {
+		return &InterfacesApplier{mustParseFile(tplPath)}
 	}
+	return &InterfacesApplier{mustParseFS(interfacesTpl)}
+}
+
+func (a *InterfacesApplier) Apply(c *Conf) error {
+	err := write(c, a.tpl, interfacesTmp)
+	if err != nil {
+		return err
+	}
+
+	err = validate(interfacesValidationService, interfacesTmp)
+	if err != nil {
+		return err
+	}
+
+	moved, err := move(interfacesTmp, interfaces)
+	if err == nil && moved {
+		return dbus.Start(interfacesReloadService)
+	}
+	return err
 }

@@ -1,98 +1,24 @@
 package switcher
 
 import (
-	"bufio"
 	"bytes"
 	"crypto/sha256"
+	"fmt"
 	"io"
 	"os"
+	"text/template"
+
+	"github.com/coreos/go-systemd/v22/unit"
+	"github.com/metal-stack/metal-core/cmd/internal/dbus"
 )
 
-type Reloader interface {
-	Reload() error
-}
-
-type Renderer interface {
-	Render(io.Writer, *Conf) error
-}
-
-type Validator interface {
-	Validate(path string) error
-}
-
-type destConfig struct {
-	dest     string
-	renderer Renderer
-	tmpFile  string
-}
-
-func newDestConfig(dest string, renderer Renderer) *destConfig {
-	return &destConfig{
-		dest:     dest,
-		renderer: renderer,
-		tmpFile:  dest + ".tmp",
-	}
-}
-
-type networkApplier struct {
-	destConfigs []*destConfig
-	reloader    Reloader
-	validator   Validator
-}
-
-// Apply applies the given configuration.
-func (n *networkApplier) Apply(c *Conf) error {
-	for _, d := range n.destConfigs {
-		err := write(c, d)
-		if err != nil {
-			return err
-		}
-	}
-
-	for _, d := range n.destConfigs {
-		err := n.validator.Validate(d.tmpFile)
-		if err != nil {
-			return err
-		}
-	}
-
-	equals := true
-	for _, d := range n.destConfigs {
-		equal, err := areEqual(d.tmpFile, d.dest)
-		if err != nil {
-			return err
-		}
-		equals = equals && equal
-	}
-
-	if equals {
-		return nil
-	}
-
-	for _, d := range n.destConfigs {
-		err := os.Rename(d.tmpFile, d.dest)
-		if err != nil {
-			return err
-		}
-	}
-
-	return n.reloader.Reload()
-}
-
-func write(c *Conf, d *destConfig) error {
-	f, err := os.OpenFile(d.tmpFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+func write(c *Conf, tpl *template.Template, tmpPath string) error {
+	f, err := os.OpenFile(tmpPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
 
-	w := bufio.NewWriter(f)
-	err = d.renderer.Render(w, c)
-	if err != nil {
-		_ = f.Close()
-		return err
-	}
-
-	err = w.Flush()
+	err = tpl.Execute(f, c)
 	if err != nil {
 		_ = f.Close()
 		return err
@@ -101,22 +27,33 @@ func write(c *Conf, d *destConfig) error {
 	return f.Close()
 }
 
-func areEqual(source, target string) (bool, error) {
-	sourceChecksum, err := checksum(source)
-	if err != nil {
-		return false, err
+func validate(service string, path string) error {
+	u := fmt.Sprintf("%s@%s.service", service, unit.UnitNamePathEscape(path))
+	if err := dbus.Start(u); err != nil {
+		return fmt.Errorf("validation failed %w", err)
 	}
-
-	targetChecksum, err := checksum(target)
-	if err != nil {
-		return false, err
-	}
-
-	return bytes.Equal(sourceChecksum, targetChecksum), nil
+	return nil
 }
 
-func checksum(file string) ([]byte, error) {
-	f, err := os.Open(file)
+func move(src, dest string) (bool, error) {
+	sourceChecksum, err := checksum(src)
+	if err != nil {
+		return false, err
+	}
+
+	targetChecksum, err := checksum(dest)
+	if err != nil {
+		return false, err
+	}
+
+	if bytes.Equal(sourceChecksum, targetChecksum) {
+		return false, os.Remove(src)
+	}
+	return true, os.Rename(src, dest)
+}
+
+func checksum(path string) ([]byte, error) {
+	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}

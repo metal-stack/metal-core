@@ -9,30 +9,26 @@ import (
 )
 
 type Cumulus struct {
-	frrApplier       *networkApplier
-	interfaceApplier *networkApplier
-	log              *zap.SugaredLogger
+	frrApplier        *FrrApplier
+	interfacesApplier *InterfacesApplier
+	log               *zap.SugaredLogger
 }
 
 func NewCumulus(log *zap.SugaredLogger, frrTplFile, interfacesTplFile string) *Cumulus {
 	return &Cumulus{
-		frrApplier:       newFrrApplier(frrTplFile),
-		interfaceApplier: newInterfacesApplier(interfacesTplFile),
-		log:              log,
+		frrApplier:        NewFrrApplier(frrTplFile),
+		interfacesApplier: NewInterfacesApplier(interfacesTplFile),
+		log:               log,
 	}
 }
 
 func (c *Cumulus) Apply(cfg *Conf) error {
-	err := c.interfaceApplier.Apply(cfg)
+	err := c.interfacesApplier.Apply(cfg)
 	if err != nil {
 		return err
 	}
 
-	err = c.frrApplier.Apply(cfg)
-	if err != nil {
-		return err
-	}
-	return nil
+	return c.frrApplier.Apply(cfg)
 }
 
 func (c *Cumulus) GetSwitchPorts() ([]*net.Interface, error) {
