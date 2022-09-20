@@ -1,58 +1,44 @@
 package switcher
 
 import (
-	"io"
-	"path"
 	"text/template"
 
-	"github.com/metal-stack/metal-networker/pkg/net"
+	"github.com/metal-stack/metal-core/cmd/internal/dbus"
 )
 
 const (
-	// Frr is the path to the frr configuration file
-	Frr = "/etc/frr/frr.conf"
-	// FrrTmp is the path to the tempoary location of the frr configuration file
-	FrrTmp = "/etc/frr/frr.tmp"
-	// FrrReloadService is the systemd service to reload
-	FrrReloadService = "frr.service"
-	// FrrValidationService is the systemd unit that is used for validation
-	FrrValidationService = "frr-validation"
+	frr                  = "/etc/frr/frr.conf"
+	frrTmp               = "/etc/frr/frr.tmp"
+	frrTpl               = "frr.tpl"
+	frrReloadService     = "frr.service"
+	frrValidationService = "frr-validation"
 )
 
-// FrrApplier is responsible for writing and
-// applying the FRR configuration
 type FrrApplier struct {
-	tplFile string
-	applier net.Applier
+	tpl *template.Template
 }
 
-// NewFrrApplier creates a new FrrApplier
-func NewFrrApplier(c *Conf) Applier {
-	v := net.DBusTemplateValidator{TemplateName: FrrValidationService, InstanceName: FrrTmp}
-	r := net.DBusReloader{ServiceFilename: FrrReloadService}
-	a := net.NewNetworkApplier(c, v, r)
-	return FrrApplier{
-		applier: a,
-		tplFile: c.FrrTplFile,
+func NewFrrApplier(tplPath string) *FrrApplier {
+	if tplPath != "" {
+		return &FrrApplier{mustParseFile(tplPath)}
 	}
+	return &FrrApplier{mustParseFS(frrTpl)}
 }
 
-// Apply applies the configuration to the system
-func (a FrrApplier) Apply() error {
-	tpl := a.getTpl()
-	_, err := a.applier.Apply(*tpl, FrrTmp, Frr, true)
+func (a *FrrApplier) Apply(c *Conf) error {
+	err := write(c, a.tpl, frrTmp)
+	if err != nil {
+		return err
+	}
+
+	err = validate(frrValidationService, frrTmp)
+	if err != nil {
+		return err
+	}
+
+	moved, err := move(frrTmp, frr)
+	if err == nil && moved {
+		return dbus.Reload(frrReloadService)
+	}
 	return err
-}
-
-// Render renders the frr configuration to the given writer
-func (a FrrApplier) Render(w io.Writer) error {
-	tpl := a.getTpl()
-	return a.applier.Render(w, *tpl)
-}
-
-func (a FrrApplier) getTpl() *template.Template {
-	if a.tplFile != "" {
-		return template.Must(template.New(path.Base(a.tplFile)).ParseFiles(a.tplFile))
-	}
-	return template.Must(template.New("frr.tpl").Parse(frrTPL))
 }

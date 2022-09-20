@@ -4,6 +4,7 @@ import (
 	"time"
 
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 	metalgo "github.com/metal-stack/metal-go"
 	"go.uber.org/zap"
 )
@@ -24,8 +25,8 @@ type Core struct {
 	additionalBridgeVIDs      []string
 	spineUplinks              string
 
-	interfacesTplFile string
-	frrTplFile        string
+	interfacesApplier *switcher.InterfacesApplier
+	frrApplier        *switcher.FrrApplier
 
 	driver             metalgo.Client
 	eventServiceClient v1.EventServiceClient
@@ -47,8 +48,8 @@ type Config struct {
 	AdditionalBridgeVIDs      []string
 	SpineUplinks              string
 
-	InterfacesTplFile string
-	FrrTplFile        string
+	InterfacesApplier *switcher.InterfacesApplier
+	FrrApplier        *switcher.FrrApplier
 
 	Driver             metalgo.Client
 	EventServiceClient v1.EventServiceClient
@@ -69,8 +70,8 @@ func New(c Config) *Core {
 		additionalBridgePorts:     c.AdditionalBridgePorts,
 		additionalBridgeVIDs:      c.AdditionalBridgeVIDs,
 		spineUplinks:              c.SpineUplinks,
-		interfacesTplFile:         c.InterfacesTplFile,
-		frrTplFile:                c.FrrTplFile,
+		interfacesApplier:         c.InterfacesApplier,
+		frrApplier:                c.FrrApplier,
 		driver:                    c.Driver,
 		eventServiceClient:        c.EventServiceClient,
 	}

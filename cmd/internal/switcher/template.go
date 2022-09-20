@@ -3,18 +3,16 @@ package switcher
 import (
 	"embed"
 	"path"
+	"text/template"
 )
 
 //go:embed tpl
 var templates embed.FS
 
-var interfacesTPL = mustReadTpl("interfaces.tpl")
-var frrTPL = mustReadTpl("frr.tpl")
+func mustParseFile(path string) *template.Template {
+	return template.Must(template.ParseFiles(path))
+}
 
-func mustReadTpl(tplName string) string {
-	contents, err := templates.ReadFile(path.Join("tpl", tplName))
-	if err != nil {
-		panic(err)
-	}
-	return string(contents)
+func mustParseFS(name string) *template.Template {
+	return template.Must(template.ParseFS(templates, path.Join("tpl", name)))
 }
