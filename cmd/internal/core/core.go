@@ -31,9 +31,7 @@ type Core struct {
 	additionalBridgeVIDs      []string
 	spineUplinks              string
 
-	nos               NOS
-	interfacesTplFile string
-	frrTplFile        string
+	nos NOS
 
 	driver             metalgo.Client
 	eventServiceClient v1.EventServiceClient
@@ -55,9 +53,7 @@ type Config struct {
 	AdditionalBridgeVIDs      []string
 	SpineUplinks              string
 
-	NOS               NOS
-	InterfacesTplFile string
-	FrrTplFile        string
+	NOS NOS
 
 	Driver             metalgo.Client
 	EventServiceClient v1.EventServiceClient

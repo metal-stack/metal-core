@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
-	httppprof "net/http/pprof"
 	"os"
 	"strings"
 
@@ -15,6 +13,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"net/http"
+	httppprof "net/http/pprof"
 )
 
 func Run() {
