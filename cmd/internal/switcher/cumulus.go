@@ -28,11 +28,7 @@ func (c *Cumulus) Apply(cfg *Conf) error {
 		return err
 	}
 
-	err = c.frrApplier.Apply(cfg)
-	if err != nil {
-		return err
-	}
-	return nil
+	return c.frrApplier.Apply(cfg)
 }
 
 func (c *Cumulus) GetSwitchPorts() ([]*net.Interface, error) {
