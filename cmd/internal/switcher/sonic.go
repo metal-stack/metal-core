@@ -11,20 +11,26 @@ import (
 )
 
 type Sonic struct {
-	bgpApplier *BgpApplier
-	log        *zap.SugaredLogger
+	bgpApplier     *BgpApplier
+	confidbApplier *ConfigdbApplier
+	log            *zap.SugaredLogger
 }
 
 func NewSonic(log *zap.SugaredLogger) *Sonic {
 	return &Sonic{
-		bgpApplier: newBgpApplier(),
-		log:        log,
+		bgpApplier:     newBgpApplier(),
+		confidbApplier: newConfigdbApplier(),
+		log:            log,
 	}
 }
 
 func (s *Sonic) Apply(cfg *Conf) error {
 	c := capitalizeVrfName(cfg)
-	return s.bgpApplier.Apply(c)
+	err := s.bgpApplier.Apply(c)
+	if err != nil {
+		return err
+	}
+	return s.confidbApplier.Apply(c)
 }
 
 func (s *Sonic) GetSwitchPorts() ([]*net.Interface, error) {

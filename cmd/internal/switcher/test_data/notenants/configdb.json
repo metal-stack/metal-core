@@ -1,0 +1,51 @@
+{
+  "INTERFACE": {
+    "swp1": {},
+    "swp2": {},
+    "swp31": {},
+    "swp32": {}
+  },
+  "PORT": {
+    "swp1": {
+      "mtu": "9000"
+    },
+    "swp2": {
+      "mtu": "9000"
+    },
+    "swp31": {
+      "mtu": "9216"
+    },
+    "swp32": {
+      "mtu": "9216"
+    }
+  },
+  "VLAN": {
+    "Vlan4000": {
+      "vlanid": "4000"
+    }
+  },
+  "VLAN_INTERFACE": {
+    "Vlan4000": {},
+    "Vlan4000|10.255.255.2/24": {}
+  },
+  "VLAN_MEMBER": {
+    "Vlan4000|swp1": {
+      "tagging_mode": "untagged"
+    },
+    "Vlan4000|swp2": {
+      "tagging_mode": "untagged"
+    }
+  },
+  "VRF": {},
+  "VXLAN_TUNNEL": {
+    "vtep": {
+      "src_ip": "10.0.0.10"
+    }
+  },
+  "VXLAN_TUNNEL_MAP": {
+    "vtep|map_104000_Vlan4000": {
+      "vlan": "Vlan4000",
+      "vni": "104000"
+    }
+  }
+}
