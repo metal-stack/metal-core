@@ -6,20 +6,25 @@ import (
 	"strings"
 
 	"go.uber.org/zap"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type Sonic struct {
-	log *zap.SugaredLogger
+	bgpApplier *BgpApplier
+	log        *zap.SugaredLogger
 }
 
 func NewSonic(log *zap.SugaredLogger) *Sonic {
 	return &Sonic{
-		log: log,
+		bgpApplier: newBgpApplier(),
+		log:        log,
 	}
 }
 
 func (s *Sonic) Apply(cfg *Conf) error {
-	return nil
+	c := capitalizeVrfName(cfg)
+	return s.bgpApplier.Apply(c)
 }
 
 func (s *Sonic) GetSwitchPorts() ([]*net.Interface, error) {
@@ -41,4 +46,30 @@ func (s *Sonic) GetSwitchPorts() ([]*net.Interface, error) {
 		switchPorts = append(switchPorts, iface)
 	}
 	return switchPorts, nil
+}
+
+func capitalizeVrfName(cfg *Conf) *Conf {
+	caser := cases.Title(language.English)
+	vrfs := make(map[string]*Vrf)
+	for name, vrf := range cfg.Ports.Vrfs {
+		s := caser.String(name)
+		vrfs[s] = vrf
+	}
+	p := Ports{
+		Eth0:          cfg.Ports.Eth0,
+		Underlay:      cfg.Ports.Underlay,
+		Unprovisioned: cfg.Ports.Unprovisioned,
+		BladePorts:    cfg.Ports.BladePorts,
+		Vrfs:          vrfs,
+		Firewalls:     cfg.Ports.Firewalls,
+	}
+	return &Conf{
+		Name:                 cfg.Name,
+		LogLevel:             cfg.LogLevel,
+		Loopback:             cfg.Loopback,
+		ASN:                  cfg.ASN,
+		Ports:                p,
+		MetalCoreCIDR:        cfg.MetalCoreCIDR,
+		AdditionalBridgeVIDs: cfg.AdditionalBridgeVIDs,
+	}
 }
