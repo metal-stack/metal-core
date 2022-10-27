@@ -2,13 +2,11 @@ package core
 
 import (
 	"fmt"
-	"net"
 	"os"
 	"time"
 
 	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
 	"github.com/metal-stack/metal-go/api/models"
-	"go.uber.org/zap"
 )
 
 func (c *Core) RegisterSwitch() error {
@@ -19,7 +17,7 @@ func (c *Core) RegisterSwitch() error {
 		hostname string
 	)
 
-	if nics, err = getNics(c.log, c.nos, c.additionalBridgePorts); err != nil {
+	if nics, err = c.nos.GetNics(c.log, c.additionalBridgePorts); err != nil {
 		return fmt.Errorf("unable to get nics: %w", err)
 	}
 
@@ -46,34 +44,4 @@ func (c *Core) RegisterSwitch() error {
 	}
 	c.log.Infow("register switch completed")
 	return nil
-}
-
-func getNics(log *zap.SugaredLogger, nos NOS, blacklist []string) ([]*models.V1SwitchNic, error) {
-	var nics []*models.V1SwitchNic
-	ifs, err := nos.GetSwitchPorts()
-	if err != nil {
-		return nil, fmt.Errorf("unable to get all ifs: %w", err)
-	}
-links:
-	for _, iface := range ifs {
-		name := iface.Name
-		mac := iface.HardwareAddr.String()
-		for _, b := range blacklist {
-			if b == name {
-				log.Debugw("skip interface, because it is contained in the blacklist", "interface", name, "blacklist", blacklist)
-				continue links
-			}
-		}
-		_, err := net.ParseMAC(mac)
-		if err != nil {
-			log.Debugw("skip interface with invalid mac", "interface", name, "MAC", mac)
-			continue
-		}
-		nic := &models.V1SwitchNic{
-			Mac:  &mac,
-			Name: &name,
-		}
-		nics = append(nics, nic)
-	}
-	return nics, nil
 }

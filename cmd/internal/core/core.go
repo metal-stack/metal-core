@@ -1,6 +1,7 @@
 package core
 
 import (
+	"github.com/metal-stack/metal-go/api/models"
 	"net"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 
 type NOS interface {
 	Apply(cfg *switcher.Conf) error
+	GetNics(log *zap.SugaredLogger, blacklist []string) ([]*models.V1SwitchNic, error)
 	GetSwitchPorts() ([]*net.Interface, error)
 }
 

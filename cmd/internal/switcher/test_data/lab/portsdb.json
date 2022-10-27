@@ -1,0 +1,17 @@
+{
+  "INTERFACE": {},
+  "PORT": {
+    "Ethernet0": {
+      "alias": "fortyGigE0/0"
+    },
+    "Ethernet4": {
+      "alias": "fortyGigE1/0"
+    },
+    "Ethernet8": {
+      "alias": "fortyGigE2/0"
+    },
+    "Ethernet12": {
+      "alias": "fortyGigE3/0"
+    }
+  }
+}
