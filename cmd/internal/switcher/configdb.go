@@ -3,7 +3,7 @@ package switcher
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strconv"
 
 	"github.com/metal-stack/metal-core/cmd/internal/dbus"
@@ -125,7 +125,7 @@ func (a *ConfigdbApplier) Apply(c *Conf) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(metalCoreConfigdbTmp, data, 0644)
+	err = os.WriteFile(metalCoreConfigdbTmp, data, 0644)
 	if err != nil {
 		return err
 	}

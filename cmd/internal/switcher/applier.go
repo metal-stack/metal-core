@@ -17,14 +17,14 @@ func write(c *Conf, tpl *template.Template, tmpPath string) error {
 	if err != nil {
 		return err
 	}
+	defer f.Close()
 
 	err = tpl.Execute(f, c)
 	if err != nil {
-		_ = f.Close()
 		return err
 	}
 
-	return f.Close()
+	return nil
 }
 
 func validate(service string, path string) error {
@@ -55,12 +55,12 @@ func move(src, dest string) (bool, error) {
 func checksum(path string) ([]byte, error) {
 	f, err := os.Open(path)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
-
-	defer func() {
-		_ = f.Close()
-	}()
+	defer f.Close()
 
 	h := sha256.New()
 	if _, err := io.Copy(h, f); err != nil {
