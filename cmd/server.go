@@ -72,7 +72,10 @@ func Run() {
 
 	var nos core.NOS
 	if _, err := os.Stat(sonicVersionFile); err == nil {
-		nos = switcher.NewSonic(log)
+		nos, err = switcher.NewSonic(log)
+		if err != nil {
+			log.Fatalw("failed to initialize SONiC configurator", "error", err)
+		}
 	} else {
 		nos = switcher.NewCumulus(log, cfg.FrrTplFile, cfg.InterfacesTplFile)
 	}

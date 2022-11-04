@@ -28,12 +28,17 @@ type PortInfo struct {
 	Alias string
 }
 
-func NewSonic(log *zap.SugaredLogger) *Sonic {
+func NewSonic(log *zap.SugaredLogger) (*Sonic, error) {
+	ifs, err := getInterfacesConfig(sonicConfigDBPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load interfaces config from ConfgiDB: %w", err)
+	}
+
 	return &Sonic{
 		bgpApplier:     newBgpApplier(),
-		confidbApplier: newConfigdbApplier(),
+		confidbApplier: newConfigdbApplier(ifs),
 		log:            log,
-	}
+	}, nil
 }
 
 func (s *Sonic) Apply(cfg *Conf) error {
@@ -117,6 +122,30 @@ func getPortsConfig(filepath string) (map[string]PortInfo, error) {
 	json.Unmarshal(byteValue, &config)
 
 	return config.Ports, nil
+}
+
+func getInterfacesConfig(filepath string) (infs []string, err error) {
+	jsonFile, err := os.Open(filepath)
+	if err != nil {
+		return nil, err
+	}
+	defer jsonFile.Close()
+
+	byteValue, err := io.ReadAll(jsonFile)
+	if err != nil {
+		return nil, err
+	}
+
+	config := struct {
+		Interfaces map[string]struct{} `json:"INTERFACE"`
+	}{}
+	json.Unmarshal(byteValue, &config)
+
+	for k, _ := range config.Interfaces {
+		infs = append(infs, k)
+	}
+
+	return infs, nil
 }
 
 func capitalizeVrfName(cfg *Conf) *Conf {

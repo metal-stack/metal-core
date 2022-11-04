@@ -6,6 +6,7 @@ import (
 	"github.com/coreos/go-systemd/v22/unit"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/metal-stack/metal-core/cmd/internal/dbus"
 )
@@ -64,7 +65,7 @@ type vxlanTunnelMap struct {
 	Vni  string `json:"vni"`
 }
 
-func buildConfigdb(cfg *Conf) *configdb {
+func buildConfigdb(cfg *Conf, fpInfs []string) *configdb {
 	c := &configdb{
 		Ifaces:         map[string]*iface{},
 		Ports:          map[string]*port{},
@@ -111,17 +112,28 @@ func buildConfigdb(cfg *Conf) *configdb {
 		c.VlanMembers[memberName] = &vlanMember{untagged}
 	}
 
+	// remove IPs for front-panel interfaces
+	for _, inf := range fpInfs {
+		if strings.Contains(inf, "|") {
+			c.Ifaces[inf] = nil
+		}
+	}
+
 	return c
 }
 
-type ConfigdbApplier struct{}
+type ConfigdbApplier struct {
+	interfaces []string
+}
 
-func newConfigdbApplier() *ConfigdbApplier {
-	return &ConfigdbApplier{}
+func newConfigdbApplier(infs []string) *ConfigdbApplier {
+	return &ConfigdbApplier{
+		interfaces: infs,
+	}
 }
 
 func (a *ConfigdbApplier) Apply(c *Conf) error {
-	cfg := buildConfigdb(c)
+	cfg := buildConfigdb(c, a.interfaces)
 
 	data, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {

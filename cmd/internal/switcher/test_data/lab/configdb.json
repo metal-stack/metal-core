@@ -3,6 +3,7 @@
     "swp1": {
       "vrf_name": "vrf104001"
     },
+    "swp1|10.0.0.10": null,
     "swp2": {
       "vrf_name": "vrf104001"
     },
