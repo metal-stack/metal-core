@@ -3,6 +3,7 @@ package switcher
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/coreos/go-systemd/v22/unit"
 	"os"
 	"strconv"
 
@@ -10,8 +11,10 @@ import (
 )
 
 const (
-	metalCoreConfigdb     = "/etc/sonic/metal-core.json"
-	metalCoreConfigdbTmp  = "/etc/sonic/metal-core.tmp"
+	// Tried to use "metal-core" name for the file. It doesn't work.
+	// Systemd transforms "-" to "\" when %I specifier is used.
+	metalCoreConfigdb     = "/etc/sonic/metal.json"
+	metalCoreConfigdbTmp  = "/etc/sonic/metal.tmp"
 	configdbReloadService = "write-to-db"
 
 	untagged = "untagged"
@@ -136,7 +139,8 @@ func (a *ConfigdbApplier) Apply(c *Conf) error {
 	}
 
 	if moved {
-		return dbus.Start(configdbReloadService)
+		u := fmt.Sprintf("%s@%s.service", configdbReloadService, unit.UnitNamePathEscape(metalCoreConfigdb))
+		return dbus.Start(u)
 	}
 	return nil
 }
