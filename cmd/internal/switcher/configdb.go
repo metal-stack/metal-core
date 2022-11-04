@@ -22,6 +22,7 @@ const (
 )
 
 type configdb struct {
+	Features       map[string]*feature        `json:"FEATURE"`
 	Ifaces         map[string]*iface          `json:"INTERFACE"`
 	Ports          map[string]*port           `json:"PORT"`
 	Vlans          map[string]*vlan2          `json:"VLAN"`
@@ -30,6 +31,10 @@ type configdb struct {
 	Vrfs           map[string]*vrf            `json:"VRF"`
 	VxlanTunnel    vxlanTunnel                `json:"VXLAN_TUNNEL"`
 	VxlanTunnelMap map[string]*vxlanTunnelMap `json:"VXLAN_TUNNEL_MAP"`
+}
+
+type feature struct {
+	State string `json:"state,omitempty"`
 }
 
 type iface struct {
@@ -41,7 +46,8 @@ type port struct {
 }
 
 type vlan2 struct {
-	VlanId string `json:"vlanid,omitempty"`
+	VlanId      string   `json:"vlanid,omitempty"`
+	DHCPServers []string `json:"dhcp_servers,omitempty"`
 }
 
 type vlanMember struct {
@@ -67,6 +73,7 @@ type vxlanTunnelMap struct {
 
 func buildConfigdb(cfg *Conf, fpInfs []string) *configdb {
 	c := &configdb{
+		Features:       map[string]*feature{},
 		Ifaces:         map[string]*iface{},
 		Ports:          map[string]*port{},
 		Vlans:          map[string]*vlan2{},
@@ -75,6 +82,10 @@ func buildConfigdb(cfg *Conf, fpInfs []string) *configdb {
 		Vrfs:           map[string]*vrf{},
 		VxlanTunnel:    vxlanTunnel{vtep{SrcIp: cfg.Loopback}},
 		VxlanTunnelMap: map[string]*vxlanTunnelMap{},
+	}
+
+	c.Features["dhcp_relay"] = &feature{
+		State: "enabled",
 	}
 
 	for _, p := range cfg.Ports.Underlay {
@@ -93,7 +104,7 @@ func buildConfigdb(cfg *Conf, fpInfs []string) *configdb {
 		vlanId := strconv.FormatUint(uint64(v.VLANID), 10)
 		vlanName := "Vlan" + vlanId
 		vni := strconv.FormatUint(uint64(v.VNI), 10)
-		c.Vlans[vlanName] = &vlan2{vlanId}
+		c.Vlans[vlanName] = &vlan2{VlanId: vlanId}
 		c.VlanIfaces[vlanName] = &iface{vrfName}
 		c.Vrfs[vrfName] = &vrf{vni}
 
@@ -101,7 +112,7 @@ func buildConfigdb(cfg *Conf, fpInfs []string) *configdb {
 		c.VxlanTunnelMap[tunnelMapName] = &vxlanTunnelMap{vlanName, vni}
 	}
 	pxeIfaceName := "Vlan4000|" + cfg.MetalCoreCIDR
-	c.Vlans["Vlan4000"] = &vlan2{"4000"}
+	c.Vlans["Vlan4000"] = &vlan2{VlanId: "4000", DHCPServers: []string{"10.0.1.100"}}
 	c.VlanIfaces["Vlan4000"] = &iface{}
 	c.VlanIfaces[pxeIfaceName] = &iface{}
 	c.VxlanTunnelMap["vtep|map_104000_Vlan4000"] = &vxlanTunnelMap{"Vlan4000", "104000"}
