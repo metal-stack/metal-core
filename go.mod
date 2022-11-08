@@ -6,7 +6,7 @@ require (
 	github.com/coreos/go-systemd/v22 v22.3.2
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/go-lldpd v0.4.0
-	github.com/metal-stack/metal-api v0.21.5-0.20221026170408-2848475e64a9
+	github.com/metal-stack/metal-api v0.21.5-0.20221108201044-00cea8081c41
 	github.com/metal-stack/metal-go v0.21.5-0.20221026170528-05ca3b3024a8
 	github.com/metal-stack/v v1.0.3
 	github.com/prometheus/client_golang v1.13.0
