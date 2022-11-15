@@ -1,9 +1,5 @@
 {
-  "FEATURE": {
-    "dhcp_relay": {
-      "state": "enabled"
-    }
-  },
+  "FEATURE": {},
   "INTERFACE": {
     "swp1": {
       "vrf_name": "vrf104001"
@@ -42,18 +38,11 @@
     }
   },
   "VLAN": {
-    "Vlan4000": {
-      "vlanid": "4000",
-      "dhcp_servers": [
-        "10.0.1.100"
-      ]
-    },
     "Vlan4001": {
       "vlanid": "4001"
     }
   },
   "VLAN_INTERFACE": {
-    "Vlan4000": {},
     "Vlan4000|10.255.255.2/24": {},
     "Vlan4001": {
       "vrf_name": "vrf104001"

@@ -46,8 +46,7 @@ type port struct {
 }
 
 type vlan2 struct {
-	VlanId      string   `json:"vlanid,omitempty"`
-	DHCPServers []string `json:"dhcp_servers,omitempty"`
+	VlanId string `json:"vlanid,omitempty"`
 }
 
 type vlanMember struct {
@@ -84,10 +83,6 @@ func buildConfigdb(cfg *Conf, fpInfs []string) *configdb {
 		VxlanTunnelMap: map[string]*vxlanTunnelMap{},
 	}
 
-	c.Features["dhcp_relay"] = &feature{
-		State: "enabled",
-	}
-
 	for _, p := range cfg.Ports.Underlay {
 		c.Ifaces[p] = &iface{}
 		c.Ports[p] = &port{Mtu: "9216"}
@@ -112,8 +107,6 @@ func buildConfigdb(cfg *Conf, fpInfs []string) *configdb {
 		c.VxlanTunnelMap[tunnelMapName] = &vxlanTunnelMap{vlanName, vni}
 	}
 	pxeIfaceName := "Vlan4000|" + cfg.MetalCoreCIDR
-	c.Vlans["Vlan4000"] = &vlan2{VlanId: "4000", DHCPServers: []string{"10.0.1.100"}}
-	c.VlanIfaces["Vlan4000"] = &iface{}
 	c.VlanIfaces[pxeIfaceName] = &iface{}
 	c.VxlanTunnelMap["vtep|map_104000_Vlan4000"] = &vxlanTunnelMap{"Vlan4000", "104000"}
 	for _, p := range cfg.Ports.Unprovisioned {
