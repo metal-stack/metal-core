@@ -1,5 +1,9 @@
 {
-  "FEATURE": {},
+  "FEATURE": {
+    "dhcp_relay": {
+      "state": "enabled"
+    }
+  },
   "INTERFACE": {
     "swp1": {},
     "swp1|10.0.0.10": null,
@@ -21,8 +25,16 @@
       "mtu": "9216"
     }
   },
-  "VLAN": {},
+  "VLAN": {
+    "Vlan4000": {
+      "vlanid": "4000",
+      "dhcp_servers": [
+        "10.0.1.100"
+      ]
+    }
+  },
   "VLAN_INTERFACE": {
+    "Vlan4000": {},
     "Vlan4000|10.255.255.2/24": {}
   },
   "VLAN_MEMBER": {
