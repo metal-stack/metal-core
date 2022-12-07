@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"os/exec"
 	"strings"
 
 	"go.uber.org/zap"
@@ -43,11 +44,30 @@ func NewSonic(log *zap.SugaredLogger) (*Sonic, error) {
 
 func (s *Sonic) Apply(cfg *Conf) error {
 	c := capitalizeVrfName(cfg)
-	err := s.bgpApplier.Apply(c)
+	bgpApplied, err := s.bgpApplier.Apply(c)
 	if err != nil {
 		return err
 	}
-	return s.confidbApplier.Apply(c)
+
+	configDBApplied, err := s.confidbApplier.Apply(c)
+	if err != nil {
+		return err
+	}
+
+	// Save ConfiDB and reload configuration
+	if bgpApplied || configDBApplied {
+		cmd := exec.Command("/bin/bash", "-c", "sudo config save -y")
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to sae ConfigDB: %w", err)
+		}
+
+		cmd = exec.Command("/bin/bash", "-c", "sudo config reload -y")
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to reload config: %w", err)
+		}
+	}
+
+	return nil
 }
 
 func (s *Sonic) GetNics(log *zap.SugaredLogger, blacklist []string) (nics []*models.V1SwitchNic, err error) {

@@ -2,8 +2,6 @@ package switcher
 
 import (
 	"text/template"
-
-	"github.com/metal-stack/metal-core/cmd/internal/dbus"
 )
 
 const (
@@ -16,7 +14,6 @@ const (
 	zebra    = "/etc/sonic/frr/zebra.conf"
 	zebraTpl = "zebra.tpl"
 
-	bgpReloadService     = "bgp.service"
 	bgpValidationService = "bgp-validation"
 )
 
@@ -42,10 +39,6 @@ func (r *renderer) write(c *Conf) error {
 	return validate(bgpValidationService, r.tmp)
 }
 
-func (r *renderer) move() (bool, error) {
-	return move(r.tmp, r.dest)
-}
-
 type BgpApplier struct {
 	renderers []*renderer
 }
@@ -60,27 +53,24 @@ func newBgpApplier() *BgpApplier {
 	}
 }
 
-func (a *BgpApplier) Apply(c *Conf) error {
+func (a *BgpApplier) Apply(c *Conf) (applied bool, err error) {
 	for _, r := range a.renderers {
 		err := r.write(c)
 		if err != nil {
-			return err
+			return false, err
 		}
 	}
 
-	var anyMoved = false
 	for _, r := range a.renderers {
-		moved, err := r.move()
+		a, err := move(r.tmp, r.dest)
 		if err != nil {
-			return err
+			return false, err
 		}
-		if moved {
-			anyMoved = true
+
+		if a {
+			applied = true
 		}
 	}
 
-	if anyMoved {
-		return dbus.Reload(bgpReloadService)
-	}
-	return nil
+	return applied, nil
 }

@@ -143,27 +143,28 @@ func newConfigdbApplier(infs []string) *ConfigdbApplier {
 	}
 }
 
-func (a *ConfigdbApplier) Apply(c *Conf) error {
+func (a *ConfigdbApplier) Apply(c *Conf) (applied bool, err error) {
 	cfg := buildConfigdb(c, a.interfaces)
 
 	data, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	err = os.WriteFile(metalCoreConfigdbTmp, data, 0644)
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	moved, err := move(metalCoreConfigdbTmp, metalCoreConfigdb)
+	applied, err = move(metalCoreConfigdbTmp, metalCoreConfigdb)
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	if moved {
+	if applied {
 		u := fmt.Sprintf("%s@%s.service", configdbReloadService, unit.UnitNamePathEscape(metalCoreConfigdb))
-		return dbus.Start(u)
+		return applied, dbus.Start(u)
 	}
-	return nil
+
+	return false, nil
 }
