@@ -30,7 +30,7 @@ func write(c *Conf, tpl *template.Template, tmpPath string) error {
 func validate(service string, path string) error {
 	u := fmt.Sprintf("%s@%s.service", service, unit.UnitNamePathEscape(path))
 	if err := dbus.Start(u); err != nil {
-		return fmt.Errorf("validation failed %w", err)
+		return fmt.Errorf("%s@%s: %w", service, unit.UnitNamePathEscape(path), err)
 	}
 	return nil
 }
