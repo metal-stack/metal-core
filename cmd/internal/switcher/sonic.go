@@ -3,11 +3,11 @@ package switcher
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/metal-stack/metal-core/cmd/internal/dbus"
 	"github.com/metal-stack/metal-go/api/models"
 	"io"
 	"net"
 	"os"
-	"os/exec"
 	"strings"
 
 	"go.uber.org/zap"
@@ -16,7 +16,8 @@ import (
 )
 
 const (
-	sonicConfigDBPath = "/etc/sonic/config_db.json"
+	sonicConfigDBPath            = "/etc/sonic/config_db.json"
+	sonicConfigSaveReloadService = "config-save-reload.service"
 )
 
 type Sonic struct {
@@ -56,14 +57,8 @@ func (s *Sonic) Apply(cfg *Conf) error {
 
 	// Save ConfiDB and reload configuration
 	if bgpApplied || configDBApplied {
-		cmd := exec.Command("/bin/bash", "-c", "sudo config save -y")
-		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("failed to sae ConfigDB: %w", err)
-		}
-
-		cmd = exec.Command("/bin/bash", "-c", "sudo config reload -y")
-		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("failed to reload config: %w", err)
+		if err := dbus.Start(sonicConfigSaveReloadService); err != nil {
+			return fmt.Errorf("failed to save and reload SONiC config")
 		}
 	}
 
