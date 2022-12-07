@@ -1,6 +1,7 @@
 package switcher
 
 import (
+	"strings"
 	"text/template"
 
 	"github.com/metal-stack/metal-core/cmd/internal/dbus"
@@ -29,7 +30,7 @@ type renderer struct {
 func newRenderer(dest string, tpl *template.Template) *renderer {
 	return &renderer{
 		dest: dest,
-		tmp:  dest + ".tmp",
+		tmp:  strings.Replace(dest, ".conf", ".tmp", 1),
 		tpl:  tpl,
 	}
 }
