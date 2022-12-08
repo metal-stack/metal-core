@@ -94,6 +94,7 @@ func Run() {
 		AdditionalBridgePorts:     cfg.AdditionalBridgePorts,
 		AdditionalBridgeVIDs:      cfg.AdditionalBridgeVIDs,
 		SpineUplinks:              cfg.SpineUplinks,
+		DHCPServers:               cfg.DHCPServers,
 		NOS:                       nos,
 		Driver:                    driver,
 		EventServiceClient:        grpcClient.NewEventClient(),

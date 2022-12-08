@@ -11,6 +11,7 @@ type Conf struct {
 	Ports                Ports
 	MetalCoreCIDR        string
 	AdditionalBridgeVIDs []string
+	DHCPServers          []string
 }
 
 type Ports struct {

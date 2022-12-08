@@ -93,6 +93,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*switcher.Conf, 
 		Loopback:             c.loopbackIP,
 		MetalCoreCIDR:        c.cidr,
 		AdditionalBridgeVIDs: c.additionalBridgeVIDs,
+		DHCPServers:          c.dhcpServers,
 	}
 
 	p := switcher.Ports{

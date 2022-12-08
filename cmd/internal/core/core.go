@@ -32,6 +32,7 @@ type Core struct {
 	additionalBridgePorts     []string
 	additionalBridgeVIDs      []string
 	spineUplinks              string
+	dhcpServers               []string
 
 	nos NOS
 
@@ -54,6 +55,7 @@ type Config struct {
 	AdditionalBridgePorts     []string
 	AdditionalBridgeVIDs      []string
 	SpineUplinks              string
+	DHCPServers               []string
 
 	NOS NOS
 
@@ -76,6 +78,7 @@ func New(c Config) *Core {
 		additionalBridgePorts:     c.AdditionalBridgePorts,
 		additionalBridgeVIDs:      c.AdditionalBridgeVIDs,
 		spineUplinks:              c.SpineUplinks,
+		dhcpServers:               c.DHCPServers,
 		nos:                       c.NOS,
 		driver:                    c.Driver,
 		eventServiceClient:        c.EventServiceClient,

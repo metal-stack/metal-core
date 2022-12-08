@@ -30,4 +30,5 @@ type Config struct {
 	GrpcCACertFile            string        `required:"false" desc:"the gRPC CA certificate file" envconfig:"grpc_ca_cert_file"`
 	GrpcClientCertFile        string        `required:"false" desc:"the gRPC client certificate file" envconfig:"grpc_client_cert_file"`
 	GrpcClientKeyFile         string        `required:"false" desc:"the gRPC client key file" envconfig:"grpc_client_key_file"`
+	DHCPServers               []string      `required:"false" desc:"DHCP helper address config for SONiC" envconfig:"dhcp_servers"`
 }

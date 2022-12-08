@@ -39,3 +39,5 @@ ports:
 additionalbridgevids:
   - 201-256
   - 301-356
+dhcpservers:
+  - 10.0.1.100
