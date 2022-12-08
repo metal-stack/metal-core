@@ -1,9 +1,10 @@
 package core
 
 import (
-	"github.com/metal-stack/metal-go/api/models"
 	"net"
 	"time"
+
+	"github.com/metal-stack/metal-go/api/models"
 
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
@@ -31,7 +32,7 @@ type Core struct {
 	managementGateway         string
 	additionalBridgePorts     []string
 	additionalBridgeVIDs      []string
-	spineUplinks              string
+	spineUplinks              []string
 	dhcpServers               []string
 
 	nos NOS
@@ -54,7 +55,7 @@ type Config struct {
 	ManagementGateway         string
 	AdditionalBridgePorts     []string
 	AdditionalBridgeVIDs      []string
-	SpineUplinks              string
+	SpineUplinks              []string
 	DHCPServers               []string
 
 	NOS NOS

@@ -25,7 +25,7 @@ func TestStaticdRenderer(t *testing.T) {
 		t.Run(tt, func(t *testing.T) {
 			c := readConf(t, path.Join("test_data", tt, "conf.yaml"))
 			tpl := mustParseFS(staticdTpl)
-			
+
 			// Test scenario with VRF leakage
 			testTemplate(t, tpl, &c, path.Join("test_data", tt, "staticd.conf"))
 

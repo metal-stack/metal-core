@@ -15,7 +15,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		rackID:               "rack01",
 		asn:                  "420000001",
 		loopbackIP:           "10.0.0.1",
-		spineUplinks:         "swp31,swp32",
+		spineUplinks:         []string{"swp31", "swp32"},
 		additionalBridgeVIDs: []string{"201-256", "301-356"},
 	}
 
