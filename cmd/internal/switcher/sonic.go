@@ -11,8 +11,6 @@ import (
 	"strings"
 
 	"go.uber.org/zap"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 const (
@@ -44,13 +42,13 @@ func NewSonic(log *zap.SugaredLogger) (*Sonic, error) {
 }
 
 func (s *Sonic) Apply(cfg *Conf) error {
-	c := capitalizeVrfName(cfg)
-	bgpApplied, err := s.bgpApplier.Apply(c)
+	cfg.CapitalizeVrfName()
+	bgpApplied, err := s.bgpApplier.Apply(cfg)
 	if err != nil {
 		return err
 	}
 
-	configDBApplied, err := s.confidbApplier.Apply(c)
+	configDBApplied, err := s.confidbApplier.Apply(cfg)
 	if err != nil {
 		return err
 	}
@@ -161,30 +159,4 @@ func getInterfacesConfig(filepath string) (infs []string, err error) {
 	}
 
 	return infs, nil
-}
-
-func capitalizeVrfName(cfg *Conf) *Conf {
-	caser := cases.Title(language.English)
-	vrfs := make(map[string]*Vrf)
-	for name, vrf := range cfg.Ports.Vrfs {
-		s := caser.String(name)
-		vrfs[s] = vrf
-	}
-	p := Ports{
-		Eth0:          cfg.Ports.Eth0,
-		Underlay:      cfg.Ports.Underlay,
-		Unprovisioned: cfg.Ports.Unprovisioned,
-		BladePorts:    cfg.Ports.BladePorts,
-		Vrfs:          vrfs,
-		Firewalls:     cfg.Ports.Firewalls,
-	}
-	return &Conf{
-		Name:                 cfg.Name,
-		LogLevel:             cfg.LogLevel,
-		Loopback:             cfg.Loopback,
-		ASN:                  cfg.ASN,
-		Ports:                p,
-		MetalCoreCIDR:        cfg.MetalCoreCIDR,
-		AdditionalBridgeVIDs: cfg.AdditionalBridgeVIDs,
-	}
 }

@@ -112,7 +112,6 @@ func buildConfigdb(cfg *Conf, fpInfs []string) *configdb {
 		c.VxlanTunnelMap[tunnelMapName] = &vxlanTunnelMap{vlanName, vni}
 	}
 	pxeIfaceName := "Vlan4000|" + cfg.MetalCoreCIDR
-	fmt.Println(cfg.DHCPServers)
 	c.Vlans["Vlan4000"] = &vlan2{VlanId: "4000", DHCPServers: cfg.DHCPServers}
 	c.VlanIfaces["Vlan4000"] = &iface{}
 	c.VlanIfaces[pxeIfaceName] = &iface{}
