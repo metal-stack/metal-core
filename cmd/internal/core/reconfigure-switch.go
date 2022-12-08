@@ -86,6 +86,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*switcher.Conf, 
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println(c.dhcpServers)
 	switcherConfig := &switcher.Conf{
 		Name:                 s.Name,
 		LogLevel:             mapLogLevel(c.logLevel),
