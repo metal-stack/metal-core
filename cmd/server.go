@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/cumulus"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic"
 	"net/http"
 	httppprof "net/http/pprof"
 	"os"
@@ -9,7 +11,6 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/metal-stack/metal-core/cmd/internal/core"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/v"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -72,12 +73,12 @@ func Run() {
 
 	var nos core.NOS
 	if _, err := os.Stat(sonicVersionFile); err == nil {
-		nos, err = switcher.NewSonic(log)
+		nos, err = sonic.NewSonic(log)
 		if err != nil {
 			log.Fatalw("failed to initialize SONiC configurator", "error", err)
 		}
 	} else {
-		nos = switcher.NewCumulus(log, cfg.FrrTplFile, cfg.InterfacesTplFile)
+		nos = cumulus.NewCumulus(log, cfg.FrrTplFile, cfg.InterfacesTplFile)
 	}
 
 	c := core.New(core.Config{

@@ -2,12 +2,12 @@ package core
 
 import (
 	"fmt"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
 	"github.com/metal-stack/metal-go/api/models"
@@ -80,13 +80,13 @@ func (c *Core) reconfigureSwitch(switchName string) error {
 	return nil
 }
 
-func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*switcher.Conf, error) {
+func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, error) {
 	asn64, err := strconv.ParseUint(c.asn, 10, 32)
 	asn := uint32(asn64)
 	if err != nil {
 		return nil, err
 	}
-	switcherConfig := &switcher.Conf{
+	switcherConfig := &types.Conf{
 		Name:                 s.Name,
 		LogLevel:             mapLogLevel(c.logLevel),
 		ASN:                  asn,
@@ -96,11 +96,11 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*switcher.Conf, 
 		DHCPServers:          c.dhcpServers,
 	}
 
-	p := switcher.Ports{
+	p := types.Ports{
 		Underlay:      c.spineUplinks,
 		Unprovisioned: []string{},
-		Vrfs:          map[string]*switcher.Vrf{},
-		Firewalls:     map[string]*switcher.Firewall{},
+		Vrfs:          map[string]*types.Vrf{},
+		Firewalls:     map[string]*types.Firewall{},
 	}
 	p.BladePorts = c.additionalBridgePorts
 	for _, nic := range s.Nics {
@@ -119,7 +119,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*switcher.Conf, 
 		}
 		// Firewall-Port
 		if nic.Vrf == "default" {
-			fw := &switcher.Firewall{
+			fw := &types.Firewall{
 				Port: port,
 			}
 			if nic.Filter != nil {
@@ -130,7 +130,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*switcher.Conf, 
 			continue
 		}
 		// Machine-Port
-		vrf := &switcher.Vrf{}
+		vrf := &types.Vrf{}
 		if v, has := p.Vrfs[nic.Vrf]; has {
 			vrf = v
 		}
@@ -175,8 +175,8 @@ func mapLogLevel(level string) string {
 	}
 }
 
-func fillEth0Info(c *switcher.Conf, gw string) error {
-	c.Ports.Eth0 = switcher.Nic{}
+func fillEth0Info(c *types.Conf, gw string) error {
+	c.Ports.Eth0 = types.Nic{}
 	eth0, err := netlink.LinkByName("eth0")
 	if err != nil {
 		return err

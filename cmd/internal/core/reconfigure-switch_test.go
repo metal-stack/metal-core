@@ -1,9 +1,9 @@
 package core
 
 import (
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"testing"
 
-	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 	"github.com/metal-stack/metal-go/api/models"
 	"github.com/stretchr/testify/require"
 )
@@ -49,31 +49,31 @@ func TestBuildSwitcherConfig(t *testing.T) {
 	actual, err := c.buildSwitcherConfig(s)
 	require.NoError(t, err)
 	require.NotNil(t, actual)
-	expected := &switcher.Conf{
+	expected := &types.Conf{
 		LogLevel:      "warnings",
 		Loopback:      "10.0.0.1",
 		MetalCoreCIDR: "10.255.255.2/24",
 		ASN:           420000001,
-		Ports: switcher.Ports{
+		Ports: types.Ports{
 			Underlay:      []string{"swp31", "swp32"},
 			Unprovisioned: []string{"swp1"},
-			Firewalls: map[string]*switcher.Firewall{
+			Firewalls: map[string]*types.Firewall{
 				"swp3": {
 					Port: "swp3",
 				},
 			},
-			Vrfs: map[string]*switcher.Vrf{"vrf104001": {
+			Vrfs: map[string]*types.Vrf{"vrf104001": {
 				VNI:       104001,
 				VLANID:    1001,
 				Neighbors: []string{"swp2"},
-				Filter: switcher.Filter{
-					IPPrefixLists: []switcher.IPPrefixList{
+				Filter: types.Filter{
+					IPPrefixLists: []types.IPPrefixList{
 						{
 							Name: "vrf104001-in-prefixes",
 							Spec: "permit 10.244.0.0/16 le 32",
 						},
 					},
-					RouteMaps: []switcher.RouteMap{
+					RouteMaps: []types.RouteMap{
 						{
 							Name:    "vrf104001-in",
 							Entries: []string{"match ip address prefix-list vrf104001-in-prefixes"},

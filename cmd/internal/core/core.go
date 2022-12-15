@@ -1,19 +1,19 @@
 package core
 
 import (
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"net"
 	"time"
 
 	"github.com/metal-stack/metal-go/api/models"
 
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 	metalgo "github.com/metal-stack/metal-go"
 	"go.uber.org/zap"
 )
 
 type NOS interface {
-	Apply(cfg *switcher.Conf) error
+	Apply(cfg *types.Conf) error
 	GetNics(log *zap.SugaredLogger, blacklist []string) ([]*models.V1SwitchNic, error)
 	GetSwitchPorts() ([]*net.Interface, error)
 }
