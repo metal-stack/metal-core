@@ -53,7 +53,7 @@ router bgp {{ $ASN }}
  exit-address-family
 !
 route-map LOOPBACKS permit 10
- match interface lo
+ match interface Loopback0
 !
 {{- range $k, $f := .Ports.Firewalls }}
 # route-maps for firewall@{{ $k }}
