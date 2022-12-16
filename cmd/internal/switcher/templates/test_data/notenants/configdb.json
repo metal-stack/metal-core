@@ -4,6 +4,10 @@
       "state": "enabled"
     }
   },
+  "LOOPBACK_INTERFACE": {
+    "Loopback0": {},
+    "Loopback0|10.0.0.10/32": {}
+  },
   "INTERFACE": {
     "swp1": {},
     "swp1|10.0.0.10": null,

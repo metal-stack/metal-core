@@ -24,6 +24,7 @@ const (
 
 type configdb struct {
 	Features       map[string]*feature        `json:"FEATURE"`
+	Loopback       map[string]struct{}        `json:"LOOPBACK_INTERFACE"`
 	Ifaces         map[string]*iface          `json:"INTERFACE"`
 	Ports          map[string]*port           `json:"PORT"`
 	Vlans          map[string]*vlan2          `json:"VLAN"`
@@ -75,6 +76,7 @@ type vxlanTunnelMap struct {
 func buildConfigdb(cfg *types.Conf, fpInfs []string) *configdb {
 	c := &configdb{
 		Features:       map[string]*feature{},
+		Loopback:       map[string]struct{}{},
 		Ifaces:         map[string]*iface{},
 		Ports:          map[string]*port{},
 		Vlans:          map[string]*vlan2{},
@@ -87,6 +89,11 @@ func buildConfigdb(cfg *types.Conf, fpInfs []string) *configdb {
 
 	c.Features["dhcp_relay"] = &feature{
 		State: "enabled",
+	}
+
+	c.Loopback["Loopback0"] = struct{}{}
+	if cfg.Loopback != "" {
+		c.Loopback[fmt.Sprintf("Loopback0|%s/32", cfg.Loopback)] = struct{}{}
 	}
 
 	for _, p := range cfg.Ports.Underlay {
