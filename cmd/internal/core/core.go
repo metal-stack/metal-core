@@ -1,9 +1,10 @@
 package core
 
 import (
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"net"
 	"time"
+
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 
 	"github.com/metal-stack/metal-go/api/models"
 
@@ -13,6 +14,7 @@ import (
 )
 
 type NOS interface {
+	SanitizeConfig(cfg *types.Conf)
 	Apply(cfg *types.Conf) error
 	GetNics(log *zap.SugaredLogger, blacklist []string) ([]*models.V1SwitchNic, error)
 	GetSwitchPorts() ([]*net.Interface, error)

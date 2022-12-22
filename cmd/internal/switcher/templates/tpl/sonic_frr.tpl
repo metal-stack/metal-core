@@ -12,7 +12,7 @@ debug bgp update-groups
 debug bgp zebra
 {{- range $vrf, $t := .Ports.Vrfs }}
 !
-vrf vrf{{ $t.VNI }}
+vrf Vrf{{ $t.VNI }}
  vni {{ $t.VNI }}
  exit-vrf
 {{- end }}

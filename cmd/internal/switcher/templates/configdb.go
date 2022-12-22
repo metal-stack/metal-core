@@ -3,11 +3,12 @@ package templates
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/coreos/go-systemd/v22/unit"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/coreos/go-systemd/v22/unit"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 
 	"github.com/metal-stack/metal-core/cmd/internal/dbus"
 )
@@ -45,6 +46,7 @@ type iface struct {
 
 type port struct {
 	Mtu string `json:"mtu,omitempty"`
+	Fec string `json:"fec,omitempty"`
 }
 
 type vlan2 struct {
@@ -102,12 +104,12 @@ func buildConfigdb(cfg *types.Conf, fpInfs []string) *configdb {
 	}
 	for _, fw := range cfg.Ports.Firewalls {
 		c.Ifaces[fw.Port] = &iface{}
-		c.Ports[fw.Port] = &port{Mtu: "9216"}
+		c.Ports[fw.Port] = &port{Mtu: "9216", Fec: "rs"}
 	}
 	for vrfName, v := range cfg.Ports.Vrfs {
 		for _, p := range v.Neighbors {
 			c.Ifaces[p] = &iface{vrfName}
-			c.Ports[p] = &port{Mtu: "9000"}
+			c.Ports[p] = &port{Mtu: "9000", Fec: "rs"}
 		}
 		vlanId := strconv.FormatUint(uint64(v.VLANID), 10)
 		vlanName := "Vlan" + vlanId
@@ -127,7 +129,7 @@ func buildConfigdb(cfg *types.Conf, fpInfs []string) *configdb {
 	for _, p := range cfg.Ports.Unprovisioned {
 		memberName := "Vlan4000|" + p
 		c.Ifaces[p] = &iface{}
-		c.Ports[p] = &port{Mtu: "9000"}
+		c.Ports[p] = &port{Mtu: "9000", Fec: "rs"}
 		c.VlanMembers[memberName] = &vlanMember{untagged}
 	}
 

@@ -2,11 +2,12 @@ package cumulus
 
 import (
 	"fmt"
+	"net"
+	"strings"
+
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/metal-go/api/models"
-	"net"
-	"strings"
 
 	"go.uber.org/zap"
 )
@@ -90,4 +91,7 @@ func (c *Cumulus) GetSwitchPorts() ([]*net.Interface, error) {
 		switchPorts = append(switchPorts, iface)
 	}
 	return switchPorts, nil
+}
+
+func (c *Cumulus) SanitizeConfig(cfg *types.Conf) {
 }

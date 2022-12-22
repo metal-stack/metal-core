@@ -2,11 +2,12 @@ package core
 
 import (
 	"fmt"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
@@ -146,6 +147,8 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 		p.Vrfs[nic.Vrf] = vrf
 	}
 	switcherConfig.Ports = p
+
+	c.nos.SanitizeConfig(switcherConfig)
 	switcherConfig.FillRouteMapsAndIPPrefixLists()
 	m, err := vlan.ReadMapping()
 	if err != nil {
@@ -155,6 +158,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 	if err != nil {
 		return nil, err
 	}
+
 	return switcherConfig, nil
 }
 

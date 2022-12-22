@@ -1,8 +1,10 @@
 package core
 
 import (
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"testing"
+
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/cumulus"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 
 	"github.com/metal-stack/metal-go/api/models"
 	"github.com/stretchr/testify/require"
@@ -17,6 +19,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		loopbackIP:           "10.0.0.1",
 		spineUplinks:         []string{"swp31", "swp32"},
 		additionalBridgeVIDs: []string{"201-256", "301-356"},
+		nos:                  &cumulus.Cumulus{},
 	}
 
 	n1 := "swp1"

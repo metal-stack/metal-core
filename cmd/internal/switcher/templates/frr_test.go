@@ -24,6 +24,7 @@ func TestSonicFrrTpl(t *testing.T) {
 		tt := tests[i]
 		t.Run(tt, func(t *testing.T) {
 			c := readConf(t, path.Join("test_data", tt, "conf.yaml"))
+			c.CapitalizeVrfName()
 			c.FillRouteMapsAndIPPrefixLists()
 			tpl := mustParseFS("sonic_frr.tpl")
 			testTemplate(t, tpl, &c, path.Join("test_data", tt, "sonic_frr.conf"))

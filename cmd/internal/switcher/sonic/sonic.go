@@ -3,14 +3,15 @@ package sonic
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/metal-stack/metal-core/cmd/internal/dbus"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
-	"github.com/metal-stack/metal-go/api/models"
 	"io"
 	"net"
 	"os"
 	"strings"
+
+	"github.com/metal-stack/metal-core/cmd/internal/dbus"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
+	"github.com/metal-stack/metal-go/api/models"
 
 	"go.uber.org/zap"
 )
@@ -49,7 +50,6 @@ func NewSonic(log *zap.SugaredLogger) (*Sonic, error) {
 }
 
 func (s *Sonic) Apply(cfg *types.Conf) error {
-	cfg.CapitalizeVrfName()
 	bgpApplied, err := s.frrApplier.Apply(cfg)
 	if err != nil {
 		return err
@@ -102,6 +102,10 @@ func (s *Sonic) GetNics(log *zap.SugaredLogger, blacklist []string) (nics []*mod
 	}
 
 	return nics, nil
+}
+
+func (s *Sonic) SanitizeConfig(cfg *types.Conf) {
+	cfg.CapitalizeVrfName()
 }
 
 func (s *Sonic) GetSwitchPorts() ([]*net.Interface, error) {
