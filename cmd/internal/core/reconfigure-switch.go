@@ -99,6 +99,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 
 	p := types.Ports{
 		Underlay:      c.spineUplinks,
+		Provisioned:   []string{},
 		Unprovisioned: []string{},
 		Vrfs:          map[string]*types.Vrf{},
 		Firewalls:     map[string]*types.Firewall{},
@@ -117,7 +118,12 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 				p.Unprovisioned = append(p.Unprovisioned, port)
 			}
 			continue
+		} else {
+			if !contains(p.Provisioned, port) {
+				p.Provisioned = append(p.Provisioned, port)
+			}
 		}
+		
 		// Firewall-Port
 		if nic.Vrf == "default" {
 			fw := &types.Firewall{

@@ -126,6 +126,11 @@ func buildConfigdb(cfg *types.Conf, fpInfs []string) *configdb {
 	c.VlanIfaces["Vlan4000"] = &iface{}
 	c.VlanIfaces[pxeIfaceName] = &iface{}
 	c.VxlanTunnelMap["vtep|map_104000_Vlan4000"] = &vxlanTunnelMap{"Vlan4000", "104000"}
+
+	for _, p := range cfg.Ports.Provisioned {
+		memberName := "Vlan4000|" + p
+		c.VlanMembers[memberName] = nil
+	}
 	for _, p := range cfg.Ports.Unprovisioned {
 		memberName := "Vlan4000|" + p
 		c.Ifaces[p] = &iface{}

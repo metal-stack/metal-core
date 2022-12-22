@@ -17,6 +17,7 @@ type Conf struct {
 type Ports struct {
 	Eth0          Nic
 	Underlay      []string
+	Provisioned   []string
 	Unprovisioned []string
 	BladePorts    []string
 	Vrfs          map[string]*Vrf

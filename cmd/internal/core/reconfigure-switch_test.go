@@ -59,6 +59,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		ASN:           420000001,
 		Ports: types.Ports{
 			Underlay:      []string{"swp31", "swp32"},
+			Provisioned:   []string{"swp2", "swp3"},
 			Unprovisioned: []string{"swp1"},
 			Firewalls: map[string]*types.Firewall{
 				"swp3": {
