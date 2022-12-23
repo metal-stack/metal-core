@@ -12,6 +12,11 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
+    - name: Lint
+      uses: golangci/golangci-lint-action@v3
+      with:
+        args: --build-tags -p bugs -p unused --timeout=3m
+
     - name: Figure out if running fork PR
       id: fork
       run: '["${{ secrets.DOCKER_REGISTRY_TOKEN }}" == ""] && echo "::set-output name=is_fork_pr::true" || echo "::set-output name=is_fork_pr::false"'
