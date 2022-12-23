@@ -94,6 +94,8 @@ func (c *Core) ConstantlyPhoneHome() {
 }
 
 func (c *Core) send(ctx context.Context, event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 	s, err := c.eventServiceClient.Send(ctx, event)
 	if err != nil {
 		return nil, err
