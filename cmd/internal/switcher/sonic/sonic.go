@@ -143,9 +143,9 @@ func getPortsConfig(filepath string) (map[string]PortInfo, error) {
 	config := struct {
 		Ports map[string]PortInfo `json:"PORT"`
 	}{}
-	json.Unmarshal(byteValue, &config)
+	err = json.Unmarshal(byteValue, &config)
 
-	return config.Ports, nil
+	return config.Ports, err
 }
 
 func getInterfacesConfig(filepath string) (infs []string, err error) {
@@ -163,7 +163,10 @@ func getInterfacesConfig(filepath string) (infs []string, err error) {
 	config := struct {
 		Interfaces map[string]struct{} `json:"INTERFACE"`
 	}{}
-	json.Unmarshal(byteValue, &config)
+	err = json.Unmarshal(byteValue, &config)
+	if err != nil {
+		return nil, err
+	}
 
 	for k, _ := range config.Interfaces {
 		infs = append(infs, k)

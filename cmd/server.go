@@ -1,13 +1,17 @@
+//go:build client
+// +build client
+
 package cmd
 
 import (
 	"fmt"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/cumulus"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic"
 	"net/http"
 	httppprof "net/http/pprof"
 	"os"
 	"strings"
+
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/cumulus"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/metal-stack/metal-core/cmd/internal/core"

@@ -1,3 +1,6 @@
+//go:build client
+// +build client
+
 package core
 
 import (
@@ -84,14 +87,14 @@ func (c *Core) ConstantlyPhoneHome() {
 					msgs = append(msgs, msg)
 					return true
 				})
-				c.phoneHome(msgs)
+				c.phoneHome(ctx, msgs)
 			}
 		}
 	}()
 }
 
-func (c *Core) send(event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (c *Core) send(ctx context.Context, event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	s, err := c.eventServiceClient.Send(ctx, event)
 	if err != nil {
@@ -103,7 +106,7 @@ func (c *Core) send(event *v1.EventServiceSendRequest) (*v1.EventServiceSendResp
 	return s, err
 }
 
-func (c *Core) phoneHome(msgs []phoneHomeMessage) {
+func (c *Core) phoneHome(ctx context.Context, msgs []phoneHomeMessage) {
 	c.log.Debug("phonehome", zap.Any("machines", msgs))
 	c.log.Infow("phonehome", "machines", len(msgs))
 
@@ -119,7 +122,7 @@ func (c *Core) phoneHome(msgs []phoneHomeMessage) {
 		events[msg.machineID] = event
 	}
 
-	s, err := c.send(&v1.EventServiceSendRequest{Events: events})
+	s, err := c.send(ctx, &v1.EventServiceSendRequest{Events: events})
 	if err != nil {
 		c.log.Errorw("unable to send provisioning event back to API", "error", err)
 	}

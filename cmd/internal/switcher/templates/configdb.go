@@ -166,7 +166,7 @@ func (a *ConfigdbApplier) Apply(c *types.Conf) (applied bool, err error) {
 		return false, err
 	}
 
-	err = os.WriteFile(metalCoreConfigdbTmp, data, 0644)
+	err = os.WriteFile(metalCoreConfigdbTmp, data, 0600)
 	if err != nil {
 		return false, err
 	}

@@ -28,7 +28,7 @@ func TestSonicGetPortsConfig(t *testing.T) {
 				"Expected ports config length: %d, Got: %d", len(interfaceToAliasMap), len(ports))
 
 			for i, a := range interfaceToAliasMap {
-				v, _ := ports[i]
+				v := ports[i]
 				require.Equal(t, a, v.Alias, "Expected interface alias: %s, Got: %s", a, v.Alias)
 			}
 		})

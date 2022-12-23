@@ -15,9 +15,8 @@ import (
 )
 
 type GrpcClient struct {
-	addr string
-	log  *zap.SugaredLogger
-	c    *grpc.ClientConn
+	log *zap.SugaredLogger
+	c   *grpc.ClientConn
 }
 
 // NewGrpcClient fetches the address and certificates from metal-core needed to communicate with metal-api via grpc,

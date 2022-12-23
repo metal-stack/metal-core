@@ -123,7 +123,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 				p.Provisioned = append(p.Provisioned, port)
 			}
 		}
-		
+
 		// Firewall-Port
 		if nic.Vrf == "default" {
 			fw := &types.Firewall{
