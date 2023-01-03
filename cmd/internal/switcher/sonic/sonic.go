@@ -183,7 +183,7 @@ type sonic_version struct {
 }
 
 func (s *Sonic) GetOS() (*models.V1SwitchOS, error) {
-	versionBytes, err := os.ReadFile("/etc/sonic/sonic_version.yaml")
+	versionBytes, err := os.ReadFile("/etc/sonic/sonic_version.yml")
 	if err != nil {
 		return nil, fmt.Errorf("unable to read sonic_version: %w", err)
 	}
