@@ -18,10 +18,9 @@ func GetManagementIP(interfaceName string) (addr string, err error) {
 		return
 	}
 	for _, addr := range addrs {
-		fmt.Printf("interface:%s\n", addr.String())
-		parsed, err := netip.ParseAddr(addr.String())
-		if err == nil {
-			return parsed.String(), nil
+		parsed, err := netip.ParsePrefix(addr.String())
+		if err == nil && parsed.Addr().IsGlobalUnicast() {
+			return parsed.Addr().String(), nil
 		}
 	}
 	return "", fmt.Errorf("interface %s does not have an ip address", interfaceName)
