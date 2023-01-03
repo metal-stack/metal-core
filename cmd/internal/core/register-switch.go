@@ -12,9 +12,12 @@ import (
 func (c *Core) RegisterSwitch() error {
 	c.log.Infow("register switch")
 	var (
-		err      error
-		nics     []*models.V1SwitchNic
-		hostname string
+		err            error
+		nics           []*models.V1SwitchNic
+		hostname       string
+		switchOS       *models.V1SwitchOS
+		managementIP   string
+		managementUser string
 	)
 
 	if nics, err = c.nos.GetNics(c.log, c.additionalBridgePorts); err != nil {
@@ -25,13 +28,24 @@ func (c *Core) RegisterSwitch() error {
 		return fmt.Errorf("unable to get hostname: %w", err)
 	}
 
+	if switchOS, err = c.nos.GetOS(); err != nil {
+		return fmt.Errorf("unable to get switch os: %w", err)
+	}
+
+	if managementIP, managementUser, err = c.nos.GetManagement(); err != nil {
+		return fmt.Errorf("unable to get switch management info: %w", err)
+	}
+
 	params := sw.NewRegisterSwitchParams()
 	params.Body = &models.V1SwitchRegisterRequest{
-		ID:          &hostname,
-		Name:        hostname,
-		PartitionID: &c.partitionID,
-		RackID:      &c.rackID,
-		Nics:        nics,
+		ID:             &hostname,
+		Name:           hostname,
+		PartitionID:    &c.partitionID,
+		RackID:         &c.rackID,
+		Nics:           nics,
+		Os:             switchOS,
+		ManagementIP:   managementIP,
+		ManagementUser: managementUser,
 	}
 
 	for {

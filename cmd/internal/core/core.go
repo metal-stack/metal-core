@@ -18,6 +18,8 @@ type NOS interface {
 	Apply(cfg *types.Conf) error
 	GetNics(log *zap.SugaredLogger, blacklist []string) ([]*models.V1SwitchNic, error)
 	GetSwitchPorts() ([]*net.Interface, error)
+	GetOS() (*models.V1SwitchOS, error)
+	GetManagement() (ip, user string, err error)
 }
 
 type Core struct {
