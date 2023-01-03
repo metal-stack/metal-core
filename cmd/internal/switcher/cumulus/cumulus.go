@@ -5,11 +5,13 @@ import (
 	"net"
 	"strings"
 
+	"github.com/metal-stack/metal-core/cmd/internal"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/metal-go/api/models"
 
 	"go.uber.org/zap"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -52,7 +54,7 @@ func (c *Cumulus) GetNics(log *zap.SugaredLogger, blacklist []string) (nics []*m
 	for _, iface := range ifs {
 		name := iface.Name
 		mac := iface.HardwareAddr.String()
-		if contains(blacklist, name) {
+		if slices.Contains(blacklist, name) {
 			log.Debugw("skip interface, because it is contained in the blacklist", "interface", name, "blacklist", blacklist)
 			continue
 		}
@@ -94,4 +96,19 @@ func (c *Cumulus) GetSwitchPorts() ([]*net.Interface, error) {
 }
 
 func (c *Cumulus) SanitizeConfig(cfg *types.Conf) {
+}
+
+func (c *Cumulus) GetOS() (*models.V1SwitchOS, error) {
+	return &models.V1SwitchOS{
+		Vendor: "Cumulus",
+		// FIXME fill with version
+		Version: "",
+	}, nil
+}
+func (c *Cumulus) GetManagement() (ip, user string, err error) {
+	ip, err = internal.GetManagementIP("eth0")
+	if err != nil {
+		return "", "", err
+	}
+	return ip, "cumulus", nil
 }

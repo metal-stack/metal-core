@@ -8,10 +8,13 @@ import (
 	"os"
 	"strings"
 
+	"github.com/metal-stack/metal-core/cmd/internal"
 	"github.com/metal-stack/metal-core/cmd/internal/dbus"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/metal-go/api/models"
+	"golang.org/x/exp/slices"
+	"gopkg.in/yaml.v3"
 
 	"go.uber.org/zap"
 )
@@ -83,7 +86,7 @@ func (s *Sonic) GetNics(log *zap.SugaredLogger, blacklist []string) (nics []*mod
 
 	for _, iface := range ifs {
 		name := iface.Name
-		if contains(blacklist, name) {
+		if slices.Contains(blacklist, name) {
 			log.Debugw("skip interface, because it is contained in the blacklist", "interface", name, "blacklist", blacklist)
 			continue
 		}
@@ -173,4 +176,32 @@ func getInterfacesConfig(filepath string) (infs []string, err error) {
 	}
 
 	return infs, nil
+}
+
+type sonic_version struct {
+	BuildVersion string `yaml:"build_version"`
+}
+
+func (s *Sonic) GetOS() (*models.V1SwitchOS, error) {
+	versionBytes, err := os.ReadFile("/etc/sonic/sonic_version.yml")
+	if err != nil {
+		return nil, fmt.Errorf("unable to read sonic_version: %w", err)
+	}
+
+	var sonicVersion sonic_version
+	err = yaml.Unmarshal(versionBytes, &sonicVersion)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse sonic_version: %w", err)
+	}
+	return &models.V1SwitchOS{
+		Vendor:  "SONiC",
+		Version: sonicVersion.BuildVersion,
+	}, nil
+}
+func (s *Sonic) GetManagement() (ip, user string, err error) {
+	ip, err = internal.GetManagementIP("eth0")
+	if err != nil {
+		return "", "", err
+	}
+	return ip, "admin", nil
 }

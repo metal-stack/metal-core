@@ -2,14 +2,15 @@ package templates
 
 import (
 	"bytes"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"log"
 	"os"
 	"testing"
 	"text/template"
 
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
+
 	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 func testTemplate(t *testing.T, tpl *template.Template, c *types.Conf, expectedFilename string) {
