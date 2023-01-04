@@ -122,9 +122,7 @@ func (s *Sonic) GetSwitchPorts() ([]*net.Interface, error) {
 	for i := range ifs {
 		iface := &ifs[i]
 		if !strings.HasPrefix(iface.Name, "Ethernet") {
-			s.log.Debug("skip interface, because only Ethernet* interface are front panels",
-				zap.String("interface", iface.Name),
-			)
+			s.log.Debugw("skip interface, because only Ethernet* interface are front panels", "interface", iface.Name)
 			continue
 		}
 		switchPorts = append(switchPorts, iface)

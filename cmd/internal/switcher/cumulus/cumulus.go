@@ -85,10 +85,7 @@ func (c *Cumulus) GetSwitchPorts() ([]*net.Interface, error) {
 	for i := range ifs {
 		iface := &ifs[i]
 		if !strings.HasPrefix(iface.Name, "swp") {
-			c.log.Debug("skip interface, because only swp* interface are front panels",
-				zap.String("interface", iface.Name),
-				zap.String("MAC", iface.HardwareAddr.String()),
-			)
+			c.log.Debugw("skip interface, because only swp* interface are front panels", "interface", iface.Name)
 			continue
 		}
 		switchPorts = append(switchPorts, iface)
@@ -97,6 +94,7 @@ func (c *Cumulus) GetSwitchPorts() ([]*net.Interface, error) {
 }
 
 func (c *Cumulus) SanitizeConfig(cfg *types.Conf) {
+	// nothing required here
 }
 
 func (c *Cumulus) GetOS() (*models.V1SwitchOS, error) {
