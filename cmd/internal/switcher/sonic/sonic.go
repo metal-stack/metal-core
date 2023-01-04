@@ -42,6 +42,7 @@ type PortInfo struct {
 }
 
 func New(log *zap.SugaredLogger, frrTplFile string) (*Sonic, error) {
+	log.Infow("create sonic NOS")
 	ifs, err := getInterfacesConfig(sonicConfigDBPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load interfaces config from configDB: %w", err)

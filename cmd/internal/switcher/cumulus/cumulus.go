@@ -31,6 +31,7 @@ type Cumulus struct {
 }
 
 func New(log *zap.SugaredLogger, frrTplFile, interfacesTplFile string) *Cumulus {
+	log.Infow("create cumulus NOS")
 	embedFS := true
 	if frrTplFile != "" {
 		frrTpl = frrTplFile
