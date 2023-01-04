@@ -22,15 +22,23 @@ const (
 	frrReloadService     = "frr.service"
 )
 
+var frrTpl = "frr.tpl"
+
 type Cumulus struct {
 	frrApplier        *templates.FrrApplier
 	interfacesApplier *templates.InterfacesApplier
 	log               *zap.SugaredLogger
 }
 
-func NewCumulus(log *zap.SugaredLogger, frrTplFile, interfacesTplFile string) *Cumulus {
+func New(log *zap.SugaredLogger, frrTplFile, interfacesTplFile string) *Cumulus {
+	embedFS := true
+	if frrTplFile != "" {
+		frrTpl = frrTplFile
+		embedFS = false
+	}
+
 	return &Cumulus{
-		frrApplier:        templates.NewFrrApplier(frr, frrTmp, frrValidationService, frrReloadService, frrTplFile, false),
+		frrApplier:        templates.NewFrrApplier(frr, frrTmp, frrValidationService, frrReloadService, frrTpl, embedFS),
 		interfacesApplier: templates.NewInterfacesApplier(interfacesTplFile),
 		log:               log,
 	}

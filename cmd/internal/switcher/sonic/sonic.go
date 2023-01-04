@@ -26,9 +26,10 @@ const (
 
 	frr                  = "/etc/sonic/frr/frr.conf"
 	frrTmp               = "/etc/sonic/frr/frr.tmp"
-	frrTpl               = "sonic_frr.tpl"
 	frrValidationService = "bgp-validation"
 )
+
+var frrTpl = "sonic_frr.tpl"
 
 type Sonic struct {
 	frrApplier     *templates.FrrApplier
@@ -40,14 +41,20 @@ type PortInfo struct {
 	Alias string
 }
 
-func NewSonic(log *zap.SugaredLogger) (*Sonic, error) {
+func New(log *zap.SugaredLogger, frrTplFile string) (*Sonic, error) {
 	ifs, err := getInterfacesConfig(sonicConfigDBPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load interfaces config from ConfgiDB: %w", err)
+		return nil, fmt.Errorf("failed to load interfaces config from configDB: %w", err)
+	}
+
+	embedFS := true
+	if frrTplFile != "" {
+		frrTpl = frrTplFile
+		embedFS = false
 	}
 
 	return &Sonic{
-		frrApplier:     templates.NewFrrApplier(frr, frrTmp, frrValidationService, "", frrTpl, true),
+		frrApplier:     templates.NewFrrApplier(frr, frrTmp, frrValidationService, "", frrTpl, embedFS),
 		confidbApplier: templates.NewConfigdbApplier(ifs),
 		log:            log,
 	}, nil

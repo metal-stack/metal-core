@@ -10,8 +10,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/cumulus"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/metal-stack/metal-core/cmd/internal/core"
@@ -73,14 +72,9 @@ func Run() {
 		log.Fatalw("failed to create grpc client", "error", err)
 	}
 
-	var nos core.NOS
-	if _, err := os.Stat(sonic.SonicVersionFile); err == nil {
-		nos, err = sonic.NewSonic(log)
-		if err != nil {
-			log.Fatalw("failed to initialize SONiC configurator", "error", err)
-		}
-	} else {
-		nos = cumulus.NewCumulus(log, cfg.FrrTplFile, cfg.InterfacesTplFile)
+	nos, err := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile)
+	if err != nil {
+		log.Fatalw("failed to create NOS instance", "error", err)
 	}
 
 	c := core.New(core.Config{
