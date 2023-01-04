@@ -22,8 +22,6 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-const sonicVersionFile = "/etc/sonic/sonic_version.yml"
-
 func Run() {
 	cfg := &Config{}
 	if err := envconfig.Process("METAL_CORE", cfg); err != nil {
@@ -76,7 +74,7 @@ func Run() {
 	}
 
 	var nos core.NOS
-	if _, err := os.Stat(sonicVersionFile); err == nil {
+	if _, err := os.Stat(sonic.SonicVersionFile); err == nil {
 		nos, err = sonic.NewSonic(log)
 		if err != nil {
 			log.Fatalw("failed to initialize SONiC configurator", "error", err)
