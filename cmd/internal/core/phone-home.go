@@ -44,15 +44,16 @@ func (c *Core) ConstantlyPhoneHome() {
 
 	var phoneHomeMessages sync.Map
 	for _, iface := range ifs {
-		lldpcli, err := lldp.NewClient(ctx, *iface)
-		if err != nil {
-			c.log.Errorw("unable to start LLDP client", "interface", iface.Name, "error", err)
-			continue
-		}
+		lldpcli := lldp.NewClient(ctx, *iface)
 		c.log.Infow("start lldp client", "interface", iface.Name)
 
 		// constantly observe LLDP traffic on current machine and current interface
-		go lldpcli.Start(c.log.Named("lldp"), discoveryResultChan)
+		go func() {
+			err = lldpcli.Start(c.log.Named("lldp"), discoveryResultChan)
+			if err != nil {
+				c.log.Errorw("unable to start lldp discovery for interface", "interface", iface.Name)
+			}
+		}()
 
 	}
 	// extract phone home messages from fetched LLDP packages
