@@ -17,7 +17,6 @@ func NewNOS(log *zap.SugaredLogger, frrTplFile, interfacesTplFile string) (core.
 			return nil, fmt.Errorf("failed to initialize SONiC NOS %w", err)
 		}
 		return nos, nil
-	} else {
-		return cumulus.New(log.Named("cumulus"), frrTplFile, interfacesTplFile), nil
 	}
+	return cumulus.New(log.Named("cumulus"), frrTplFile, interfacesTplFile), nil
 }

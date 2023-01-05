@@ -46,10 +46,15 @@ func Run() {
 	log.Infow("metal-core version", "version", v.V)
 	log.Infow("configuration", "cfg", cfg)
 
+	// This enables debug output of rest calls
+	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
+		_ = os.Setenv("DEBUG", "1")
+	}
+
 	driver, err := metalgo.NewDriver(
 		fmt.Sprintf("%s://%s:%d%s", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort, cfg.ApiBasePath),
-		"", cfg.HMACKey, metalgo.AuthType("Metal-Edit"))
-
+		"", cfg.HMACKey, metalgo.AuthType("Metal-Edit"),
+	)
 	if err != nil {
 		log.Fatalw("unable to create metal-api driver", "error", err)
 	}
@@ -103,10 +108,6 @@ func Run() {
 
 	go c.ReconfigureSwitch()
 	c.ConstantlyPhoneHome()
-
-	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
-		_ = os.Setenv("DEBUG", "1")
-	}
 
 	// Start metrics
 	metricsAddr := fmt.Sprintf("%v:%d", cfg.MetricsServerBindAddress, cfg.MetricsServerPort)

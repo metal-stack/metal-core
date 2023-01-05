@@ -178,7 +178,7 @@ func getInterfacesConfig(filepath string) (infs []string, err error) {
 		return nil, err
 	}
 
-	for k, _ := range config.Interfaces {
+	for k := range config.Interfaces {
 		infs = append(infs, k)
 	}
 

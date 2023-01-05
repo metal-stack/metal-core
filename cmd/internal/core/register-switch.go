@@ -48,6 +48,7 @@ func (c *Core) RegisterSwitch() error {
 		ManagementUser: managementUser,
 	}
 
+	// TODO could be done with retry-go
 	for {
 		_, _, err := c.driver.SwitchOperations().RegisterSwitch(params, nil)
 		if err == nil {
