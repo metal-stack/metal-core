@@ -42,7 +42,7 @@ func (c *Core) ConstantlyPhoneHome() {
 	// FIXME context should come from caller and canceled on shutdown
 	ctx := context.Background()
 
-	phoneHomeMessages := sync.Map{}
+	var phoneHomeMessages sync.Map
 	for _, iface := range ifs {
 		lldpcli, err := lldp.NewClient(ctx, *iface)
 		if err != nil {
