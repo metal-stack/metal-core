@@ -52,7 +52,7 @@ func (c *Core) ConstantlyPhoneHome() {
 		c.log.Infow("start lldp client", "interface", iface.Name)
 
 		// constantly observe LLDP traffic on current machine and current interface
-		go lldpcli.Start(discoveryResultChan)
+		go lldpcli.Start(c.log.Named("lldp"), discoveryResultChan)
 
 	}
 	// extract phone home messages from fetched LLDP packages
