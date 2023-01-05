@@ -8,7 +8,6 @@ import (
 	"net/http"
 	httppprof "net/http/pprof"
 	"os"
-	"strings"
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 
@@ -45,11 +44,6 @@ func Run() {
 	log := l.Sugar()
 	log.Infow("metal-core version", "version", v.V)
 	log.Infow("configuration", "cfg", cfg)
-
-	// This enables debug output of rest calls
-	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
-		_ = os.Setenv("DEBUG", "1")
-	}
 
 	driver, err := metalgo.NewDriver(
 		fmt.Sprintf("%s://%s:%d%s", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort, cfg.ApiBasePath),
