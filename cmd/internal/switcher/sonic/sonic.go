@@ -61,25 +61,26 @@ func New(log *zap.SugaredLogger, frrTplFile string) (*Sonic, error) {
 	}, nil
 }
 
-func (s *Sonic) Apply(cfg *types.Conf) error {
+func (s *Sonic) Apply(cfg *types.Conf) (updated bool, err error) {
 	bgpApplied, err := s.frrApplier.Apply(cfg)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	configDBApplied, err := s.confidbApplier.Apply(cfg)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	// Save ConfiDB and reload configuration
-	if bgpApplied || configDBApplied {
+	updated = bgpApplied || configDBApplied
+	if updated {
 		if err := dbus.Start(sonicConfigSaveReloadService); err != nil {
-			return fmt.Errorf("failed to save and reload SONiC config")
+			return false, fmt.Errorf("failed to save and reload SONiC config")
 		}
 	}
 
-	return nil
+	return updated, nil
 }
 
 func (s *Sonic) GetNics(log *zap.SugaredLogger, blacklist []string) (nics []*models.V1SwitchNic, err error) {

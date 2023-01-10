@@ -45,14 +45,18 @@ func New(log *zap.SugaredLogger, frrTplFile, interfacesTplFile string) *Cumulus 
 	}
 }
 
-func (c *Cumulus) Apply(cfg *types.Conf) error {
-	err := c.interfacesApplier.Apply(cfg)
+func (c *Cumulus) Apply(cfg *types.Conf) (updated bool, err error) {
+	ifsApplied, err := c.interfacesApplier.Apply(cfg)
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	_, err = c.frrApplier.Apply(cfg)
-	return err
+	frrApplied, err := c.frrApplier.Apply(cfg)
+	if err != nil {
+		return false, err
+	}
+	
+	return ifsApplied || frrApplied, nil
 }
 
 func (c *Cumulus) GetNics(log *zap.SugaredLogger, blacklist []string) (nics []*models.V1SwitchNic, err error) {

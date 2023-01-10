@@ -26,20 +26,23 @@ func NewInterfacesApplier(tplPath string) *InterfacesApplier {
 	return &InterfacesApplier{mustParseFS(interfacesTpl)}
 }
 
-func (a *InterfacesApplier) Apply(c *types.Conf) error {
-	err := write(c, a.tpl, interfacesTmp)
+func (a *InterfacesApplier) Apply(c *types.Conf) (applied bool, err error) {
+	err = write(c, a.tpl, interfacesTmp)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	err = validate(interfacesValidationService, interfacesTmp)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	moved, err := move(interfacesTmp, interfaces)
-	if err == nil && moved {
-		return dbus.Start(interfacesReloadService)
+	if err != nil {
+		return false, err
 	}
-	return err
+	if moved {
+		return moved, dbus.Start(interfacesReloadService)
+	}
+	return false, nil
 }
