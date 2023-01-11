@@ -1,0 +1,13 @@
+{
+  "INTERFACE": {
+    "swp1": {},
+    "swp1|10.0.0.10": null,
+    "swp2": {},
+    "swp31": {},
+    "swp32": {}
+  },
+  "VLAN": {},
+  "VLAN_INTERFACE": {},
+  "VRF": {},
+  "VXLAN_TUNNEL_MAP": {}
+}

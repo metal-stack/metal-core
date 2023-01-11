@@ -1,0 +1,37 @@
+{
+  "INTERFACE": {
+    "swp1": {
+      "vrf_name": "vrf104001"
+    },
+    "swp1|10.0.0.10": null,
+    "swp2": {
+      "vrf_name": "vrf104001"
+    },
+    "swp3": {},
+    "swp31": {},
+    "swp32": {},
+    "swp4": {},
+    "swp5": {}
+  },
+  "VLAN": {
+    "Vlan4001": {
+      "vlanid": "4001"
+    }
+  },
+  "VLAN_INTERFACE": {
+    "Vlan4001": {
+      "vrf_name": "vrf104001"
+    }
+  },
+  "VRF": {
+    "vrf104001": {
+      "vni": "104001"
+    }
+  },
+  "VXLAN_TUNNEL_MAP": {
+    "vtep|map_104001_Vlan4001": {
+      "vlan": "Vlan4001",
+      "vni": "104001"
+    }
+  }
+}

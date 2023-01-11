@@ -1,0 +1,10 @@
+{
+  "VLAN_MEMBER": {
+    "Vlan4000|swp1": {
+      "tagging_mode": "untagged"
+    },
+    "Vlan4000|swp2": {
+      "tagging_mode": "untagged"
+    }
+  }
+}
