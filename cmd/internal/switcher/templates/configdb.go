@@ -16,11 +16,11 @@ import (
 const (
 	// Tried to use name that includes "-" for the file. It doesn't work.
 	// Systemd transforms "-" to "\" when %I specifier is used.
-	metalCoreVrfConfig    = "/etc/sonic/vrfs.json"
-	metalCoreVrfConfigTmp = "/etc/sonic/vrfs.tmp"
+	metalCoreVrfConfig    = "/etc/sonic/metal/vrfs.json"
+	metalCoreVrfConfigTmp = "/etc/sonic/metal/vrfs.tmp"
 
-	metalCoreVlanConfig    = "/etc/sonic/vlans.json"
-	metalCoreVlanConfigTmp = "/etc/sonic/vlans.tmp"
+	metalCoreVlanConfig    = "/etc/sonic/metal/vlans.json"
+	metalCoreVlanConfigTmp = "/etc/sonic/metal/vlans.tmp"
 
 	configdbUpdateService = "write-to-db"
 
