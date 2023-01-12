@@ -7,11 +7,9 @@
     "swp2": {
       "vrf_name": "vrf104001"
     },
-    "swp3": {},
-    "swp31": {},
-    "swp32": {},
-    "swp4": {},
-    "swp5": {}
+    "swp3": null,
+    "swp4": null,
+    "swp5": null
   },
   "VLAN": {
     "Vlan4001": {
