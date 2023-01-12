@@ -44,8 +44,7 @@ type iface struct {
 }
 
 type vlan struct {
-	VlanId      string   `json:"vlanid,omitempty"`
-	DHCPServers []string `json:"dhcp_servers,omitempty"`
+	VlanId string `json:"vlanid,omitempty"`
 }
 
 type vlanMember struct {

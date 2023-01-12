@@ -14,5 +14,3 @@ ports:
   unprovisioned:
     - swp1
     - swp2
-dhcpservers:
-  - 10.0.1.100

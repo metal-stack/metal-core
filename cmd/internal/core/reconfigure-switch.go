@@ -98,7 +98,6 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 		Loopback:             c.loopbackIP,
 		MetalCoreCIDR:        c.cidr,
 		AdditionalBridgeVIDs: c.additionalBridgeVIDs,
-		DHCPServers:          c.dhcpServers,
 	}
 
 	p := types.Ports{

@@ -55,7 +55,7 @@ func (c *Cumulus) Apply(cfg *types.Conf) (updated bool, err error) {
 	if err != nil {
 		return false, err
 	}
-	
+
 	return ifsApplied || frrApplied, nil
 }
 
