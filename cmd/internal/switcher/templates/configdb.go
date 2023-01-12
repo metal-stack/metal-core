@@ -76,7 +76,7 @@ func (a *ConfigdbApplier) Apply(cfg *types.Conf) (applied bool, err error) {
 		return false, fmt.Errorf("failed to apply VRF config: %w", err)
 	}
 
-	vlanApplied, err := a.applyVrfConfig(cfg)
+	vlanApplied, err := a.applyVlanConfig(cfg)
 	if err != nil {
 		return false, fmt.Errorf("failed to apply VLAN config: %w", err)
 	}
