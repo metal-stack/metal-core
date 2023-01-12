@@ -109,14 +109,11 @@ func buildVrfConfig(cfg *types.Conf, fpInfs []string) *vrfConfig {
 	}
 
 	// Configure interfaces
-	for _, p := range cfg.Ports.Underlay {
-		c.Ifaces[p] = &iface{}
-	}
 	for _, fw := range cfg.Ports.Firewalls {
-		c.Ifaces[fw.Port] = &iface{}
+		c.Ifaces[fw.Port] = nil
 	}
 	for _, p := range cfg.Ports.Unprovisioned {
-		c.Ifaces[p] = &iface{}
+		c.Ifaces[p] = nil
 	}
 
 	// Remove IPs for front-panel interfaces
