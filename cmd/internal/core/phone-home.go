@@ -51,7 +51,7 @@ func (c *Core) ConstantlyPhoneHome() {
 		go func() {
 			err = lldpcli.Start(c.log.Named("lldp"), discoveryResultChan)
 			if err != nil {
-				c.log.Errorw("unable to start lldp discovery for interface", "interface", iface.Name)
+				c.log.Infow("unable to start lldp discovery for interface", "interface", iface.Name)
 			}
 		}()
 
