@@ -52,6 +52,11 @@
     }
   },
   "VRF": {},
+  "VXLAN_EVPN_NVO": {
+    "nvo": {
+      "source_vtep": "vtep"
+    }
+  },
   "VXLAN_TUNNEL": {
     "vtep": {
       "src_ip": "10.0.0.10"

@@ -32,6 +32,7 @@ type configdb struct {
 	VlanIfaces     map[string]*iface          `json:"VLAN_INTERFACE"`
 	VlanMembers    map[string]*vlanMember     `json:"VLAN_MEMBER"`
 	Vrfs           map[string]*vrf            `json:"VRF"`
+	VxlanEvpnNvo   map[string]*nvo            `json:"VXLAN_EVPN_NVO"`
 	VxlanTunnel    vxlanTunnel                `json:"VXLAN_TUNNEL"`
 	VxlanTunnelMap map[string]*vxlanTunnelMap `json:"VXLAN_TUNNEL_MAP"`
 }
@@ -62,6 +63,10 @@ type vrf struct {
 	Vni string `json:"vni,omitempty"`
 }
 
+type nvo struct {
+	SourceVtep string `json:"source_vtep"`
+}
+
 type vxlanTunnel struct {
 	Vtep vtep `json:"vtep"`
 }
@@ -85,6 +90,7 @@ func buildConfigdb(cfg *types.Conf, fpInfs []string) *configdb {
 		VlanIfaces:     map[string]*iface{},
 		VlanMembers:    map[string]*vlanMember{},
 		Vrfs:           map[string]*vrf{},
+		VxlanEvpnNvo:   map[string]*nvo{},
 		VxlanTunnel:    vxlanTunnel{vtep{SrcIp: cfg.Loopback}},
 		VxlanTunnelMap: map[string]*vxlanTunnelMap{},
 	}
@@ -125,6 +131,7 @@ func buildConfigdb(cfg *types.Conf, fpInfs []string) *configdb {
 	c.Vlans["Vlan4000"] = &vlan2{VlanId: "4000", DHCPServers: cfg.DHCPServers}
 	c.VlanIfaces["Vlan4000"] = &iface{}
 	c.VlanIfaces[pxeIfaceName] = &iface{}
+	c.VxlanEvpnNvo["nvo"] = &nvo{SourceVtep: "vtep"}
 	c.VxlanTunnelMap["vtep|map_104000_Vlan4000"] = &vxlanTunnelMap{"Vlan4000", "104000"}
 
 	for _, p := range cfg.Ports.Provisioned {
