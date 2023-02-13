@@ -3,6 +3,7 @@ package templates
 import (
 	"encoding/json"
 	"path"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -18,8 +19,8 @@ func TestVRFApplyer(t *testing.T) {
 
 			data, err := json.MarshalIndent(cfg, "", "  ")
 			require.NoError(t, err, "Couldn't marshall VRF config")
-			actual := string(data)
-			expected := readExpected(t, path.Join("test_data", tt, "vrf_config.json"))
+			actual := strings.TrimSpace(string(data))
+			expected := strings.TrimSpace(readExpected(t, path.Join("test_data", tt, "vrf_config.json")))
 			require.Equal(t, expected, actual, "Wanted: %s, Got: %s", expected, actual)
 		})
 	}

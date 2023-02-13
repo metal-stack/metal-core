@@ -38,6 +38,7 @@ func (c *Core) ConstantlyPhoneHome() {
 	}
 
 	discoveryResultChan := make(chan lldp.DiscoveryResult)
+	discoveryResultChanwWG := sync.WaitGroup{}
 
 	// FIXME context should come from caller and canceled on shutdown
 	ctx := context.Background()
@@ -49,13 +50,21 @@ func (c *Core) ConstantlyPhoneHome() {
 
 		// constantly observe LLDP traffic on current machine and current interface
 		go func() {
+			discoveryResultChanwWG.Add(1)
+			defer discoveryResultChanwWG.Done()
 			err = lldpcli.Start(c.log.Named("lldp"), discoveryResultChan)
 			if err != nil {
 				c.log.Errorw("unable to start lldp discovery for interface", "interface", iface.Name)
 			}
 		}()
-
 	}
+
+	// wait all lldp routines to finish to close result channel
+	go func() {
+		discoveryResultChanwWG.Wait()
+		close(discoveryResultChan)
+	}()
+
 	// extract phone home messages from fetched LLDP packages
 	go func() {
 		for phoneHome := range discoveryResultChan {

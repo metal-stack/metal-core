@@ -32,6 +32,7 @@ type vrfConfig struct {
 	Vlans          map[string]*vlan           `json:"VLAN"`
 	VlanIfaces     map[string]*iface          `json:"VLAN_INTERFACE"`
 	Vrfs           map[string]*vrf            `json:"VRF"`
+	VxlanEvpnNvo   map[string]*nvo            `json:"VXLAN_EVPN_NVO"`
 	VxlanTunnelMap map[string]*vxlanTunnelMap `json:"VXLAN_TUNNEL_MAP"`
 }
 
@@ -58,6 +59,10 @@ type vrf struct {
 type vxlanTunnelMap struct {
 	Vlan string `json:"vlan"`
 	Vni  string `json:"vni"`
+}
+
+type nvo struct {
+	SourceVtep string `json:"source_vtep"`
 }
 
 type ConfigdbApplier struct {
@@ -90,6 +95,7 @@ func buildVrfConfig(cfg *types.Conf, fpInfs []string) *vrfConfig {
 		Ifaces:         map[string]*iface{},
 		Vlans:          map[string]*vlan{},
 		VlanIfaces:     map[string]*iface{},
+		VxlanEvpnNvo:   map[string]*nvo{},
 		VxlanTunnelMap: map[string]*vxlanTunnelMap{},
 	}
 
@@ -107,6 +113,8 @@ func buildVrfConfig(cfg *types.Conf, fpInfs []string) *vrfConfig {
 		tunnelMapName := fmt.Sprintf("vtep|map_%s_%s", vni, vlanName)
 		c.VxlanTunnelMap[tunnelMapName] = &vxlanTunnelMap{vlanName, vni}
 	}
+
+	c.VxlanEvpnNvo["nvo"] = &nvo{SourceVtep: "vtep"}
 
 	// Configure interfaces
 	for _, fw := range cfg.Ports.Firewalls {

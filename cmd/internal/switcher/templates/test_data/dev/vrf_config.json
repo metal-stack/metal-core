@@ -26,6 +26,11 @@
       "vni": "104001"
     }
   },
+  "VXLAN_EVPN_NVO": {
+    "nvo": {
+      "source_vtep": "vtep"
+    }
+  },
   "VXLAN_TUNNEL_MAP": {
     "vtep|map_104001_Vlan4001": {
       "vlan": "Vlan4001",

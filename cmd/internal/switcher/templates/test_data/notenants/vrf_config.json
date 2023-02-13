@@ -7,5 +7,10 @@
   "VLAN": {},
   "VLAN_INTERFACE": {},
   "VRF": {},
+  "VXLAN_EVPN_NVO": {
+    "nvo": {
+      "source_vtep": "vtep"
+    }
+  },
   "VXLAN_TUNNEL_MAP": {}
 }
