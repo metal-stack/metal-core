@@ -10,6 +10,7 @@ import (
 
 	"github.com/metal-stack/metal-core/cmd/internal"
 	"github.com/metal-stack/metal-core/cmd/internal/dbus"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/metal-go/api/models"
@@ -28,7 +29,7 @@ const (
 	frrTmp               = "/etc/sonic/frr/frr.tmp"
 	frrValidationService = "bgp-validation"
 
-	sonicDatabaseConfigFile = "/var/run/redis/sonic-db/database_config.json"
+	redisConfigFile = "/var/run/redis/sonic-db/database_config.json"
 )
 
 var frrTpl = "sonic_frr.tpl"
@@ -36,7 +37,7 @@ var frrTpl = "sonic_frr.tpl"
 type Sonic struct {
 	frrApplier     *templates.FrrApplier
 	confidbApplier *templates.ConfigdbApplier
-	redisApplier   *redisApplier
+	redisApplier   *redis.Applier
 	log            *zap.SugaredLogger
 }
 
@@ -57,7 +58,7 @@ func New(log *zap.SugaredLogger, frrTplFile string) (*Sonic, error) {
 		embedFS = false
 	}
 
-	cfg, err := loadSonicDatabaseConfig(sonicDatabaseConfigFile)
+	cfg, err := loadRedisConfig(redisConfigFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load database config for SONiC: %w", err)
 	}
@@ -65,17 +66,17 @@ func New(log *zap.SugaredLogger, frrTplFile string) (*Sonic, error) {
 	return &Sonic{
 		frrApplier:     templates.NewFrrApplier(frr, frrTmp, frrValidationService, "", frrTpl, embedFS),
 		confidbApplier: templates.NewConfigdbApplier(ifs),
-		redisApplier:   NewRedisApplier(log, cfg),
+		redisApplier:   redis.NewApplier(log, cfg),
 		log:            log,
 	}, nil
 }
 
-func loadSonicDatabaseConfig(path string) (*sonicDatabasesConfig, error) {
+func loadRedisConfig(path string) (*redis.Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	cfg := &sonicDatabasesConfig{}
+	cfg := &redis.Config{}
 	err = json.Unmarshal(data, cfg)
 	if err != nil {
 		return nil, err
@@ -94,7 +95,7 @@ func (s *Sonic) Apply(cfg *types.Conf) (updated bool, err error) {
 		return false, err
 	}
 
-	err = s.redisApplier.apply(cfg)
+	err = s.redisApplier.Apply(cfg)
 	if err != nil {
 		return false, err
 	}
