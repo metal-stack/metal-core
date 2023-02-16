@@ -47,9 +47,6 @@ func New(log *zap.SugaredLogger, opt *Options) ConfigDB {
 }
 
 func (c *configdb) ConfigureInterface(config InterfaceConfiguration) error {
-	if config.Vlan != nil && config.Vrf != nil {
-		return fmt.Errorf("either vlan or vrf must be configured not both")
-	}
 	c.log.Infow("configure", "interface", config)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
