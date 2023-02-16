@@ -41,7 +41,7 @@ type configdb struct {
 
 func New(log *zap.SugaredLogger, opt *Options) ConfigDB {
 	return &configdb{
-		r: newRedis(opt),
+		r:   newRedis(opt),
 		log: log,
 	}
 }
@@ -137,6 +137,18 @@ func (c *configdb) removeInterfaceFromVRF(ctx context.Context, interfaceName str
 	link, err := netlink.LinkByName(interfaceName)
 	if err != nil {
 		return fmt.Errorf("unable to get kernel info of interface:%s %w", interfaceName, err)
+	}
+
+	if link.Attrs().MasterIndex == 0 {
+		return nil
+	}
+
+	master, err := netlink.LinkByIndex(link.Attrs().MasterIndex)
+	if err != nil {
+		return fmt.Errorf("unable to get the master of interface:%s %w", interfaceName, err)
+	}
+	if master.Type() != "vrf" {
+		return nil
 	}
 
 	err = retry.Do(
