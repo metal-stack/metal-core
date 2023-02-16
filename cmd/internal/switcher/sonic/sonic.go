@@ -29,6 +29,8 @@ const (
 	frr                  = "/etc/sonic/frr/frr.conf"
 	frrTmp               = "/etc/sonic/frr/frr.tmp"
 	frrValidationService = "bgp-validation"
+
+	sonicDatabaseConfigFile = "/var/run/redis/sonic-db/database_config.json"
 )
 
 var frrTpl = "sonic_frr.tpl"
@@ -57,11 +59,30 @@ func New(log *zap.SugaredLogger, frrTplFile string) (*Sonic, error) {
 		embedFS = false
 	}
 
+	cfg, err := loadSonicDatabaseConfig(sonicDatabaseConfigFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load database config for SONiC: %w", err)
+	}
+
 	return &Sonic{
 		frrApplier:     templates.NewFrrApplier(frr, frrTmp, frrValidationService, "", frrTpl, embedFS),
 		confidbApplier: templates.NewConfigdbApplier(ifs),
+		cfgdb:          configdb.New(cfg),
 		log:            log,
 	}, nil
+}
+
+func loadSonicDatabaseConfig(path string) (*configdb.SonicDatabasesConfig, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	cfg := &configdb.SonicDatabasesConfig{}
+	err = json.Unmarshal(data, cfg)
+	if err != nil {
+		return nil, err
+	}
+	return cfg, nil
 }
 
 func (s *Sonic) Apply(cfg *types.Conf) (updated bool, err error) {

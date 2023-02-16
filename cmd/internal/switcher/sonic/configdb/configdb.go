@@ -1,7 +1,9 @@
 package configdb
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/vishvananda/netlink"
 
@@ -31,13 +33,33 @@ type ConfigDB interface {
 	ConfigureInterface(InterfaceConfiguration) error
 }
 
-type configdb struct {
-	r redis
+type SonicDatabasesConfig struct {
+	Databases map[string]Database `json:"DATABASES"`
+	Instances map[string]Instance `json:"INSTANCES"`
 }
 
-func New() ConfigDB {
+type Database struct {
+	Id        int    `json:"id"`
+	Instance  string `json:"instance"`
+	Separator string `json:"separator"`
+}
+
+type Instance struct {
+	Addr string `json:"unix_socket_path"`
+}
+
+type configdb struct {
+	r *database
+}
+
+func New(cfg *SonicDatabasesConfig) ConfigDB {
+	db := cfg.Databases["CONFIG_DB"]
 	return &configdb{
-		// FIXME implement redis
+		r: newRedis(&Options{
+			Addr:      cfg.Instances[db.Instance].Addr,
+			Id:        db.Id,
+			Separator: db.Separator,
+		}),
 	}
 }
 
@@ -46,13 +68,16 @@ func (c *configdb) ConfigureInterface(config InterfaceConfiguration) error {
 		return fmt.Errorf("either vlan or vrf must be configured not both")
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	if config.Vlan != nil {
-		err := c.removeInterfaceFromVRF(config.Name)
+		err := c.removeInterfaceFromVRF(ctx, config.Name)
 		if err != nil {
 			// Wrapped inside the called func
 			return err
 		}
-		err = c.addInterfaceToVLAN(config.Name, config.Vlan.Name)
+		err = c.addInterfaceToVLAN(ctx, config.Name, config.Vlan.Name)
 		if err != nil {
 			// Wrapped inside the called func
 			return err
@@ -60,12 +85,12 @@ func (c *configdb) ConfigureInterface(config InterfaceConfiguration) error {
 	}
 
 	if config.Vrf != nil {
-		err := c.removeInterfaceFromVLAN(config.Name)
+		err := c.removeInterfaceFromVLAN(ctx, config.Name)
 		if err != nil {
 			// Wrapped inside the called func
 			return err
 		}
-		err = c.addInterfaceToVRF(config.Name, config.Vrf.Name)
+		err = c.addInterfaceToVRF(ctx, config.Name, config.Vrf.Name)
 		if err != nil {
 			// Wrapped inside the called func
 			return err
@@ -75,13 +100,13 @@ func (c *configdb) ConfigureInterface(config InterfaceConfiguration) error {
 	return nil
 }
 
-func (c *configdb) addInterfaceToVLAN(interfaceName, vlan string) error {
-	return c.r.setVLANMember(interfaceName, vlan)
+func (c *configdb) addInterfaceToVLAN(ctx context.Context, interfaceName, vlan string) error {
+	return c.r.setVLANMember(ctx, interfaceName, vlan)
 }
 
 // removeInterfaceFromVLAN removes the interface from a vlan, if the interface not bound to a vlan no op is executed,
 // otherwise netlink and configdb are modified to remove the interface from a vlan.
-func (c *configdb) removeInterfaceFromVLAN(interfaceName string) error {
+func (c *configdb) removeInterfaceFromVLAN(ctx context.Context, interfaceName string) error {
 	link, err := netlink.LinkByName(interfaceName)
 	if err != nil {
 		return fmt.Errorf("unable to get kernel info of interface:%s %w", interfaceName, err)
@@ -100,7 +125,7 @@ func (c *configdb) removeInterfaceFromVLAN(interfaceName string) error {
 
 			for _, vlan := range vlans {
 				// remove from configdb
-				err := c.r.deleteVLANMember(interfaceName, vlan.Vid)
+				err := c.r.deleteVLANMember(ctx, interfaceName, vlan.Vid)
 				if err != nil {
 					return fmt.Errorf("unable to remove vlan %d from configdb %s %w", vlan.Vid, interfaceName, err)
 				}
@@ -120,10 +145,10 @@ func (c *configdb) removeInterfaceFromVLAN(interfaceName string) error {
 	return err
 }
 
-func (c *configdb) addInterfaceToVRF(interfaceName, vrf string) error {
-	return c.r.setVRFMember(interfaceName, vrf)
+func (c *configdb) addInterfaceToVRF(ctx context.Context, interfaceName, vrf string) error {
+	return c.r.setVRFMember(ctx, interfaceName, vrf)
 }
-func (c *configdb) removeInterfaceFromVRF(interfaceName string) error {
+func (c *configdb) removeInterfaceFromVRF(ctx context.Context, interfaceName string) error {
 	link, err := netlink.LinkByName(interfaceName)
 	if err != nil {
 		return fmt.Errorf("unable to get kernel info of interface:%s %w", interfaceName, err)
@@ -132,7 +157,7 @@ func (c *configdb) removeInterfaceFromVRF(interfaceName string) error {
 	err = retry.Do(
 		func() error {
 			// remove from configdb
-			err := c.r.deleteVRFMember(interfaceName)
+			err := c.r.deleteVRFMember(ctx, interfaceName)
 			if err != nil {
 				return fmt.Errorf("unable to remove vrf from configdb %s %w", interfaceName, err)
 			}

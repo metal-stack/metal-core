@@ -1,20 +1,56 @@
 package configdb
 
-type redis struct {
+import (
+	"context"
+
+	"github.com/redis/go-redis/v9"
+)
+
+type Options struct {
+	Addr      string
+	Id        int
+	Separator string
 }
 
-func (r *redis) setVLANMember(interfaceName, vlan string) error {
-	return nil
+type database struct {
+	rdb       *redis.Client
+	separator string
 }
 
-func (r *redis) deleteVLANMember(interfaceName string, vlan uint16) error {
-	return nil
+func newRedis(option *Options) *database {
+	rdb := redis.NewClient(&redis.Options{
+		Addr: option.Addr,
+		DB:   option.Id,
+	})
+	return &database{
+		rdb:       rdb,
+		separator: option.Separator,
+	}
 }
 
-func (r *redis) setVRFMember(interfaceName string, vrf string) error {
-	return nil
+const INTERFACE = "INTERFACE"
+const VLAN_MEMBER_TABLE = "VLAN_MEMBER"
+
+func (r *database) setVLANMember(ctx context.Context, interfaceName, vlan string) error {
+	key := VLAN_MEMBER_TABLE + r.separator + vlan + r.separator + interfaceName
+
+	return r.rdb.HSet(ctx, key, "tagging_mode", "untagged").Err()
 }
 
-func (r *redis) deleteVRFMember(interfaceName string) error {
-	return nil
+func (r *database) deleteVLANMember(ctx context.Context, interfaceName string, vlan uint16) error {
+	key := VLAN_MEMBER_TABLE + r.separator + "Vlan" + string(vlan) + r.separator + interfaceName
+
+	return r.rdb.Del(ctx, key).Err()
+}
+
+func (r *database) setVRFMember(ctx context.Context, interfaceName string, vrf string) error {
+	key := INTERFACE + r.separator + interfaceName
+
+	return r.rdb.HSet(ctx, key, "vrf_name", vrf).Err()
+}
+
+func (r *database) deleteVRFMember(ctx context.Context, interfaceName string) error {
+	key := INTERFACE + r.separator + interfaceName
+
+	return r.rdb.HSet(ctx, key, "NULL", "NULL").Err()
 }
