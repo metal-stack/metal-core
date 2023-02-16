@@ -53,5 +53,5 @@ func (r *database) setVRFMember(ctx context.Context, interfaceName string, vrf s
 func (r *database) deleteVRFMember(ctx context.Context, interfaceName string) error {
 	key := INTERFACE + r.separator + interfaceName
 
-	return r.rdb.HSet(ctx, key, "NULL", "NULL").Err()
+	return r.rdb.HDel(ctx, key, "vrf_name").Err()
 }
