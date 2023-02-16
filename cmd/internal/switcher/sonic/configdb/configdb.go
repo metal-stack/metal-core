@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/vishvananda/netlink"
+	"go.uber.org/zap"
 
 	"github.com/avast/retry-go/v4"
 )
@@ -49,10 +50,11 @@ type Instance struct {
 }
 
 type configdb struct {
-	r *database
+	r   *database
+	log *zap.SugaredLogger
 }
 
-func New(cfg *SonicDatabasesConfig) ConfigDB {
+func New(log *zap.SugaredLogger, cfg *SonicDatabasesConfig) ConfigDB {
 	db := cfg.Databases["CONFIG_DB"]
 	return &configdb{
 		r: newRedis(&Options{
@@ -60,6 +62,7 @@ func New(cfg *SonicDatabasesConfig) ConfigDB {
 			Id:        db.Id,
 			Separator: db.Separator,
 		}),
+		log: log,
 	}
 }
 
@@ -67,6 +70,7 @@ func (c *configdb) ConfigureInterface(config InterfaceConfiguration) error {
 	if config.Vlan != nil && config.Vrf != nil {
 		return fmt.Errorf("either vlan or vrf must be configured not both")
 	}
+	c.log.Infow("configure", "interface", config)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

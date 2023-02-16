@@ -67,7 +67,7 @@ func New(log *zap.SugaredLogger, frrTplFile string) (*Sonic, error) {
 	return &Sonic{
 		frrApplier:     templates.NewFrrApplier(frr, frrTmp, frrValidationService, "", frrTpl, embedFS),
 		confidbApplier: templates.NewConfigdbApplier(ifs),
-		cfgdb:          configdb.New(cfg),
+		cfgdb:          configdb.New(log, cfg),
 		log:            log,
 	}, nil
 }
@@ -91,21 +91,22 @@ func (s *Sonic) Apply(cfg *types.Conf) (updated bool, err error) {
 		return false, err
 	}
 
-	err = s.applyInterfaces(cfg)
-	if err != nil {
-		return false, err
-	}
-
 	configDBApplied, err := s.confidbApplier.Apply(cfg)
 	if err != nil {
 		return false, err
 	}
 
+	err = s.applyInterfaces(cfg)
+	if err != nil {
+		return false, err
+	}
+
 	// Save ConfiDB and reload configuration
+	// TODO check if still required
 	updated = bgpApplied || configDBApplied
 	if updated {
 		if err := dbus.Start(sonicConfigSaveReloadService); err != nil {
-			return false, fmt.Errorf("failed to save and reload SONiC config")
+			return false, fmt.Errorf("failed to save and reload SONiC config %w", err)
 		}
 	}
 

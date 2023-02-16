@@ -2,6 +2,7 @@ package configdb
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -38,7 +39,7 @@ func (r *database) setVLANMember(ctx context.Context, interfaceName, vlan string
 }
 
 func (r *database) deleteVLANMember(ctx context.Context, interfaceName string, vlan uint16) error {
-	key := VLAN_MEMBER_TABLE + r.separator + "Vlan" + string(vlan) + r.separator + interfaceName
+	key := VLAN_MEMBER_TABLE + r.separator + "Vlan" + fmt.Sprintf("%d", vlan) + r.separator + interfaceName
 
 	return r.rdb.Del(ctx, key).Err()
 }
