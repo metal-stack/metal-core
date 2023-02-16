@@ -19,8 +19,6 @@ const (
 	metalCoreConfigdb     = "/etc/sonic/metal.json"
 	metalCoreConfigdbTmp  = "/etc/sonic/metal.tmp"
 	configdbReloadService = "write-to-db"
-
-	untagged = "untagged"
 )
 
 type configdb struct {
