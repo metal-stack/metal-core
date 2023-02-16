@@ -34,34 +34,14 @@ type ConfigDB interface {
 	ConfigureInterface(InterfaceConfiguration) error
 }
 
-type SonicDatabasesConfig struct {
-	Databases map[string]Database `json:"DATABASES"`
-	Instances map[string]Instance `json:"INSTANCES"`
-}
-
-type Database struct {
-	Id        int    `json:"id"`
-	Instance  string `json:"instance"`
-	Separator string `json:"separator"`
-}
-
-type Instance struct {
-	Addr string `json:"unix_socket_path"`
-}
-
 type configdb struct {
 	r   *database
 	log *zap.SugaredLogger
 }
 
-func New(log *zap.SugaredLogger, cfg *SonicDatabasesConfig) ConfigDB {
-	db := cfg.Databases["CONFIG_DB"]
+func New(log *zap.SugaredLogger, opt *Options) ConfigDB {
 	return &configdb{
-		r: newRedis(&Options{
-			Addr:      cfg.Instances[db.Instance].Addr,
-			Id:        db.Id,
-			Separator: db.Separator,
-		}),
+		r: newRedis(opt),
 		log: log,
 	}
 }
@@ -152,6 +132,7 @@ func (c *configdb) removeInterfaceFromVLAN(ctx context.Context, interfaceName st
 func (c *configdb) addInterfaceToVRF(ctx context.Context, interfaceName, vrf string) error {
 	return c.r.setVRFMember(ctx, interfaceName, vrf)
 }
+
 func (c *configdb) removeInterfaceFromVRF(ctx context.Context, interfaceName string) error {
 	link, err := netlink.LinkByName(interfaceName)
 	if err != nil {

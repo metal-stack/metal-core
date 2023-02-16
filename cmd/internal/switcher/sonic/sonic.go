@@ -2,7 +2,6 @@ package sonic
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -11,7 +10,6 @@ import (
 
 	"github.com/metal-stack/metal-core/cmd/internal"
 	"github.com/metal-stack/metal-core/cmd/internal/dbus"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/configdb"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/metal-go/api/models"
@@ -38,7 +36,7 @@ var frrTpl = "sonic_frr.tpl"
 type Sonic struct {
 	frrApplier     *templates.FrrApplier
 	confidbApplier *templates.ConfigdbApplier
-	cfgdb          configdb.ConfigDB
+	redisApplier   *redisApplier
 	log            *zap.SugaredLogger
 }
 
@@ -67,17 +65,17 @@ func New(log *zap.SugaredLogger, frrTplFile string) (*Sonic, error) {
 	return &Sonic{
 		frrApplier:     templates.NewFrrApplier(frr, frrTmp, frrValidationService, "", frrTpl, embedFS),
 		confidbApplier: templates.NewConfigdbApplier(ifs),
-		cfgdb:          configdb.New(log, cfg),
+		redisApplier:   NewRedisApplier(log, cfg),
 		log:            log,
 	}, nil
 }
 
-func loadSonicDatabaseConfig(path string) (*configdb.SonicDatabasesConfig, error) {
+func loadSonicDatabaseConfig(path string) (*sonicDatabasesConfig, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	cfg := &configdb.SonicDatabasesConfig{}
+	cfg := &sonicDatabasesConfig{}
 	err = json.Unmarshal(data, cfg)
 	if err != nil {
 		return nil, err
@@ -96,7 +94,7 @@ func (s *Sonic) Apply(cfg *types.Conf) (updated bool, err error) {
 		return false, err
 	}
 
-	err = s.applyInterfaces(cfg)
+	err = s.redisApplier.apply(cfg)
 	if err != nil {
 		return false, err
 	}
@@ -242,32 +240,4 @@ func (s *Sonic) GetManagement() (ip, user string, err error) {
 		return "", "", err
 	}
 	return ip, "admin", nil
-}
-
-func (s *Sonic) applyInterfaces(cfg *types.Conf) error {
-	var (
-		errs             []error
-		interfaceConfigs []configdb.InterfaceConfiguration
-	)
-
-	for _, unprovisioned := range cfg.Ports.Unprovisioned {
-		interfaceConfigs = append(interfaceConfigs, configdb.InterfaceConfiguration{Name: unprovisioned, Vlan: &configdb.Vlan{Name: "Vlan4000"}})
-	}
-	for _, provisioned := range cfg.Ports.Provisioned {
-		vrf, ok := cfg.Ports.Vrfs[provisioned]
-		if !ok {
-			continue
-		}
-		interfaceConfigs = append(interfaceConfigs, configdb.InterfaceConfiguration{Name: provisioned, Vrf: &configdb.Vrf{Name: fmt.Sprintf("Vrf%d", vrf.VLANID)}})
-	}
-
-	for _, c := range interfaceConfigs {
-		err := s.cfgdb.ConfigureInterface(c)
-		if err != nil {
-			errs = append(errs, err)
-		}
-	}
-
-	return errors.Join(errs...)
-
 }

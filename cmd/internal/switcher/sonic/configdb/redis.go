@@ -18,14 +18,14 @@ type database struct {
 	separator string
 }
 
-func newRedis(option *Options) *database {
+func newRedis(opt *Options) *database {
 	rdb := redis.NewClient(&redis.Options{
-		Addr: option.Addr,
-		DB:   option.Id,
+		Addr: opt.Addr,
+		DB:   opt.Id,
 	})
 	return &database{
 		rdb:       rdb,
-		separator: option.Separator,
+		separator: opt.Separator,
 	}
 }
 
