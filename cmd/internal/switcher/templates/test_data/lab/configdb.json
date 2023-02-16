@@ -9,18 +9,7 @@
     "Loopback0|10.0.0.10/32": {}
   },
   "INTERFACE": {
-    "swp1": {
-      "vrf_name": "vrf104001"
-    },
-    "swp1|10.0.0.10": null,
-    "swp2": {
-      "vrf_name": "vrf104001"
-    },
-    "swp3": {},
-    "swp31": {},
-    "swp32": {},
-    "swp4": {},
-    "swp5": {}
+    "swp1|10.0.0.10": null
   },
   "PORT": {
     "swp1": {
@@ -66,14 +55,6 @@
     "Vlan4000|10.255.255.2/24": {},
     "Vlan4001": {
       "vrf_name": "vrf104001"
-    }
-  },
-  "VLAN_MEMBER": {
-    "Vlan4000|swp4": {
-      "tagging_mode": "untagged"
-    },
-    "Vlan4000|swp5": {
-      "tagging_mode": "untagged"
     }
   },
   "VRF": {

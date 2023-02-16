@@ -9,11 +9,7 @@
     "Loopback0|10.0.0.10/32": {}
   },
   "INTERFACE": {
-    "swp1": {},
-    "swp1|10.0.0.10": null,
-    "swp2": {},
-    "swp31": {},
-    "swp32": {}
+    "swp1|10.0.0.10": null
   },
   "PORT": {
     "swp1": {
@@ -42,14 +38,6 @@
   "VLAN_INTERFACE": {
     "Vlan4000": {},
     "Vlan4000|10.255.255.2/24": {}
-  },
-  "VLAN_MEMBER": {
-    "Vlan4000|swp1": {
-      "tagging_mode": "untagged"
-    },
-    "Vlan4000|swp2": {
-      "tagging_mode": "untagged"
-    }
   },
   "VRF": {},
   "VXLAN_EVPN_NVO": {

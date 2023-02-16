@@ -30,7 +30,6 @@ type configdb struct {
 	Ports          map[string]*port           `json:"PORT"`
 	Vlans          map[string]*vlan2          `json:"VLAN"`
 	VlanIfaces     map[string]*iface          `json:"VLAN_INTERFACE"`
-	VlanMembers    map[string]*vlanMember     `json:"VLAN_MEMBER"`
 	Vrfs           map[string]*vrf            `json:"VRF"`
 	VxlanEvpnNvo   map[string]*nvo            `json:"VXLAN_EVPN_NVO"`
 	VxlanTunnel    vxlanTunnel                `json:"VXLAN_TUNNEL"`
@@ -53,10 +52,6 @@ type port struct {
 type vlan2 struct {
 	VlanId      string   `json:"vlanid,omitempty"`
 	DHCPServers []string `json:"dhcp_servers,omitempty"`
-}
-
-type vlanMember struct {
-	TaggingMode string `json:"tagging_mode"`
 }
 
 type vrf struct {
@@ -88,7 +83,6 @@ func buildConfigdb(cfg *types.Conf, fpInfs []string) *configdb {
 		Ports:          map[string]*port{},
 		Vlans:          map[string]*vlan2{},
 		VlanIfaces:     map[string]*iface{},
-		VlanMembers:    map[string]*vlanMember{},
 		Vrfs:           map[string]*vrf{},
 		VxlanEvpnNvo:   map[string]*nvo{},
 		VxlanTunnel:    vxlanTunnel{vtep{SrcIp: cfg.Loopback}},
@@ -105,16 +99,13 @@ func buildConfigdb(cfg *types.Conf, fpInfs []string) *configdb {
 	}
 
 	for _, p := range cfg.Ports.Underlay {
-		c.Ifaces[p] = &iface{}
 		c.Ports[p] = &port{Mtu: "9216"}
 	}
 	for _, fw := range cfg.Ports.Firewalls {
-		c.Ifaces[fw.Port] = &iface{}
 		c.Ports[fw.Port] = &port{Mtu: "9216", Fec: "rs"}
 	}
 	for vrfName, v := range cfg.Ports.Vrfs {
 		for _, p := range v.Neighbors {
-			c.Ifaces[p] = &iface{vrfName}
 			c.Ports[p] = &port{Mtu: "9000", Fec: "rs"}
 		}
 		vlanId := strconv.FormatUint(uint64(v.VLANID), 10)
@@ -134,15 +125,8 @@ func buildConfigdb(cfg *types.Conf, fpInfs []string) *configdb {
 	c.VxlanEvpnNvo["nvo"] = &nvo{SourceVtep: "vtep"}
 	c.VxlanTunnelMap["vtep|map_104000_Vlan4000"] = &vxlanTunnelMap{"Vlan4000", "104000"}
 
-	for _, p := range cfg.Ports.Provisioned {
-		memberName := "Vlan4000|" + p
-		c.VlanMembers[memberName] = nil
-	}
 	for _, p := range cfg.Ports.Unprovisioned {
-		memberName := "Vlan4000|" + p
-		c.Ifaces[p] = &iface{}
 		c.Ports[p] = &port{Mtu: "9000", Fec: "rs"}
-		c.VlanMembers[memberName] = &vlanMember{untagged}
 	}
 
 	// remove IPs for front-panel interfaces
