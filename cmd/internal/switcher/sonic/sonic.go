@@ -2,6 +2,7 @@ package sonic
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/metal-stack/metal-core/cmd/internal"
 	"github.com/metal-stack/metal-core/cmd/internal/dbus"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/configdb"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/metal-go/api/models"
@@ -34,6 +36,7 @@ var frrTpl = "sonic_frr.tpl"
 type Sonic struct {
 	frrApplier     *templates.FrrApplier
 	confidbApplier *templates.ConfigdbApplier
+	cfgdb          configdb.ConfigDB
 	log            *zap.SugaredLogger
 }
 
@@ -63,6 +66,11 @@ func New(log *zap.SugaredLogger, frrTplFile string) (*Sonic, error) {
 
 func (s *Sonic) Apply(cfg *types.Conf) (updated bool, err error) {
 	bgpApplied, err := s.frrApplier.Apply(cfg)
+	if err != nil {
+		return false, err
+	}
+
+	err = s.applyInterfaces(cfg)
 	if err != nil {
 		return false, err
 	}
@@ -212,4 +220,32 @@ func (s *Sonic) GetManagement() (ip, user string, err error) {
 		return "", "", err
 	}
 	return ip, "admin", nil
+}
+
+func (s *Sonic) applyInterfaces(cfg *types.Conf) error {
+	var (
+		errs             []error
+		interfaceConfigs []configdb.InterfaceConfiguration
+	)
+
+	for _, unprovisioned := range cfg.Ports.Unprovisioned {
+		interfaceConfigs = append(interfaceConfigs, configdb.InterfaceConfiguration{Name: unprovisioned, Vlan: &configdb.Vlan{Name: "Vlan4000"}})
+	}
+	for _, provisioned := range cfg.Ports.Provisioned {
+		vrf, ok := cfg.Ports.Vrfs[provisioned]
+		if !ok {
+			continue
+		}
+		interfaceConfigs = append(interfaceConfigs, configdb.InterfaceConfiguration{Name: provisioned, Vrf: &configdb.Vrf{Name: fmt.Sprintf("Vrf%d", vrf.VLANID)}})
+	}
+
+	for _, c := range interfaceConfigs {
+		err := s.cfgdb.ConfigureInterface(c)
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	return errors.Join(errs...)
+
 }

@@ -35,7 +35,7 @@ type configdb struct {
 	r redis
 }
 
-func New() *configdb {
+func New() ConfigDB {
 	return &configdb{
 		// FIXME implement redis
 	}
