@@ -68,12 +68,14 @@ func (c *configdb) ConfigureInterface(config InterfaceConfiguration) error {
 		}
 	}
 
+	// Firewalls have to be removed from the VLAN and specify no VRF
+	err := c.removeInterfaceFromVLAN(ctx, config.Name)
+	if err != nil {
+		// Wrapped inside the called func
+		return err
+	}
+
 	if config.Vrf != nil {
-		err := c.removeInterfaceFromVLAN(ctx, config.Name)
-		if err != nil {
-			// Wrapped inside the called func
-			return err
-		}
 		err = c.addInterfaceToVRF(ctx, config.Name, config.Vrf.Name)
 		if err != nil {
 			// Wrapped inside the called func

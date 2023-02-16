@@ -55,6 +55,10 @@ func (a *redisApplier) apply(cfg *types.Conf) error {
 		}
 	}
 
+	for port, _ := range cfg.Ports.Firewalls {
+		interfaceConfigs = append(interfaceConfigs, configdb.InterfaceConfiguration{Name: port})
+	}
+
 	for _, c := range interfaceConfigs {
 		err := a.c.ConfigureInterface(c)
 		if err != nil {
