@@ -21,7 +21,7 @@ func TestApply(t *testing.T) {
 	mock := &dummyConfigDB{}
 	testee := &redisApplier{c: mock}
 
-	testee.apply(&types.Conf{
+	err := testee.apply(&types.Conf{
 		Ports: types.Ports{
 			Unprovisioned: []string{"Ethernet0", "Ethernet1"},
 			Vrfs: map[string]*types.Vrf{
@@ -30,13 +30,15 @@ func TestApply(t *testing.T) {
 		},
 	})
 
-	require.Equal(t, mock.Ifaces[0].Name, "Ethernet0");
-	require.Equal(t, mock.Ifaces[0].Vlan.Name, "Vlan4000");
-	require.Equal(t, mock.Ifaces[1].Name, "Ethernet1");
-	require.Equal(t, mock.Ifaces[1].Vlan.Name, "Vlan4000");
+	require.Nil(t, err)
 
-	require.Equal(t, mock.Ifaces[2].Name, "Ethernet2");
-	require.Equal(t, mock.Ifaces[2].Vrf.Name, "Vrf20");
-	require.Equal(t, mock.Ifaces[3].Name, "Ethernet4");
-	require.Equal(t, mock.Ifaces[3].Vrf.Name, "Vrf20");
+	require.Equal(t, mock.Ifaces[0].Name, "Ethernet0")
+	require.Equal(t, mock.Ifaces[0].Vlan.Name, "Vlan4000")
+	require.Equal(t, mock.Ifaces[1].Name, "Ethernet1")
+	require.Equal(t, mock.Ifaces[1].Vlan.Name, "Vlan4000")
+
+	require.Equal(t, mock.Ifaces[2].Name, "Ethernet2")
+	require.Equal(t, mock.Ifaces[2].Vrf.Name, "Vrf20")
+	require.Equal(t, mock.Ifaces[3].Name, "Ethernet4")
+	require.Equal(t, mock.Ifaces[3].Vrf.Name, "Vrf20")
 }
