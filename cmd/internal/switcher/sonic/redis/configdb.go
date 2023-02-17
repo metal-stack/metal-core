@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/redis/go-redis/v9"
@@ -53,7 +54,7 @@ func (c *configdb) deleteVlanMember(ctx context.Context, interfaceName string, v
 	key := vlanMemberTable + c.separator + "Vlan" + fmt.Sprintf("%d", vlan) + c.separator + interfaceName
 
 	err := c.rdb.Get(ctx, key).Err()
-	if err != redis.Nil {
+	if !errors.Is(err, redis.Nil) {
 		return nil
 	} else if err != nil {
 		return err
