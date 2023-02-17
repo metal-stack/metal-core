@@ -47,7 +47,7 @@ func (a *Applier) Apply(cfg *types.Conf) error {
 	if a.previousCfg != nil {
 		diff := cmp.Diff(a.previousCfg, cfg)
 		if diff == "" {
-			a.log.Infow("apply no changes on interfaces detected, nothing to do")
+			a.log.Infow("no changes on interfaces detected, nothing to do")
 			return nil
 		} else {
 			a.log.Debugw("interface changes", "changes", diff)

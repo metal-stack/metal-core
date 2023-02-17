@@ -7,6 +7,11 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+const (
+	interfaceTable  = "INTERFACE"
+	vlanMemberTable = "VLAN_MEMBER"
+)
+
 type configdb struct {
 	rdb       *redis.Client
 	separator string
@@ -22,9 +27,6 @@ func newConfigdb(addr string, id int, separator string) *configdb {
 		separator: separator,
 	}
 }
-
-const interfaceTable = "INTERFACE"
-const vlanMemberTable = "VLAN_MEMBER"
 
 func (c *configdb) setVlanMember(ctx context.Context, interfaceName, vlan string) error {
 	key := vlanMemberTable + c.separator + vlan + c.separator + interfaceName
