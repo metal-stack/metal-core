@@ -7,7 +7,7 @@ require (
 	github.com/coreos/go-systemd/v22 v22.5.0
 	github.com/google/go-cmp v0.5.9
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/metal-stack/go-lldpd v0.4.3-0.20230117201738-75afff7b0bb3
+	github.com/metal-stack/go-lldpd v0.4.3-0.20230217074454-77b05b671221
 	github.com/metal-stack/metal-api v0.21.5-0.20221108201044-00cea8081c41
 	github.com/metal-stack/metal-go v0.21.5-0.20230103105327-50b1d5dda0e7
 	github.com/metal-stack/v v1.0.3
