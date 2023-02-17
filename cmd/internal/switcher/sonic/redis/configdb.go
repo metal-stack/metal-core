@@ -89,8 +89,24 @@ func (c *configdb) deleteVrfMember(ctx context.Context, interfaceName string) er
 		return err
 	}
 	if _, inVrf := result[vrfName]; len(result) == 2 && result[linkLocalOnly] == enable && inVrf {
-		return c.rdb.HDel(ctx, key, "ipv6_use_link_local_only", "vrf_name").Err()
+		return c.rdb.HDel(ctx, key, linkLocalOnly, vrfName).Err()
 	}
 
 	return nil
+}
+
+func (c *configdb) enableLinkLocalOnly(ctx context.Context, interfaceName string) error {
+	key := interfaceTable + c.separator + interfaceName
+
+	// If the key doesn't exist then an empty map will be returned instead of an error
+	// https://github.com/redis/go-redis/issues/1668#issuecomment-781090968
+	result, err := c.rdb.HGetAll(ctx, key).Result()
+	if err != nil {
+		return err
+	}
+	if result[linkLocalOnly] == enable {
+		return nil
+	}
+
+	return c.rdb.HSet(ctx, key, linkLocalOnly, enable).Err()
 }

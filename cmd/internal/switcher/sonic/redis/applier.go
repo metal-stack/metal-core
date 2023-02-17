@@ -54,6 +54,12 @@ func (a *Applier) Apply(cfg *types.Conf) error {
 		}
 	}
 
+	for _, interfaceName := range cfg.Ports.Underlay {
+		if err := a.configureUnderlayPort(interfaceName); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
 	for _, interfaceName := range cfg.Ports.Unprovisioned {
 		if err := a.addInterfaceToVlan(interfaceName, "Vlan4000"); err != nil {
 			errs = append(errs, err)
@@ -86,5 +92,17 @@ func (a *Applier) configureFirewallPort(interfaceName string) error {
 	defer cancel()
 
 	// Firewalls have to be removed from the VLAN and specify no VRF
-	return a.removeInterfaceFromVlan(ctx, interfaceName)
+	err := a.removeInterfaceFromVlan(ctx, interfaceName)
+	if err != nil {
+		return err
+	}
+
+	return a.c.enableLinkLocalOnly(ctx, interfaceName)
+}
+
+func (a *Applier) configureUnderlayPort(interfaceName string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	return a.c.enableLinkLocalOnly(ctx, interfaceName)
 }
