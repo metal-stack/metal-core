@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/avast/retry-go/v4 v4.3.3
 	github.com/coreos/go-systemd/v22 v22.5.0
+	github.com/google/go-cmp v0.5.9
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/go-lldpd v0.4.3-0.20230117201738-75afff7b0bb3
 	github.com/metal-stack/metal-api v0.21.5-0.20221108201044-00cea8081c41
@@ -83,7 +84,7 @@ require (
 	golang.org/x/oauth2 v0.5.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20230209215440-0dfe4f8abfcc // indirect
+	google.golang.org/genproto v0.0.0-20230216225411-c8e22ba71e44 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"go.uber.org/zap"
 )
@@ -25,8 +26,9 @@ type instance struct {
 }
 
 type Applier struct {
-	c   *configdb
-	log *zap.SugaredLogger
+	c           *configdb
+	log         *zap.SugaredLogger
+	previousCfg *types.Conf
 }
 
 func NewApplier(log *zap.SugaredLogger, cfg *Config) *Applier {
@@ -40,6 +42,17 @@ func NewApplier(log *zap.SugaredLogger, cfg *Config) *Applier {
 
 func (a *Applier) Apply(cfg *types.Conf) error {
 	var errs []error
+
+	// only process if changes are detected
+	if a.previousCfg != nil {
+		diff := cmp.Diff(a.previousCfg, cfg)
+		if diff == "" {
+			a.log.Infow("apply no changes on interfaces detected, nothting to do")
+			return nil
+		} else {
+			a.log.Debugw("interface changes", "changes", diff)
+		}
+	}
 
 	for _, interfaceName := range cfg.Ports.Unprovisioned {
 		if err := a.addInterfaceToVlan(interfaceName, "Vlan4000"); err != nil {
@@ -61,6 +74,10 @@ func (a *Applier) Apply(cfg *types.Conf) error {
 		}
 	}
 
+	// config is only treated as applied if no errors are encountered
+	if len(errs) == 0 {
+		a.previousCfg = cfg
+	}
 	return errors.Join(errs...)
 }
 
