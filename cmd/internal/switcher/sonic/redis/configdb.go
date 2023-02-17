@@ -41,11 +41,11 @@ func (c *configdb) deleteVlanMember(ctx context.Context, interfaceName string, v
 func (c *configdb) setVrfMember(ctx context.Context, interfaceName string, vrf string) error {
 	key := interfaceTable + c.separator + interfaceName
 
-	return c.rdb.HSet(ctx, key, "vrf_name", vrf).Err()
+	return c.rdb.HSet(ctx, key, "ipv6_use_link_local_only", "enable", "vrf_name", vrf).Err()
 }
 
 func (c *configdb) deleteVrfMember(ctx context.Context, interfaceName string) error {
 	key := interfaceTable + c.separator + interfaceName
 
-	return c.rdb.HDel(ctx, key, "vrf_name").Err()
+	return c.rdb.HDel(ctx, key, "ipv6_use_link_local_only", "vrf_name").Err()
 }
