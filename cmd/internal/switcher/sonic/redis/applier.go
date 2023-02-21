@@ -130,10 +130,10 @@ func (a *Applier) configureVrfNeighbor(interfaceName, vrf string) error {
 		return err
 	}
 
-	err = a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
+	err = a.ensureInterfaceIsVrfMember(ctx, interfaceName, vrf)
 	if err != nil {
 		return err
 	}
 
-	return a.ensureInterfaceIsVrfMember(ctx, interfaceName, vrf)
+	return a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
 }
