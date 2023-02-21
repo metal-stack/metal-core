@@ -47,7 +47,7 @@ func (a *Applier) ensureInterfaceIsNotVlanMember(ctx context.Context, interfaceN
 
 	// an interface should belong to at most one VLAN and therefore no sorting necessary
 	if !equal(fromRedis, fromSys) {
-		return fmt.Errorf("different state in Redis %v and reported by netlink %v", fromRedis, fromSys)
+		return fmt.Errorf("different state in Redis %v and reported by netlink %v for interface %s", fromRedis, fromSys, interfaceName)
 	}
 
 	if len(fromRedis) == 0 {
