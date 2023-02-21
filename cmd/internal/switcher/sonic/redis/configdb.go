@@ -80,7 +80,7 @@ func (c *configdb) getVrfMembership(ctx context.Context, interfaceName string) (
 
 	result, err := c.rdb.HGetAll(ctx, key).Result()
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 	return result[vrfName], nil
 }
