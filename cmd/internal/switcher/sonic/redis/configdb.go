@@ -24,8 +24,9 @@ type configdb struct {
 
 func newConfigdb(addr string, id int, separator string) *configdb {
 	rdb := redis.NewClient(&redis.Options{
-		Addr: addr,
-		DB:   id,
+		Addr:     addr,
+		DB:       id,
+		PoolSize: 1,
 	})
 	return &configdb{
 		rdb:       rdb,
