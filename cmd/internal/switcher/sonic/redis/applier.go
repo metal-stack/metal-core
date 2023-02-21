@@ -61,7 +61,7 @@ func (a *Applier) Apply(cfg *types.Conf) error {
 	}
 
 	for _, interfaceName := range cfg.Ports.Unprovisioned {
-		if err := a.addInterfaceToVlan(interfaceName, "Vlan4000"); err != nil {
+		if err := a.configureUnprovisionedPort(interfaceName); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -74,7 +74,7 @@ func (a *Applier) Apply(cfg *types.Conf) error {
 
 	for vrfName, vrf := range cfg.Ports.Vrfs {
 		for _, interfaceName := range vrf.Neighbors {
-			if err := a.addInterfaceToVrf(interfaceName, vrfName); err != nil {
+			if err := a.configureVrfNeighbor(interfaceName, vrfName); err != nil {
 				errs = append(errs, err)
 			}
 		}
@@ -87,22 +87,50 @@ func (a *Applier) Apply(cfg *types.Conf) error {
 	return errors.Join(errs...)
 }
 
-func (a *Applier) configureFirewallPort(interfaceName string) error {
+func (a *Applier) configureUnprovisionedPort(interfaceName string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Firewalls have to be removed from the VLAN and specify no VRF
-	err := a.removeInterfaceFromVlan(ctx, interfaceName)
+	err := a.ensureInterfaceIsNotVrfMember(ctx, interfaceName)
 	if err != nil {
 		return err
 	}
 
-	return a.c.enableLinkLocalOnly(ctx, interfaceName)
+	err = a.ensureLinkLocalOnlyIsDisabled(ctx, interfaceName)
+	if err != nil {
+		return err
+	}
+
+	return a.ensureInterfaceIsVlanMember(ctx, interfaceName, "Vlan4000")
+}
+
+func (a *Applier) configureFirewallPort(interfaceName string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := a.ensureInterfaceIsNotVlanMember(ctx, interfaceName)
+	if err != nil {
+		return err
+	}
+
+	return a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
 }
 
 func (a *Applier) configureUnderlayPort(interfaceName string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	return a.c.enableLinkLocalOnly(ctx, interfaceName)
+	return a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
+}
+
+func (a *Applier) configureVrfNeighbor(interfaceName, vrf string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := a.ensureInterfaceIsNotVlanMember(ctx, interfaceName)
+	if err != nil {
+		return err
+	}
+
+	return a.ensureInterfaceIsVrfMember(ctx, interfaceName, vrf)
 }

@@ -3,74 +3,91 @@ package redis
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/avast/retry-go/v4"
 	"github.com/vishvananda/netlink"
 )
 
-func (a *Applier) addInterfaceToVrf(interfaceName, vrf string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	err := a.removeInterfaceFromVlan(ctx, interfaceName)
+func (a *Applier) ensureInterfaceIsVrfMember(ctx context.Context, interfaceName, vrf string) error {
+	fromRedis, err := a.c.getVrfMembership(ctx, interfaceName)
 	if err != nil {
-		// Wrapped inside the called func
-		return err
-	}
-	err = a.c.setVrfMember(ctx, interfaceName, vrf)
-	if err != nil {
-		// Wrapped inside the called func
-		return err
+		return fmt.Errorf("could not retrieve vrf membership for %s from redis: %w", interfaceName, err)
 	}
 
-	return nil
+	fromSys, err := getVrfMembership(interfaceName)
+	if err != nil {
+		return fmt.Errorf("could not retrieve vrf membership for %s via netlink: %w", interfaceName, err)
+	}
+
+	if fromRedis != fromSys {
+		return fmt.Errorf("different state in redis %s and reported by netlink %v for interface %s", fromRedis, fromSys, interfaceName)
+	}
+
+	if fromRedis == vrf {
+		return nil
+	} else if len(fromRedis) != 0 {
+		return fmt.Errorf("interface %s already member of a different vrf %v", interfaceName, fromRedis)
+	}
+
+	a.log.Infof("add interface %s to vrf %s", interfaceName, vrf)
+	return a.c.setVrfMember(ctx, interfaceName, vrf)
 }
 
-func (a *Applier) removeInterfaceFromVrf(ctx context.Context, interfaceName string) error {
-	inVrf, err := isVrfMember(interfaceName)
+func (a *Applier) ensureInterfaceIsNotVrfMember(ctx context.Context, interfaceName string) error {
+	fromRedis, err := a.c.getVrfMembership(ctx, interfaceName)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not retrieve vrf membership for %s from redis: %w", interfaceName, err)
 	}
-	if !inVrf {
+
+	fromSys, err := getVrfMembership(interfaceName)
+	if err != nil {
+		return fmt.Errorf("could not retrieve vrf membership for %s via netlink: %w", interfaceName, err)
+	}
+
+	if fromRedis != fromSys {
+		return fmt.Errorf("different state in redis %s and reported by netlink %v for interface %s", fromRedis, fromSys, interfaceName)
+	}
+
+	if len(fromRedis) == 0 {
 		return nil
 	}
 
-	err = retry.Do(
-		func() error {
-			// remove from configdb
-			err := a.c.deleteVrfMember(ctx, interfaceName)
-			if err != nil {
-				return fmt.Errorf("unable to remove interface %s from a vrf from configdb: %w", interfaceName, err)
-			}
+	a.log.Infof("remove interface %s from vrf %s", interfaceName, fromRedis)
+	err = a.c.deleteVrfMember(ctx, interfaceName)
+	if err != nil {
+		return fmt.Errorf("could not remove interface %s from vrf %s", interfaceName, fromRedis)
+	}
 
-			inVrf, err = isVrfMember(interfaceName)
+	return retry.Do(
+		func() error {
+			vrf, err := getVrfMembership(interfaceName)
 			if err != nil {
 				return err
 			}
-			if inVrf {
-				return fmt.Errorf("interface %s is still member of a vrf", interfaceName)
+			if len(vrf) != 0 {
+				return fmt.Errorf("interface %s is still member of vrf %s", interfaceName, vrf)
 			}
-
 			return nil
 		},
 	)
-	return err
 }
 
-func isVrfMember(interfaceName string) (bool, error) {
+func getVrfMembership(interfaceName string) (string, error) {
 	link, err := netlink.LinkByName(interfaceName)
 	if err != nil {
-		return false, fmt.Errorf("unable to get kernel info of the interface %s: %w", interfaceName, err)
+		return "", fmt.Errorf("unable to get kernel info of the interface %s: %w", interfaceName, err)
 	}
 
 	if link.Attrs().MasterIndex == 0 {
-		return false, nil
+		return "", nil
 	}
 
 	master, err := netlink.LinkByIndex(link.Attrs().MasterIndex)
 	if err != nil {
-		return false, fmt.Errorf("unable to get the master of the interface %s: %w", interfaceName, err)
+		return "", fmt.Errorf("unable to get the master of the interface %s: %w", interfaceName, err)
 	}
-	return master.Type() == "vrf", nil
+	if master.Type() == "vrf" {
+		return master.Attrs().Name, nil
+	}
+	return "", nil
 }

@@ -3,6 +3,8 @@ package redis
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
@@ -36,83 +38,77 @@ func newConfigdb(log *zap.SugaredLogger, addr string, id int, separator string) 
 	}
 }
 
+func (c *configdb) getVlanMembership(ctx context.Context, interfaceName string) ([]string, error) {
+	pattern := vlanMemberTable + c.separator + "*" + c.separator + interfaceName
+
+	keys, err := c.rdb.Keys(ctx, pattern).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	vlans := make([]string, 0, len(keys))
+	for _, key := range keys {
+		split := strings.Split(key, c.separator)
+		if len(split) != 3 {
+			return nil, fmt.Errorf("could not parse key %s", key)
+		}
+		vlans = append(vlans, split[1])
+	}
+	return vlans, nil
+}
+
 func (c *configdb) setVlanMember(ctx context.Context, interfaceName, vlan string) error {
 	key := vlanMemberTable + c.separator + vlan + c.separator + interfaceName
 
-	// If the key doesn't exist then an empty map will be returned instead of an error
-	// https://github.com/redis/go-redis/issues/1668#issuecomment-781090968
-	result, err := c.rdb.HGetAll(ctx, key).Result()
-	if err != nil {
-		return err
-	}
-	if len(result) == 1 && result[taggingMode] == untagged {
-		return nil
-	}
-
-	c.log.Infof("add interface %s to vlan %s", interfaceName, vlan)
 	return c.rdb.HSet(ctx, key, taggingMode, untagged).Err()
 }
 
-func (c *configdb) deleteVlanMember(ctx context.Context, interfaceName string, vlan uint16) error {
-	key := vlanMemberTable + c.separator + "Vlan" + fmt.Sprintf("%d", vlan) + c.separator + interfaceName
+func (c *configdb) deleteVlanMember(ctx context.Context, interfaceName, vlan string) error {
+	key := vlanMemberTable + c.separator + vlan + c.separator + interfaceName
 
-	result, err := c.rdb.Exists(ctx, key).Result()
-	if err != nil {
-		return err
-	} else if result == 0 {
-		return nil
-	}
-
-	c.log.Infof("remove interface %s from vlan Vlan%d", interfaceName, vlan)
 	return c.rdb.Del(ctx, key).Err()
 }
 
 func (c *configdb) setVrfMember(ctx context.Context, interfaceName string, vrf string) error {
 	key := interfaceTable + c.separator + interfaceName
 
-	// If the key doesn't exist then an empty map will be returned instead of an error
-	// https://github.com/redis/go-redis/issues/1668#issuecomment-781090968
+	return c.rdb.HSet(ctx, key, linkLocalOnly, enable, vrfName, vrf).Err()
+}
+
+func (c *configdb) getVrfMembership(ctx context.Context, interfaceName string) (string, error) {
+	key := interfaceTable + c.separator + interfaceName
+
 	result, err := c.rdb.HGetAll(ctx, key).Result()
 	if err != nil {
-		return err
+		return "", nil
 	}
-	if len(result) == 2 && result[linkLocalOnly] == enable && result[vrfName] == vrf {
-		return nil
-	}
-
-	c.log.Infof("add interface %s to vrf %s", interfaceName, vrfName)
-	return c.rdb.HSet(ctx, key, linkLocalOnly, enable, vrfName, vrf).Err()
+	return result[vrfName], nil
 }
 
 func (c *configdb) deleteVrfMember(ctx context.Context, interfaceName string) error {
 	key := interfaceTable + c.separator + interfaceName
 
-	// If the key doesn't exist then an empty map will be returned instead of an error
-	// https://github.com/redis/go-redis/issues/1668#issuecomment-781090968
+	return c.rdb.Del(ctx, key).Err()
+}
+
+func (c *configdb) isLinkLocalOnly(ctx context.Context, interfaceName string) (bool, error) {
+	key := interfaceTable + c.separator + interfaceName
+
 	result, err := c.rdb.HGetAll(ctx, key).Result()
 	if err != nil {
-		return err
+		return false, err
 	}
-	if vrf, inVrf := result[vrfName]; len(result) == 2 && result[linkLocalOnly] == enable && inVrf {
-		c.log.Infof("remove interface %s from vrf %s", interfaceName, vrf)
-		return c.rdb.HDel(ctx, key, linkLocalOnly, vrfName).Err()
-	}
-
-	return nil
+	return result[linkLocalOnly] == enable, nil
 }
 
 func (c *configdb) enableLinkLocalOnly(ctx context.Context, interfaceName string) error {
 	key := interfaceTable + c.separator + interfaceName
 
-	// If the key doesn't exist then an empty map will be returned instead of an error
-	// https://github.com/redis/go-redis/issues/1668#issuecomment-781090968
-	result, err := c.rdb.HGetAll(ctx, key).Result()
-	if err != nil {
-		return err
-	}
-	if result[linkLocalOnly] == enable {
-		return nil
-	}
-
 	return c.rdb.HSet(ctx, key, linkLocalOnly, enable).Err()
+}
+
+func (c *configdb) disableLinkLocalOnly(ctx context.Context, interfaceName string) error {
+	key := interfaceTable + c.separator + interfaceName
+
+	return c.rdb.HDel(ctx, key, linkLocalOnly).Err()
 }

@@ -3,67 +3,108 @@ package redis
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/avast/retry-go/v4"
 	"github.com/vishvananda/netlink"
 )
 
-func (a *Applier) addInterfaceToVlan(interfaceName, vlan string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	err := a.removeInterfaceFromVrf(ctx, interfaceName)
+func (a *Applier) ensureInterfaceIsVlanMember(ctx context.Context, interfaceName, vlan string) error {
+	fromRedis, err := a.c.getVlanMembership(ctx, interfaceName)
 	if err != nil {
-		// Wrapped inside the called func
-		return err
-	}
-	err = a.c.setVlanMember(ctx, interfaceName, vlan)
-	if err != nil {
-		// Wrapped inside the called func
-		return err
+		return fmt.Errorf("could not retrieve vlan membership for %s from redis: %w", interfaceName, err)
 	}
 
-	return nil
+	fromSys, err := getVlanMembership(interfaceName)
+	if err != nil {
+		return fmt.Errorf("could not retrieve vlan membership for %s via netlink: %w", interfaceName, err)
+	}
+
+	// an interface should belong to at most one VLAN and therefore no sorting necessary
+	if !equal(fromRedis, fromSys) {
+		return fmt.Errorf("different state in redis %v and reported by netlink %v for interface %s", fromRedis, fromSys, interfaceName)
+	}
+
+	if len(fromRedis) == 1 && fromRedis[0] == vlan {
+		return nil
+	} else if len(fromRedis) != 0 {
+		return fmt.Errorf("interface %s already member of a different vlan %v", interfaceName, fromRedis)
+	}
+
+	a.log.Infof("add interface %s to vlan %s", interfaceName, vlan)
+	return a.c.setVlanMember(ctx, interfaceName, vlan)
 }
 
-// removeInterfaceFromVlan removes the interface from a vlan, if the interface not bound to a vlan no op is executed,
-// otherwise netlink and configdb are modified to remove the interface from a vlan.
-func (a *Applier) removeInterfaceFromVlan(ctx context.Context, interfaceName string) error {
-	link, err := netlink.LinkByName(interfaceName)
+func (a *Applier) ensureInterfaceIsNotVlanMember(ctx context.Context, interfaceName string) error {
+	fromRedis, err := a.c.getVlanMembership(ctx, interfaceName)
 	if err != nil {
-		return fmt.Errorf("unable to get kernel info of interface:%s %w", interfaceName, err)
+		return fmt.Errorf("could not retrieve vlan membership for %s from Redis: %w", interfaceName, err)
 	}
 
-	err = retry.Do(
+	fromSys, err := getVlanMembership(interfaceName)
+	if err != nil {
+		return fmt.Errorf("could not retrieve vlan membership for %s via netlink: %w", interfaceName, err)
+	}
+
+	// an interface should belong to at most one VLAN and therefore no sorting necessary
+	if !equal(fromRedis, fromSys) {
+		return fmt.Errorf("different state in Redis %v and reported by netlink %v", fromRedis, fromSys)
+	}
+
+	if len(fromRedis) == 0 {
+		return nil
+	}
+
+	for _, vlan := range fromRedis {
+		a.log.Infof("remove interface %s from vlan %s", interfaceName, vlan)
+		err := a.c.deleteVlanMember(ctx, interfaceName, vlan)
+		if err != nil {
+			return fmt.Errorf("could not remove interface %s from vlan %s", interfaceName, vlan)
+		}
+	}
+
+	return retry.Do(
 		func() error {
-			vlansByInterface, err := netlink.BridgeVlanList()
+			vlans, err := getVlanMembership(interfaceName)
 			if err != nil {
-				return fmt.Errorf("unable to get kernel info of vlans %w", err)
+				return err
 			}
-			vlans, ok := vlansByInterface[int32(link.Attrs().Index)]
-			if !ok {
-				return nil
+			if len(vlans) != 0 {
+				return fmt.Errorf("interface %s still member of vlan %v", interfaceName, vlans)
 			}
-
-			for _, vlan := range vlans {
-				// remove from configdb
-				err := a.c.deleteVlanMember(ctx, interfaceName, vlan.Vid)
-				if err != nil {
-					return fmt.Errorf("unable to remove vlan %d from configdb %s %w", vlan.Vid, interfaceName, err)
-				}
-
-				// remove with netlink
-				// if interface is not in a vlan anymore, removing does not return with an error
-				err = netlink.BridgeVlanDel(link, vlan.Vid, false, true, false, false)
-				if err != nil {
-					return fmt.Errorf("unable to remove vlan %d from interface %s %w", vlan.Vid, interfaceName, err)
-				}
-			}
-
-			// TODO also check if interface is not configured to any vlan in configdb.
 			return nil
 		},
 	)
-	return err
+}
+
+func getVlanMembership(interfaceName string) ([]string, error) {
+	link, err := netlink.LinkByName(interfaceName)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get kernel info of interface:%s %w", interfaceName, err)
+	}
+	vlansByInterface, err := netlink.BridgeVlanList()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get kernel info of vlans %w", err)
+	}
+	vlanInfos, ok := vlansByInterface[int32(link.Attrs().Index)]
+	if !ok {
+		return nil, nil
+	}
+
+	vlans := make([]string, 0, len(vlanInfos))
+	for _, vlanInfo := range vlanInfos {
+		vlans = append(vlans, fmt.Sprintf("%d", vlanInfo.Vid))
+	}
+	return vlans, nil
+}
+
+func equal(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
