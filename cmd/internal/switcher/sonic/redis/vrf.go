@@ -30,20 +30,11 @@ func (a *Applier) addInterfaceToVrf(interfaceName, vrf string) error {
 }
 
 func (a *Applier) removeInterfaceFromVrf(ctx context.Context, interfaceName string) error {
-	link, err := netlink.LinkByName(interfaceName)
+	inVrf, err := isVrfMember(interfaceName)
 	if err != nil {
-		return fmt.Errorf("unable to get kernel info of interface:%s %w", interfaceName, err)
+		return err
 	}
-
-	if link.Attrs().MasterIndex == 0 {
-		return nil
-	}
-
-	master, err := netlink.LinkByIndex(link.Attrs().MasterIndex)
-	if err != nil {
-		return fmt.Errorf("unable to get the master of interface:%s %w", interfaceName, err)
-	}
-	if master.Type() != "vrf" {
+	if !inVrf {
 		return nil
 	}
 
@@ -52,18 +43,36 @@ func (a *Applier) removeInterfaceFromVrf(ctx context.Context, interfaceName stri
 			// remove from configdb
 			err := a.c.deleteVrfMember(ctx, interfaceName)
 			if err != nil {
-				return fmt.Errorf("unable to remove vrf from configdb %s %w", interfaceName, err)
+				return fmt.Errorf("unable to remove interface %s from a vrf from configdb: %w", interfaceName, err)
 			}
 
-			// remove with netlink
-			// if there is a master (vrfname) remove it
-			err = netlink.LinkSetNoMaster(link)
+			inVrf, err = isVrfMember(interfaceName)
 			if err != nil {
-				return fmt.Errorf("unable to remove vrf from interface %s %w", interfaceName, err)
+				return err
+			}
+			if inVrf {
+				return fmt.Errorf("interface %s is still member of a vrf", interfaceName)
 			}
 
 			return nil
 		},
 	)
 	return err
+}
+
+func isVrfMember(interfaceName string) (bool, error) {
+	link, err := netlink.LinkByName(interfaceName)
+	if err != nil {
+		return false, fmt.Errorf("unable to get kernel info of the interface %s: %w", interfaceName, err)
+	}
+
+	if link.Attrs().MasterIndex == 0 {
+		return false, nil
+	}
+
+	master, err := netlink.LinkByIndex(link.Attrs().MasterIndex)
+	if err != nil {
+		return false, fmt.Errorf("unable to get the master of the interface %s: %w", interfaceName, err)
+	}
+	return master.Type() == "vrf", nil
 }
