@@ -26,17 +26,20 @@ type instance struct {
 }
 
 type Applier struct {
-	c           *configdb
+	c           *configDB
 	log         *zap.SugaredLogger
 	previousCfg *types.Conf
+	s           *stateDB
 }
 
 func NewApplier(log *zap.SugaredLogger, cfg *Config) *Applier {
-	db := cfg.Databases["CONFIG_DB"]
+	configDB := cfg.Databases["CONFIG_DB"]
+	stateDB := cfg.Databases["STATE_DB"]
 
 	return &Applier{
-		c:   newConfigdb(log, cfg.Instances[db.Instance].Addr, db.Id, db.Separator),
+		c:   newConfigDB(cfg.Instances[configDB.Instance].Addr, configDB.Id, configDB.Separator),
 		log: log,
+		s:   newStateDB(cfg.Instances[stateDB.Instance].Addr, stateDB.Id, stateDB.Separator),
 	}
 }
 

@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/avast/retry-go/v4"
 	"github.com/vishvananda/netlink"
@@ -60,12 +61,14 @@ func (a *Applier) ensureInterfaceIsNotVrfMember(ctx context.Context, interfaceNa
 
 	return retry.Do(
 		func() error {
-			vrf, err := getVrfMembership(interfaceName)
+			exist, err := a.s.existInterface(ctx, interfaceName)
 			if err != nil {
 				return err
 			}
-			if len(vrf) != 0 {
-				return fmt.Errorf("interface %s is still member of vrf %s", interfaceName, vrf)
+			if exist {
+				a.log.Debugf("interface %s is still present in the STATE_DB", interfaceName)
+				time.Sleep(10 * time.Microsecond)
+				return fmt.Errorf("interface %s is still present in the STATE_DB", interfaceName)
 			}
 			return nil
 		},
