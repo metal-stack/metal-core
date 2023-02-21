@@ -10,8 +10,6 @@ import (
 )
 
 func (a *Applier) addInterfaceToVrf(interfaceName, vrf string) error {
-	a.log.Infof("add interface %s to vrf %s", interfaceName, vrf)
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

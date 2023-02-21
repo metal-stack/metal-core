@@ -3,8 +3,8 @@ package redis
 import (
 	"context"
 	"fmt"
-
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 )
 
 const (
@@ -18,17 +18,19 @@ const (
 )
 
 type configdb struct {
+	log       *zap.SugaredLogger
 	rdb       *redis.Client
 	separator string
 }
 
-func newConfigdb(addr string, id int, separator string) *configdb {
+func newConfigdb(log *zap.SugaredLogger, addr string, id int, separator string) *configdb {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     addr,
 		DB:       id,
 		PoolSize: 1,
 	})
 	return &configdb{
+		log:       log,
 		rdb:       rdb,
 		separator: separator,
 	}
@@ -47,6 +49,7 @@ func (c *configdb) setVlanMember(ctx context.Context, interfaceName, vlan string
 		return nil
 	}
 
+	c.log.Infof("add interface %s to vlan %s", interfaceName, vlan)
 	return c.rdb.HSet(ctx, key, taggingMode, untagged).Err()
 }
 
@@ -60,6 +63,7 @@ func (c *configdb) deleteVlanMember(ctx context.Context, interfaceName string, v
 		return nil
 	}
 
+	c.log.Infof("remove interface %s from vlan Vlan%d", interfaceName, vlan)
 	return c.rdb.Del(ctx, key).Err()
 }
 
@@ -76,6 +80,7 @@ func (c *configdb) setVrfMember(ctx context.Context, interfaceName string, vrf s
 		return nil
 	}
 
+	c.log.Infof("add interface %s to vrf %s", interfaceName, vrfName)
 	return c.rdb.HSet(ctx, key, linkLocalOnly, enable, vrfName, vrf).Err()
 }
 
@@ -88,7 +93,8 @@ func (c *configdb) deleteVrfMember(ctx context.Context, interfaceName string) er
 	if err != nil {
 		return err
 	}
-	if _, inVrf := result[vrfName]; len(result) == 2 && result[linkLocalOnly] == enable && inVrf {
+	if vrf, inVrf := result[vrfName]; len(result) == 2 && result[linkLocalOnly] == enable && inVrf {
+		c.log.Infof("remove interface %s from vrf %s", interfaceName, vrf)
 		return c.rdb.HDel(ctx, key, linkLocalOnly, vrfName).Err()
 	}
 

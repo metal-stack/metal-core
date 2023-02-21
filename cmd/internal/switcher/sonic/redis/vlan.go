@@ -10,8 +10,6 @@ import (
 )
 
 func (a *Applier) addInterfaceToVlan(interfaceName, vlan string) error {
-	a.log.Infof("add interface %s to vlan %s", interfaceName, vlan)
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

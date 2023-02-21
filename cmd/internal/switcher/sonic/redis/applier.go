@@ -35,7 +35,7 @@ func NewApplier(log *zap.SugaredLogger, cfg *Config) *Applier {
 	db := cfg.Databases["CONFIG_DB"]
 
 	return &Applier{
-		c:   newConfigdb(cfg.Instances[db.Instance].Addr, db.Id, db.Separator),
+		c:   newConfigdb(log, cfg.Instances[db.Instance].Addr, db.Id, db.Separator),
 		log: log,
 	}
 }
