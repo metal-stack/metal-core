@@ -92,7 +92,7 @@ func getVlanMembership(interfaceName string) ([]string, error) {
 
 	vlans := make([]string, 0, len(vlanInfos))
 	for _, vlanInfo := range vlanInfos {
-		vlans = append(vlans, fmt.Sprintf("%d", vlanInfo.Vid))
+		vlans = append(vlans, fmt.Sprintf("Vlan%d", vlanInfo.Vid))
 	}
 	return vlans, nil
 }
