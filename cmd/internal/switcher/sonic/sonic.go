@@ -85,17 +85,17 @@ func loadRedisConfig(path string) (*redis.Config, error) {
 }
 
 func (s *Sonic) Apply(cfg *types.Conf) (updated bool, err error) {
-	bgpApplied, err := s.frrApplier.Apply(cfg)
-	if err != nil {
-		return false, err
-	}
-
 	configDBApplied, err := s.confidbApplier.Apply(cfg)
 	if err != nil {
 		return false, err
 	}
 
 	err = s.redisApplier.Apply(cfg)
+	if err != nil {
+		return false, err
+	}
+
+	bgpApplied, err := s.frrApplier.Apply(cfg)
 	if err != nil {
 		return false, err
 	}
