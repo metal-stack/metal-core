@@ -22,7 +22,7 @@ func newStateDB(addr string, id int, separator string) *stateDB {
 	}
 }
 
-func (s *stateDB) existInterface(ctx context.Context, interfaceName string) (bool, error) {
+func (s *stateDB) existInInterfaceTable(ctx context.Context, interfaceName string) (bool, error) {
 	key := "INTERFACE_TABLE" + s.separator + interfaceName
 
 	result, err := s.rdb.Exists(ctx, key).Result()

@@ -69,7 +69,7 @@ func (c *configDB) deleteVlanMember(ctx context.Context, interfaceName, vlan str
 func (c *configDB) setVrfMember(ctx context.Context, interfaceName string, vrf string) error {
 	key := interfaceTable + c.separator + interfaceName
 
-	return c.rdb.HSet(ctx, key, linkLocalOnly, enable, vrfName, vrf).Err()
+	return c.rdb.HSet(ctx, key, vrfName, vrf).Err()
 }
 
 func (c *configDB) getVrfMembership(ctx context.Context, interfaceName string) (string, error) {
@@ -82,7 +82,7 @@ func (c *configDB) getVrfMembership(ctx context.Context, interfaceName string) (
 	return result[vrfName], nil
 }
 
-func (c *configDB) deleteVrfMember(ctx context.Context, interfaceName string) error {
+func (c *configDB) deleteInterfaceConfiguration(ctx context.Context, interfaceName string) error {
 	key := interfaceTable + c.separator + interfaceName
 
 	return c.rdb.Del(ctx, key).Err()
@@ -102,10 +102,4 @@ func (c *configDB) enableLinkLocalOnly(ctx context.Context, interfaceName string
 	key := interfaceTable + c.separator + interfaceName
 
 	return c.rdb.HSet(ctx, key, linkLocalOnly, enable).Err()
-}
-
-func (c *configDB) disableLinkLocalOnly(ctx context.Context, interfaceName string) error {
-	key := interfaceTable + c.separator + interfaceName
-
-	return c.rdb.HDel(ctx, key, linkLocalOnly).Err()
 }

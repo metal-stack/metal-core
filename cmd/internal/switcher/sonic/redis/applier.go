@@ -94,12 +94,7 @@ func (a *Applier) configureUnprovisionedPort(interfaceName string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	err := a.ensureInterfaceIsNotVrfMember(ctx, interfaceName)
-	if err != nil {
-		return err
-	}
-
-	err = a.ensureLinkLocalOnlyIsDisabled(ctx, interfaceName)
+	err := a.ensureInterfaceIsNotConfigured(ctx, interfaceName)
 	if err != nil {
 		return err
 	}
@@ -131,6 +126,11 @@ func (a *Applier) configureVrfNeighbor(interfaceName, vrf string) error {
 	defer cancel()
 
 	err := a.ensureInterfaceIsNotVlanMember(ctx, interfaceName)
+	if err != nil {
+		return err
+	}
+
+	err = a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
 	if err != nil {
 		return err
 	}
