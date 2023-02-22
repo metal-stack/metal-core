@@ -75,7 +75,7 @@ func (a *Applier) configureUnprovisionedPort(interfaceName string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	err := a.ensureInterfaceIsNotConfigured(ctx, interfaceName)
+	err := a.ensureNotRouted(ctx, interfaceName)
 	if err != nil {
 		return err
 	}
