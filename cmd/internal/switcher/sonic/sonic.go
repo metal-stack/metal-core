@@ -11,6 +11,7 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal"
 	"github.com/metal-stack/metal-core/cmd/internal/dbus"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis/db"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/metal-go/api/models"
@@ -67,12 +68,12 @@ func New(log *zap.SugaredLogger, frrTplFile string) (*Sonic, error) {
 	}, nil
 }
 
-func loadRedisConfig(path string) (*redis.Config, error) {
+func loadRedisConfig(path string) (*db.Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	cfg := &redis.Config{}
+	cfg := &db.Config{}
 	err = json.Unmarshal(data, cfg)
 	if err != nil {
 		return nil, err

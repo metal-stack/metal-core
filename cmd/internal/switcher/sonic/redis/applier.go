@@ -11,28 +11,13 @@ import (
 	"go.uber.org/zap"
 )
 
-type Config struct {
-	Databases map[string]database `json:"DATABASES"`
-	Instances map[string]instance `json:"INSTANCES"`
-}
-
-type database struct {
-	Id        int    `json:"id"`
-	Instance  string `json:"instance"`
-	Separator string `json:"separator"`
-}
-
-type instance struct {
-	Addr string `json:"unix_socket_path"`
-}
-
 type Applier struct {
 	db          *db.DB
 	log         *zap.SugaredLogger
 	previousCfg *types.Conf
 }
 
-func NewApplier(log *zap.SugaredLogger, cfg *Config) *Applier {
+func NewApplier(log *zap.SugaredLogger, cfg *db.Config) *Applier {
 	return &Applier{
 		db:  db.New(cfg),
 		log: log,
