@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/coreos/go-systemd/v22/unit"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
-
 	"github.com/metal-stack/metal-core/cmd/internal/dbus"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
 const (
@@ -24,7 +22,6 @@ const (
 type configdb struct {
 	Features       map[string]*feature        `json:"FEATURE"`
 	Loopback       map[string]struct{}        `json:"LOOPBACK_INTERFACE"`
-	Ifaces         map[string]*iface          `json:"INTERFACE"`
 	Ports          map[string]*port           `json:"PORT"`
 	Vlans          map[string]*vlan2          `json:"VLAN"`
 	VlanIfaces     map[string]*iface          `json:"VLAN_INTERFACE"`
@@ -73,11 +70,10 @@ type vxlanTunnelMap struct {
 	Vni  string `json:"vni"`
 }
 
-func buildConfigdb(cfg *types.Conf, fpInfs []string) *configdb {
+func buildConfigdb(cfg *types.Conf) *configdb {
 	c := &configdb{
 		Features:       map[string]*feature{},
 		Loopback:       map[string]struct{}{},
-		Ifaces:         map[string]*iface{},
 		Ports:          map[string]*port{},
 		Vlans:          map[string]*vlan2{},
 		VlanIfaces:     map[string]*iface{},
@@ -127,28 +123,17 @@ func buildConfigdb(cfg *types.Conf, fpInfs []string) *configdb {
 		c.Ports[p] = &port{Mtu: "9000", Fec: "rs"}
 	}
 
-	// remove IPs for front-panel interfaces
-	for _, inf := range fpInfs {
-		if strings.Contains(inf, "|") {
-			c.Ifaces[inf] = nil
-		}
-	}
-
 	return c
 }
 
-type ConfigdbApplier struct {
-	interfaces []string
-}
+type ConfigdbApplier struct{}
 
-func NewConfigdbApplier(infs []string) *ConfigdbApplier {
-	return &ConfigdbApplier{
-		interfaces: infs,
-	}
+func NewConfigdbApplier() *ConfigdbApplier {
+	return &ConfigdbApplier{}
 }
 
 func (a *ConfigdbApplier) Apply(c *types.Conf) (applied bool, err error) {
-	cfg := buildConfigdb(c, a.interfaces)
+	cfg := buildConfigdb(c)
 
 	data, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {

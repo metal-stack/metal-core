@@ -47,10 +47,6 @@ type PortInfo struct {
 
 func New(log *zap.SugaredLogger, frrTplFile string) (*Sonic, error) {
 	log.Infow("create sonic NOS")
-	ifs, err := getInterfacesConfig(sonicConfigDBPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load interfaces config from configDB: %w", err)
-	}
 
 	embedFS := true
 	if frrTplFile != "" {
@@ -65,7 +61,7 @@ func New(log *zap.SugaredLogger, frrTplFile string) (*Sonic, error) {
 
 	return &Sonic{
 		frrApplier:     templates.NewFrrApplier(frr, frrTmp, frrValidationService, "", frrTpl, embedFS),
-		confidbApplier: templates.NewConfigdbApplier(ifs),
+		confidbApplier: templates.NewConfigdbApplier(),
 		redisApplier:   redis.NewApplier(log, cfg),
 		log:            log,
 	}, nil
@@ -186,33 +182,6 @@ func getPortsConfig(filepath string) (map[string]PortInfo, error) {
 	err = json.Unmarshal(byteValue, &config)
 
 	return config.Ports, err
-}
-
-func getInterfacesConfig(filepath string) (infs []string, err error) {
-	jsonFile, err := os.Open(filepath)
-	if err != nil {
-		return nil, err
-	}
-	defer jsonFile.Close()
-
-	byteValue, err := io.ReadAll(jsonFile)
-	if err != nil {
-		return nil, err
-	}
-
-	config := struct {
-		Interfaces map[string]struct{} `json:"INTERFACE"`
-	}{}
-	err = json.Unmarshal(byteValue, &config)
-	if err != nil {
-		return nil, err
-	}
-
-	for k := range config.Interfaces {
-		infs = append(infs, k)
-	}
-
-	return infs, nil
 }
 
 type sonic_version struct {

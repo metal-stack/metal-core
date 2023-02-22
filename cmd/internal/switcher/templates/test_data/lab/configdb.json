@@ -8,9 +8,6 @@
     "Loopback0": {},
     "Loopback0|10.0.0.10/32": {}
   },
-  "INTERFACE": {
-    "swp1|10.0.0.10": null
-  },
   "PORT": {
     "swp1": {
       "mtu": "9000",
