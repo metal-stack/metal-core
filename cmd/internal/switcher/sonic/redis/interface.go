@@ -3,7 +3,6 @@ package redis
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/avast/retry-go/v4"
 )
@@ -31,10 +30,12 @@ func (a *Applier) ensureInterfaceIsNotConfigured(ctx context.Context, interfaceN
 			}
 			if configured {
 				a.log.Debugf("interface %s is still configured", interfaceName)
-				time.Sleep(10 * time.Microsecond)
 				return fmt.Errorf("interface %s is still configured", interfaceName)
 			}
 			return nil
 		},
+		// These are the defaults
+		// retry.Attempts(10),
+		// retry.Delay(100*time.Millisecond),
 	)
 }
