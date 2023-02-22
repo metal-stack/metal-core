@@ -21,9 +21,9 @@ import (
 )
 
 const (
-	sonicConfigDBPath            = "/etc/sonic/config_db.json"
-	sonicConfigSaveReloadService = "config-save-reload.service"
-	SonicVersionFile             = "/etc/sonic/sonic_version.yml"
+	sonicConfigDBPath        = "/etc/sonic/config_db.json"
+	sonicConfigReloadService = "frr-reload.service"
+	SonicVersionFile         = "/etc/sonic/sonic_version.yml"
 
 	frr                  = "/etc/sonic/frr/frr.conf"
 	frrTmp               = "/etc/sonic/frr/frr.tmp"
@@ -100,7 +100,7 @@ func (s *Sonic) Apply(cfg *types.Conf) (updated bool, err error) {
 	// TODO check if still required
 	updated = bgpApplied || configDBApplied
 	if updated {
-		if err := dbus.Start(sonicConfigSaveReloadService); err != nil {
+		if err := dbus.Start(sonicConfigReloadService); err != nil {
 			return false, fmt.Errorf("failed to save and reload SONiC config %w", err)
 		}
 	}
