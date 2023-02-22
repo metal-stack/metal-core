@@ -1,28 +1,29 @@
-package redis
+package db
 
 import (
 	"context"
+
 	"github.com/redis/go-redis/v9"
 )
 
-type stateDB struct {
+type StateDB struct {
 	rdb       *redis.Client
 	separator string
 }
 
-func newStateDB(addr string, id int, separator string) *stateDB {
+func newStateDB(addr string, id int, separator string) *StateDB {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     addr,
 		DB:       id,
 		PoolSize: 1,
 	})
-	return &stateDB{
+	return &StateDB{
 		rdb:       rdb,
 		separator: separator,
 	}
 }
 
-func (s *stateDB) existInInterfaceTable(ctx context.Context, interfaceName string) (bool, error) {
+func (s *StateDB) ExistInInterfaceTable(ctx context.Context, interfaceName string) (bool, error) {
 	key := "INTERFACE_TABLE" + s.separator + interfaceName
 
 	result, err := s.rdb.Exists(ctx, key).Result()

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis/db"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"go.uber.org/zap"
 )
@@ -26,20 +27,15 @@ type instance struct {
 }
 
 type Applier struct {
-	c           *configDB
+	db          *db.DB
 	log         *zap.SugaredLogger
 	previousCfg *types.Conf
-	s           *stateDB
 }
 
 func NewApplier(log *zap.SugaredLogger, cfg *Config) *Applier {
-	configDB := cfg.Databases["CONFIG_DB"]
-	stateDB := cfg.Databases["STATE_DB"]
-
 	return &Applier{
-		c:   newConfigDB(cfg.Instances[configDB.Instance].Addr, configDB.Id, configDB.Separator),
+		db:  db.New(cfg),
 		log: log,
-		s:   newStateDB(cfg.Instances[stateDB.Instance].Addr, stateDB.Id, stateDB.Separator),
 	}
 }
 

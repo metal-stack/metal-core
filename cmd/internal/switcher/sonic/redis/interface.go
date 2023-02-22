@@ -8,7 +8,7 @@ import (
 )
 
 func (a *Applier) ensureInterfaceIsNotConfigured(ctx context.Context, interfaceName string) error {
-	configured, err := a.s.existInInterfaceTable(ctx, interfaceName)
+	configured, err := a.db.State.ExistInInterfaceTable(ctx, interfaceName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve state data for interface %s: %w", interfaceName, err)
 	}
@@ -17,14 +17,14 @@ func (a *Applier) ensureInterfaceIsNotConfigured(ctx context.Context, interfaceN
 	}
 
 	a.log.Infof("remove configuration for interface %s", interfaceName)
-	err = a.c.deleteInterfaceConfiguration(ctx, interfaceName)
+	err = a.db.Config.DeleteInterfaceConfiguration(ctx, interfaceName)
 	if err != nil {
 		return fmt.Errorf("could not remove configuration for interface %s: %w", interfaceName, err)
 	}
 
 	return retry.Do(
 		func() error {
-			configured, err := a.s.existInInterfaceTable(ctx, interfaceName)
+			configured, err := a.db.State.ExistInInterfaceTable(ctx, interfaceName)
 			if err != nil {
 				return err
 			}

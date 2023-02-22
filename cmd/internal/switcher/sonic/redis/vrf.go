@@ -8,7 +8,7 @@ import (
 )
 
 func (a *Applier) ensureInterfaceIsVrfMember(ctx context.Context, interfaceName, vrf string) error {
-	fromRedis, err := a.c.getVrfMembership(ctx, interfaceName)
+	fromRedis, err := a.db.Config.GetVrfMembership(ctx, interfaceName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve vrf membership for %s from redis: %w", interfaceName, err)
 	}
@@ -29,7 +29,7 @@ func (a *Applier) ensureInterfaceIsVrfMember(ctx context.Context, interfaceName,
 	}
 
 	a.log.Infof("add interface %s to vrf %s", interfaceName, vrf)
-	return a.c.setVrfMember(ctx, interfaceName, vrf)
+	return a.db.Config.SetVrfMember(ctx, interfaceName, vrf)
 }
 
 func getVrfMembership(interfaceName string) (string, error) {

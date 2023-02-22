@@ -1,4 +1,4 @@
-package redis
+package db
 
 import (
 	"context"
@@ -18,24 +18,24 @@ const (
 	vrfName         = "vrf_name"
 )
 
-type configDB struct {
+type ConfigDB struct {
 	rdb       *redis.Client
 	separator string
 }
 
-func newConfigDB(addr string, id int, separator string) *configDB {
+func newConfigDB(addr string, id int, separator string) *ConfigDB {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     addr,
 		DB:       id,
 		PoolSize: 1,
 	})
-	return &configDB{
+	return &ConfigDB{
 		rdb:       rdb,
 		separator: separator,
 	}
 }
 
-func (c *configDB) getVlanMembership(ctx context.Context, interfaceName string) ([]string, error) {
+func (c *ConfigDB) GetVlanMembership(ctx context.Context, interfaceName string) ([]string, error) {
 	pattern := vlanMemberTable + c.separator + "*" + c.separator + interfaceName
 
 	keys, err := c.rdb.Keys(ctx, pattern).Result()
@@ -54,25 +54,25 @@ func (c *configDB) getVlanMembership(ctx context.Context, interfaceName string) 
 	return vlans, nil
 }
 
-func (c *configDB) setVlanMember(ctx context.Context, interfaceName, vlan string) error {
+func (c *ConfigDB) SetVlanMember(ctx context.Context, interfaceName, vlan string) error {
 	key := vlanMemberTable + c.separator + vlan + c.separator + interfaceName
 
 	return c.rdb.HSet(ctx, key, taggingMode, untagged).Err()
 }
 
-func (c *configDB) deleteVlanMember(ctx context.Context, interfaceName, vlan string) error {
+func (c *ConfigDB) DeleteVlanMember(ctx context.Context, interfaceName, vlan string) error {
 	key := vlanMemberTable + c.separator + vlan + c.separator + interfaceName
 
 	return c.rdb.Del(ctx, key).Err()
 }
 
-func (c *configDB) setVrfMember(ctx context.Context, interfaceName string, vrf string) error {
+func (c *ConfigDB) SetVrfMember(ctx context.Context, interfaceName string, vrf string) error {
 	key := interfaceTable + c.separator + interfaceName
 
 	return c.rdb.HSet(ctx, key, vrfName, vrf).Err()
 }
 
-func (c *configDB) getVrfMembership(ctx context.Context, interfaceName string) (string, error) {
+func (c *ConfigDB) GetVrfMembership(ctx context.Context, interfaceName string) (string, error) {
 	key := interfaceTable + c.separator + interfaceName
 
 	result, err := c.rdb.HGetAll(ctx, key).Result()
@@ -82,13 +82,13 @@ func (c *configDB) getVrfMembership(ctx context.Context, interfaceName string) (
 	return result[vrfName], nil
 }
 
-func (c *configDB) deleteInterfaceConfiguration(ctx context.Context, interfaceName string) error {
+func (c *ConfigDB) DeleteInterfaceConfiguration(ctx context.Context, interfaceName string) error {
 	key := interfaceTable + c.separator + interfaceName
 
 	return c.rdb.Del(ctx, key).Err()
 }
 
-func (c *configDB) isLinkLocalOnly(ctx context.Context, interfaceName string) (bool, error) {
+func (c *ConfigDB) IsLinkLocalOnly(ctx context.Context, interfaceName string) (bool, error) {
 	key := interfaceTable + c.separator + interfaceName
 
 	result, err := c.rdb.HGetAll(ctx, key).Result()
@@ -98,7 +98,7 @@ func (c *configDB) isLinkLocalOnly(ctx context.Context, interfaceName string) (b
 	return result[linkLocalOnly] == enable, nil
 }
 
-func (c *configDB) enableLinkLocalOnly(ctx context.Context, interfaceName string) error {
+func (c *ConfigDB) EnableLinkLocalOnly(ctx context.Context, interfaceName string) error {
 	key := interfaceTable + c.separator + interfaceName
 
 	return c.rdb.HSet(ctx, key, linkLocalOnly, enable).Err()

@@ -9,7 +9,7 @@ import (
 )
 
 func (a *Applier) ensureInterfaceIsVlanMember(ctx context.Context, interfaceName, vlan string) error {
-	fromRedis, err := a.c.getVlanMembership(ctx, interfaceName)
+	fromRedis, err := a.db.Config.GetVlanMembership(ctx, interfaceName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve vlan membership for %s from redis: %w", interfaceName, err)
 	}
@@ -31,11 +31,11 @@ func (a *Applier) ensureInterfaceIsVlanMember(ctx context.Context, interfaceName
 	}
 
 	a.log.Infof("add interface %s to vlan %s", interfaceName, vlan)
-	return a.c.setVlanMember(ctx, interfaceName, vlan)
+	return a.db.Config.SetVlanMember(ctx, interfaceName, vlan)
 }
 
 func (a *Applier) ensureInterfaceIsNotVlanMember(ctx context.Context, interfaceName string) error {
-	fromRedis, err := a.c.getVlanMembership(ctx, interfaceName)
+	fromRedis, err := a.db.Config.GetVlanMembership(ctx, interfaceName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve vlan membership for %s from Redis: %w", interfaceName, err)
 	}
@@ -56,7 +56,7 @@ func (a *Applier) ensureInterfaceIsNotVlanMember(ctx context.Context, interfaceN
 
 	for _, vlan := range fromRedis {
 		a.log.Infof("remove interface %s from vlan %s", interfaceName, vlan)
-		err := a.c.deleteVlanMember(ctx, interfaceName, vlan)
+		err := a.db.Config.DeleteVlanMember(ctx, interfaceName, vlan)
 		if err != nil {
 			return fmt.Errorf("could not remove interface %s from vlan %s", interfaceName, vlan)
 		}
