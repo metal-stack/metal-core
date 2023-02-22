@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
@@ -80,6 +81,10 @@ func (a *Applier) configureUnprovisionedPort(interfaceName string) error {
 		return err
 	}
 
+	if err := a.ensurePortMTU(ctx, interfaceName, "9000", true); err != nil {
+		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
+	}
+
 	return a.ensureInterfaceIsVlanMember(ctx, interfaceName, "Vlan4000")
 }
 
@@ -92,6 +97,10 @@ func (a *Applier) configureFirewallPort(interfaceName string) error {
 		return err
 	}
 
+	if err := a.ensurePortMTU(ctx, interfaceName, "9216", true); err != nil {
+		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
+	}
+
 	return a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
 }
 
@@ -99,6 +108,9 @@ func (a *Applier) configureUnderlayPort(interfaceName string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	if err := a.ensurePortMTU(ctx, interfaceName, "9216", false); err != nil {
+		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
+	}
 	return a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
 }
 
@@ -114,6 +126,10 @@ func (a *Applier) configureVrfNeighbor(interfaceName, vrf string) error {
 	err = a.ensureInterfaceIsVrfMember(ctx, interfaceName, vrf)
 	if err != nil {
 		return err
+	}
+
+	if err := a.ensurePortMTU(ctx, interfaceName, "9000", true); err != nil {
+		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 
 	return a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)

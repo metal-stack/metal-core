@@ -22,7 +22,6 @@ const (
 type configdb struct {
 	Features       map[string]*feature        `json:"FEATURE"`
 	Loopback       map[string]struct{}        `json:"LOOPBACK_INTERFACE"`
-	Ports          map[string]*port           `json:"PORT"`
 	Vlans          map[string]*vlan2          `json:"VLAN"`
 	VlanIfaces     map[string]*iface          `json:"VLAN_INTERFACE"`
 	Vrfs           map[string]*vrf            `json:"VRF"`
@@ -74,7 +73,6 @@ func buildConfigdb(cfg *types.Conf) *configdb {
 	c := &configdb{
 		Features:       map[string]*feature{},
 		Loopback:       map[string]struct{}{},
-		Ports:          map[string]*port{},
 		Vlans:          map[string]*vlan2{},
 		VlanIfaces:     map[string]*iface{},
 		Vrfs:           map[string]*vrf{},
@@ -92,16 +90,7 @@ func buildConfigdb(cfg *types.Conf) *configdb {
 		c.Loopback[fmt.Sprintf("Loopback0|%s/32", cfg.Loopback)] = struct{}{}
 	}
 
-	for _, p := range cfg.Ports.Underlay {
-		c.Ports[p] = &port{Mtu: "9216"}
-	}
-	for _, fw := range cfg.Ports.Firewalls {
-		c.Ports[fw.Port] = &port{Mtu: "9216", Fec: "rs"}
-	}
 	for vrfName, v := range cfg.Ports.Vrfs {
-		for _, p := range v.Neighbors {
-			c.Ports[p] = &port{Mtu: "9000", Fec: "rs"}
-		}
 		vlanId := strconv.FormatUint(uint64(v.VLANID), 10)
 		vlanName := "Vlan" + vlanId
 		vni := strconv.FormatUint(uint64(v.VNI), 10)
@@ -118,10 +107,6 @@ func buildConfigdb(cfg *types.Conf) *configdb {
 	c.VlanIfaces[pxeIfaceName] = &iface{}
 	c.VxlanEvpnNvo["nvo"] = &nvo{SourceVtep: "vtep"}
 	c.VxlanTunnelMap["vtep|map_104000_Vlan4000"] = &vxlanTunnelMap{"Vlan4000", "104000"}
-
-	for _, p := range cfg.Ports.Unprovisioned {
-		c.Ports[p] = &port{Mtu: "9000", Fec: "rs"}
-	}
 
 	return c
 }

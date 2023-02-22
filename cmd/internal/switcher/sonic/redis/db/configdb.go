@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/redis/go-redis/v9"
@@ -16,6 +17,10 @@ const (
 	taggingMode     = "tagging_mode"
 	untagged        = "untagged"
 	vrfName         = "vrf_name"
+	portTable       = "PORT"
+	mtu             = "mtu"
+	fec             = "fec"
+	fecRS           = "rs"
 )
 
 type ConfigDB struct {
@@ -102,4 +107,37 @@ func (c *ConfigDB) EnableLinkLocalOnly(ctx context.Context, interfaceName string
 	key := interfaceTable + c.separator + interfaceName
 
 	return c.rdb.HSet(ctx, key, linkLocalOnly, enable).Err()
+}
+
+func (c *ConfigDB) GetPortMTU(ctx context.Context, interfaceName string) (int, error) {
+	key := portTable + c.separator + interfaceName
+
+	result, err := c.rdb.HGetAll(ctx, key).Result()
+	if err != nil {
+		return 0, err
+	}
+	if v, ok := result[mtu]; ok {
+		mtuInt, err := strconv.Atoi(v)
+		if err != nil {
+			return 0, fmt.Errorf("failed to convert MTU value %s to int: %w", v, err)
+		}
+
+		return mtuInt, nil
+	}
+
+	return 0, nil
+}
+
+func (c *ConfigDB) SetPort(ctx context.Context, interfaceName string, mtuVal string, isFEC bool) error {
+	key := portTable + c.separator + interfaceName
+
+	if err := c.rdb.HSet(ctx, key, mtu, mtuVal).Err(); err != nil {
+		return fmt.Errorf("failed to update port mtu: %w", err)
+	}
+
+	if isFEC {
+		return c.rdb.HSet(ctx, key, fec, fecRS).Err()
+	}
+
+	return c.rdb.HDel(ctx, key, fec).Err()
 }
