@@ -38,11 +38,6 @@ type iface struct {
 	VrfName string `json:"vrf_name,omitempty"`
 }
 
-type port struct {
-	Mtu string `json:"mtu,omitempty"`
-	Fec string `json:"fec,omitempty"`
-}
-
 type vlan2 struct {
 	VlanId      string   `json:"vlanid,omitempty"`
 	DHCPServers []string `json:"dhcp_servers,omitempty"`
