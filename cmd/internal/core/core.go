@@ -29,7 +29,7 @@ type Core struct {
 	managementGateway         string
 	additionalBridgePorts     []string
 	additionalBridgeVIDs      []string
-	spineUplinks              string
+	spineUplinks              []string
 
 	nos NOS
 
@@ -51,7 +51,7 @@ type Config struct {
 	ManagementGateway         string
 	AdditionalBridgePorts     []string
 	AdditionalBridgeVIDs      []string
-	SpineUplinks              string
+	SpineUplinks              []string
 
 	NOS NOS
 
