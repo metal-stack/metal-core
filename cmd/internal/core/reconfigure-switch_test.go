@@ -3,11 +3,11 @@ package core
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/cumulus"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
-
 	"github.com/metal-stack/metal-go/api/models"
-	"github.com/stretchr/testify/require"
 )
 
 func TestBuildSwitcherConfig(t *testing.T) {
@@ -59,7 +59,6 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		ASN:           420000001,
 		Ports: types.Ports{
 			Underlay:      []string{"swp31", "swp32"},
-			Provisioned:   []string{"swp2", "swp3"},
 			Unprovisioned: []string{"swp1"},
 			Firewalls: map[string]*types.Firewall{
 				"swp3": {

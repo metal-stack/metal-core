@@ -7,13 +7,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
+	"github.com/vishvananda/netlink"
 	"golang.org/x/exp/slices"
 
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
 	"github.com/metal-stack/metal-go/api/models"
-	"github.com/vishvananda/netlink"
 )
 
 // ReconfigureSwitch reconfigures the switch.
@@ -103,7 +103,6 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 
 	p := types.Ports{
 		Underlay:      c.spineUplinks,
-		Provisioned:   []string{},
 		Unprovisioned: []string{},
 		Vrfs:          map[string]*types.Vrf{},
 		Firewalls:     map[string]*types.Firewall{},
@@ -122,10 +121,6 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 				p.Unprovisioned = append(p.Unprovisioned, port)
 			}
 			continue
-		} else {
-			if !slices.Contains(p.Provisioned, port) {
-				p.Provisioned = append(p.Provisioned, port)
-			}
 		}
 
 		// Firewall-Port
