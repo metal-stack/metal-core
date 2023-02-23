@@ -33,6 +33,9 @@ bin/$(BINARY): test $(GOSRC)
 test:
 	CGO_ENABLED=1 go test -tags client -cover ./...
 
+.PHONY: lint
+lint:
+	golangci-lint run --build-tags client  -p bugs -p unused
 
 .PHONY: gofmt
 gofmt:
