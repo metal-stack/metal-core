@@ -96,7 +96,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*switcher.Conf, 
 	}
 
 	p := switcher.Ports{
-		Underlay:      strings.Split(c.spineUplinks, ","),
+		Underlay:      c.spineUplinks,
 		Unprovisioned: []string{},
 		Vrfs:          map[string]*switcher.Vrf{},
 		Firewalls:     map[string]*switcher.Firewall{},
