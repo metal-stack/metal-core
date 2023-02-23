@@ -1,4 +1,4 @@
-package switcher
+package types
 
 import (
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"

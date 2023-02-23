@@ -1,4 +1,4 @@
-package switcher
+package templates
 
 import (
 	"bytes"
@@ -9,10 +9,12 @@ import (
 	"text/template"
 
 	"github.com/coreos/go-systemd/v22/unit"
+
 	"github.com/metal-stack/metal-core/cmd/internal/dbus"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
-func write(c *Conf, tpl *template.Template, tmpPath string) error {
+func write(c *types.Conf, tpl *template.Template, tmpPath string) error {
 	f, err := os.OpenFile(tmpPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		return err

@@ -1,9 +1,10 @@
-package switcher
+package templates
 
 import (
 	"text/template"
 
 	"github.com/metal-stack/metal-core/cmd/internal/dbus"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
 const (
@@ -25,7 +26,7 @@ func NewInterfacesApplier(tplPath string) *InterfacesApplier {
 	return &InterfacesApplier{mustParseFS(interfacesTpl)}
 }
 
-func (a *InterfacesApplier) Apply(c *Conf) error {
+func (a *InterfacesApplier) Apply(c *types.Conf) error {
 	err := write(c, a.tpl, interfacesTmp)
 	if err != nil {
 		return err

@@ -1,4 +1,4 @@
-package switcher
+package templates
 
 import (
 	"embed"

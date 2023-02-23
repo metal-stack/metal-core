@@ -1,9 +1,10 @@
-package switcher
+package templates
 
 import (
 	"text/template"
 
 	"github.com/metal-stack/metal-core/cmd/internal/dbus"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
 const (
@@ -25,7 +26,7 @@ func NewFrrApplier(tplPath string) *FrrApplier {
 	return &FrrApplier{mustParseFS(frrTpl)}
 }
 
-func (a *FrrApplier) Apply(c *Conf) error {
+func (a *FrrApplier) Apply(c *types.Conf) error {
 	err := write(c, a.tpl, frrTmp)
 	if err != nil {
 		return err

@@ -1,4 +1,4 @@
-package switcher
+package types
 
 import (
 	"testing"

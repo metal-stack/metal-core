@@ -1,19 +1,14 @@
 package core
 
 import (
-	"net"
 	"time"
 
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 	metalgo "github.com/metal-stack/metal-go"
+
 	"go.uber.org/zap"
 )
-
-type NOS interface {
-	Apply(cfg *switcher.Conf) error
-	GetSwitchPorts() ([]*net.Interface, error)
-}
 
 type Core struct {
 	log      *zap.SugaredLogger
@@ -31,7 +26,7 @@ type Core struct {
 	additionalBridgeVIDs      []string
 	spineUplinks              []string
 
-	nos NOS
+	nos switcher.NOS
 
 	driver             metalgo.Client
 	eventServiceClient v1.EventServiceClient
@@ -53,7 +48,7 @@ type Config struct {
 	AdditionalBridgeVIDs      []string
 	SpineUplinks              []string
 
-	NOS NOS
+	NOS switcher.NOS
 
 	Driver             metalgo.Client
 	EventServiceClient v1.EventServiceClient

@@ -7,11 +7,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/kelseyhightower/envconfig"
 	"github.com/metal-stack/metal-core/cmd/internal/core"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/v"
+
+	"github.com/kelseyhightower/envconfig"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -69,7 +70,7 @@ func Run() {
 		log.Fatalw("failed to create grpc client", "error", err)
 	}
 
-	nos := switcher.NewCumulus(log, cfg.FrrTplFile, cfg.InterfacesTplFile)
+	nos := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile)
 
 	c := core.New(core.Config{
 		Log:                       log,

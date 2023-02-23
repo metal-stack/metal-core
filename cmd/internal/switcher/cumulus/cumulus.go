@@ -1,28 +1,31 @@
-package switcher
+package cumulus
 
 import (
 	"fmt"
 	"net"
 	"strings"
 
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
+
 	"go.uber.org/zap"
 )
 
 type Cumulus struct {
-	frrApplier        *FrrApplier
-	interfacesApplier *InterfacesApplier
+	frrApplier        *templates.FrrApplier
+	interfacesApplier *templates.InterfacesApplier
 	log               *zap.SugaredLogger
 }
 
-func NewCumulus(log *zap.SugaredLogger, frrTplFile, interfacesTplFile string) *Cumulus {
+func New(log *zap.SugaredLogger, frrTplFile, interfacesTplFile string) *Cumulus {
 	return &Cumulus{
-		frrApplier:        NewFrrApplier(frrTplFile),
-		interfacesApplier: NewInterfacesApplier(interfacesTplFile),
+		frrApplier:        templates.NewFrrApplier(frrTplFile),
+		interfacesApplier: templates.NewInterfacesApplier(interfacesTplFile),
 		log:               log,
 	}
 }
 
-func (c *Cumulus) Apply(cfg *Conf) error {
+func (c *Cumulus) Apply(cfg *types.Conf) error {
 	err := c.interfacesApplier.Apply(cfg)
 	if err != nil {
 		return err
