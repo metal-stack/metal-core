@@ -5,10 +5,10 @@ import (
 	"net"
 	"strings"
 
+	"go.uber.org/zap"
+
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
-
-	"go.uber.org/zap"
 )
 
 type Cumulus struct {

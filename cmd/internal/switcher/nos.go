@@ -3,10 +3,10 @@ package switcher
 import (
 	"net"
 
+	"go.uber.org/zap"
+
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/cumulus"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
-
-	"go.uber.org/zap"
 )
 
 type NOS interface {

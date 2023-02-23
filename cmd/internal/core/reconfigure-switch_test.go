@@ -3,10 +3,10 @@ package core
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/metal-go/api/models"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestBuildSwitcherConfig(t *testing.T) {

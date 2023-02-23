@@ -3,9 +3,9 @@ package types
 import (
 	"testing"
 
-	"github.com/metal-stack/metal-core/cmd/internal/vlan"
-
 	"github.com/stretchr/testify/require"
+
+	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 )
 
 func TestFillVLANIDs(t *testing.T) {

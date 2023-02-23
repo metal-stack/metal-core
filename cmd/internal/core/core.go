@@ -3,11 +3,11 @@ package core
 import (
 	"time"
 
+	"go.uber.org/zap"
+
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 	metalgo "github.com/metal-stack/metal-go"
-
-	"go.uber.org/zap"
 )
 
 type Core struct {

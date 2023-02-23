@@ -6,11 +6,11 @@ import (
 	"os"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
 	"github.com/metal-stack/metal-go/api/models"
-
-	"go.uber.org/zap"
 )
 
 func (c *Core) RegisterSwitch() error {
