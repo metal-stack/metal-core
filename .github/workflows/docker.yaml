@@ -39,6 +39,8 @@ jobs:
       uses: golangci/golangci-lint-action@v3
       with:
         args: --build-tags client -p bugs -p unused --timeout=3m
+        skip-cache: true
+
 
     - name: Make tag
       run: |
