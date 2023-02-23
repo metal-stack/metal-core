@@ -128,8 +128,9 @@ func (c *ConfigDB) GetPortMTU(ctx context.Context, interfaceName string) (int, e
 	return 0, nil
 }
 
-func (c *ConfigDB) SetPort(ctx context.Context, interfaceName string, mtuVal string, isFEC bool) error {
+func (c *ConfigDB) SetPort(ctx context.Context, interfaceName string, mtuInt int, isFEC bool) error {
 	key := portTable + c.separator + interfaceName
+	mtuVal := fmt.Sprintf("%d", mtuInt)
 
 	if err := c.rdb.HSet(ctx, key, mtu, mtuVal).Err(); err != nil {
 		return fmt.Errorf("failed to update port mtu: %w", err)
