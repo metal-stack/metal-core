@@ -49,13 +49,14 @@ func (c *Core) ConstantlyPhoneHome() {
 		lldpcli := lldp.NewClient(ctx, *iface)
 		c.log.Infow("start lldp client", "interface", iface.Name)
 
+		ifaceName := iface.Name
 		// constantly observe LLDP traffic on current machine and current interface
+		discoveryResultChanwWG.Add(1)
 		go func() {
-			discoveryResultChanwWG.Add(1)
 			defer discoveryResultChanwWG.Done()
 			err = lldpcli.Start(c.log.Named("lldp"), discoveryResultChan)
 			if err != nil {
-				c.log.Errorw("unable to start lldp discovery for interface", "interface", iface.Name)
+				c.log.Errorw("unable to start lldp discovery for interface", "interface", ifaceName)
 			}
 		}()
 	}
