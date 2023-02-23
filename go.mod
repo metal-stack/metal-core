@@ -9,7 +9,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/go-lldpd v0.4.3
 	github.com/metal-stack/metal-api v0.22.1-0.20230223082817-2ca852f7ec3c
-	github.com/metal-stack/metal-go v0.22.1-0.20230223121457-daa646b1fb2d
+	github.com/metal-stack/metal-go v0.22.1-0.20230223125202-9fea982fd4c9
 	github.com/metal-stack/v v1.0.3
 	github.com/prometheus/client_golang v1.14.0
 	github.com/redis/go-redis/v9 v9.0.2
