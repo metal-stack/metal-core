@@ -42,7 +42,7 @@ func Run() {
 	log.Infow("metal-core version", "version", v.V)
 	log.Infow("configuration", "cfg", cfg)
 
-	driver, _, err := metalgo.NewDriver(
+	driver, err := metalgo.NewDriver(
 		fmt.Sprintf("%s://%s:%d%s", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort, cfg.ApiBasePath),
 		"", cfg.HMACKey, metalgo.AuthType("Metal-Edit"))
 
