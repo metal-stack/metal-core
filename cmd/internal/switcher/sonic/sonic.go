@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/metal-stack/metal-core/cmd/internal"
+	"github.com/metal-stack/metal-core/cmd/internal/dbus"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis/db"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
@@ -26,7 +27,7 @@ const (
 
 	frr                  = "/etc/sonic/frr/frr.conf"
 	frrTmp               = "/etc/sonic/frr/frr.tmp"
-	frrReloadService     = "frr-reload"
+	frrReloadService     = "frr-reload.service"
 	frrValidationService = "bgp-validation"
 
 	redisConfigFile = "/var/run/redis/sonic-db/database_config.json"
@@ -60,7 +61,7 @@ func New(log *zap.SugaredLogger, frrTplFile string) (*Sonic, error) {
 	}
 
 	return &Sonic{
-		frrApplier:     templates.NewFrrApplier(frr, frrTmp, frrValidationService, frrReloadService, frrTpl, embedFS),
+		frrApplier:     templates.NewFrrApplier(frr, frrTmp, frrValidationService, "", frrTpl, embedFS),
 		confidbApplier: templates.NewConfigdbApplier(),
 		redisApplier:   redis.NewApplier(log, cfg),
 		log:            log,
@@ -86,17 +87,24 @@ func (s *Sonic) Apply(cfg *types.Conf) (updated bool, err error) {
 		return false, err
 	}
 
-	err = s.redisApplier.Apply(cfg)
+	redisApplied, err := s.redisApplier.Apply(cfg)
 	if err != nil {
 		return false, err
 	}
 
-	bgpApplied, err := s.frrApplier.Apply(cfg)
+	frrApplied, err := s.frrApplier.Apply(cfg)
 	if err != nil {
 		return false, err
 	}
 
-	return bgpApplied || configDBApplied, nil
+	// TODO should be moved to frrApplier
+	if frrApplied {
+		if err := dbus.Start(frrReloadService); err != nil {
+			return false, fmt.Errorf("failed reload FRR %w", err)
+		}
+	}
+
+	return configDBApplied || frrApplied || redisApplied, nil
 }
 
 func (s *Sonic) GetNics(log *zap.SugaredLogger, blacklist []string) (nics []*models.V1SwitchNic, err error) {
