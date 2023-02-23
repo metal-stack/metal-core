@@ -28,7 +28,7 @@ github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 h1:HbphB4TFFXpv7MNrT52FGrrgVXF1
 github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0/go.mod h1:DZGJHZMqrU4JJqFAWUS2UO1+lbSKsdiOoYi9Zzey7Fc=
 github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f h1:lO4WD4F/rVNCu3HqELle0jiPLLBs70cWOduZpkS1E78=
 github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f/go.mod h1:cuUVRXasLTGF7a8hSLbxyZXjz+1KgoB3wDUb6vlszIc=
-github.com/emicklei/go-restful/v3 v3.9.0 h1:XwGDlfxEnQZzuopoqxwSEllNcCOM9DhhFyhFIIGKwxE=
+github.com/emicklei/go-restful/v3 v3.10.1 h1:rc42Y5YTp7Am7CS630D7JmhRjq4UlEUuEKfrDac4bSQ=
 github.com/go-jose/go-jose/v3 v3.0.0 h1:s6rrhirfEP/CGIoc6p+PZAeogN2SxKav6Wp7+dyMWVo=
 github.com/go-jose/go-jose/v3 v3.0.0/go.mod h1:RNkWWRld676jZEYoV3+XK8L2ZnNSvIsxFMht0mSX+u8=
 github.com/go-logr/logr v1.2.2/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=
@@ -180,12 +180,12 @@ github.com/mdlayher/lldp v0.0.0-20150915211757-afd9f83164c5 h1:i4JJtLb5iDVsncU7s
 github.com/mdlayher/lldp v0.0.0-20150915211757-afd9f83164c5/go.mod h1:IZAsRpRUv/4B6NhGzofHK/+I+N31NTUz/hrEm4ssUwA=
 github.com/mdlayher/packet v1.0.0/go.mod h1:eE7/ctqDhoiRhQ44ko5JZU2zxB88g+JH/6jmnjzPjOU=
 github.com/mdlayher/socket v0.2.1/go.mod h1:QLlNPkFR88mRUNQIzRBMfXxwKal8H7u1h3bL1CV+f0E=
-github.com/metal-stack/go-lldpd v0.4.3-0.20230217074454-77b05b671221 h1:zhhYcmeyaBLFAC/TiaAdpNV6pqMEf3ITwseWpEihG+M=
-github.com/metal-stack/go-lldpd v0.4.3-0.20230217074454-77b05b671221/go.mod h1:qRzSZyEqu/gniYOF8SJ3rH4xGOD51eeO8hBX+hDB5n8=
-github.com/metal-stack/metal-api v0.21.5-0.20221108201044-00cea8081c41 h1:tcCZVNK/gmovVYSEsPMSqlIm+pJKfcC9H87ZiWVBhGQ=
-github.com/metal-stack/metal-api v0.21.5-0.20221108201044-00cea8081c41/go.mod h1:HY7W/StUF2ISlcjByMshAQUZoY+hzLCSmoJhvWwTIok=
-github.com/metal-stack/metal-go v0.21.5-0.20230103105327-50b1d5dda0e7 h1:nbr+b+9rfi9XuFJJz6O7Uq8a/IKghYFOYFD3vVvsTXc=
-github.com/metal-stack/metal-go v0.21.5-0.20230103105327-50b1d5dda0e7/go.mod h1:EttkuzD25TrMHwhR2cbaHdY58xg54gfd6pgXjchqBS0=
+github.com/metal-stack/go-lldpd v0.4.3 h1:LIlqrdNMsTDke5MwphpbPOgmwJPcgJLnRTyJj/RIJ+Q=
+github.com/metal-stack/go-lldpd v0.4.3/go.mod h1:gtsAjN4CCDia+ZD3O53/HeDlxN2h2kMkvIbIREyBkCE=
+github.com/metal-stack/metal-api v0.22.1-0.20230223082817-2ca852f7ec3c h1:/QNEtUFjlLgb5dE5KobJkVFQPLWE8o9ve0qgMyO62LU=
+github.com/metal-stack/metal-api v0.22.1-0.20230223082817-2ca852f7ec3c/go.mod h1:BQmd6bt7GA9llGC7/BrPmpEe6pT17chC4bipmu/5iH0=
+github.com/metal-stack/metal-go v0.22.1-0.20230223121457-daa646b1fb2d h1:BnzsFtmObJaWHWaqzEr1zZrD8ldArD1S8+vXhxKBxzQ=
+github.com/metal-stack/metal-go v0.22.1-0.20230223121457-daa646b1fb2d/go.mod h1:IZ7qY6dUAi72ZTz7Ni5cwWzzUXJj2Or1t04c3u4AUzU=
 github.com/metal-stack/metal-lib v0.11.3 h1:0VyfzyfwTYuaKn7ggok6ieU1MDY+RfbxOTL+Bji89x4=
 github.com/metal-stack/metal-lib v0.11.3/go.mod h1:Ge1ypz6aOf2ab98kr8GYMXD8eZ7VfKFUfUE3p/8Sm3g=
 github.com/metal-stack/security v0.6.6 h1:KSPNN8YZd2EJEjsJ0xCBcd5o53uU0iFupahHA9Twuh0=
@@ -274,7 +274,7 @@ go.opentelemetry.io/otel/trace v1.13.0 h1:CBgRZ6ntv+Amuj1jDsMhZtlAPT6gbyIRdaIzFh
 go.opentelemetry.io/otel/trace v1.13.0/go.mod h1:muCvmmO9KKpvuXSf3KKAXXB2ygNYHQ+ZfI5X08d3tds=
 go.uber.org/atomic v1.10.0 h1:9qC72Qh0+3MqyJbAn8YU5xVq1frD8bn3JtD2oXtafVQ=
 go.uber.org/atomic v1.10.0/go.mod h1:LUxbIzbOniOlMKjJjyPfpl4v+PKK2cNJn91OQbhoJI0=
-go.uber.org/goleak v1.1.11 h1:wy28qYRKZgnJTxGxvye5/wgWr1EKjmUDGYox5mGlRlI=
+go.uber.org/goleak v1.1.12 h1:gZAh5/EyT/HQwlpkCy6wTpqfH9H8Lz8zbm3dZh+OyzA=
 go.uber.org/multierr v1.9.0 h1:7fIwc/ZtS0q++VgcfqFDxSBZVv/Xo49/SYnDFupUwlI=
 go.uber.org/multierr v1.9.0/go.mod h1:X2jQV1h+kxSjClGpnseKVIxpmcjrj7MNnI0bnlfKTVQ=
 go.uber.org/zap v1.24.0 h1:FiJd5l1UOLj0wCgbSE0rwwXHzEdAZS6hiiSnxJN/D60=
