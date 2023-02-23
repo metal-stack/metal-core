@@ -8,11 +8,11 @@ import (
 	"net/http"
 	httppprof "net/http/pprof"
 	"os"
-
-	"github.com/metal-stack/metal-core/cmd/internal/switcher"
+	"time"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/metal-stack/metal-core/cmd/internal/core"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/v"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -116,5 +116,11 @@ func Run() {
 	metricsServer.Handle("/pprof/heap", httppprof.Handler("heap"))
 	metricsServer.Handle("/pprof/goroutine", httppprof.Handler("goroutine"))
 
-	log.Fatal(http.ListenAndServe(metricsAddr, metricsServer))
+	srv := &http.Server{
+		Addr:              metricsAddr,
+		Handler:           metricsServer,
+		ReadHeaderTimeout: 3 * time.Second,
+	}
+
+	log.Fatal(srv.ListenAndServe())
 }
