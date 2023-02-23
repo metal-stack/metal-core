@@ -5,7 +5,7 @@ import (
 	"net/http"
 	httppprof "net/http/pprof"
 	"os"
-	"strings"
+	"time"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/metal-stack/metal-core/cmd/internal/core"
@@ -42,9 +42,10 @@ func Run() {
 	log.Infow("metal-core version", "version", v.V)
 	log.Infow("configuration", "cfg", cfg)
 
-	driver, _, err := metalgo.NewDriver(
+	driver, err := metalgo.NewDriver(
 		fmt.Sprintf("%s://%s:%d%s", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort, cfg.ApiBasePath),
-		"", cfg.HMACKey, metalgo.AuthType("Metal-Edit"))
+		"", cfg.HMACKey, metalgo.AuthType("Metal-Edit"),
+	)
 
 	if err != nil {
 		log.Fatalw("unable to create metal-api driver", "error", err)
@@ -96,10 +97,6 @@ func Run() {
 	go c.ReconfigureSwitch()
 	c.ConstantlyPhoneHome()
 
-	if strings.ToUpper(cfg.LogLevel) == "DEBUG" {
-		_ = os.Setenv("DEBUG", "1")
-	}
-
 	// Start metrics
 	metricsAddr := fmt.Sprintf("%v:%d", cfg.MetricsServerBindAddress, cfg.MetricsServerPort)
 
@@ -113,5 +110,11 @@ func Run() {
 	metricsServer.Handle("/pprof/heap", httppprof.Handler("heap"))
 	metricsServer.Handle("/pprof/goroutine", httppprof.Handler("goroutine"))
 
-	log.Fatal(http.ListenAndServe(metricsAddr, metricsServer))
+	srv := &http.Server{
+		Addr:              metricsAddr,
+		Handler:           metricsServer,
+		ReadHeaderTimeout: 3 * time.Second,
+	}
+
+	log.Fatal(srv.ListenAndServe())
 }
