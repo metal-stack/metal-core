@@ -25,7 +25,7 @@ func NewApplier(log *zap.SugaredLogger, cfg *db.Config) *Applier {
 	}
 }
 
-func (a *Applier) Apply(cfg *types.Conf) error {
+func (a *Applier) Apply(cfg *types.Conf) (bool, error) {
 	var errs []error
 
 	// only process if changes are detected
@@ -33,7 +33,7 @@ func (a *Applier) Apply(cfg *types.Conf) error {
 		diff := cmp.Diff(a.previousCfg, cfg)
 		if diff == "" {
 			a.log.Infow("no changes on interfaces detected, nothing to do")
-			return nil
+			return false, nil
 		} else {
 			a.log.Debugw("interface changes", "changes", diff)
 		}
@@ -69,7 +69,7 @@ func (a *Applier) Apply(cfg *types.Conf) error {
 	if len(errs) == 0 {
 		a.previousCfg = cfg
 	}
-	return errors.Join(errs...)
+	return true, errors.Join(errs...)
 }
 
 func (a *Applier) configureUnprovisionedPort(interfaceName string) error {

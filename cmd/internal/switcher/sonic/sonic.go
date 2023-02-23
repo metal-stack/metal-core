@@ -86,7 +86,7 @@ func (s *Sonic) Apply(cfg *types.Conf) (updated bool, err error) {
 		return false, err
 	}
 
-	err = s.redisApplier.Apply(cfg)
+	redisApplied, err := s.redisApplier.Apply(cfg)
 	if err != nil {
 		return false, err
 	}
@@ -96,7 +96,7 @@ func (s *Sonic) Apply(cfg *types.Conf) (updated bool, err error) {
 		return false, err
 	}
 
-	return bgpApplied || configDBApplied, nil
+	return bgpApplied || configDBApplied || redisApplied, nil
 }
 
 func (s *Sonic) GetNics(log *zap.SugaredLogger, blacklist []string) (nics []*models.V1SwitchNic, err error) {
