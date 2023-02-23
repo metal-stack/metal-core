@@ -1,13 +1,4 @@
 {
-  "FEATURE": {
-    "dhcp_relay": {
-      "state": "enabled"
-    }
-  },
-  "LOOPBACK_INTERFACE": {
-    "Loopback0": {},
-    "Loopback0|10.0.0.10/32": {}
-  },
   "VLAN": {
     "Vlan4000": {
       "vlanid": "4000",

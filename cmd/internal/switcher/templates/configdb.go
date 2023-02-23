@@ -20,18 +20,12 @@ const (
 )
 
 type configdb struct {
-	Features       map[string]*feature        `json:"FEATURE"`
-	Loopback       map[string]struct{}        `json:"LOOPBACK_INTERFACE"`
 	Vlans          map[string]*vlan2          `json:"VLAN"`
 	VlanIfaces     map[string]*iface          `json:"VLAN_INTERFACE"`
 	Vrfs           map[string]*vrf            `json:"VRF"`
 	VxlanEvpnNvo   map[string]*nvo            `json:"VXLAN_EVPN_NVO"`
 	VxlanTunnel    vxlanTunnel                `json:"VXLAN_TUNNEL"`
 	VxlanTunnelMap map[string]*vxlanTunnelMap `json:"VXLAN_TUNNEL_MAP"`
-}
-
-type feature struct {
-	State string `json:"state,omitempty"`
 }
 
 type iface struct {
@@ -66,23 +60,12 @@ type vxlanTunnelMap struct {
 
 func buildConfigdb(cfg *types.Conf) *configdb {
 	c := &configdb{
-		Features:       map[string]*feature{},
-		Loopback:       map[string]struct{}{},
 		Vlans:          map[string]*vlan2{},
 		VlanIfaces:     map[string]*iface{},
 		Vrfs:           map[string]*vrf{},
 		VxlanEvpnNvo:   map[string]*nvo{},
 		VxlanTunnel:    vxlanTunnel{vtep{SrcIp: cfg.Loopback}},
 		VxlanTunnelMap: map[string]*vxlanTunnelMap{},
-	}
-
-	c.Features["dhcp_relay"] = &feature{
-		State: "enabled",
-	}
-
-	c.Loopback["Loopback0"] = struct{}{}
-	if cfg.Loopback != "" {
-		c.Loopback[fmt.Sprintf("Loopback0|%s/32", cfg.Loopback)] = struct{}{}
 	}
 
 	for vrfName, v := range cfg.Ports.Vrfs {
