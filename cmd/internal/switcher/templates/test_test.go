@@ -1,4 +1,4 @@
-package switcher
+package templates
 
 import (
 	"bytes"
@@ -9,23 +9,25 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
+
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
-func testTemplate(t *testing.T, tpl *template.Template, c *Conf, expectedFilename string) {
+func testTemplate(t *testing.T, tpl *template.Template, c *types.Conf, expectedFilename string) {
 	actual := renderToString(t, tpl, c)
 	expected := readExpected(t, expectedFilename)
 	require.Equal(t, expected, actual, "Wanted: %s, Got: %s", expected, actual)
 }
 
-func renderToString(t *testing.T, tpl *template.Template, c *Conf) string {
+func renderToString(t *testing.T, tpl *template.Template, c *types.Conf) string {
 	var b bytes.Buffer
 	err := tpl.Execute(&b, c)
 	require.NoError(t, err, "Couldn't render configuration")
 	return b.String()
 }
 
-func readConf(t *testing.T, i string) Conf {
-	c := Conf{}
+func readConf(t *testing.T, i string) types.Conf {
+	c := types.Conf{}
 	b, err := os.ReadFile(i)
 	require.Nil(t, err, "unexpected error when reading testing input")
 

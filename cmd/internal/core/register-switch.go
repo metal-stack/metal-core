@@ -6,9 +6,11 @@ import (
 	"os"
 	"time"
 
+	"go.uber.org/zap"
+
+	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
 	"github.com/metal-stack/metal-go/api/models"
-	"go.uber.org/zap"
 )
 
 func (c *Core) RegisterSwitch() error {
@@ -48,7 +50,7 @@ func (c *Core) RegisterSwitch() error {
 	return nil
 }
 
-func getNics(log *zap.SugaredLogger, nos NOS, blacklist []string) ([]*models.V1SwitchNic, error) {
+func getNics(log *zap.SugaredLogger, nos switcher.NOS, blacklist []string) ([]*models.V1SwitchNic, error) {
 	var nics []*models.V1SwitchNic
 	ifs, err := nos.GetSwitchPorts()
 	if err != nil {

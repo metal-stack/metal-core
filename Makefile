@@ -43,4 +43,4 @@ gofmt:
 
 .PHONY: test-switcher
 test-switcher:
-	cd ./switcher && ./validate.sh && cd -
+	cd ./switcher/templates && ./validate.sh && cd -
