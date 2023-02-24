@@ -25,7 +25,7 @@ type redisLogger struct {
 }
 
 func (l *redisLogger) Printf(ctx context.Context, format string, v ...interface{}) {
-	l.log.Infof(format, v)
+	l.log.Infof(format, v...)
 }
 
 func NewApplier(log *zap.SugaredLogger, cfg *db.Config) *Applier {
