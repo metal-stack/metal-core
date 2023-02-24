@@ -40,6 +40,39 @@ func newConfigDB(addr string, id int, separator string) *ConfigDB {
 	}
 }
 
+func (c *ConfigDB) ExistVlan(ctx context.Context, vid uint16) (bool, error) {
+	key := "VLAN" + c.separator + "Vlan" + fmt.Sprintf("%d", vid)
+
+	result, err := c.rdb.Exists(ctx, key).Result()
+	if err != nil {
+		return false, err
+	}
+	return result != 0, nil
+}
+
+func (c *ConfigDB) CreateVlan(ctx context.Context, vid uint16) error {
+	vlanId := fmt.Sprintf("%d", vid)
+	key := "VLAN" + c.separator + "Vlan" + vlanId
+
+	return c.rdb.HSet(ctx, key, "vlanid", vlanId).Err()
+}
+
+func (c *ConfigDB) ExistVlanInterface(ctx context.Context, vid uint16) (bool, error) {
+	key := "VLAN_INTERFACE" + c.separator + "Vlan" + fmt.Sprintf("%d", vid)
+
+	result, err := c.rdb.Exists(ctx, key).Result()
+	if err != nil {
+		return false, err
+	}
+	return result != 0, nil
+}
+
+func (c *ConfigDB) CreateVlanInterface(ctx context.Context, vid uint16, vrf string) error {
+	key := "VLAN_INTERFACE" + c.separator + "Vlan" + fmt.Sprintf("%d", vid)
+
+	return c.rdb.HSet(ctx, key, vrfName, vrf).Err()
+}
+
 func (c *ConfigDB) GetVlanMembership(ctx context.Context, interfaceName string) ([]string, error) {
 	pattern := vlanMemberTable + c.separator + "*" + c.separator + interfaceName
 
@@ -71,6 +104,22 @@ func (c *ConfigDB) DeleteVlanMember(ctx context.Context, interfaceName, vlan str
 	return c.rdb.Del(ctx, key).Err()
 }
 
+func (c *ConfigDB) ExistVrf(ctx context.Context, vrf string) (bool, error) {
+	key := "VRF" + c.separator + vrf
+
+	result, err := c.rdb.Exists(ctx, key).Result()
+	if err != nil {
+		return false, err
+	}
+	return result != 0, nil
+}
+
+func (c *ConfigDB) CreateVrf(ctx context.Context, vrf string) error {
+	key := "VRF" + c.separator + vrf
+
+	return c.rdb.HSet(ctx, key).Err()
+}
+
 func (c *ConfigDB) SetVrfMember(ctx context.Context, interfaceName string, vrf string) error {
 	key := interfaceTable + c.separator + interfaceName
 
@@ -85,6 +134,22 @@ func (c *ConfigDB) GetVrfMembership(ctx context.Context, interfaceName string) (
 		return "", err
 	}
 	return result[vrfName], nil
+}
+
+func (c *ConfigDB) ExistVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) (bool, error) {
+	key := "VXLAN_TUNNEL_MAP" + c.separator + "vtep" + c.separator + fmt.Sprintf("map_%d_Vlan%d", vni, vid)
+
+	result, err := c.rdb.Exists(ctx, key).Result()
+	if err != nil {
+		return false, err
+	}
+	return result != 0, nil
+}
+
+func (c *ConfigDB) CreateVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) error {
+	key := "VXLAN_TUNNEL_MAP" + c.separator + "vtep" + c.separator + fmt.Sprintf("map_%d_Vlan%d", vni, vid)
+
+	return c.rdb.HSet(ctx, key, "vlan", fmt.Sprintf("Vlan%d", vid), "vni", fmt.Sprintf("%d", vni)).Err()
 }
 
 func (c *ConfigDB) DeleteInterfaceConfiguration(ctx context.Context, interfaceName string) error {

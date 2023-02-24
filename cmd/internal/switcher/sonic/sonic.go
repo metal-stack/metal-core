@@ -8,6 +8,9 @@ import (
 	"os"
 	"strings"
 
+	"golang.org/x/exp/slices"
+	"gopkg.in/yaml.v3"
+
 	"github.com/metal-stack/metal-core/cmd/internal"
 	"github.com/metal-stack/metal-core/cmd/internal/dbus"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis"
@@ -15,8 +18,6 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/metal-go/api/models"
-	"golang.org/x/exp/slices"
-	"gopkg.in/yaml.v3"
 
 	"go.uber.org/zap"
 )
@@ -36,10 +37,9 @@ const (
 var frrTpl = "sonic_frr.tpl"
 
 type Sonic struct {
-	frrApplier     *templates.FrrApplier
-	confidbApplier *templates.ConfigdbApplier
-	redisApplier   *redis.Applier
-	log            *zap.SugaredLogger
+	frrApplier   *templates.FrrApplier
+	redisApplier *redis.Applier
+	log          *zap.SugaredLogger
 }
 
 type PortInfo struct {
@@ -61,10 +61,9 @@ func New(log *zap.SugaredLogger, frrTplFile string) (*Sonic, error) {
 	}
 
 	return &Sonic{
-		frrApplier:     templates.NewFrrApplier(frr, frrTmp, frrValidationService, "", frrTpl, embedFS),
-		confidbApplier: templates.NewConfigdbApplier(),
-		redisApplier:   redis.NewApplier(log, cfg),
-		log:            log,
+		frrApplier:   templates.NewFrrApplier(frr, frrTmp, frrValidationService, "", frrTpl, embedFS),
+		redisApplier: redis.NewApplier(log, cfg),
+		log:          log,
 	}, nil
 }
 
@@ -82,11 +81,6 @@ func loadRedisConfig(path string) (*db.Config, error) {
 }
 
 func (s *Sonic) Apply(cfg *types.Conf) (updated bool, err error) {
-	configDBApplied, err := s.confidbApplier.Apply(cfg)
-	if err != nil {
-		return false, err
-	}
-
 	redisApplied, err := s.redisApplier.Apply(cfg)
 	if err != nil {
 		return false, err
@@ -104,7 +98,7 @@ func (s *Sonic) Apply(cfg *types.Conf) (updated bool, err error) {
 		}
 	}
 
-	return configDBApplied || frrApplied || redisApplied, nil
+	return frrApplied || redisApplied, nil
 }
 
 func (s *Sonic) GetNics(log *zap.SugaredLogger, blacklist []string) (nics []*models.V1SwitchNic, err error) {

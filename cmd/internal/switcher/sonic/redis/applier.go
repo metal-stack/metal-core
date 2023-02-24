@@ -7,9 +7,11 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
+
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis/db"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
-	"go.uber.org/zap"
 )
 
 type Applier struct {
@@ -18,7 +20,16 @@ type Applier struct {
 	previousCfg *types.Conf
 }
 
+type redisLogger struct {
+	log *zap.SugaredLogger
+}
+
+func (l *redisLogger) Printf(ctx context.Context, format string, v ...interface{}) {
+	l.log.Infof(format, v)
+}
+
 func NewApplier(log *zap.SugaredLogger, cfg *db.Config) *Applier {
+	redis.SetLogger(&redisLogger{log: log})
 	return &Applier{
 		db:  db.New(cfg),
 		log: log,
@@ -58,6 +69,9 @@ func (a *Applier) Apply(cfg *types.Conf) (bool, error) {
 	}
 
 	for vrfName, vrf := range cfg.Ports.Vrfs {
+		if err := a.configureVrf(vrfName, vrf); err != nil {
+			errs = append(errs, err)
+		}
 		for _, interfaceName := range vrf.Neighbors {
 			if err := a.configureVrfNeighbor(interfaceName, vrfName); err != nil {
 				errs = append(errs, err)
@@ -114,7 +128,7 @@ func (a *Applier) configureUnderlayPort(interfaceName string) error {
 	return a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
 }
 
-func (a *Applier) configureVrfNeighbor(interfaceName, vrf string) error {
+func (a *Applier) configureVrfNeighbor(interfaceName, vrfName string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -123,7 +137,7 @@ func (a *Applier) configureVrfNeighbor(interfaceName, vrf string) error {
 		return err
 	}
 
-	err = a.ensureInterfaceIsVrfMember(ctx, interfaceName, vrf)
+	err = a.ensureInterfaceIsVrfMember(ctx, interfaceName, vrfName)
 	if err != nil {
 		return err
 	}
@@ -133,4 +147,51 @@ func (a *Applier) configureVrfNeighbor(interfaceName, vrf string) error {
 	}
 
 	return a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
+}
+
+func (a *Applier) configureVrf(vrfName string, vrf *types.Vrf) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	exist, err := a.db.Config.ExistVrf(ctx, vrfName)
+	if err != nil {
+		return err
+	}
+	if !exist {
+		if err := a.db.Config.CreateVrf(ctx, vrfName); err != nil {
+			return fmt.Errorf("could not create vrf %s: %w", vrfName, err)
+		}
+	}
+
+	exist, err = a.db.Config.ExistVlan(ctx, vrf.VLANID)
+	if err != nil {
+		return err
+	}
+	if !exist {
+		if err := a.db.Config.CreateVlan(ctx, vrf.VLANID); err != nil {
+			return fmt.Errorf("could not create vlan %d: %w", vrf.VLANID, err)
+		}
+	}
+
+	exist, err = a.db.Config.ExistVlanInterface(ctx, vrf.VLANID)
+	if err != nil {
+		return err
+	}
+	if !exist {
+		if err := a.db.Config.CreateVlanInterface(ctx, vrf.VLANID, vrfName); err != nil {
+			return fmt.Errorf("could not create vlan interface for vlan %d: %w", vrf.VLANID, err)
+		}
+	}
+
+	exist, err = a.db.Config.ExistVxlanTunnelMap(ctx, vrf.VLANID, vrf.VNI)
+	if err != nil {
+		return err
+	}
+	if !exist {
+		if err := a.db.Config.CreateVxlanTunnelMap(ctx, vrf.VLANID, vrf.VNI); err != nil {
+			return fmt.Errorf("could not create vxlan tunnel between vlan %d and vni %d: %w", vrf.VLANID, vrf.VNI, err)
+		}
+	}
+
+	return nil
 }
