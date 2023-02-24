@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"fmt"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"io"
 	"os"
 	"text/template"
 
 	"github.com/coreos/go-systemd/v22/unit"
+
 	"github.com/metal-stack/metal-core/cmd/internal/dbus"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
 func write(c *types.Conf, tpl *template.Template, tmpPath string) error {

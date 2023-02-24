@@ -7,10 +7,10 @@ import (
 	"testing"
 	"text/template"
 
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
-
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
+
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
 func testTemplate(t *testing.T, tpl *template.Template, c *types.Conf, expectedFilename string) {

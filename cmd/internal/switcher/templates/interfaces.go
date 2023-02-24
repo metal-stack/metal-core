@@ -1,10 +1,10 @@
 package templates
 
 import (
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"text/template"
 
 	"github.com/metal-stack/metal-core/cmd/internal/dbus"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
 const (

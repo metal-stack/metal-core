@@ -6,13 +6,13 @@ import (
 	"os"
 	"strings"
 
+	"go.uber.org/zap"
+	"golang.org/x/exp/slices"
+
 	"github.com/metal-stack/metal-core/cmd/internal"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/metal-go/api/models"
-
-	"go.uber.org/zap"
-	"golang.org/x/exp/slices"
 )
 
 const (

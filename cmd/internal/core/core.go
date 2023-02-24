@@ -1,26 +1,14 @@
 package core
 
 import (
-	"net"
 	"time"
 
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
-
-	"github.com/metal-stack/metal-go/api/models"
+	"go.uber.org/zap"
 
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 	metalgo "github.com/metal-stack/metal-go"
-	"go.uber.org/zap"
 )
-
-type NOS interface {
-	SanitizeConfig(cfg *types.Conf)
-	Apply(cfg *types.Conf) (updated bool, err error)
-	GetNics(log *zap.SugaredLogger, blacklist []string) ([]*models.V1SwitchNic, error)
-	GetSwitchPorts() ([]*net.Interface, error)
-	GetOS() (*models.V1SwitchOS, error)
-	GetManagement() (ip, user string, err error)
-}
 
 type Core struct {
 	log      *zap.SugaredLogger
@@ -39,7 +27,7 @@ type Core struct {
 	spineUplinks              []string
 	dhcpServers               []string
 
-	nos NOS
+	nos switcher.NOS
 
 	driver             metalgo.Client
 	eventServiceClient v1.EventServiceClient
@@ -62,7 +50,7 @@ type Config struct {
 	SpineUplinks              []string
 	DHCPServers               []string
 
-	NOS NOS
+	NOS switcher.NOS
 
 	Driver             metalgo.Client
 	EventServiceClient v1.EventServiceClient
