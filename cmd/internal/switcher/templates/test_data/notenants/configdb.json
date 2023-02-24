@@ -1,31 +1,6 @@
 {
-  "VLAN": {
-    "Vlan4000": {
-      "vlanid": "4000",
-      "dhcp_servers": [
-        "10.0.1.100"
-      ]
-    }
-  },
-  "VLAN_INTERFACE": {
-    "Vlan4000": {},
-    "Vlan4000|10.255.255.2/24": {}
-  },
+  "VLAN": {},
+  "VLAN_INTERFACE": {},
   "VRF": {},
-  "VXLAN_EVPN_NVO": {
-    "nvo": {
-      "source_vtep": "vtep"
-    }
-  },
-  "VXLAN_TUNNEL": {
-    "vtep": {
-      "src_ip": "10.0.0.10"
-    }
-  },
-  "VXLAN_TUNNEL_MAP": {
-    "vtep|map_104000_Vlan4000": {
-      "vlan": "Vlan4000",
-      "vni": "104000"
-    }
-  }
+  "VXLAN_TUNNEL_MAP": {}
 }

@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/coreos/go-systemd/v22/unit"
+
 	"github.com/metal-stack/metal-core/cmd/internal/dbus"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
@@ -23,8 +24,6 @@ type configdb struct {
 	Vlans          map[string]*vlan2          `json:"VLAN"`
 	VlanIfaces     map[string]*iface          `json:"VLAN_INTERFACE"`
 	Vrfs           map[string]*vrf            `json:"VRF"`
-	VxlanEvpnNvo   map[string]*nvo            `json:"VXLAN_EVPN_NVO"`
-	VxlanTunnel    vxlanTunnel                `json:"VXLAN_TUNNEL"`
 	VxlanTunnelMap map[string]*vxlanTunnelMap `json:"VXLAN_TUNNEL_MAP"`
 }
 
@@ -41,18 +40,6 @@ type vrf struct {
 	Vni string `json:"vni,omitempty"`
 }
 
-type nvo struct {
-	SourceVtep string `json:"source_vtep"`
-}
-
-type vxlanTunnel struct {
-	Vtep vtep `json:"vtep"`
-}
-
-type vtep struct {
-	SrcIp string `json:"src_ip"`
-}
-
 type vxlanTunnelMap struct {
 	Vlan string `json:"vlan"`
 	Vni  string `json:"vni"`
@@ -63,8 +50,6 @@ func buildConfigdb(cfg *types.Conf) *configdb {
 		Vlans:          map[string]*vlan2{},
 		VlanIfaces:     map[string]*iface{},
 		Vrfs:           map[string]*vrf{},
-		VxlanEvpnNvo:   map[string]*nvo{},
-		VxlanTunnel:    vxlanTunnel{vtep{SrcIp: cfg.Loopback}},
 		VxlanTunnelMap: map[string]*vxlanTunnelMap{},
 	}
 
@@ -79,12 +64,6 @@ func buildConfigdb(cfg *types.Conf) *configdb {
 		tunnelMapName := fmt.Sprintf("vtep|map_%s_%s", vni, vlanName)
 		c.VxlanTunnelMap[tunnelMapName] = &vxlanTunnelMap{vlanName, vni}
 	}
-	pxeIfaceName := "Vlan4000|" + cfg.MetalCoreCIDR
-	c.Vlans["Vlan4000"] = &vlan2{VlanId: "4000", DHCPServers: cfg.DHCPServers}
-	c.VlanIfaces["Vlan4000"] = &iface{}
-	c.VlanIfaces[pxeIfaceName] = &iface{}
-	c.VxlanEvpnNvo["nvo"] = &nvo{SourceVtep: "vtep"}
-	c.VxlanTunnelMap["vtep|map_104000_Vlan4000"] = &vxlanTunnelMap{"Vlan4000", "104000"}
 
 	return c
 }
