@@ -3,12 +3,15 @@ package cumulus
 import (
 	"fmt"
 	"net"
+	"os"
 	"strings"
 
 	"go.uber.org/zap"
 
+	"github.com/metal-stack/metal-core/cmd/internal"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
+	"github.com/metal-stack/metal-go/api/models"
 )
 
 type Cumulus struct {
@@ -53,4 +56,32 @@ func (c *Cumulus) GetSwitchPorts() ([]*net.Interface, error) {
 		switchPorts = append(switchPorts, iface)
 	}
 	return switchPorts, nil
+}
+
+func (c *Cumulus) GetOS() (*models.V1SwitchOS, error) {
+	version := "unknown"
+	lsbReleaseBytes, err := os.ReadFile("/etc/lsb-release")
+	if err != nil {
+		c.log.Errorw("unable to read /etc/lsb-release", "error", err)
+	} else {
+		for _, line := range strings.Fields(string(lsbReleaseBytes)) {
+			if strings.HasPrefix(line, "DISTRIB_RELEASE") {
+				_, v, found := strings.Cut(line, "=")
+				if found {
+					version = v
+				}
+			}
+		}
+	}
+	return &models.V1SwitchOS{
+		Vendor:  "Cumulus",
+		Version: version,
+	}, nil
+}
+func (c *Cumulus) GetManagement() (ip, user string, err error) {
+	ip, err = internal.GetManagementIP("eth0")
+	if err != nil {
+		return "", "", err
+	}
+	return ip, "cumulus", nil
 }
