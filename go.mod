@@ -8,12 +8,12 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/go-lldpd v0.4.3
-	github.com/metal-stack/metal-api v0.22.1-0.20230223082817-2ca852f7ec3c
+	github.com/metal-stack/metal-api v0.22.2-0.20230227122820-6b424a7e3841
 	github.com/metal-stack/metal-go v0.22.1-0.20230223125202-9fea982fd4c9
 	github.com/metal-stack/v v1.0.3
 	github.com/prometheus/client_golang v1.14.0
 	github.com/redis/go-redis/v9 v9.0.2
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	github.com/vishvananda/netlink v1.1.0
 	go.uber.org/zap v1.24.0
 	golang.org/x/exp v0.0.0-20230213192124-5e25df0256eb
