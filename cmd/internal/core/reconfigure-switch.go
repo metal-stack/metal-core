@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/vishvananda/netlink"
+	"golang.org/x/exp/slices"
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
@@ -105,14 +106,14 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 	p.BladePorts = c.additionalBridgePorts
 	for _, nic := range s.Nics {
 		port := *nic.Name
-		if contains(p.Underlay, port) {
+		if slices.Contains(p.Underlay, port) {
 			continue
 		}
-		if contains(c.additionalBridgePorts, port) {
+		if slices.Contains(c.additionalBridgePorts, port) {
 			continue
 		}
 		if nic.Vrf == "" {
-			if !contains(p.Unprovisioned, port) {
+			if !slices.Contains(p.Unprovisioned, port) {
 				p.Unprovisioned = append(p.Unprovisioned, port)
 			}
 			continue
@@ -194,13 +195,4 @@ func fillEth0Info(c *types.Conf, gw string) error {
 	c.Ports.Eth0.AddressCIDR = fmt.Sprintf("%s/%d", ip.String(), s)
 	c.Ports.Eth0.Gateway = gw
 	return nil
-}
-
-func contains(l []string, e string) bool {
-	for _, i := range l {
-		if i == e {
-			return true
-		}
-	}
-	return false
 }
