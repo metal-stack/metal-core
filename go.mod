@@ -5,17 +5,17 @@ go 1.20
 require (
 	github.com/coreos/go-systemd/v22 v22.5.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/metal-stack/go-lldpd v0.4.2
+	github.com/metal-stack/go-lldpd v0.4.3
 	github.com/metal-stack/metal-api v0.22.0
 	github.com/metal-stack/metal-go v0.22.0
 	github.com/metal-stack/v v1.0.3
 	github.com/prometheus/client_golang v1.14.0
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	github.com/vishvananda/netlink v1.1.0
 	go.uber.org/zap v1.24.0
 	google.golang.org/grpc v1.53.0
 	google.golang.org/protobuf v1.28.1
-	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -84,5 +84,5 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230222225845-10f96fb3dbec // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
