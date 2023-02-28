@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/avast/retry-go/v4"
 	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
 	"github.com/metal-stack/metal-go/api/models"
 )
@@ -20,12 +21,34 @@ func (c *Core) RegisterSwitch() error {
 		managementUser string
 	)
 
+	err = retry.Do(
+		func() error {
+			initialized, err := c.nos.IsInitialized()
+			if err != nil {
+				return err
+			}
+			if initialized {
+				return nil
+			}
+			return fmt.Errorf("switch is not yet initialized, retrying")
+		},
+		retry.Attempts(20),
+		retry.Delay(1*time.Second),
+	)
+	if err != nil {
+		return fmt.Errorf("unable to start register-switch because it is not initialized: %w", err)
+	}
+
 	if nics, err = c.nos.GetNics(c.log, c.additionalBridgePorts); err != nil {
 		return fmt.Errorf("unable to get nics: %w", err)
 	}
 
-	if hostname, err = os.Hostname(); err != nil {
-		return fmt.Errorf("unable to get hostname: %w", err)
+	if c.hostname != "" {
+		hostname = c.hostname
+	} else {
+		if hostname, err = os.Hostname(); err != nil {
+			return fmt.Errorf("unable to get hostname: %w", err)
+		}
 	}
 
 	if switchOS, err = c.nos.GetOS(); err != nil {

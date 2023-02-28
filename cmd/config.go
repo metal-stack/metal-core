@@ -4,6 +4,7 @@ import "time"
 
 type Config struct {
 	// Valid log levels are: DEBUG, INFO, WARN, ERROR, FATAL and PANIC
+	Hostname                  string        `required:"true" desc:"use this hostname to register this switch at the metal-api"`
 	CIDR                      string        `required:"true" desc:"set the metal core CIDR"`
 	PartitionID               string        `required:"true" desc:"set the partition ID" envconfig:"partition_id"`
 	RackID                    string        `required:"true" desc:"set the rack ID" envconfig:"rack_id"`

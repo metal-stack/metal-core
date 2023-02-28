@@ -14,6 +14,7 @@ type Core struct {
 	log      *zap.SugaredLogger
 	logLevel string
 
+	hostname                  string
 	cidr                      string
 	loopbackIP                string
 	asn                       string
@@ -36,6 +37,7 @@ type Config struct {
 	Log      *zap.SugaredLogger
 	LogLevel string
 
+	Hostname                  string
 	CIDR                      string
 	LoopbackIP                string
 	ASN                       string
@@ -58,6 +60,7 @@ func New(c Config) *Core {
 	return &Core{
 		log:                       c.Log,
 		logLevel:                  c.LogLevel,
+		hostname:                  c.Hostname,
 		cidr:                      c.CIDR,
 		loopbackIP:                c.LoopbackIP,
 		asn:                       c.ASN,

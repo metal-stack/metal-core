@@ -40,6 +40,15 @@ func newConfigDB(addr string, id int, separator string) *ConfigDB {
 	}
 }
 
+func (c *ConfigDB) IsInitialized(ctx context.Context) (bool, error) {
+	key := "CONFIG_DB_INITIALIZED"
+	result, err := c.rdb.Get(ctx, key).Result()
+	if err != nil {
+		return false, err
+	}
+	return result == "1", nil
+}
+
 func (c *ConfigDB) ExistVlan(ctx context.Context, vid uint16) (bool, error) {
 	key := "VLAN" + c.separator + "Vlan" + fmt.Sprintf("%d", vid)
 

@@ -195,3 +195,7 @@ func (a *Applier) configureVrf(vrfName string, vrf *types.Vrf) error {
 
 	return nil
 }
+
+func (a *Applier) IsInitialized(ctx context.Context) (bool, error) {
+	return a.db.Config.IsInitialized(ctx)
+}

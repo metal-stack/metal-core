@@ -137,3 +137,7 @@ func (c *Cumulus) GetManagement() (ip, user string, err error) {
 	}
 	return ip, "cumulus", nil
 }
+
+func (c *Cumulus) IsInitialized() (initialized bool, err error) {
+	return true, nil
+}

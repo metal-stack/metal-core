@@ -20,6 +20,7 @@ type NOS interface {
 	GetSwitchPorts() ([]*net.Interface, error)
 	GetOS() (*models.V1SwitchOS, error)
 	GetManagement() (ip, user string, err error)
+	IsInitialized() (initialized bool, err error)
 }
 
 func NewNOS(log *zap.SugaredLogger, frrTplFile, interfacesTplFile string) (NOS, error) {

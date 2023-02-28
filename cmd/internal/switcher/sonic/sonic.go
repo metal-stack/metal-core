@@ -1,6 +1,7 @@
 package sonic
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -203,4 +204,8 @@ func (s *Sonic) GetManagement() (ip, user string, err error) {
 		return "", "", err
 	}
 	return ip, "admin", nil
+}
+
+func (s *Sonic) IsInitialized() (initialized bool, err error) {
+	return s.redisApplier.IsInitialized(context.Background())
 }
