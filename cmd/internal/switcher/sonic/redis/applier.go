@@ -18,6 +18,8 @@ type Applier struct {
 	db          *db.DB
 	log         *zap.SugaredLogger
 	previousCfg *types.Conf
+
+	portOidMap map[string]db.OID
 }
 
 type redisLogger struct {
@@ -48,6 +50,10 @@ func (a *Applier) Apply(cfg *types.Conf) (bool, error) {
 		} else {
 			a.log.Debugw("interface changes", "changes", diff)
 		}
+	}
+
+	if err := a.refreshOidMaps(); err != nil {
+		return true, err
 	}
 
 	for _, interfaceName := range cfg.Ports.Underlay {
@@ -86,6 +92,19 @@ func (a *Applier) Apply(cfg *types.Conf) (bool, error) {
 	return true, errors.Join(errs...)
 }
 
+func (a *Applier) refreshOidMaps() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	oidMap, err := a.db.Counters.GetPortNameMap(ctx)
+	if err != nil {
+		return fmt.Errorf("could not update port to oid map: %w", err)
+	}
+	a.portOidMap = oidMap
+
+	return nil
+}
+
 func (a *Applier) configureUnprovisionedPort(interfaceName string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -95,7 +114,7 @@ func (a *Applier) configureUnprovisionedPort(interfaceName string) error {
 		return err
 	}
 
-	if err := a.ensurePortMTU(ctx, interfaceName, 9000, true); err != nil {
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "9000", true); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 
@@ -111,7 +130,7 @@ func (a *Applier) configureFirewallPort(interfaceName string) error {
 		return err
 	}
 
-	if err := a.ensurePortMTU(ctx, interfaceName, 9216, true); err != nil {
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "9216", true); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 
@@ -122,7 +141,7 @@ func (a *Applier) configureUnderlayPort(interfaceName string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := a.ensurePortMTU(ctx, interfaceName, 9216, false); err != nil {
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "9216", false); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 	return a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
@@ -142,7 +161,7 @@ func (a *Applier) configureVrfNeighbor(interfaceName, vrfName string) error {
 		return err
 	}
 
-	if err := a.ensurePortMTU(ctx, interfaceName, 9000, true); err != nil {
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "9000", true); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 

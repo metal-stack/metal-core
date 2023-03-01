@@ -8,7 +8,7 @@ import (
 )
 
 func (a *Applier) ensureNotRouted(ctx context.Context, interfaceName string) error {
-	oid, err := a.db.CountersDB.GetOID(ctx, interfaceName)
+	oid, err := a.db.Counters.GetOID(ctx, interfaceName)
 	if err != nil {
 		return fmt.Errorf("could not get the oid of interface %s: %w", interfaceName, err)
 	}

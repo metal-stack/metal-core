@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"fmt"
-	"strconv"
 )
 
 const (
@@ -23,6 +22,11 @@ const (
 
 type ConfigDB struct {
 	c *Client
+}
+
+type Port struct {
+	Mtu   string
+	FecRs bool
 }
 
 func newConfigDB(addr string, id int, sep string) *ConfigDB {
@@ -147,36 +151,35 @@ func (d *ConfigDB) EnableLinkLocalOnly(ctx context.Context, interfaceName string
 	return d.c.HSet(ctx, key, Val{linkLocalOnly: enable})
 }
 
-func (d *ConfigDB) GetPortMTU(ctx context.Context, interfaceName string) (int, error) {
+func (d *ConfigDB) GetPort(ctx context.Context, interfaceName string) (*Port, error) {
 	key := Key{portTable, interfaceName}
 
-	result, err := d.c.HGet(ctx, key, mtu)
+	result, err := d.c.HGetAll(ctx, key)
 	if err != nil {
-		return 0, err
-	}
-	if len(result) > 0 {
-		mtuInt, err := strconv.Atoi(result)
-		if err != nil {
-			return 0, fmt.Errorf("failed to convert MTU value %s to int: %w", result, err)
-		}
-
-		return mtuInt, nil
+		return nil, err
 	}
 
-	return 0, nil
+	return &Port{
+		Mtu:   result[mtu],
+		FecRs: result[fec] == fecRS,
+	}, nil
 }
 
-func (d *ConfigDB) SetPort(ctx context.Context, interfaceName string, mtuInt int, isFEC bool) error {
+func (d *ConfigDB) SetPortFecMode(ctx context.Context, interfaceName string, isFecRs bool) error {
 	key := Key{portTable, interfaceName}
-	mtuVal := fmt.Sprintf("%d", mtuInt)
 
-	if err := d.c.HSet(ctx, key, Val{mtu: mtuVal}); err != nil {
-		return fmt.Errorf("failed to update port mtu: %w", err)
-	}
-
-	if isFEC {
-		return d.c.HSet(ctx, key, Val{fec: fecRS})
+	var mode string
+	if isFecRs {
+		mode = fecRS
 	} else {
-		return d.c.HSet(ctx, key, Val{fec: fecNone})
+		mode = fecNone
 	}
+
+	return d.c.HSet(ctx, key, Val{fec: mode})
+}
+
+func (d *ConfigDB) SetPortMtu(ctx context.Context, interfaceName string, mtu string) error {
+	key := Key{portTable, interfaceName}
+
+	return d.c.HSet(ctx, key, Val{mtu: mtu})
 }
