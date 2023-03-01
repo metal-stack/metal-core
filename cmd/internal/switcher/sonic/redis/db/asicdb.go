@@ -2,33 +2,20 @@ package db
 
 import (
 	"context"
-
-	"github.com/redis/go-redis/v9"
 )
 
 type AsicDB struct {
-	rdb       *redis.Client
-	separator string
+	c *Client
 }
 
-func newAsicDB(addr string, id int, separator string) *AsicDB {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     addr,
-		DB:       id,
-		PoolSize: 1,
-	})
+func newAsicDB(addr string, id int, sep string) *AsicDB {
 	return &AsicDB{
-		rdb:       rdb,
-		separator: separator,
+		c: NewClient(addr, id, sep),
 	}
 }
 
-func (a *AsicDB) ExistRouterInterface(ctx context.Context, oid string) (bool, error) {
-	key := "ASIC_STATE" + a.separator + "SAI_OBJECT_TYPE_ROUTER_INTERFACE" + a.separator + oid
+func (d *AsicDB) ExistRouterInterface(ctx context.Context, oid string) (bool, error) {
+	key := Key{"ASIC_STATE", "SAI_OBJECT_TYPE_ROUTER_INTERFACE", oid}
 
-	result, err := a.rdb.Exists(ctx, key).Result()
-	if err != nil {
-		return false, err
-	}
-	return result != 0, nil
+	return d.c.Exists(ctx, key)
 }

@@ -2,29 +2,20 @@ package db
 
 import (
 	"context"
-
-	"github.com/redis/go-redis/v9"
 )
 
 type CountersDB struct {
-	rdb       *redis.Client
-	separator string
+	c *Client
 }
 
-func newCountersDB(addr string, id int, separator string) *CountersDB {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     addr,
-		DB:       id,
-		PoolSize: 1,
-	})
+func newCountersDB(addr string, id int, sep string) *CountersDB {
 	return &CountersDB{
-		rdb:       rdb,
-		separator: separator,
+		c: NewClient(addr, id, sep),
 	}
 }
 
 func (c *CountersDB) GetOID(ctx context.Context, interfaceName string) (string, error) {
-	rifNameMap, err := c.rdb.HGetAll(ctx, "COUNTERS_RIF_NAME_MAP").Result()
+	rifNameMap, err := c.c.HGetAll(ctx, Key{"COUNTERS_RIF_NAME_MAP"})
 	if err != nil {
 		return "", err
 	}

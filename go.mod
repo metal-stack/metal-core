@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/avast/retry-go/v4 v4.3.3
 	github.com/coreos/go-systemd/v22 v22.5.0
+	github.com/go-redis/redismock/v9 v9.0.2
 	github.com/google/go-cmp v0.5.9
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/go-lldpd v0.4.3
