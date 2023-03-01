@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis/db"
@@ -22,16 +21,7 @@ type Applier struct {
 	portOidMap map[string]db.OID
 }
 
-type redisLogger struct {
-	log *zap.SugaredLogger
-}
-
-func (l *redisLogger) Printf(ctx context.Context, format string, v ...interface{}) {
-	l.log.Infof(format, v...)
-}
-
 func NewApplier(log *zap.SugaredLogger, cfg *db.Config) *Applier {
-	redis.SetLogger(&redisLogger{log: log})
 	return &Applier{
 		db:  db.New(cfg),
 		log: log,
