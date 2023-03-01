@@ -14,7 +14,7 @@ func (a *Applier) ensurePortConfiguration(ctx context.Context, interfaceName, mt
 	}
 
 	if p.FecRs != isFecRs {
-		a.log.Debugw("set interface %s rs mode to %v", interfaceName, isFecRs)
+		a.log.Debugf("set interface %s rs mode to %v", interfaceName, isFecRs)
 		err = a.ensurePortFecMode(ctx, interfaceName, isFecRs)
 		if err != nil {
 			return err
@@ -22,7 +22,7 @@ func (a *Applier) ensurePortConfiguration(ctx context.Context, interfaceName, mt
 	}
 
 	if p.Mtu != mtu {
-		a.log.Debugw("set interface %s mtu to %s", interfaceName, mtu)
+		a.log.Debugf("set interface %s mtu to %s", interfaceName, mtu)
 		return a.db.Config.SetPortMtu(ctx, interfaceName, mtu)
 	}
 
