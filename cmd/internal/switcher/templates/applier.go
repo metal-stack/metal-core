@@ -31,6 +31,9 @@ func (a *Applier) Apply(c *types.Conf) error {
 	}
 
 	equal, err := areEqual(a.Tmp, a.Dest)
+	if err != nil {
+		return err
+	}
 	if equal {
 		return os.Remove(a.Tmp)
 	}
