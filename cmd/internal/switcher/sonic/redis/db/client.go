@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/redis/go-redis/v9"
@@ -41,6 +42,17 @@ func (d *Client) Exists(ctx context.Context, key Key) (bool, error) {
 		return false, err
 	}
 	return result != 0, nil
+}
+
+func (d *Client) HGet(ctx context.Context, key Key, field string) (string, error) {
+	result, err := d.rdb.HGet(ctx, key.toString(d.sep), field).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return "", nil
+		}
+		return "", err
+	}
+	return result, nil
 }
 
 func (d *Client) HGetAll(ctx context.Context, key Key) (Val, error) {

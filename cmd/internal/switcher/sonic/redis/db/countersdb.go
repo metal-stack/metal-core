@@ -15,9 +15,5 @@ func newCountersDB(addr string, id int, sep string) *CountersDB {
 }
 
 func (c *CountersDB) GetOID(ctx context.Context, interfaceName string) (string, error) {
-	rifNameMap, err := c.c.HGetAll(ctx, Key{"COUNTERS_RIF_NAME_MAP"})
-	if err != nil {
-		return "", err
-	}
-	return rifNameMap[interfaceName], nil
+	return c.c.HGet(ctx, Key{"COUNTERS_RIF_NAME_MAP"}, interfaceName)
 }

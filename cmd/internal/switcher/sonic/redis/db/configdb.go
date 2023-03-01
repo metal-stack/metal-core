@@ -107,11 +107,7 @@ func (d *ConfigDB) SetVrfMember(ctx context.Context, interfaceName string, vrf s
 func (d *ConfigDB) GetVrfMembership(ctx context.Context, interfaceName string) (string, error) {
 	key := Key{interfaceTable, interfaceName}
 
-	result, err := d.c.HGetAll(ctx, key)
-	if err != nil {
-		return "", err
-	}
-	return result[vrfName], nil
+	return d.c.HGet(ctx, key, vrfName)
 }
 
 func (d *ConfigDB) ExistVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) (bool, error) {
@@ -138,11 +134,11 @@ func (d *ConfigDB) DeleteInterfaceConfiguration(ctx context.Context, interfaceNa
 func (d *ConfigDB) IsLinkLocalOnly(ctx context.Context, interfaceName string) (bool, error) {
 	key := Key{interfaceTable, interfaceName}
 
-	result, err := d.c.HGetAll(ctx, key)
+	result, err := d.c.HGet(ctx, key, linkLocalOnly)
 	if err != nil {
 		return false, err
 	}
-	return result[linkLocalOnly] == enable, nil
+	return result == enable, nil
 }
 
 func (d *ConfigDB) EnableLinkLocalOnly(ctx context.Context, interfaceName string) error {
@@ -154,14 +150,14 @@ func (d *ConfigDB) EnableLinkLocalOnly(ctx context.Context, interfaceName string
 func (d *ConfigDB) GetPortMTU(ctx context.Context, interfaceName string) (int, error) {
 	key := Key{portTable, interfaceName}
 
-	result, err := d.c.HGetAll(ctx, key)
+	result, err := d.c.HGet(ctx, key, mtu)
 	if err != nil {
 		return 0, err
 	}
-	if v, ok := result[mtu]; ok {
-		mtuInt, err := strconv.Atoi(v)
+	if len(result) > 0 {
+		mtuInt, err := strconv.Atoi(result)
 		if err != nil {
-			return 0, fmt.Errorf("failed to convert MTU value %s to int: %w", v, err)
+			return 0, fmt.Errorf("failed to convert MTU value %s to int: %w", result, err)
 		}
 
 		return mtuInt, nil

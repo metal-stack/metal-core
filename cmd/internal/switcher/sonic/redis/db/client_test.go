@@ -55,6 +55,22 @@ func TestClient_Exists(t *testing.T) {
 	}
 }
 
+func TestClient_HGet(t *testing.T) {
+	db, mock := redismock.NewClientMock()
+	c := &Client{rdb: db, sep: "|"}
+
+	mock.ExpectHGet("table|key", "field").RedisNil()
+
+	got, err := c.HGet(context.Background(), Key{"table", "key"}, "field")
+	if err != nil {
+		t.Errorf("HGet() error = %v, wantErr %v", err, false)
+		return
+	}
+	if len(got) != 0 {
+		t.Errorf("HGet() got = %v, want %v", got, "")
+	}
+}
+
 func TestClient_HGetAll(t *testing.T) {
 	db, mock := redismock.NewClientMock()
 	c := &Client{rdb: db, sep: "|"}
