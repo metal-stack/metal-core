@@ -139,5 +139,6 @@ func (c *Cumulus) GetManagement() (ip, user string, err error) {
 }
 
 func (c *Cumulus) IsInitialized() (initialized bool, err error) {
+	// FIXME decide how we can detect initialization is complete.
 	return true, nil
 }
