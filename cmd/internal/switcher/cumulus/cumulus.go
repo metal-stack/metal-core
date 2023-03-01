@@ -15,15 +15,15 @@ import (
 )
 
 type Cumulus struct {
-	frrApplier        *templates.FrrApplier
-	interfacesApplier *templates.InterfacesApplier
+	frrApplier        *templates.Applier
+	interfacesApplier *templates.Applier
 	log               *zap.SugaredLogger
 }
 
 func New(log *zap.SugaredLogger, frrTplFile, interfacesTplFile string) *Cumulus {
 	return &Cumulus{
-		frrApplier:        templates.NewFrrApplier(frrTplFile),
-		interfacesApplier: templates.NewInterfacesApplier(interfacesTplFile),
+		frrApplier:        NewFrrApplier(frrTplFile),
+		interfacesApplier: NewInterfacesApplier(interfacesTplFile),
 		log:               log,
 	}
 }
