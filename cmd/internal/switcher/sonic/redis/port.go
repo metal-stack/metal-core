@@ -29,8 +29,8 @@ func (a *Applier) ensurePortConfiguration(ctx context.Context, interfaceName, mt
 	return nil
 }
 
-func (a *Applier) ensurePortFecMode(ctx context.Context, interfaceName string, isFecRs bool) error {
-	err := a.db.Config.SetPortFecMode(ctx, interfaceName, isFecRs)
+func (a *Applier) ensurePortFecMode(ctx context.Context, interfaceName string, wantFecRs bool) error {
+	err := a.db.Config.SetPortFecMode(ctx, interfaceName, wantFecRs)
 	if err != nil {
 		return fmt.Errorf("could not update Fec for interface %s: %w", interfaceName, err)
 	}
@@ -42,12 +42,12 @@ func (a *Applier) ensurePortFecMode(ctx context.Context, interfaceName string, i
 
 	return retry.Do(
 		func() error {
-			isRs, err := a.db.Asic.InFecModeRs(ctx, oid)
+			isFecRs, err := a.db.Asic.InFecModeRs(ctx, oid)
 			if err != nil {
 				return err
 			}
-			if isRs != isFecRs {
-				return fmt.Errorf("is interface %s in rs mode = %v, but want %v")
+			if isFecRs != wantFecRs {
+				return fmt.Errorf("is interface %s in rs mode = %v, but want %v", interfaceName, isFecRs, wantFecRs)
 			}
 			return nil
 		},
