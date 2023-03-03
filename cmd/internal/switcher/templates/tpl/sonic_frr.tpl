@@ -10,8 +10,6 @@ debug bgp updates
 debug bgp nht
 debug bgp update-groups
 debug bgp zebra
-debug zebra kernel
-debug zebra rib detail
 {{- range $vrf, $t := .Ports.Vrfs }}
 !
 vrf Vrf{{ $t.VNI }}
