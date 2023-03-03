@@ -15,48 +15,27 @@ import (
 	"github.com/metal-stack/metal-go/api/models"
 )
 
-const (
-	frr                  = "/etc/frr/frr.conf"
-	frrTmp               = "/etc/frr/frr.tmp"
-	frrValidationService = "frr-validation"
-	frrReloadService     = "frr.service"
-)
-
-var frrTpl = "frr.tpl"
-
 type Cumulus struct {
-	frrApplier        *templates.FrrApplier
-	interfacesApplier *templates.InterfacesApplier
+	frrApplier        *templates.Applier
+	interfacesApplier *templates.Applier
 	log               *zap.SugaredLogger
 }
 
 func New(log *zap.SugaredLogger, frrTplFile, interfacesTplFile string) *Cumulus {
-	log.Infow("create cumulus NOS")
-	embedFS := true
-	if frrTplFile != "" {
-		frrTpl = frrTplFile
-		embedFS = false
-	}
-
 	return &Cumulus{
-		frrApplier:        templates.NewFrrApplier(frr, frrTmp, frrValidationService, frrReloadService, frrTpl, embedFS),
-		interfacesApplier: templates.NewInterfacesApplier(interfacesTplFile),
+		frrApplier:        NewFrrApplier(frrTplFile),
+		interfacesApplier: NewInterfacesApplier(interfacesTplFile),
 		log:               log,
 	}
 }
 
-func (c *Cumulus) Apply(cfg *types.Conf) (updated bool, err error) {
-	ifsApplied, err := c.interfacesApplier.Apply(cfg)
+func (c *Cumulus) Apply(cfg *types.Conf) error {
+	err := c.interfacesApplier.Apply(cfg)
 	if err != nil {
-		return false, err
+		return err
 	}
 
-	frrApplied, err := c.frrApplier.Apply(cfg)
-	if err != nil {
-		return false, err
-	}
-
-	return ifsApplied || frrApplied, nil
+	return c.frrApplier.Apply(cfg)
 }
 
 func (c *Cumulus) GetNics(log *zap.SugaredLogger, blacklist []string) (nics []*models.V1SwitchNic, err error) {
