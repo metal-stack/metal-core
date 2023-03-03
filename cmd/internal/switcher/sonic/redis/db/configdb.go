@@ -178,8 +178,8 @@ func (d *ConfigDB) SetPortFecMode(ctx context.Context, interfaceName string, isF
 	return d.c.HSet(ctx, key, Val{fec: mode})
 }
 
-func (d *ConfigDB) SetPortMtu(ctx context.Context, interfaceName string, mtu string) error {
+func (d *ConfigDB) SetPortMtu(ctx context.Context, interfaceName string, val string) error {
 	key := Key{portTable, interfaceName}
 
-	return d.c.HSet(ctx, key, Val{mtu: mtu})
+	return d.c.HSet(ctx, key, Val{mtu: val})
 }
