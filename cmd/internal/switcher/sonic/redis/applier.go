@@ -28,7 +28,7 @@ func NewApplier(log *zap.SugaredLogger, cfg *db.Config) *Applier {
 	}
 }
 
-func (a *Applier) Apply(cfg *types.Conf) (bool, error) {
+func (a *Applier) Apply(cfg *types.Conf) error {
 	var errs []error
 
 	// only process if changes are detected
@@ -36,14 +36,14 @@ func (a *Applier) Apply(cfg *types.Conf) (bool, error) {
 		diff := cmp.Diff(a.previousCfg, cfg)
 		if diff == "" {
 			a.log.Infow("no changes on interfaces detected, nothing to do")
-			return false, nil
+			return nil
 		} else {
 			a.log.Debugw("interface changes", "changes", diff)
 		}
 	}
 
 	if err := a.refreshOidMaps(); err != nil {
-		return true, err
+		return err
 	}
 
 	for _, interfaceName := range cfg.Ports.Underlay {
@@ -79,7 +79,7 @@ func (a *Applier) Apply(cfg *types.Conf) (bool, error) {
 	if len(errs) == 0 {
 		a.previousCfg = cfg
 	}
-	return true, errors.Join(errs...)
+	return errors.Join(errs...)
 }
 
 func (a *Applier) refreshOidMaps() error {

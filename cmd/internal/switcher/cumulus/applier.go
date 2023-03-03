@@ -32,7 +32,7 @@ func NewFrrApplier(tplPath string) *templates.Applier {
 		Dest:              frr,
 		Reloader:          reloadFrr,
 		Tmp:               frrTmp,
-		Tpl:               templates.FrrTemplate(tplPath),
+		Tpl:               templates.CumulusFrrTemplate(tplPath),
 		ValidationService: frrValidationService,
 	}
 }
