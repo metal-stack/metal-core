@@ -7,37 +7,37 @@ import (
 	"github.com/avast/retry-go/v4"
 )
 
-func (a *Applier) ensurePortConfiguration(ctx context.Context, interfaceName, mtu string, isFecRs bool) error {
-	p, err := a.db.Config.GetPort(ctx, interfaceName)
+func (a *Applier) ensurePortConfiguration(ctx context.Context, portName, mtu string, isFecRs bool) error {
+	p, err := a.db.Config.GetPort(ctx, portName)
 	if err != nil {
-		return fmt.Errorf("could not retrieve port info for %s from redis: %w", interfaceName, err)
+		return fmt.Errorf("could not retrieve port info for %s from redis: %w", portName, err)
 	}
 
 	if p.FecRs != isFecRs {
-		a.log.Debugf("set interface %s rs mode to %v", interfaceName, isFecRs)
-		err = a.ensurePortFecMode(ctx, interfaceName, isFecRs)
+		a.log.Debugf("set port %s rs mode to %v", portName, isFecRs)
+		err = a.ensurePortFecMode(ctx, portName, isFecRs)
 		if err != nil {
 			return err
 		}
 	}
 
 	if p.Mtu != mtu {
-		a.log.Debugf("set interface %s mtu to %s", interfaceName, mtu)
-		return a.db.Config.SetPortMtu(ctx, interfaceName, mtu)
+		a.log.Debugf("set port %s mtu to %s", portName, mtu)
+		return a.db.Config.SetPortMtu(ctx, portName, mtu)
 	}
 
 	return nil
 }
 
-func (a *Applier) ensurePortFecMode(ctx context.Context, interfaceName string, wantFecRs bool) error {
-	err := a.db.Config.SetPortFecMode(ctx, interfaceName, wantFecRs)
+func (a *Applier) ensurePortFecMode(ctx context.Context, portName string, wantFecRs bool) error {
+	err := a.db.Config.SetPortFecMode(ctx, portName, wantFecRs)
 	if err != nil {
-		return fmt.Errorf("could not update Fec for interface %s: %w", interfaceName, err)
+		return fmt.Errorf("could not update Fec for port %s: %w", portName, err)
 	}
 
-	oid, ok := a.portOidMap[interfaceName]
+	oid, ok := a.portOidMap[portName]
 	if !ok {
-		return fmt.Errorf("no mapping of interface %s to OID", interfaceName)
+		return fmt.Errorf("no mapping of port %s to OID", portName)
 	}
 
 	return retry.Do(
@@ -47,7 +47,7 @@ func (a *Applier) ensurePortFecMode(ctx context.Context, interfaceName string, w
 				return err
 			}
 			if isFecRs != wantFecRs {
-				return fmt.Errorf("is interface %s in rs mode = %v, but want %v", interfaceName, isFecRs, wantFecRs)
+				return fmt.Errorf("port %s still has rs mode = %v, but want %v", portName, isFecRs, wantFecRs)
 			}
 			return nil
 		},
