@@ -8,9 +8,9 @@ import (
 )
 
 func (a *Applier) ensureNotRouted(ctx context.Context, interfaceName string) error {
-	oid, err := a.db.Counters.GetOID(ctx, interfaceName)
-	if err != nil {
-		return fmt.Errorf("could not get the oid of interface %s: %w", interfaceName, err)
+	oid, ok := a.rifOidMap[interfaceName]
+	if !ok {
+		return fmt.Errorf("no mapping of router interface %s to OID", interfaceName)
 	}
 	routed, err := a.db.Asic.ExistRouterInterface(ctx, oid)
 	if err != nil {
@@ -38,8 +38,5 @@ func (a *Applier) ensureNotRouted(ctx context.Context, interfaceName string) err
 			}
 			return nil
 		},
-		// These are the defaults
-		// retry.Attempts(10),
-		// retry.Delay(100*time.Millisecond),
 	)
 }

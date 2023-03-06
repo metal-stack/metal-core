@@ -14,16 +14,20 @@ func newCountersDB(addr string, id int, sep string) *CountersDB {
 	}
 }
 
-func (d *CountersDB) GetOID(ctx context.Context, interfaceName string) (OID, error) {
-	oid, err := d.c.HGet(ctx, Key{"COUNTERS_RIF_NAME_MAP"}, interfaceName)
-	return OID(oid), err
+func (d *CountersDB) GetPortNameMap(ctx context.Context) (map[string]OID, error) {
+	val, err := d.c.HGetAll(ctx, Key{"COUNTERS_PORT_NAME_MAP"})
+	return toOIDMap(val), err
 }
 
-func (d *CountersDB) GetPortNameMap(ctx context.Context) (map[string]OID, error) {
-	result, err := d.c.HGetAll(ctx, Key{"COUNTERS_PORT_NAME_MAP"})
+func (d *CountersDB) GetRifNameMap(ctx context.Context) (map[string]OID, error) {
+	val, err := d.c.HGetAll(ctx, Key{"COUNTERS_RIF_NAME_MAP"})
+	return toOIDMap(val), err
+}
+
+func toOIDMap(val Val) map[string]OID {
 	m := make(map[string]OID)
-	for k, v := range result {
+	for k, v := range val {
 		m[k] = OID(v)
 	}
-	return m, err
+	return m
 }

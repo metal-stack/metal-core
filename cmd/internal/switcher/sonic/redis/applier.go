@@ -19,6 +19,7 @@ type Applier struct {
 	previousCfg *types.Conf
 
 	portOidMap map[string]db.OID
+	rifOidMap  map[string]db.OID
 }
 
 func NewApplier(log *zap.SugaredLogger, cfg *db.Config) *Applier {
@@ -91,6 +92,12 @@ func (a *Applier) refreshOidMaps() error {
 		return fmt.Errorf("could not update port to oid map: %w", err)
 	}
 	a.portOidMap = oidMap
+
+	oidMap, err = a.db.Counters.GetRifNameMap(ctx)
+	if err != nil {
+		return fmt.Errorf("could not update rif to oid ma: %w", err)
+	}
+	a.rifOidMap = oidMap
 
 	return nil
 }
