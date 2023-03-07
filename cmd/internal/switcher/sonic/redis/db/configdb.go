@@ -48,6 +48,22 @@ func (d *ConfigDB) CreateVlan(ctx context.Context, vid uint16) error {
 	return d.c.HSet(ctx, key, Val{"vlanid": vlanId})
 }
 
+func (d *ConfigDB) AreNeighborsSuppressed(ctx context.Context, vid uint16) (bool, error) {
+	key := Key{"SUPPRESS_VLAN_NEIGH", fmt.Sprintf("Vlan%d", vid)}
+
+	suppress, err := d.c.HGet(ctx, key, "suppress")
+	if err != nil {
+		return false, err
+	}
+	return suppress == "on", nil
+}
+
+func (d *ConfigDB) SuppressNeighbors(ctx context.Context, vid uint16) error {
+	key := Key{"SUPPRESS_VLAN_NEIGH", fmt.Sprintf("Vlan%d", vid)}
+
+	return d.c.HSet(ctx, key, Val{"suppress": "on"})
+}
+
 func (d *ConfigDB) ExistVlanInterface(ctx context.Context, vid uint16) (bool, error) {
 	key := Key{"VLAN_INTERFACE", fmt.Sprintf("Vlan%d", vid)}
 

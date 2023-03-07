@@ -189,6 +189,16 @@ func (a *Applier) configureVrf(vrfName string, vrf *types.Vrf) error {
 		}
 	}
 
+	exist, err = a.db.Config.AreNeighborsSuppressed(ctx, vrf.VLANID)
+	if err != nil {
+		return err
+	}
+	if !exist {
+		if err := a.db.Config.SuppressNeighbors(ctx, vrf.VLANID); err != nil {
+			return fmt.Errorf("could not suppress neighbors for vlan %d: %w", vrf.VLANID, err)
+		}
+	}
+
 	exist, err = a.db.Config.ExistVlanInterface(ctx, vrf.VLANID)
 	if err != nil {
 		return err
