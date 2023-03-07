@@ -17,7 +17,7 @@ func NewFrrApplier(tplPath string) *templates.Applier {
 		Dest:              frr,
 		Reloader:          reloadFrr,
 		Tmp:               frrTmp,
-		Tpl:               templates.CumulusFrrTemplate(tplPath),
+		Tpl:               templates.SonicFrrTemplate(tplPath),
 		ValidationService: frrValidationService,
 	}
 }
