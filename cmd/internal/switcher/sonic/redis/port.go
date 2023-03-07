@@ -3,18 +3,53 @@ package redis
 import (
 	"context"
 	"fmt"
+
+	"github.com/avast/retry-go/v4"
 )
 
-func (a *Applier) ensurePortMTU(ctx context.Context, interfaceName string, mtu int, isFEC bool) error {
-	currentMtu, err := a.db.Config.GetPortMTU(ctx, interfaceName)
+func (a *Applier) ensurePortConfiguration(ctx context.Context, portName, mtu string, isFecRs bool) error {
+	p, err := a.db.Config.GetPort(ctx, portName)
 	if err != nil {
-		return fmt.Errorf("could not retrieve port info for %s from redis: %w", interfaceName, err)
+		return fmt.Errorf("could not retrieve port info for %s from redis: %w", portName, err)
 	}
 
-	if currentMtu == mtu {
-		return nil
+	if p.FecRs != isFecRs {
+		a.log.Debugf("set port %s rs mode to %v", portName, isFecRs)
+		err = a.ensurePortFecMode(ctx, portName, isFecRs)
+		if err != nil {
+			return err
+		}
 	}
 
-	a.log.Infof("update port info for %s", interfaceName)
-	return a.db.Config.SetPort(ctx, interfaceName, mtu, isFEC)
+	if p.Mtu != mtu {
+		a.log.Debugf("set port %s mtu to %s", portName, mtu)
+		return a.db.Config.SetPortMtu(ctx, portName, mtu)
+	}
+
+	return nil
+}
+
+func (a *Applier) ensurePortFecMode(ctx context.Context, portName string, wantFecRs bool) error {
+	err := a.db.Config.SetPortFecMode(ctx, portName, wantFecRs)
+	if err != nil {
+		return fmt.Errorf("could not update Fec for port %s: %w", portName, err)
+	}
+
+	oid, ok := a.portOidMap[portName]
+	if !ok {
+		return fmt.Errorf("no mapping of port %s to OID", portName)
+	}
+
+	return retry.Do(
+		func() error {
+			isFecRs, err := a.db.Asic.InFecModeRs(ctx, oid)
+			if err != nil {
+				return err
+			}
+			if isFecRs != wantFecRs {
+				return fmt.Errorf("port %s still has rs mode = %v, but want %v", portName, isFecRs, wantFecRs)
+			}
+			return nil
+		},
+	)
 }

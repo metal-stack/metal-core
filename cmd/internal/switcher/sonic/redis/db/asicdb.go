@@ -2,33 +2,32 @@ package db
 
 import (
 	"context"
-
-	"github.com/redis/go-redis/v9"
 )
 
 type AsicDB struct {
-	rdb       *redis.Client
-	separator string
+	c *Client
 }
 
-func newAsicDB(addr string, id int, separator string) *AsicDB {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     addr,
-		DB:       id,
-		PoolSize: 1,
-	})
+type OID string
+
+func newAsicDB(addr string, id int, sep string) *AsicDB {
 	return &AsicDB{
-		rdb:       rdb,
-		separator: separator,
+		c: NewClient(addr, id, sep),
 	}
 }
 
-func (a *AsicDB) ExistRouterInterface(ctx context.Context, oid string) (bool, error) {
-	key := "ASIC_STATE" + a.separator + "SAI_OBJECT_TYPE_ROUTER_INTERFACE" + a.separator + oid
+func (d *AsicDB) ExistRouterInterface(ctx context.Context, rif OID) (bool, error) {
+	key := Key{"ASIC_STATE", "SAI_OBJECT_TYPE_ROUTER_INTERFACE", string(rif)}
 
-	result, err := a.rdb.Exists(ctx, key).Result()
+	return d.c.Exists(ctx, key)
+}
+
+func (d *AsicDB) InFecModeRs(ctx context.Context, port OID) (bool, error) {
+	key := Key{"ASIC_STATE", "SAI_OBJECT_TYPE_PORT", string(port)}
+
+	result, err := d.c.HGet(ctx, key, "SAI_PORT_ATTR_FEC_MODE")
 	if err != nil {
 		return false, err
 	}
-	return result != 0, nil
+	return result == "SAI_PORT_FEC_MODE_RS", err
 }

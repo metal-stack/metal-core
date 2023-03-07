@@ -74,12 +74,9 @@ func (c *Core) reconfigureSwitch(switchName string) error {
 		return nil
 	}
 
-	updated, err := c.nos.Apply(switchConfig)
+	err = c.nos.Apply(switchConfig)
 	if err != nil {
 		return fmt.Errorf("could not apply switch config: %w", err)
-	}
-	if updated {
-		c.log.Debug("switch reconfigured")
 	}
 
 	return nil

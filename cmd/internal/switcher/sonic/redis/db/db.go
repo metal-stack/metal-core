@@ -16,22 +16,19 @@ type instance struct {
 }
 
 type DB struct {
-	Asic       *AsicDB
-	Config     *ConfigDB
-	CountersDB *CountersDB
-	State      *StateDB
+	Asic     *AsicDB
+	Config   *ConfigDB
+	Counters *CountersDB
 }
 
 func New(cfg *Config) *DB {
 	asicDB := cfg.Databases["ASIC_DB"]
 	configDB := cfg.Databases["CONFIG_DB"]
 	countersDB := cfg.Databases["COUNTERS_DB"]
-	stateDB := cfg.Databases["STATE_DB"]
 
 	return &DB{
-		Asic:       newAsicDB(cfg.Instances[asicDB.Instance].Addr, asicDB.Id, asicDB.Separator),
-		Config:     newConfigDB(cfg.Instances[configDB.Instance].Addr, configDB.Id, configDB.Separator),
-		CountersDB: newCountersDB(cfg.Instances[countersDB.Instance].Addr, countersDB.Id, countersDB.Separator),
-		State:      newStateDB(cfg.Instances[stateDB.Instance].Addr, stateDB.Id, stateDB.Separator),
+		Asic:     newAsicDB(cfg.Instances[asicDB.Instance].Addr, asicDB.Id, asicDB.Separator),
+		Config:   newConfigDB(cfg.Instances[configDB.Instance].Addr, configDB.Id, configDB.Separator),
+		Counters: newCountersDB(cfg.Instances[countersDB.Instance].Addr, countersDB.Id, countersDB.Separator),
 	}
 }

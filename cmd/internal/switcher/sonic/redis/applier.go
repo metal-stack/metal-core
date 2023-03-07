@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis/db"
@@ -18,25 +17,19 @@ type Applier struct {
 	db          *db.DB
 	log         *zap.SugaredLogger
 	previousCfg *types.Conf
-}
 
-type redisLogger struct {
-	log *zap.SugaredLogger
-}
-
-func (l *redisLogger) Printf(ctx context.Context, format string, v ...interface{}) {
-	l.log.Infof(format, v...)
+	portOidMap map[string]db.OID
+	rifOidMap  map[string]db.OID
 }
 
 func NewApplier(log *zap.SugaredLogger, cfg *db.Config) *Applier {
-	redis.SetLogger(&redisLogger{log: log})
 	return &Applier{
 		db:  db.New(cfg),
 		log: log,
 	}
 }
 
-func (a *Applier) Apply(cfg *types.Conf) (bool, error) {
+func (a *Applier) Apply(cfg *types.Conf) error {
 	var errs []error
 
 	// only process if changes are detected
@@ -44,10 +37,14 @@ func (a *Applier) Apply(cfg *types.Conf) (bool, error) {
 		diff := cmp.Diff(a.previousCfg, cfg)
 		if diff == "" {
 			a.log.Infow("no changes on interfaces detected, nothing to do")
-			return false, nil
+			return nil
 		} else {
 			a.log.Debugw("interface changes", "changes", diff)
 		}
+	}
+
+	if err := a.refreshOidMaps(); err != nil {
+		return err
 	}
 
 	for _, interfaceName := range cfg.Ports.Underlay {
@@ -83,7 +80,26 @@ func (a *Applier) Apply(cfg *types.Conf) (bool, error) {
 	if len(errs) == 0 {
 		a.previousCfg = cfg
 	}
-	return true, errors.Join(errs...)
+	return errors.Join(errs...)
+}
+
+func (a *Applier) refreshOidMaps() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	oidMap, err := a.db.Counters.GetPortNameMap(ctx)
+	if err != nil {
+		return fmt.Errorf("could not update port to oid map: %w", err)
+	}
+	a.portOidMap = oidMap
+
+	oidMap, err = a.db.Counters.GetRifNameMap(ctx)
+	if err != nil {
+		return fmt.Errorf("could not update rif to oid ma: %w", err)
+	}
+	a.rifOidMap = oidMap
+
+	return nil
 }
 
 func (a *Applier) configureUnprovisionedPort(interfaceName string) error {
@@ -95,7 +111,7 @@ func (a *Applier) configureUnprovisionedPort(interfaceName string) error {
 		return err
 	}
 
-	if err := a.ensurePortMTU(ctx, interfaceName, 9000, true); err != nil {
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "9000", true); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 
@@ -111,7 +127,7 @@ func (a *Applier) configureFirewallPort(interfaceName string) error {
 		return err
 	}
 
-	if err := a.ensurePortMTU(ctx, interfaceName, 9216, true); err != nil {
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "9216", true); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 
@@ -122,7 +138,7 @@ func (a *Applier) configureUnderlayPort(interfaceName string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := a.ensurePortMTU(ctx, interfaceName, 9216, false); err != nil {
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "9216", false); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 	return a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
@@ -142,7 +158,7 @@ func (a *Applier) configureVrfNeighbor(interfaceName, vrfName string) error {
 		return err
 	}
 
-	if err := a.ensurePortMTU(ctx, interfaceName, 9000, true); err != nil {
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "9000", true); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 

@@ -2,31 +2,32 @@ package db
 
 import (
 	"context"
-
-	"github.com/redis/go-redis/v9"
 )
 
 type CountersDB struct {
-	rdb       *redis.Client
-	separator string
+	c *Client
 }
 
-func newCountersDB(addr string, id int, separator string) *CountersDB {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     addr,
-		DB:       id,
-		PoolSize: 1,
-	})
+func newCountersDB(addr string, id int, sep string) *CountersDB {
 	return &CountersDB{
-		rdb:       rdb,
-		separator: separator,
+		c: NewClient(addr, id, sep),
 	}
 }
 
-func (c *CountersDB) GetOID(ctx context.Context, interfaceName string) (string, error) {
-	rifNameMap, err := c.rdb.HGetAll(ctx, "COUNTERS_RIF_NAME_MAP").Result()
-	if err != nil {
-		return "", err
+func (d *CountersDB) GetPortNameMap(ctx context.Context) (map[string]OID, error) {
+	val, err := d.c.HGetAll(ctx, Key{"COUNTERS_PORT_NAME_MAP"})
+	return toOIDMap(val), err
+}
+
+func (d *CountersDB) GetRifNameMap(ctx context.Context) (map[string]OID, error) {
+	val, err := d.c.HGetAll(ctx, Key{"COUNTERS_RIF_NAME_MAP"})
+	return toOIDMap(val), err
+}
+
+func toOIDMap(val Val) map[string]OID {
+	m := make(map[string]OID)
+	for k, v := range val {
+		m[k] = OID(v)
 	}
-	return rifNameMap[interfaceName], nil
+	return m
 }

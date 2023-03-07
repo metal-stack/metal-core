@@ -3,10 +3,6 @@ package db
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
-
-	"github.com/redis/go-redis/v9"
 )
 
 const (
@@ -21,198 +17,175 @@ const (
 	mtu             = "mtu"
 	fec             = "fec"
 	fecRS           = "rs"
+	fecNone         = "none"
 )
 
 type ConfigDB struct {
-	rdb       *redis.Client
-	separator string
+	c *Client
 }
 
-func newConfigDB(addr string, id int, separator string) *ConfigDB {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     addr,
-		DB:       id,
-		PoolSize: 1,
-	})
+type Port struct {
+	Mtu   string
+	FecRs bool
+}
+
+func newConfigDB(addr string, id int, sep string) *ConfigDB {
 	return &ConfigDB{
-		rdb:       rdb,
-		separator: separator,
+		c: NewClient(addr, id, sep),
 	}
 }
 
-func (c *ConfigDB) IsInitialized(ctx context.Context) (bool, error) {
-	key := "CONFIG_DB_INITIALIZED"
-	result, err := c.rdb.Get(ctx, key).Result()
-	if err != nil {
-		return false, err
-	}
-	return result == "1", nil
+func (d *ConfigDB) IsInitialized(ctx context.Context) (bool, error) {
+	key := Key{"CONFIG_DB_INITIALIZED"}
+
+	return d.c.Exists(ctx, key)
 }
 
-func (c *ConfigDB) ExistVlan(ctx context.Context, vid uint16) (bool, error) {
-	key := "VLAN" + c.separator + "Vlan" + fmt.Sprintf("%d", vid)
+func (d *ConfigDB) ExistVlan(ctx context.Context, vid uint16) (bool, error) {
+	key := Key{"VLAN", fmt.Sprintf("Vlan%d", vid)}
 
-	result, err := c.rdb.Exists(ctx, key).Result()
-	if err != nil {
-		return false, err
-	}
-	return result != 0, nil
+	return d.c.Exists(ctx, key)
 }
 
-func (c *ConfigDB) CreateVlan(ctx context.Context, vid uint16) error {
+func (d *ConfigDB) CreateVlan(ctx context.Context, vid uint16) error {
 	vlanId := fmt.Sprintf("%d", vid)
-	key := "VLAN" + c.separator + "Vlan" + vlanId
+	key := Key{"VLAN", "Vlan" + vlanId}
 
-	return c.rdb.HSet(ctx, key, "vlanid", vlanId).Err()
+	return d.c.HSet(ctx, key, Val{"vlanid": vlanId})
 }
 
-func (c *ConfigDB) ExistVlanInterface(ctx context.Context, vid uint16) (bool, error) {
-	key := "VLAN_INTERFACE" + c.separator + "Vlan" + fmt.Sprintf("%d", vid)
+func (d *ConfigDB) ExistVlanInterface(ctx context.Context, vid uint16) (bool, error) {
+	key := Key{"VLAN_INTERFACE", fmt.Sprintf("Vlan%d", vid)}
 
-	result, err := c.rdb.Exists(ctx, key).Result()
-	if err != nil {
-		return false, err
-	}
-	return result != 0, nil
+	return d.c.Exists(ctx, key)
 }
 
-func (c *ConfigDB) CreateVlanInterface(ctx context.Context, vid uint16, vrf string) error {
-	key := "VLAN_INTERFACE" + c.separator + "Vlan" + fmt.Sprintf("%d", vid)
+func (d *ConfigDB) CreateVlanInterface(ctx context.Context, vid uint16, vrf string) error {
+	key := Key{"VLAN_INTERFACE", "Vlan" + fmt.Sprintf("%d", vid)}
 
-	return c.rdb.HSet(ctx, key, vrfName, vrf).Err()
+	return d.c.HSet(ctx, key, Val{vrfName: vrf})
 }
 
-func (c *ConfigDB) GetVlanMembership(ctx context.Context, interfaceName string) ([]string, error) {
-	pattern := vlanMemberTable + c.separator + "*" + c.separator + interfaceName
+func (d *ConfigDB) GetVlanMembership(ctx context.Context, interfaceName string) ([]string, error) {
+	pattern := Key{vlanMemberTable, "*", interfaceName}
 
-	keys, err := c.rdb.Keys(ctx, pattern).Result()
+	keys, err := d.c.Keys(ctx, pattern)
 	if err != nil {
 		return nil, err
 	}
 
 	vlans := make([]string, 0, len(keys))
 	for _, key := range keys {
-		split := strings.Split(key, c.separator)
-		if len(split) != 3 {
-			return nil, fmt.Errorf("could not parse key %s", key)
+		if len(key) != 3 {
+			return nil, fmt.Errorf("could not parse key %v", key)
 		}
-		vlans = append(vlans, split[1])
+		vlans = append(vlans, key[1])
 	}
 	return vlans, nil
 }
 
-func (c *ConfigDB) SetVlanMember(ctx context.Context, interfaceName, vlan string) error {
-	key := vlanMemberTable + c.separator + vlan + c.separator + interfaceName
+func (d *ConfigDB) SetVlanMember(ctx context.Context, interfaceName, vlan string) error {
+	key := Key{vlanMemberTable, vlan, interfaceName}
 
-	return c.rdb.HSet(ctx, key, taggingMode, untagged).Err()
+	return d.c.HSet(ctx, key, Val{taggingMode: untagged})
 }
 
-func (c *ConfigDB) DeleteVlanMember(ctx context.Context, interfaceName, vlan string) error {
-	key := vlanMemberTable + c.separator + vlan + c.separator + interfaceName
+func (d *ConfigDB) DeleteVlanMember(ctx context.Context, interfaceName, vlan string) error {
+	key := Key{vlanMemberTable, vlan, interfaceName}
 
-	return c.rdb.Del(ctx, key).Err()
+	return d.c.Del(ctx, key)
 }
 
-func (c *ConfigDB) ExistVrf(ctx context.Context, vrf string) (bool, error) {
-	key := "VRF" + c.separator + vrf
+func (d *ConfigDB) ExistVrf(ctx context.Context, vrf string) (bool, error) {
+	key := Key{"VRF", vrf}
 
-	result, err := c.rdb.Exists(ctx, key).Result()
+	return d.c.Exists(ctx, key)
+}
+
+func (d *ConfigDB) CreateVrf(ctx context.Context, vrf string) error {
+	key := Key{"VRF", vrf}
+
+	return d.c.HSet(ctx, key, Val{"NULL": "NULL"})
+}
+
+func (d *ConfigDB) SetVrfMember(ctx context.Context, interfaceName string, vrf string) error {
+	key := Key{interfaceTable, interfaceName}
+
+	return d.c.HSet(ctx, key, Val{vrfName: vrf})
+}
+
+func (d *ConfigDB) GetVrfMembership(ctx context.Context, interfaceName string) (string, error) {
+	key := Key{interfaceTable, interfaceName}
+
+	return d.c.HGet(ctx, key, vrfName)
+}
+
+func (d *ConfigDB) ExistVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) (bool, error) {
+	key := Key{"VXLAN_TUNNEL_MAP", "vtep", fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
+
+	return d.c.Exists(ctx, key)
+}
+
+func (d *ConfigDB) CreateVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) error {
+	key := Key{"VXLAN_TUNNEL_MAP", "vtep", fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
+	val := Val{
+		"vlan": fmt.Sprintf("Vlan%d", vid),
+		"vni":  fmt.Sprintf("%d", vni),
+	}
+	return d.c.HSet(ctx, key, val)
+}
+
+func (d *ConfigDB) DeleteInterfaceConfiguration(ctx context.Context, interfaceName string) error {
+	key := Key{interfaceTable, interfaceName}
+
+	return d.c.Del(ctx, key)
+}
+
+func (d *ConfigDB) IsLinkLocalOnly(ctx context.Context, interfaceName string) (bool, error) {
+	key := Key{interfaceTable, interfaceName}
+
+	result, err := d.c.HGet(ctx, key, linkLocalOnly)
 	if err != nil {
 		return false, err
 	}
-	return result != 0, nil
+	return result == enable, nil
 }
 
-func (c *ConfigDB) CreateVrf(ctx context.Context, vrf string) error {
-	key := "VRF" + c.separator + vrf
+func (d *ConfigDB) EnableLinkLocalOnly(ctx context.Context, interfaceName string) error {
+	key := Key{interfaceTable, interfaceName}
 
-	return c.rdb.HSet(ctx, key, "NULL", "NULL").Err()
+	return d.c.HSet(ctx, key, Val{linkLocalOnly: enable})
 }
 
-func (c *ConfigDB) SetVrfMember(ctx context.Context, interfaceName string, vrf string) error {
-	key := interfaceTable + c.separator + interfaceName
+func (d *ConfigDB) GetPort(ctx context.Context, interfaceName string) (*Port, error) {
+	key := Key{portTable, interfaceName}
 
-	return c.rdb.HSet(ctx, key, vrfName, vrf).Err()
-}
-
-func (c *ConfigDB) GetVrfMembership(ctx context.Context, interfaceName string) (string, error) {
-	key := interfaceTable + c.separator + interfaceName
-
-	result, err := c.rdb.HGetAll(ctx, key).Result()
+	result, err := d.c.HGetAll(ctx, key)
 	if err != nil {
-		return "", err
-	}
-	return result[vrfName], nil
-}
-
-func (c *ConfigDB) ExistVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) (bool, error) {
-	key := "VXLAN_TUNNEL_MAP" + c.separator + "vtep" + c.separator + fmt.Sprintf("map_%d_Vlan%d", vni, vid)
-
-	result, err := c.rdb.Exists(ctx, key).Result()
-	if err != nil {
-		return false, err
-	}
-	return result != 0, nil
-}
-
-func (c *ConfigDB) CreateVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) error {
-	key := "VXLAN_TUNNEL_MAP" + c.separator + "vtep" + c.separator + fmt.Sprintf("map_%d_Vlan%d", vni, vid)
-
-	return c.rdb.HSet(ctx, key, "vlan", fmt.Sprintf("Vlan%d", vid), "vni", fmt.Sprintf("%d", vni)).Err()
-}
-
-func (c *ConfigDB) DeleteInterfaceConfiguration(ctx context.Context, interfaceName string) error {
-	key := interfaceTable + c.separator + interfaceName
-
-	return c.rdb.Del(ctx, key).Err()
-}
-
-func (c *ConfigDB) IsLinkLocalOnly(ctx context.Context, interfaceName string) (bool, error) {
-	key := interfaceTable + c.separator + interfaceName
-
-	result, err := c.rdb.HGetAll(ctx, key).Result()
-	if err != nil {
-		return false, err
-	}
-	return result[linkLocalOnly] == enable, nil
-}
-
-func (c *ConfigDB) EnableLinkLocalOnly(ctx context.Context, interfaceName string) error {
-	key := interfaceTable + c.separator + interfaceName
-
-	return c.rdb.HSet(ctx, key, linkLocalOnly, enable).Err()
-}
-
-func (c *ConfigDB) GetPortMTU(ctx context.Context, interfaceName string) (int, error) {
-	key := portTable + c.separator + interfaceName
-
-	result, err := c.rdb.HGetAll(ctx, key).Result()
-	if err != nil {
-		return 0, err
-	}
-	if v, ok := result[mtu]; ok {
-		mtuInt, err := strconv.Atoi(v)
-		if err != nil {
-			return 0, fmt.Errorf("failed to convert MTU value %s to int: %w", v, err)
-		}
-
-		return mtuInt, nil
+		return nil, err
 	}
 
-	return 0, nil
+	return &Port{
+		Mtu:   result[mtu],
+		FecRs: result[fec] == fecRS,
+	}, nil
 }
 
-func (c *ConfigDB) SetPort(ctx context.Context, interfaceName string, mtuInt int, isFEC bool) error {
-	key := portTable + c.separator + interfaceName
-	mtuVal := fmt.Sprintf("%d", mtuInt)
+func (d *ConfigDB) SetPortFecMode(ctx context.Context, interfaceName string, isFecRs bool) error {
+	key := Key{portTable, interfaceName}
 
-	if err := c.rdb.HSet(ctx, key, mtu, mtuVal).Err(); err != nil {
-		return fmt.Errorf("failed to update port mtu: %w", err)
+	var mode string
+	if isFecRs {
+		mode = fecRS
+	} else {
+		mode = fecNone
 	}
 
-	if isFEC {
-		return c.rdb.HSet(ctx, key, fec, fecRS).Err()
-	}
+	return d.c.HSet(ctx, key, Val{fec: mode})
+}
 
-	return c.rdb.HDel(ctx, key, fec).Err()
+func (d *ConfigDB) SetPortMtu(ctx context.Context, interfaceName string, val string) error {
+	key := Key{portTable, interfaceName}
+
+	return d.c.HSet(ctx, key, Val{mtu: val})
 }

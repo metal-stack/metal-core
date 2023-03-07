@@ -9,36 +9,26 @@ import (
 	"os"
 	"strings"
 
+	"go.uber.org/zap"
 	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 
 	"github.com/metal-stack/metal-core/cmd/internal"
-	"github.com/metal-stack/metal-core/cmd/internal/dbus"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis/db"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/metal-go/api/models"
-
-	"go.uber.org/zap"
 )
 
 const (
 	sonicConfigDBPath = "/etc/sonic/config_db.json"
 	SonicVersionFile  = "/etc/sonic/sonic_version.yml"
-
-	frr                  = "/etc/sonic/frr/frr.conf"
-	frrTmp               = "/etc/sonic/frr/frr.tmp"
-	frrReloadService     = "frr-reload.service"
-	frrValidationService = "bgp-validation"
-
-	redisConfigFile = "/var/run/redis/sonic-db/database_config.json"
+	redisConfigFile   = "/var/run/redis/sonic-db/database_config.json"
 )
 
-var frrTpl = "sonic_frr.tpl"
-
 type Sonic struct {
-	frrApplier   *templates.FrrApplier
+	frrApplier   *templates.Applier
 	redisApplier *redis.Applier
 	log          *zap.SugaredLogger
 }
@@ -48,21 +38,13 @@ type PortInfo struct {
 }
 
 func New(log *zap.SugaredLogger, frrTplFile string) (*Sonic, error) {
-	log.Infow("create sonic NOS")
-
-	embedFS := true
-	if frrTplFile != "" {
-		frrTpl = frrTplFile
-		embedFS = false
-	}
-
 	cfg, err := loadRedisConfig(redisConfigFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load database config for SONiC: %w", err)
 	}
 
 	return &Sonic{
-		frrApplier:   templates.NewFrrApplier(frr, frrTmp, frrValidationService, "", frrTpl, embedFS),
+		frrApplier:   NewFrrApplier(frrTplFile),
 		redisApplier: redis.NewApplier(log, cfg),
 		log:          log,
 	}, nil
@@ -81,25 +63,13 @@ func loadRedisConfig(path string) (*db.Config, error) {
 	return cfg, nil
 }
 
-func (s *Sonic) Apply(cfg *types.Conf) (updated bool, err error) {
-	redisApplied, err := s.redisApplier.Apply(cfg)
+func (s *Sonic) Apply(cfg *types.Conf) error {
+	err := s.redisApplier.Apply(cfg)
 	if err != nil {
-		return false, err
+		return err
 	}
 
-	frrApplied, err := s.frrApplier.Apply(cfg)
-	if err != nil {
-		return false, err
-	}
-
-	// TODO should be moved to frrApplier
-	if frrApplied {
-		if err := dbus.Start(frrReloadService); err != nil {
-			return false, fmt.Errorf("failed reload FRR %w", err)
-		}
-	}
-
-	return frrApplied || redisApplied, nil
+	return s.frrApplier.Apply(cfg)
 }
 
 func (s *Sonic) GetNics(log *zap.SugaredLogger, blacklist []string) (nics []*models.V1SwitchNic, err error) {
