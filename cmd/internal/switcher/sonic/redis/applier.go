@@ -18,8 +18,9 @@ type Applier struct {
 	log         *zap.SugaredLogger
 	previousCfg *types.Conf
 
-	portOidMap map[string]db.OID
-	rifOidMap  map[string]db.OID
+	bridgePortOidMap map[string]db.OID
+	portOidMap       map[string]db.OID
+	rifOidMap        map[string]db.OID
 }
 
 func NewApplier(log *zap.SugaredLogger, cfg *db.Config) *Applier {
@@ -99,6 +100,18 @@ func (a *Applier) refreshOidMaps() error {
 	}
 	a.rifOidMap = oidMap
 
+	bridgePortMap, err := a.db.Asic.GetPortIdBridgePortMap(ctx)
+	if err != nil {
+		return fmt.Errorf("could not update bridge port to oid map: %w", err)
+	}
+	oidMap = make(map[string]db.OID, len(bridgePortMap))
+	for port, oid := range a.portOidMap {
+		if bridgePort, ok := bridgePortMap[oid]; ok {
+			oidMap[port] = bridgePort
+		}
+	}
+	a.bridgePortOidMap = oidMap
+
 	return nil
 }
 
@@ -122,7 +135,7 @@ func (a *Applier) configureFirewallPort(interfaceName string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	err := a.ensureInterfaceIsNotVlanMember(ctx, interfaceName)
+	err := a.ensureNotBridged(ctx, interfaceName)
 	if err != nil {
 		return err
 	}
@@ -148,7 +161,7 @@ func (a *Applier) configureVrfNeighbor(interfaceName, vrfName string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	err := a.ensureInterfaceIsNotVlanMember(ctx, interfaceName)
+	err := a.ensureNotBridged(ctx, interfaceName)
 	if err != nil {
 		return err
 	}
