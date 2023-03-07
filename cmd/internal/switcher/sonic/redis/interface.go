@@ -10,7 +10,7 @@ import (
 func (a *Applier) ensureNotRouted(ctx context.Context, interfaceName string) error {
 	oid, ok := a.rifOidMap[interfaceName]
 	if !ok {
-		return fmt.Errorf("no mapping of router interface %s to OID", interfaceName)
+		return nil
 	}
 	routed, err := a.db.Asic.ExistRouterInterface(ctx, oid)
 	if err != nil {
