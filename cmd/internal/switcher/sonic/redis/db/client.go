@@ -32,20 +32,20 @@ func NewClient(addr string, id int, sep string) *Client {
 	}
 }
 
-func (d *Client) Del(ctx context.Context, key Key) error {
-	return d.rdb.Del(ctx, key.toString(d.sep)).Err()
+func (c *Client) Del(ctx context.Context, key Key) error {
+	return c.rdb.Del(ctx, key.toString(c.sep)).Err()
 }
 
-func (d *Client) Exists(ctx context.Context, key Key) (bool, error) {
-	result, err := d.rdb.Exists(ctx, key.toString(d.sep)).Result()
+func (c *Client) Exists(ctx context.Context, key Key) (bool, error) {
+	result, err := c.rdb.Exists(ctx, key.toString(c.sep)).Result()
 	if err != nil {
 		return false, err
 	}
 	return result != 0, nil
 }
 
-func (d *Client) HGet(ctx context.Context, key Key, field string) (string, error) {
-	result, err := d.rdb.HGet(ctx, key.toString(d.sep), field).Result()
+func (c *Client) HGet(ctx context.Context, key Key, field string) (string, error) {
+	result, err := c.rdb.HGet(ctx, key.toString(c.sep), field).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return "", nil
@@ -55,23 +55,23 @@ func (d *Client) HGet(ctx context.Context, key Key, field string) (string, error
 	return result, nil
 }
 
-func (d *Client) HGetAll(ctx context.Context, key Key) (Val, error) {
-	return d.rdb.HGetAll(ctx, key.toString(d.sep)).Result()
+func (c *Client) HGetAll(ctx context.Context, key Key) (Val, error) {
+	return c.rdb.HGetAll(ctx, key.toString(c.sep)).Result()
 }
 
-func (d *Client) HSet(ctx context.Context, key Key, val Val) error {
-	return d.rdb.HSet(ctx, key.toString(d.sep), map[string]string(val)).Err()
+func (c *Client) HSet(ctx context.Context, key Key, val Val) error {
+	return c.rdb.HSet(ctx, key.toString(c.sep), map[string]string(val)).Err()
 }
 
-func (d *Client) Keys(ctx context.Context, pattern Key) ([]Key, error) {
-	result, err := d.rdb.Keys(ctx, pattern.toString(d.sep)).Result()
+func (c *Client) Keys(ctx context.Context, pattern Key) ([]Key, error) {
+	result, err := c.rdb.Keys(ctx, pattern.toString(c.sep)).Result()
 	if err != nil {
 		return nil, err
 	}
 
 	keys := make([]Key, 0, len(result))
 	for _, item := range result {
-		key := strings.Split(item, d.sep)
+		key := strings.Split(item, c.sep)
 		keys = append(keys, key)
 	}
 	return keys, nil
