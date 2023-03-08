@@ -121,7 +121,7 @@ func (d *ConfigDB) CreateVrf(ctx context.Context, vrf string) error {
 func (d *ConfigDB) SetVrfMember(ctx context.Context, interfaceName string, vrf string) error {
 	key := Key{interfaceTable, interfaceName}
 
-	return d.c.HSet(ctx, key, Val{vrfName: vrf})
+	return d.c.HSet(ctx, key, Val{linkLocalOnly: enable, vrfName: vrf})
 }
 
 func (d *ConfigDB) GetVrfMembership(ctx context.Context, interfaceName string) (string, error) {
