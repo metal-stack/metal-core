@@ -73,7 +73,7 @@ func TestClient_GetTable(t *testing.T) {
 func TestClient_GetView(t *testing.T) {
 	db, mock := redismock.NewClientMock()
 	c := &Client{rdb: db, sep: "|"}
-	want := &View{"key": {}, "key1|key2": {}}
+	want := View{"key": {}, "key1|key2": {}}
 
 	mock.ExpectKeys("table|*").SetVal([]string{"table|key", "table|key1|key2"})
 
