@@ -4,13 +4,11 @@ import (
 	"context"
 	"reflect"
 	"testing"
-
-	"github.com/go-redis/redismock/v9"
 )
 
 func TestAsicDB_GetPortIdBridgePortMap(t *testing.T) {
-	db, mock := redismock.NewClientMock()
-	asic := &AsicDB{c: &Client{rdb: db, sep: ":"}}
+	c, mock := NewClientMock(":")
+	asic := &AsicDB{c: c}
 	bridgePort := "ASIC_STATE:SAI_OBJECT_TYPE_BRIDGE_PORT:oid:0x3a000000001a0a"
 	want := map[OID]OID{OID("oid:0x1000000001251"): "oid:0x3a000000001a0a"}
 

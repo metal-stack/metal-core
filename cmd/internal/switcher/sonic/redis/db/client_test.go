@@ -8,9 +8,17 @@ import (
 	"github.com/go-redis/redismock/v9"
 )
 
-func TestClient_Del(t *testing.T) {
+func NewClientMock(sep string) (*Client, redismock.ClientMock) {
 	db, mock := redismock.NewClientMock()
-	c := &Client{rdb: db, sep: "|"}
+	c := &Client{
+		rdb: db,
+		sep: sep,
+	}
+	return c, mock
+}
+
+func TestClient_Del(t *testing.T) {
+	c, mock := NewClientMock("|")
 
 	mock.ExpectDel("table|entry").SetVal(1)
 
@@ -38,8 +46,7 @@ func TestClient_Exists(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			db, mock := redismock.NewClientMock()
-			c := &Client{rdb: db, sep: "|"}
+			c, mock := NewClientMock("|")
 
 			mock.ExpectExists("table|key").SetVal(tt.val)
 
@@ -56,10 +63,7 @@ func TestClient_Exists(t *testing.T) {
 }
 
 func TestClient_GetTable(t *testing.T) {
-	c := &Client{
-		rdb: nil,
-		sep: "|",
-	}
+	c, _ := NewClientMock("|")
 	want := &Table{
 		client: c,
 		name:   "table|sub",
@@ -71,8 +75,7 @@ func TestClient_GetTable(t *testing.T) {
 }
 
 func TestClient_GetView(t *testing.T) {
-	db, mock := redismock.NewClientMock()
-	c := &Client{rdb: db, sep: "|"}
+	c, mock := NewClientMock("|")
 	want := View{"key": {}, "key1|key2": {}}
 
 	mock.ExpectKeys("table|*").SetVal([]string{"table|key", "table|key1|key2"})
@@ -87,8 +90,7 @@ func TestClient_GetView(t *testing.T) {
 }
 
 func TestClient_HGet(t *testing.T) {
-	db, mock := redismock.NewClientMock()
-	c := &Client{rdb: db, sep: "|"}
+	c, mock := NewClientMock("|")
 
 	mock.ExpectHGet("table|key", "field").RedisNil()
 
@@ -103,8 +105,7 @@ func TestClient_HGet(t *testing.T) {
 }
 
 func TestClient_HGetAll(t *testing.T) {
-	db, mock := redismock.NewClientMock()
-	c := &Client{rdb: db, sep: "|"}
+	c, mock := NewClientMock("|")
 	want := Val{"key": "test"}
 
 	mock.ExpectHGetAll("table|key").SetVal(map[string]string{"key": "test"})
@@ -120,8 +121,7 @@ func TestClient_HGetAll(t *testing.T) {
 }
 
 func TestClient_HSet(t *testing.T) {
-	db, mock := redismock.NewClientMock()
-	c := &Client{rdb: db, sep: "|"}
+	c, mock := NewClientMock("|")
 
 	val := Val{"key": "test"}
 	mock.ExpectHSet("table|key", "key", "test").SetVal(1)
@@ -133,8 +133,7 @@ func TestClient_HSet(t *testing.T) {
 }
 
 func TestClient_Keys(t *testing.T) {
-	db, mock := redismock.NewClientMock()
-	c := &Client{rdb: db, sep: "|"}
+	c, mock := NewClientMock("|")
 	want := []Key{
 		{"table", "key"},
 		{"table", "key1", "key2"},
