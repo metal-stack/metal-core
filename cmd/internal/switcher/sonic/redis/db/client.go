@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/redis/go-redis/v9"
@@ -42,6 +43,31 @@ func (c *Client) Exists(ctx context.Context, key Key) (bool, error) {
 		return false, err
 	}
 	return result != 0, nil
+}
+
+func (c *Client) GetTable(table Key) *Table {
+	return &Table{
+		client: c,
+		name:   table.toString(c.sep),
+	}
+}
+
+func (c *Client) GetView(ctx context.Context, table string) (View, error) {
+	pattern := table + c.sep + "*"
+	keys, err := c.rdb.Keys(ctx, pattern).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	view := NewView(len(keys))
+	for _, key := range keys {
+		if len(key) < len(pattern) {
+			return nil, fmt.Errorf("key %s is slower than pattern %s", key, pattern)
+		}
+		item := key[len(table)+1:]
+		view.Add(item)
+	}
+	return view, nil
 }
 
 func (c *Client) HGet(ctx context.Context, key Key, field string) (string, error) {

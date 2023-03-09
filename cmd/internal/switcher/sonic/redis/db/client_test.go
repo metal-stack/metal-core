@@ -55,6 +55,37 @@ func TestClient_Exists(t *testing.T) {
 	}
 }
 
+func TestClient_GetTable(t *testing.T) {
+	c := &Client{
+		rdb: nil,
+		sep: "|",
+	}
+	want := &Table{
+		client: c,
+		name:   "table|sub",
+	}
+
+	if got := c.GetTable(Key{"table", "sub"}); !reflect.DeepEqual(got, want) {
+		t.Errorf("GetTable() = %v, want %v", got, want)
+	}
+}
+
+func TestClient_GetView(t *testing.T) {
+	db, mock := redismock.NewClientMock()
+	c := &Client{rdb: db, sep: "|"}
+	want := &View{"key": {}, "key1|key2": {}}
+
+	mock.ExpectKeys("table|*").SetVal([]string{"table|key", "table|key1|key2"})
+
+	got, err := c.GetView(context.Background(), "table")
+	if err != nil {
+		t.Errorf("GetView() error = %v, wantErr %v", err, false)
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("GetView() got = %v, want %v", got, want)
+	}
+}
+
 func TestClient_HGet(t *testing.T) {
 	db, mock := redismock.NewClientMock()
 	c := &Client{rdb: db, sep: "|"}
