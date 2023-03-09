@@ -55,6 +55,13 @@ router bgp {{ $ASN }}
 route-map LOOPBACKS permit 10
  match interface Loopback0
 !
+# BEGIN: bfgcfg
+route-map RM_SET_SRC permit 10
+ set src {{ $RouterId }}
+!
+ip protocol bgp route-map RM_SET_SRC
+!
+# END
 {{- range $k, $f := .Ports.Firewalls }}
 # route-maps for firewall@{{ $k }}
         {{- range $f.IPPrefixLists }}
