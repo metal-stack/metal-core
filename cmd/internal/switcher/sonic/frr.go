@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	frr                  = "/etc/sonic/frr/cumulus_frr.conf"
+	frr                  = "/etc/sonic/frr/frr.conf"
 	frrTmp               = "/etc/sonic/frr/frr.tmp"
 	frrReloadService     = "frr-reload.service"
 	frrValidationService = "bgp-validation"
