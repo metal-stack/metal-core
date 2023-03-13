@@ -10,6 +10,7 @@ debug bgp updates
 debug bgp nht
 debug bgp update-groups
 debug bgp zebra
+zebra nexthop-group keep 1
 {{- range $vrf, $t := .Ports.Vrfs }}
 !
 vrf Vrf{{ $t.VNI }}
