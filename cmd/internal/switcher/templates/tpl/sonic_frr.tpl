@@ -20,6 +20,26 @@ vrf Vrf{{ $t.VNI }}
  vni {{ $t.VNI }}
  exit-vrf
 {{- end }}
+{{- range .Ports.Underlay }}
+!
+interface {{ . }}
+ ipv6 nd ra-interval 6
+ no ipv6 nd suppress-ra
+{{- end }}
+{{- range .Ports.Firewalls }}
+!
+interface {{ .Port }}
+ ipv6 nd ra-interval 6
+ no ipv6 nd suppress-ra
+{{- end }}
+{{- range $vrf, $t := .Ports.Vrfs }}
+{{- range $t.Neighbors }}
+!
+interface {{ . }} vrf {{ $vrf }}
+ ipv6 nd ra-interval 6
+ no ipv6 nd suppress-ra
+{{- end }}
+{{- end }}
 !
 router bgp {{ $ASN }}
  bgp router-id {{ $RouterId }}
