@@ -124,9 +124,9 @@ func (a *Applier) configureUnprovisionedPort(interfaceName string) error {
 		return err
 	}
 
-	if err := a.ensurePortConfiguration(ctx, interfaceName, "9000", true); err != nil {
-		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
-	}
+	// if err := a.ensurePortConfiguration(ctx, interfaceName, "9000", true); err != nil {
+	// 	return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
+	// }
 
 	return a.ensureInterfaceIsVlanMember(ctx, interfaceName, "Vlan4000")
 }
