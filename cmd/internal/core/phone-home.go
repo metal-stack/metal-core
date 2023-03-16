@@ -136,6 +136,7 @@ func (c *Core) phoneHome(ctx context.Context, msgs []phoneHomeMessage) {
 	s, err := c.send(ctx, &v1.EventServiceSendRequest{Events: events})
 	if err != nil {
 		c.log.Errorw("unable to send provisioning event back to API", "error", err)
+		c.metrics.CountError("send-provisioning")
 	}
 	if s != nil {
 		c.log.Infow("phonehome sent", "machines", s.Events)
