@@ -16,6 +16,7 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	"github.com/metal-stack/metal-core/cmd/internal/core"
+	"github.com/metal-stack/metal-core/cmd/internal/metrics"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/v"
@@ -77,6 +78,8 @@ func Run() {
 		log.Fatalw("failed to create NOS instance", "error", err)
 	}
 
+	metrics := metrics.New()
+
 	c := core.New(core.Config{
 		Log:                       log,
 		LogLevel:                  cfg.LogLevel,
@@ -94,7 +97,9 @@ func Run() {
 		NOS:                       nos,
 		Driver:                    driver,
 		EventServiceClient:        grpcClient.NewEventClient(),
+		Metrics:                   metrics,
 	})
+
 	err = c.RegisterSwitch()
 	if err != nil {
 		log.Fatalw("failed to register switch", "error", err)
@@ -115,6 +120,7 @@ func Run() {
 	// go tool pprof -http :8080 localhost:2112/pprof/goroutine
 	metricsServer.Handle("/pprof/heap", httppprof.Handler("heap"))
 	metricsServer.Handle("/pprof/goroutine", httppprof.Handler("goroutine"))
+	metrics.Init()
 
 	srv := &http.Server{
 		Addr:              metricsAddr,

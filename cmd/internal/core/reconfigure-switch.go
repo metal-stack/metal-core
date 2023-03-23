@@ -37,6 +37,7 @@ func (c *Core) ReconfigureSwitch() {
 			errStr := err.Error()
 			nr.Error = &errStr
 			c.log.Errorw("reconfiguration failed", "error", err)
+			c.metrics.CountError("switch-reconfiguration")
 		} else {
 			c.log.Info("reconfiguration succeeded")
 		}
@@ -45,6 +46,7 @@ func (c *Core) ReconfigureSwitch() {
 		_, err = c.driver.SwitchOperations().NotifySwitch(params, nil)
 		if err != nil {
 			c.log.Errorw("notification about switch reconfiguration failed", "error", err)
+			c.metrics.CountError("reconfiguration-notification")
 		}
 	}
 }
