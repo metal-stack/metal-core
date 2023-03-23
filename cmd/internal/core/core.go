@@ -6,6 +6,7 @@ import (
 	"go.uber.org/zap"
 
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
+	"github.com/metal-stack/metal-core/cmd/internal/metrics"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 	metalgo "github.com/metal-stack/metal-go"
 )
@@ -30,6 +31,8 @@ type Core struct {
 
 	driver             metalgo.Client
 	eventServiceClient v1.EventServiceClient
+
+	metrics *metrics.Metrics
 }
 
 type Config struct {
@@ -52,6 +55,8 @@ type Config struct {
 
 	Driver             metalgo.Client
 	EventServiceClient v1.EventServiceClient
+
+	Metrics *metrics.Metrics
 }
 
 func New(c Config) *Core {
@@ -72,5 +77,6 @@ func New(c Config) *Core {
 		nos:                       c.NOS,
 		driver:                    c.Driver,
 		eventServiceClient:        c.EventServiceClient,
+		metrics:                   c.Metrics,
 	}
 }
