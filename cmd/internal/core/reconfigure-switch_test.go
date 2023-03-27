@@ -73,7 +73,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 					IPPrefixLists: []types.IPPrefixList{
 						{
 							Name: "vrf104001-in-prefixes",
-							Spec: "permit 10.244.0.0/16 le 32",
+							Spec: "permit 10.240.0.0/12 le 32",
 						},
 					},
 					RouteMaps: []types.RouteMap{
@@ -85,7 +85,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 						},
 					},
 				},
-				Cidrs: []string{"10.244.0.0/16"},
+				Cidrs: []string{"10.240.0.0/12"},
 			}},
 		},
 		AdditionalBridgeVIDs: []string{"201-256", "301-356"},
