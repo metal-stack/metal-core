@@ -9,7 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis/db"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
