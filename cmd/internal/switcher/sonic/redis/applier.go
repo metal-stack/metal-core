@@ -23,9 +23,9 @@ type Applier struct {
 	rifOidMap        map[string]db.OID
 }
 
-func NewApplier(log *zap.SugaredLogger, cfg *db.Config) *Applier {
+func NewApplier(log *zap.SugaredLogger, db *db.DB) *Applier {
 	return &Applier{
-		db:  db.New(cfg),
+		db:  db,
 		log: log,
 	}
 }

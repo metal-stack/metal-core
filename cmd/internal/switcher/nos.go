@@ -16,6 +16,7 @@ import (
 type NOS interface {
 	SanitizeConfig(cfg *types.Conf)
 	Apply(cfg *types.Conf) error
+	IsInitialized() (initialized bool, err error)
 	GetNics(log *zap.SugaredLogger, blacklist []string) ([]*models.V1SwitchNic, error)
 	GetSwitchPorts() ([]*net.Interface, error)
 	GetOS() (*models.V1SwitchOS, error)

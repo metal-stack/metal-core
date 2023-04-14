@@ -38,6 +38,11 @@ func (c *Cumulus) Apply(cfg *types.Conf) error {
 	return c.frrApplier.Apply(cfg)
 }
 
+func (c *Cumulus) IsInitialized() (initialized bool, err error) {
+	// FIXME decide how we can detect initialization is complete.
+	return true, nil
+}
+
 func (c *Cumulus) GetNics(log *zap.SugaredLogger, blacklist []string) (nics []*models.V1SwitchNic, err error) {
 	ifs, err := c.GetSwitchPorts()
 	if err != nil {

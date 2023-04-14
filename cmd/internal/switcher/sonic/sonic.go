@@ -1,20 +1,22 @@
 package sonic
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net"
 	"os"
 	"strings"
+	"time"
 
 	"go.uber.org/zap"
 	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 
 	"github.com/metal-stack/metal-core/cmd/internal"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis/db"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/metal-go/api/models"
@@ -27,6 +29,7 @@ const (
 )
 
 type Sonic struct {
+	db           *db.DB
 	frrApplier   *templates.Applier
 	redisApplier *redis.Applier
 	log          *zap.SugaredLogger
@@ -41,10 +44,12 @@ func New(log *zap.SugaredLogger, frrTplFile string) (*Sonic, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to load database config for SONiC: %w", err)
 	}
+	sonicDb := db.New(cfg)
 
 	return &Sonic{
+		db:           sonicDb,
 		frrApplier:   NewFrrApplier(frrTplFile),
-		redisApplier: redis.NewApplier(log, cfg),
+		redisApplier: redis.NewApplier(log, sonicDb),
 		log:          log,
 	}, nil
 }
@@ -69,6 +74,13 @@ func (s *Sonic) Apply(cfg *types.Conf) error {
 	}
 
 	return s.frrApplier.Apply(cfg)
+}
+
+func (s *Sonic) IsInitialized() (initialized bool, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	return s.db.Appl.ExistPortInitDone(ctx)
 }
 
 func (s *Sonic) GetNics(log *zap.SugaredLogger, blacklist []string) (nics []*models.V1SwitchNic, err error) {
