@@ -51,7 +51,7 @@ func New(log *zap.SugaredLogger, frrTplFile string) (*Sonic, error) {
 		db:                     sonicDb,
 		frrApplier:             NewFrrApplier(frrTplFile),
 		log:                    log,
-		redisApplier:           redis.NewApplier(log, cfg),
+		redisApplier:           redis.NewApplier(log, sonicDb),
 		removeNeighborsApplier: NewRemoveNeighborsApplier(),
 	}, nil
 }
