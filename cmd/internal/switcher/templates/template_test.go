@@ -39,6 +39,18 @@ func TestCumulusFrrTemplate(t *testing.T) {
 	}
 }
 
+func TestUnprovisionedTemplate(t *testing.T) {
+	tests := listTestCases()
+	for i := range tests {
+		tt := tests[i]
+		t.Run(tt, func(t *testing.T) {
+			c := readConf(t, path.Join("test_data", tt, "conf.yaml"))
+			tpl := UnprovisionedTemplate()
+			verifyTemplate(t, tpl, &c, path.Join("test_data", tt, "unprovisioned"))
+		})
+	}
+}
+
 func TestSonicFrrTpl(t *testing.T) {
 	tests := listTestCases()
 	for i := range tests {
