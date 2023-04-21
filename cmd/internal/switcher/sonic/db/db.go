@@ -16,17 +16,20 @@ type instance struct {
 }
 
 type DB struct {
+	Appl     *ApplDB
 	Asic     *AsicDB
 	Config   *ConfigDB
 	Counters *CountersDB
 }
 
 func New(cfg *Config) *DB {
+	applDB := cfg.Databases["APPL_DB"]
 	asicDB := cfg.Databases["ASIC_DB"]
 	configDB := cfg.Databases["CONFIG_DB"]
 	countersDB := cfg.Databases["COUNTERS_DB"]
 
 	return &DB{
+		Appl:     newApplDB(cfg.Instances[applDB.Instance].Addr, applDB.Id, applDB.Separator),
 		Asic:     newAsicDB(cfg.Instances[asicDB.Instance].Addr, asicDB.Id, asicDB.Separator),
 		Config:   newConfigDB(cfg.Instances[configDB.Instance].Addr, configDB.Id, configDB.Separator),
 		Counters: newCountersDB(cfg.Instances[countersDB.Instance].Addr, countersDB.Id, countersDB.Separator),
