@@ -38,9 +38,11 @@ func (a *Applier) Apply(c *types.Conf) error {
 		return os.Remove(a.Tmp)
 	}
 
-	err = validate(a.ValidationService, a.Tmp)
-	if err != nil {
-		return err
+	if len(a.ValidationService) > 0 {
+		err = validate(a.ValidationService, a.Tmp)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = os.Rename(a.Tmp, a.Dest)
