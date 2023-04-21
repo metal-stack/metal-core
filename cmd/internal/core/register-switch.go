@@ -31,14 +31,14 @@ func (c *Core) RegisterSwitch() error {
 			if initialized {
 				return nil
 			}
-			return fmt.Errorf("switch is not yet initialized, retrying")
+			return fmt.Errorf("switch is not yet initialized")
 		},
 		retry.Attempts(120),
 		retry.Delay(1*time.Second),
 		retry.DelayType(retry.FixedDelay),
 	)
 	if err != nil {
-		return fmt.Errorf("unable to start register-switch because it is not initialized: %w", err)
+		return fmt.Errorf("unable to register switch because it is not initialized: %w", err)
 	}
 
 	if nics, err = c.nos.GetNics(c.log, c.additionalBridgePorts); err != nil {
