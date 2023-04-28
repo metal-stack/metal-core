@@ -38,10 +38,6 @@ func CumulusFrrTemplate(customTplPath string) *template.Template {
 	return mustParse(cumulusFrrTpl, customTplPath)
 }
 
-func UnprovisionedTemplate() *template.Template {
-	return mustParseFS("unprovisioned.tpl")
-}
-
 func SonicFrrTemplate(customTplPath string) *template.Template {
 	return mustParse(sonicFrrTpl, customTplPath)
 }

@@ -29,11 +29,10 @@ const (
 )
 
 type Sonic struct {
-	db                     *db.DB
-	frrApplier             *templates.Applier
-	log                    *zap.SugaredLogger
-	redisApplier           *redis.Applier
-	removeNeighborsApplier *templates.Applier
+	db           *db.DB
+	frrApplier   *templates.Applier
+	log          *zap.SugaredLogger
+	redisApplier *redis.Applier
 }
 
 type PortInfo struct {
@@ -48,11 +47,10 @@ func New(log *zap.SugaredLogger, frrTplFile string) (*Sonic, error) {
 	sonicDb := db.New(cfg)
 
 	return &Sonic{
-		db:                     sonicDb,
-		frrApplier:             NewFrrApplier(frrTplFile),
-		log:                    log,
-		redisApplier:           redis.NewApplier(log, sonicDb),
-		removeNeighborsApplier: NewRemoveNeighborsApplier(),
+		db:           sonicDb,
+		frrApplier:   NewFrrApplier(frrTplFile),
+		log:          log,
+		redisApplier: redis.NewApplier(log, sonicDb),
 	}, nil
 }
 
@@ -70,12 +68,7 @@ func loadRedisConfig(path string) (*db.Config, error) {
 }
 
 func (s *Sonic) Apply(cfg *types.Conf) error {
-	err := s.removeNeighborsApplier.Apply(cfg)
-	if err != nil {
-		return err
-	}
-
-	err = s.redisApplier.Apply(cfg)
+	err := s.redisApplier.Apply(cfg)
 	if err != nil {
 		return err
 	}

@@ -1,3 +1,0 @@
-{{- range .Ports.Unprovisioned -}}
-{{ . }}
-{{ end }}
