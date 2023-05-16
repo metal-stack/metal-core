@@ -26,15 +26,29 @@ func TestInterfacesTemplate(t *testing.T) {
 	}
 }
 
-func TestFrrTemplate(t *testing.T) {
+func TestCumulusFrrTemplate(t *testing.T) {
 	tests := listTestCases()
 	for i := range tests {
 		tt := tests[i]
 		t.Run(tt, func(t *testing.T) {
 			c := readConf(t, path.Join("test_data", tt, "conf.yaml"))
 			c.FillRouteMapsAndIPPrefixLists()
-			tpl := FrrTemplate("")
-			verifyTemplate(t, tpl, &c, path.Join("test_data", tt, "frr.conf"))
+			tpl := CumulusFrrTemplate("")
+			verifyTemplate(t, tpl, &c, path.Join("test_data", tt, "cumulus_frr.conf"))
+		})
+	}
+}
+
+func TestSonicFrrTpl(t *testing.T) {
+	tests := listTestCases()
+	for i := range tests {
+		tt := tests[i]
+		t.Run(tt, func(t *testing.T) {
+			c := readConf(t, path.Join("test_data", tt, "conf.yaml"))
+			c.CapitalizeVrfName()
+			c.FillRouteMapsAndIPPrefixLists()
+			tpl := SonicFrrTemplate("")
+			verifyTemplate(t, tpl, &c, path.Join("test_data", tt, "sonic_frr.conf"))
 		})
 	}
 }
@@ -45,10 +59,17 @@ func TestCustomInterfacesTemplate(t *testing.T) {
 	verifyTemplate(t, tpl, &c, "test_data/dev/customtpl/interfaces")
 }
 
-func TestCustomFrrTemplate(t *testing.T) {
+func TestCustomCumulusFrrTemplate(t *testing.T) {
 	c := readConf(t, "test_data/dev/conf.yaml")
 	c.FillRouteMapsAndIPPrefixLists()
-	tpl := FrrTemplate("test_data/dev/customtpl/frr.tpl")
+	tpl := CumulusFrrTemplate("test_data/dev/customtpl/frr.tpl")
+	verifyTemplate(t, tpl, &c, "test_data/dev/customtpl/frr.conf")
+}
+
+func TestCustomSonicFrrTemplate(t *testing.T) {
+	c := readConf(t, "test_data/dev/conf.yaml")
+	c.FillRouteMapsAndIPPrefixLists()
+	tpl := SonicFrrTemplate("test_data/dev/customtpl/frr.tpl")
 	verifyTemplate(t, tpl, &c, "test_data/dev/customtpl/frr.conf")
 }
 

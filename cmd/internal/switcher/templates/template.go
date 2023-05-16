@@ -10,8 +10,9 @@ import (
 var templates embed.FS
 
 const (
-	interfaceTpl = "interfaces.tpl"
-	frrTpl       = "frr.tpl"
+	interfaceTpl  = "interfaces.tpl"
+	cumulusFrrTpl = "cumulus_frr.tpl"
+	sonicFrrTpl   = "sonic_frr.tpl"
 )
 
 func mustParseFile(path string) *template.Template {
@@ -33,6 +34,10 @@ func InterfacesTemplate(customTplPath string) *template.Template {
 	return mustParse(interfaceTpl, customTplPath)
 }
 
-func FrrTemplate(customTplPath string) *template.Template {
-	return mustParse(frrTpl, customTplPath)
+func CumulusFrrTemplate(customTplPath string) *template.Template {
+	return mustParse(cumulusFrrTpl, customTplPath)
+}
+
+func SonicFrrTemplate(customTplPath string) *template.Template {
+	return mustParse(sonicFrrTpl, customTplPath)
 }

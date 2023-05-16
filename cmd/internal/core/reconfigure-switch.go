@@ -120,6 +120,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 			}
 			continue
 		}
+
 		// Firewall-Port
 		if nic.Vrf == "default" {
 			fw := &types.Firewall{
@@ -149,6 +150,8 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 		p.Vrfs[nic.Vrf] = vrf
 	}
 	switcherConfig.Ports = p
+
+	c.nos.SanitizeConfig(switcherConfig)
 	switcherConfig.FillRouteMapsAndIPPrefixLists()
 	m, err := vlan.ReadMapping()
 	if err != nil {
@@ -158,6 +161,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 	if err != nil {
 		return nil, err
 	}
+
 	return switcherConfig, nil
 }
 

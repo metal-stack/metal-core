@@ -1,3 +1,6 @@
+//go:build client
+// +build client
+
 package cmd
 
 import (
@@ -48,7 +51,6 @@ func Run() {
 		fmt.Sprintf("%s://%s:%d%s", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort, cfg.ApiBasePath),
 		"", cfg.HMACKey, metalgo.AuthType("Metal-Edit"),
 	)
-
 	if err != nil {
 		log.Fatalw("unable to create metal-api driver", "error", err)
 	}
@@ -71,7 +73,10 @@ func Run() {
 		log.Fatalw("failed to create grpc client", "error", err)
 	}
 
-	nos := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile)
+	nos, err := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile)
+	if err != nil {
+		log.Fatalw("failed to create NOS instance", "error", err)
+	}
 
 	metrics := metrics.New()
 

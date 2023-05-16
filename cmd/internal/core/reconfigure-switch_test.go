@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/cumulus"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/metal-go/api/models"
 )
@@ -18,6 +19,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		loopbackIP:           "10.0.0.1",
 		spineUplinks:         []string{"swp31", "swp32"},
 		additionalBridgeVIDs: []string{"201-256", "301-356"},
+		nos:                  &cumulus.Cumulus{},
 	}
 
 	n1 := "swp1"
@@ -71,7 +73,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 					IPPrefixLists: []types.IPPrefixList{
 						{
 							Name: "vrf104001-in-prefixes",
-							Spec: "permit 10.244.0.0/16 le 32",
+							Spec: "permit 10.240.0.0/12 le 32",
 						},
 					},
 					RouteMaps: []types.RouteMap{
@@ -83,7 +85,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 						},
 					},
 				},
-				Cidrs: []string{"10.244.0.0/16"},
+				Cidrs: []string{"10.240.0.0/12"},
 			}},
 		},
 		AdditionalBridgeVIDs: []string{"201-256", "301-356"},
