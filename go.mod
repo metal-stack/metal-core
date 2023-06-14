@@ -14,7 +14,7 @@ require (
 	github.com/metal-stack/v v1.0.3
 	github.com/prometheus/client_golang v1.15.1
 	github.com/redis/go-redis/v9 v9.0.4
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.4
 	github.com/vishvananda/netlink v1.1.0
 	go.uber.org/zap v1.24.0
 	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea
@@ -57,7 +57,7 @@ require (
 	github.com/lestrrat-go/blackmagic v1.0.1 // indirect
 	github.com/lestrrat-go/httpcc v1.0.1 // indirect
 	github.com/lestrrat-go/iter v1.0.2 // indirect
-	github.com/lestrrat-go/jwx v1.2.25 // indirect
+	github.com/lestrrat-go/jwx v1.2.26 // indirect
 	github.com/lestrrat-go/option v1.0.1 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
