@@ -9,6 +9,7 @@ import (
 
 	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
 	"github.com/metal-stack/metal-go/api/models"
+	"github.com/metal-stack/v"
 )
 
 func (c *Core) RegisterSwitch() error {
@@ -52,6 +53,7 @@ func (c *Core) RegisterSwitch() error {
 	if switchOS, err = c.nos.GetOS(); err != nil {
 		return fmt.Errorf("unable to get switch os: %w", err)
 	}
+	switchOS.MetalCoreVersion = v.V.String()
 
 	if managementIP, managementUser, err = c.nos.GetManagement(); err != nil {
 		return fmt.Errorf("unable to get switch management info: %w", err)
