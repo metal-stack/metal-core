@@ -9,8 +9,8 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/go-lldpd v0.4.4
-	github.com/metal-stack/metal-api v0.22.9
-	github.com/metal-stack/metal-go v0.22.9
+	github.com/metal-stack/metal-api v0.22.10
+	github.com/metal-stack/metal-go v0.22.10
 	github.com/metal-stack/v v1.0.3
 	github.com/prometheus/client_golang v1.16.0
 	github.com/redis/go-redis/v9 v9.0.5
@@ -63,7 +63,7 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mdlayher/ethernet v0.0.0-20220221185849-529eae5b6118 // indirect
 	github.com/mdlayher/lldp v0.0.0-20150915211757-afd9f83164c5 // indirect
-	github.com/metal-stack/metal-lib v0.12.5 // indirect
+	github.com/metal-stack/metal-lib v0.12.6 // indirect
 	github.com/metal-stack/security v0.6.6 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
