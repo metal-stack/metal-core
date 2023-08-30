@@ -50,35 +50,35 @@ func Run() {
 	)
 	if err != nil {
 		log.Error("unable to create metal-api driver", "error", err)
-		panic(err)
+		os.Exit(1)
 	}
 
 	cert, err := os.ReadFile(cfg.GrpcClientCertFile)
 	if err != nil {
 		log.Error("failed to read cert", "error", err)
-		panic(err)
+		os.Exit(1)
 	}
 	cacert, err := os.ReadFile(cfg.GrpcCACertFile)
 	if err != nil {
 		log.Error("failed to read ca cert", "error", err)
-		panic(err)
+		os.Exit(1)
 	}
 	key, err := os.ReadFile(cfg.GrpcClientKeyFile)
 	if err != nil {
 		log.Error("failed to read key", "error", err)
-		panic(err)
+		os.Exit(1)
 	}
 
 	grpcClient, err := NewGrpcClient(log, cfg.GrpcAddress, cert, key, cacert)
 	if err != nil {
 		log.Error("failed to create grpc client", "error", err)
-		panic(err)
+		os.Exit(1)
 	}
 
 	nos, err := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile)
 	if err != nil {
 		log.Error("failed to create NOS instance", "error", err)
-		panic(err)
+		os.Exit(1)
 	}
 
 	metrics := metrics.New()
@@ -106,7 +106,7 @@ func Run() {
 	err = c.RegisterSwitch()
 	if err != nil {
 		log.Error("failed to register switch", "error", err)
-		panic(err)
+		os.Exit(1)
 	}
 
 	go c.ReconfigureSwitch()
@@ -134,6 +134,7 @@ func Run() {
 
 	err = srv.ListenAndServe()
 	if err != nil {
-		panic(err)
+		log.Error("unable to start metrics listener", "error", err)
+		os.Exit(1)
 	}
 }
