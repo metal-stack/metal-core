@@ -26,7 +26,7 @@ func (a *Applier) ensureNotBridged(ctx context.Context, interfaceName string) er
 	}
 
 	for _, vlan := range vlans {
-		a.log.Infof("remove interface %s from vlan %s", interfaceName, vlan)
+		a.log.Info("remove interface from vlan", "name", interfaceName, "vlan", vlan)
 		err := a.db.Config.DeleteVlanMember(ctx, interfaceName, vlan)
 		if err != nil {
 			return fmt.Errorf("could not remove interface %s from vlan %s", interfaceName, vlan)
@@ -59,6 +59,6 @@ func (a *Applier) ensureInterfaceIsVlanMember(ctx context.Context, interfaceName
 		return fmt.Errorf("interface %s already member of a different vlan %v", interfaceName, current)
 	}
 
-	a.log.Infof("add interface %s to vlan %s", interfaceName, vlan)
+	a.log.Info("add interface to vlan", "name", interfaceName, "vlan", vlan)
 	return a.db.Config.SetVlanMember(ctx, interfaceName, vlan)
 }
