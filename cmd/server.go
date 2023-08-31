@@ -39,7 +39,7 @@ func Run() {
 	case "error":
 		lvl = slog.LevelError
 	}
-	log := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: lvl, AddSource: false}))
+	log := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: lvl, AddSource: true}))
 
 	log.Info("metal-core version", "version", v.V)
 	log.Info("configuration", "cfg", cfg)
