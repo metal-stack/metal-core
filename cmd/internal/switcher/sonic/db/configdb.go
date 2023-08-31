@@ -8,7 +8,7 @@ import (
 const (
 	enable          = "enable"
 	interfaceTable  = "INTERFACE"
-	linkLocalOnly   = "ipv6_use_link_local_only"
+	linkLocalOnly   = "ipv6_use_link_local_only" // nolint:gosec
 	vlanMemberTable = "VLAN_MEMBER"
 	taggingMode     = "tagging_mode"
 	untagged        = "untagged"
