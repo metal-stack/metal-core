@@ -5,7 +5,6 @@ package core
 
 import (
 	"context"
-	"log/slog"
 	"os"
 	"strings"
 	"sync"
@@ -118,7 +117,6 @@ func (c *Core) send(ctx context.Context, event *v1.EventServiceSendRequest) (*v1
 }
 
 func (c *Core) phoneHome(ctx context.Context, msgs []phoneHomeMessage) {
-	c.log.Debug("phonehome", slog.Any("machines", msgs))
 	c.log.Info("phonehome", "machines", len(msgs))
 
 	events := make(map[string]*v1.MachineProvisioningEvent)
