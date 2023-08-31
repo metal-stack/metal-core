@@ -1,9 +1,8 @@
 package core
 
 import (
+	"log/slog"
 	"time"
-
-	"go.uber.org/zap"
 
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
@@ -12,7 +11,7 @@ import (
 )
 
 type Core struct {
-	log      *zap.SugaredLogger
+	log      *slog.Logger
 	logLevel string
 
 	cidr                      string
@@ -36,7 +35,7 @@ type Core struct {
 }
 
 type Config struct {
-	Log      *zap.SugaredLogger
+	Log      *slog.Logger
 	LogLevel string
 
 	CIDR                      string

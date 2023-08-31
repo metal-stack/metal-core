@@ -3,12 +3,12 @@ package core
 import (
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/vishvananda/netlink"
-	"golang.org/x/exp/slices"
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
@@ -25,7 +25,7 @@ func (c *Core) ReconfigureSwitch() {
 		start := time.Now()
 		err := c.reconfigureSwitch(host)
 		elapsed := time.Since(start)
-		c.log.Infow("reconfiguration took", "elapsed", elapsed)
+		c.log.Info("reconfiguration took", "elapsed", elapsed)
 
 		params := sw.NewNotifySwitchParams()
 		params.ID = host
@@ -36,7 +36,7 @@ func (c *Core) ReconfigureSwitch() {
 		if err != nil {
 			errStr := err.Error()
 			nr.Error = &errStr
-			c.log.Errorw("reconfiguration failed", "error", err)
+			c.log.Error("reconfiguration failed", "error", err)
 			c.metrics.CountError("switch-reconfiguration")
 		} else {
 			c.log.Info("reconfiguration succeeded")
@@ -45,7 +45,7 @@ func (c *Core) ReconfigureSwitch() {
 		params.Body = nr
 		_, err = c.driver.SwitchOperations().NotifySwitch(params, nil)
 		if err != nil {
-			c.log.Errorw("notification about switch reconfiguration failed", "error", err)
+			c.log.Error("notification about switch reconfiguration failed", "error", err)
 			c.metrics.CountError("reconfiguration-notification")
 		}
 	}
@@ -70,7 +70,7 @@ func (c *Core) reconfigureSwitch(switchName string) error {
 		return fmt.Errorf("could not gather information about eth0 nic: %w", err)
 	}
 
-	c.log.Infow("assembled new config for switch", "config", switchConfig)
+	c.log.Info("assembled new config for switch", "config", switchConfig)
 	if !c.enableReconfigureSwitch {
 		c.log.Debug("skip config application because of environment setting")
 		return nil

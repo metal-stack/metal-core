@@ -17,6 +17,6 @@ func (a *Applier) ensureInterfaceIsVrfMember(ctx context.Context, interfaceName,
 		return fmt.Errorf("interface %s already member of a different vrfName %v", interfaceName, current)
 	}
 
-	a.log.Infof("add interface %s to vrfName %s", interfaceName, vrfName)
+	a.log.Info("add interface to vrfName ", "name", interfaceName, "vrf", vrfName)
 	return a.db.Config.SetVrfMember(ctx, interfaceName, vrfName)
 }

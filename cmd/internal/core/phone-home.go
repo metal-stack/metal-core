@@ -12,7 +12,6 @@ import (
 
 	"github.com/metal-stack/go-lldpd/pkg/lldp"
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
-	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -34,7 +33,7 @@ func (c *Core) ConstantlyPhoneHome() {
 	// - dynamically detect changes and stop/start goroutines for the lldpd client per interface
 	ifs, err := c.nos.GetSwitchPorts()
 	if err != nil {
-		c.log.Errorw("unable to find interfaces", "error", err)
+		c.log.Error("unable to find interfaces", "error", err)
 		os.Exit(1)
 	}
 
@@ -47,16 +46,16 @@ func (c *Core) ConstantlyPhoneHome() {
 	var phoneHomeMessages sync.Map
 	for _, iface := range ifs {
 		lldpcli := lldp.NewClient(ctx, *iface)
-		c.log.Infow("start lldp client", "interface", iface.Name)
+		c.log.Info("start lldp client", "interface", iface.Name)
 
 		ifaceName := iface.Name
 		// constantly observe LLDP traffic on current machine and current interface
 		discoveryResultChanWG.Add(1)
 		go func() {
 			defer discoveryResultChanWG.Done()
-			err = lldpcli.Start(c.log.Named("lldp"), discoveryResultChan)
+			err = lldpcli.Start(c.log, discoveryResultChan)
 			if err != nil {
-				c.log.Errorw("unable to start lldp discovery for interface", "interface", ifaceName)
+				c.log.Error("unable to start lldp discovery for interface", "interface", ifaceName)
 			}
 		}()
 	}
@@ -112,14 +111,13 @@ func (c *Core) send(ctx context.Context, event *v1.EventServiceSendRequest) (*v1
 		return nil, err
 	}
 	if s != nil {
-		c.log.Infow("event", "send", s.Events, "failed", s.Failed)
+		c.log.Info("event", "send", s.Events, "failed", s.Failed)
 	}
 	return s, err
 }
 
 func (c *Core) phoneHome(ctx context.Context, msgs []phoneHomeMessage) {
-	c.log.Debug("phonehome", zap.Any("machines", msgs))
-	c.log.Infow("phonehome", "machines", len(msgs))
+	c.log.Info("phonehome", "machines", len(msgs))
 
 	events := make(map[string]*v1.MachineProvisioningEvent)
 	phonedHomeEvent := string(provisioningEventPhonedHome)
@@ -135,11 +133,11 @@ func (c *Core) phoneHome(ctx context.Context, msgs []phoneHomeMessage) {
 
 	s, err := c.send(ctx, &v1.EventServiceSendRequest{Events: events})
 	if err != nil {
-		c.log.Errorw("unable to send provisioning event back to API", "error", err)
+		c.log.Error("unable to send provisioning event back to API", "error", err)
 		c.metrics.CountError("send-provisioning")
 	}
 	if s != nil {
-		c.log.Infow("phonehome sent", "machines", s.Events)
+		c.log.Info("phonehome sent", "machines", s.Events)
 	}
 }
 
