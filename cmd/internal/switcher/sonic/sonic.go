@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
-	"go.uber.org/zap"
-	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 
 	"github.com/metal-stack/metal-core/cmd/internal"
@@ -31,7 +31,7 @@ const (
 type Sonic struct {
 	db           *db.DB
 	frrApplier   *templates.Applier
-	log          *zap.SugaredLogger
+	log          *slog.Logger
 	redisApplier *redis.Applier
 }
 
@@ -39,7 +39,7 @@ type PortInfo struct {
 	Alias string
 }
 
-func New(log *zap.SugaredLogger, frrTplFile string) (*Sonic, error) {
+func New(log *slog.Logger, frrTplFile string) (*Sonic, error) {
 	cfg, err := loadRedisConfig(redisConfigFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load database config for SONiC: %w", err)
@@ -83,7 +83,7 @@ func (s *Sonic) IsInitialized() (initialized bool, err error) {
 	return s.db.Appl.ExistPortInitDone(ctx)
 }
 
-func (s *Sonic) GetNics(log *zap.SugaredLogger, blacklist []string) (nics []*models.V1SwitchNic, err error) {
+func (s *Sonic) GetNics(log *slog.Logger, blacklist []string) (nics []*models.V1SwitchNic, err error) {
 	ifs, err := s.GetSwitchPorts()
 	if err != nil {
 		return nil, fmt.Errorf("unable to get all ifs: %w", err)
@@ -97,13 +97,13 @@ func (s *Sonic) GetNics(log *zap.SugaredLogger, blacklist []string) (nics []*mod
 	for _, iface := range ifs {
 		name := iface.Name
 		if slices.Contains(blacklist, name) {
-			log.Debugw("skip interface, because it is contained in the blacklist", "interface", name, "blacklist", blacklist)
+			log.Debug("skip interface, because it is contained in the blacklist", "interface", name, "blacklist", blacklist)
 			continue
 		}
 
 		id, found := portsConfig[name]
 		if !found {
-			log.Debugw("skip interface as no info on it was found in config DB", "interface", name)
+			log.Debug("skip interface as no info on it was found in config DB", "interface", name)
 			continue
 		}
 
@@ -131,7 +131,7 @@ func (s *Sonic) GetSwitchPorts() ([]*net.Interface, error) {
 	for i := range ifs {
 		iface := &ifs[i]
 		if !strings.HasPrefix(iface.Name, "Ethernet") {
-			s.log.Debugw("skip interface, because only Ethernet* interface are front panels", "interface", iface.Name)
+			s.log.Debug("skip interface, because only Ethernet* interface are front panels", "interface", iface.Name)
 			continue
 		}
 		switchPorts = append(switchPorts, iface)

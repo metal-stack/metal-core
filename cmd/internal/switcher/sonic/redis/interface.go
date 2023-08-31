@@ -20,7 +20,7 @@ func (a *Applier) ensureNotRouted(ctx context.Context, interfaceName string) err
 		return nil
 	}
 
-	a.log.Infof("remove routing configuration for interface %s", interfaceName)
+	a.log.Info("remove routing configuration for interface", "name", interfaceName)
 	err = a.db.Config.DeleteInterfaceConfiguration(ctx, interfaceName)
 	if err != nil {
 		return fmt.Errorf("could not remove configuration for interface %s: %w", interfaceName, err)
@@ -33,7 +33,7 @@ func (a *Applier) ensureNotRouted(ctx context.Context, interfaceName string) err
 				return err
 			}
 			if configured {
-				a.log.Debugf("interface %s is still routed", interfaceName)
+				a.log.Debug("interface is still routed", "name", interfaceName)
 				return fmt.Errorf("interface %s is still routed", interfaceName)
 			}
 			return nil

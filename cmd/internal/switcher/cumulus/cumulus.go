@@ -2,12 +2,11 @@ package cumulus
 
 import (
 	"fmt"
+	"log/slog"
 	"net"
 	"os"
+	"slices"
 	"strings"
-
-	"go.uber.org/zap"
-	"golang.org/x/exp/slices"
 
 	"github.com/metal-stack/metal-core/cmd/internal"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
@@ -18,10 +17,10 @@ import (
 type Cumulus struct {
 	frrApplier        *templates.Applier
 	interfacesApplier *templates.Applier
-	log               *zap.SugaredLogger
+	log               *slog.Logger
 }
 
-func New(log *zap.SugaredLogger, frrTplFile, interfacesTplFile string) *Cumulus {
+func New(log *slog.Logger, frrTplFile, interfacesTplFile string) *Cumulus {
 	return &Cumulus{
 		frrApplier:        NewFrrApplier(frrTplFile),
 		interfacesApplier: NewInterfacesApplier(interfacesTplFile),
@@ -43,7 +42,7 @@ func (c *Cumulus) IsInitialized() (initialized bool, err error) {
 	return true, nil
 }
 
-func (c *Cumulus) GetNics(log *zap.SugaredLogger, blacklist []string) (nics []*models.V1SwitchNic, err error) {
+func (c *Cumulus) GetNics(log *slog.Logger, blacklist []string) (nics []*models.V1SwitchNic, err error) {
 	ifs, err := c.GetSwitchPorts()
 	if err != nil {
 		return nil, fmt.Errorf("unable to get all ifs: %w", err)
@@ -53,12 +52,12 @@ func (c *Cumulus) GetNics(log *zap.SugaredLogger, blacklist []string) (nics []*m
 		name := iface.Name
 		mac := iface.HardwareAddr.String()
 		if slices.Contains(blacklist, name) {
-			log.Debugw("skip interface, because it is contained in the blacklist", "interface", name, "blacklist", blacklist)
+			log.Debug("skip interface, because it is contained in the blacklist", "interface", name, "blacklist", blacklist)
 			continue
 		}
 
 		if _, err := net.ParseMAC(mac); err != nil {
-			log.Debugw("skip interface with invalid mac", "interface", name, "MAC", mac)
+			log.Debug("skip interface with invalid mac", "interface", name, "MAC", mac)
 			continue
 		}
 
@@ -82,7 +81,7 @@ func (c *Cumulus) GetSwitchPorts() ([]*net.Interface, error) {
 	for i := range ifs {
 		iface := &ifs[i]
 		if !strings.HasPrefix(iface.Name, "swp") {
-			c.log.Debugw("skip interface, because only swp* interface are front panels", "interface", iface.Name)
+			c.log.Debug("skip interface, because only swp* interface are front panels", "interface", iface.Name)
 			continue
 		}
 		switchPorts = append(switchPorts, iface)
@@ -98,7 +97,7 @@ func (c *Cumulus) GetOS() (*models.V1SwitchOS, error) {
 	version := "unknown"
 	lsbReleaseBytes, err := os.ReadFile("/etc/lsb-release")
 	if err != nil {
-		c.log.Errorw("unable to read /etc/lsb-release", "error", err)
+		c.log.Error("unable to read /etc/lsb-release", "error", err)
 	} else {
 		for _, line := range strings.Fields(string(lsbReleaseBytes)) {
 			if strings.HasPrefix(line, "DISTRIB_RELEASE") {

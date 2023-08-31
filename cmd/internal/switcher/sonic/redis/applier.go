@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"go.uber.org/zap"
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
@@ -15,7 +15,7 @@ import (
 
 type Applier struct {
 	db          *db.DB
-	log         *zap.SugaredLogger
+	log         *slog.Logger
 	previousCfg *types.Conf
 
 	bridgePortOidMap map[string]db.OID
@@ -23,7 +23,7 @@ type Applier struct {
 	rifOidMap        map[string]db.OID
 }
 
-func NewApplier(log *zap.SugaredLogger, db *db.DB) *Applier {
+func NewApplier(log *slog.Logger, db *db.DB) *Applier {
 	return &Applier{
 		db:  db,
 		log: log,
@@ -37,10 +37,10 @@ func (a *Applier) Apply(cfg *types.Conf) error {
 	if a.previousCfg != nil {
 		diff := cmp.Diff(a.previousCfg, cfg)
 		if diff == "" {
-			a.log.Infow("no changes on interfaces detected, nothing to do")
+			a.log.Info("no changes on interfaces detected, nothing to do")
 			return nil
 		} else {
-			a.log.Debugw("interface changes", "changes", diff)
+			a.log.Debug("interface changes", "changes", diff)
 		}
 	}
 

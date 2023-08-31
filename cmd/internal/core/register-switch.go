@@ -13,7 +13,7 @@ import (
 )
 
 func (c *Core) RegisterSwitch() error {
-	c.log.Infow("register switch")
+	c.log.Info("register switch")
 	var (
 		err            error
 		nics           []*models.V1SwitchNic
@@ -77,9 +77,9 @@ func (c *Core) RegisterSwitch() error {
 		if err == nil {
 			break
 		}
-		c.log.Errorw("unable to register at metal-api, retrying", "error", err)
+		c.log.Error("unable to register at metal-api, retrying", "error", err)
 		time.Sleep(30 * time.Second)
 	}
-	c.log.Infow("register switch completed")
+	c.log.Info("register switch completed")
 	return nil
 }
