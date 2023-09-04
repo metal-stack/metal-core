@@ -18,7 +18,7 @@ type Config struct {
 	LoopbackIP                string        `required:"false" default:"10.0.0.11" desc:"set the loopback ip address that is used with BGP unnumbered" split_words:"true"`
 	ASN                       string        `required:"false" default:"420000011" desc:"set the ASN that is used with BGP"`
 	SpineUplinks              []string      `required:"false" default:"swp31,swp32" desc:"set the ports that are connected to spines" envconfig:"spine_uplinks"`
-	ManagementGateway         string        `required:"false" default:"192.168.0.1" desc:"the default gateway for the management network" split_words:"true"`
+	ManagementGateway         string        `required:"false" default:"" desc:"the default gateway for the management network" split_words:"true"`
 	ReconfigureSwitch         bool          `required:"false" default:"false" desc:"let metal-core reconfigure the switch" split_words:"true"`
 	ReconfigureSwitchInterval time.Duration `required:"false" default:"10s" desc:"pull interval to fetch and apply switch configuration" split_words:"true"`
 	AdditionalBridgeVIDs      []string      `required:"false" desc:"additional vlan ids that should be configured at the vlan-aware bridge" envconfig:"additional_bridge_vids"`

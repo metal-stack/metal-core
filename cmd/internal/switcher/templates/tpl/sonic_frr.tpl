@@ -58,7 +58,7 @@ router bgp {{ $ASN }}
  {{- end }}
  !
  address-family ipv4 unicast
-  redistribute connected route-map LOOPBACKS
+  redistribute connected route-map DENY_MGMT
   neighbor FIREWALL allowas-in 2
   {{- range $k, $f := .Ports.Firewalls }}
   neighbor {{ $f.Port }} route-map fw-{{ $k }}-in in
@@ -76,8 +76,9 @@ router bgp {{ $ASN }}
   {{- end }}
  exit-address-family
 !
-route-map LOOPBACKS permit 10
- match interface Loopback0
+route-map DENY_MGMT deny 10
+  match interface eth0
+route-map DENY_MGMT permit 20
 !
 {{- range $k, $f := .Ports.Firewalls }}
 # route-maps for firewall@{{ $k }}
