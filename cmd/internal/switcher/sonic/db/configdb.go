@@ -14,6 +14,8 @@ const (
 	untagged        = "untagged"
 	vrfName         = "vrf_name"
 	portTable       = "PORT"
+	adminStatus     = "admin_status"
+	adminStatusUp   = "up"
 	mtu             = "mtu"
 	fec             = "fec"
 	fecRS           = "rs"
@@ -25,8 +27,9 @@ type ConfigDB struct {
 }
 
 type Port struct {
-	Mtu   string
-	FecRs bool
+	AdminStatus bool
+	Mtu         string
+	FecRs       bool
 }
 
 func newConfigDB(addr string, id int, sep string) *ConfigDB {
@@ -176,8 +179,9 @@ func (d *ConfigDB) GetPort(ctx context.Context, interfaceName string) (*Port, er
 	}
 
 	return &Port{
-		Mtu:   result[mtu],
-		FecRs: result[fec] == fecRS,
+		AdminStatus: result[adminStatus] == adminStatusUp,
+		Mtu:         result[mtu],
+		FecRs:       result[fec] == fecRS,
 	}, nil
 }
 
@@ -198,4 +202,10 @@ func (d *ConfigDB) SetPortMtu(ctx context.Context, interfaceName string, val str
 	key := Key{portTable, interfaceName}
 
 	return d.c.HSet(ctx, key, Val{mtu: val})
+}
+
+func (d *ConfigDB) SetAdminStatusUp(ctx context.Context, interfaceName string) error {
+	key := Key{portTable, interfaceName}
+
+	return d.c.HSet(ctx, key, Val{adminStatus: adminStatusUp})
 }
