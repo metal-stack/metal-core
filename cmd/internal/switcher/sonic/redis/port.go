@@ -23,7 +23,15 @@ func (a *Applier) ensurePortConfiguration(ctx context.Context, portName, mtu str
 
 	if p.Mtu != mtu {
 		a.log.Debug("set port mtu to", "port", portName, "mtu", mtu)
-		return a.db.Config.SetPortMtu(ctx, portName, mtu)
+		err = a.db.Config.SetPortMtu(ctx, portName, mtu)
+		if err != nil {
+			return err
+		}
+	}
+
+	if !p.AdminStatus {
+		a.log.Debug("set admin status to", "port", portName, "admin_status", "up")
+		return a.db.Config.SetAdminStatusUp(ctx, portName)
 	}
 
 	return nil
