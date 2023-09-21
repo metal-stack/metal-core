@@ -25,7 +25,7 @@ func Reload(unitName string) error {
 
 	job := <-c
 	if job != done {
-		return fmt.Errorf("reloading failed %s", job)
+		return fmt.Errorf("reloading %s failed", unitName)
 	}
 
 	return nil
@@ -47,7 +47,7 @@ func Start(unitName string) error {
 
 	job := <-c
 	if job != done {
-		return fmt.Errorf("start failed %s", job)
+		return fmt.Errorf("start of %s failed", unitName)
 	}
 
 	return nil
