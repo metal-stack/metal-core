@@ -33,10 +33,10 @@ func NewFrrApplier(tplPath string) *templates.Applier {
 	}
 }
 
-func reloadInterfaces() error {
+func reloadInterfaces(_ string) error {
 	return dbus.Start(interfacesReloadService)
 }
 
-func reloadFrr() error {
+func reloadFrr(_ string) error {
 	return dbus.Reload(frrReloadService)
 }

@@ -3,6 +3,7 @@ package templates
 import (
 	"bytes"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -14,7 +15,7 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
-type Reloader func() error
+type Reloader func(previousConf string) error
 
 type Applier struct {
 	Dest              string
@@ -43,11 +44,11 @@ func (a *Applier) Apply(c *types.Conf) error {
 		return err
 	}
 
-	err = os.Rename(tmp, a.Dest)
+	previousConf, err := backupAndRename(tmp, a.Dest)
 	if err != nil {
 		return err
 	}
-	return a.Reloader()
+	return a.Reloader(previousConf)
 }
 
 func write(c *types.Conf, tpl *template.Template, tmpPath string) error {
@@ -106,4 +107,23 @@ func checksum(path string) ([]byte, error) {
 	}
 
 	return h.Sum(nil), nil
+}
+
+func backupAndRename(src, dest string) (backup string, err error) {
+	destStat, err := os.Stat(dest)
+
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		backup = ""
+	} else if err != nil {
+		return "", fmt.Errorf("could not obtain file info %s: %w", dest, err)
+	} else if destStat.Mode().IsRegular() {
+		backup = fmt.Sprintf("%s.bak", dest)
+		if err := os.Rename(dest, backup); err != nil {
+			return "", fmt.Errorf("could not backup file %s: %w", dest, err)
+		}
+	} else {
+		return "", fmt.Errorf("path %s is not a regular file", dest)
+	}
+
+	return backup, os.Rename(src, dest)
 }
