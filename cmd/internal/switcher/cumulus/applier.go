@@ -6,22 +6,19 @@ import (
 )
 
 const (
-	frr                  = "/etc/frr/frr.conf"
-	frrTmp               = "/etc/frr/frr.tmp"
+	frrConfFile          = "/etc/frr/frr.conf"
 	frrReloadService     = "frr.service"
 	frrValidationService = "frr-validation"
 
-	interfaces                  = "/etc/network/interfaces"
-	interfacesTmp               = "/etc/network/interfaces.tmp"
+	interfacesConfFile          = "/etc/network/interfaces"
 	interfacesReloadService     = "ifreload.service"
 	interfacesValidationService = "interfaces-validation"
 )
 
 func NewInterfacesApplier(tplPath string) *templates.Applier {
 	return &templates.Applier{
-		Dest:              interfaces,
+		Dest:              interfacesConfFile,
 		Reloader:          reloadInterfaces,
-		Tmp:               interfacesTmp,
 		Tpl:               templates.InterfacesTemplate(tplPath),
 		ValidationService: interfacesValidationService,
 	}
@@ -29,9 +26,8 @@ func NewInterfacesApplier(tplPath string) *templates.Applier {
 
 func NewFrrApplier(tplPath string) *templates.Applier {
 	return &templates.Applier{
-		Dest:              frr,
+		Dest:              frrConfFile,
 		Reloader:          reloadFrr,
-		Tmp:               frrTmp,
 		Tpl:               templates.CumulusFrrTemplate(tplPath),
 		ValidationService: frrValidationService,
 	}

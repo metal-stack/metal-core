@@ -19,31 +19,31 @@ type Reloader func() error
 type Applier struct {
 	Dest              string
 	Reloader          Reloader
-	Tmp               string
 	Tpl               *template.Template
 	ValidationService string
 }
 
 func (a *Applier) Apply(c *types.Conf) error {
-	err := write(c, a.Tpl, a.Tmp)
+	tmp := fmt.Sprintf("%s.tmp", a.Dest)
+	err := write(c, a.Tpl, tmp)
 	if err != nil {
 		return err
 	}
 
-	equal, err := areEqual(a.Tmp, a.Dest)
+	equal, err := areEqual(tmp, a.Dest)
 	if err != nil {
 		return err
 	}
 	if equal {
-		return os.Remove(a.Tmp)
+		return os.Remove(tmp)
 	}
 
-	err = validate(a.ValidationService, a.Tmp)
+	err = validate(a.ValidationService, tmp)
 	if err != nil {
 		return err
 	}
 
-	err = os.Rename(a.Tmp, a.Dest)
+	err = os.Rename(tmp, a.Dest)
 	if err != nil {
 		return err
 	}
