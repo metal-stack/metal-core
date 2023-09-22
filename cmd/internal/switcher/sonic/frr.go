@@ -6,17 +6,15 @@ import (
 )
 
 const (
-	frr                  = "/etc/sonic/frr/frr.conf"
-	frrTmp               = "/etc/sonic/frr/frr.tmp"
+	frrConfFile          = "/etc/sonic/frr/frr.conf"
 	frrReloadService     = "frr-reload.service"
 	frrValidationService = "bgp-validation"
 )
 
 func NewFrrApplier(tplPath string) *templates.Applier {
 	return &templates.Applier{
-		Dest:              frr,
+		Dest:              frrConfFile,
 		Reloader:          reloadFrr,
-		Tmp:               frrTmp,
 		Tpl:               templates.SonicFrrTemplate(tplPath),
 		ValidationService: frrValidationService,
 	}
