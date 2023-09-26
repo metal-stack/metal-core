@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"slices"
@@ -17,36 +18,44 @@ import (
 )
 
 // ReconfigureSwitch reconfigures the switch.
-func (c *Core) ReconfigureSwitch() {
+func (c *Core) ReconfigureSwitch(ctx context.Context) {
 	t := time.NewTicker(c.reconfigureSwitchInterval)
+	defer t.Stop()
+
 	host, _ := os.Hostname()
-	for range t.C {
-		c.log.Info("trigger reconfiguration")
-		start := time.Now()
-		err := c.reconfigureSwitch(host)
-		elapsed := time.Since(start)
-		c.log.Info("reconfiguration took", "elapsed", elapsed)
 
-		params := sw.NewNotifySwitchParams()
-		params.ID = host
-		ns := elapsed.Nanoseconds()
-		nr := &models.V1SwitchNotifyRequest{
-			SyncDuration: &ns,
-		}
-		if err != nil {
-			errStr := err.Error()
-			nr.Error = &errStr
-			c.log.Error("reconfiguration failed", "error", err)
-			c.metrics.CountError("switch-reconfiguration")
-		} else {
-			c.log.Info("reconfiguration succeeded")
-		}
+	for {
+		select {
+		case <-t.C:
+			c.log.Info("trigger reconfiguration")
+			start := time.Now()
+			err := c.reconfigureSwitch(host)
+			elapsed := time.Since(start)
+			c.log.Info("reconfiguration took", "elapsed", elapsed)
 
-		params.Body = nr
-		_, err = c.driver.SwitchOperations().NotifySwitch(params, nil)
-		if err != nil {
-			c.log.Error("notification about switch reconfiguration failed", "error", err)
-			c.metrics.CountError("reconfiguration-notification")
+			params := sw.NewNotifySwitchParams()
+			params.ID = host
+			ns := elapsed.Nanoseconds()
+			nr := &models.V1SwitchNotifyRequest{
+				SyncDuration: &ns,
+			}
+			if err != nil {
+				errStr := err.Error()
+				nr.Error = &errStr
+				c.log.Error("reconfiguration failed", "error", err)
+				c.metrics.CountError("switch-reconfiguration")
+			} else {
+				c.log.Info("reconfiguration succeeded")
+			}
+
+			params.Body = nr
+			_, err = c.driver.SwitchOperations().NotifySwitch(params, nil)
+			if err != nil {
+				c.log.Error("notification about switch reconfiguration failed", "error", err)
+				c.metrics.CountError("reconfiguration-notification")
+			}
+		case <-ctx.Done():
+			return
 		}
 	}
 }
