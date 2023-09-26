@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -109,8 +110,10 @@ func Run() {
 		os.Exit(1)
 	}
 
+	ctx := context.Background()
+
 	go c.ReconfigureSwitch()
-	c.ConstantlyPhoneHome()
+	c.ConstantlyPhoneHome(ctx)
 
 	// Start metrics
 	metricsAddr := fmt.Sprintf("%v:%d", cfg.MetricsServerBindAddress, cfg.MetricsServerPort)
