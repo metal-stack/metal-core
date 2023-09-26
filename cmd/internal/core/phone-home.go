@@ -94,6 +94,8 @@ func (c *Core) ConstantlyPhoneHome(ctx context.Context, interval time.Duration) 
 			})
 			c.phoneHome(ctx, msgs)
 		case <-ctx.Done():
+			// wait until all lldp routines to finish
+			discoveryResultChanWG.Wait()
 			return
 		}
 	}
