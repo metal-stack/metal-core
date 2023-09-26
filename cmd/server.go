@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -135,8 +136,7 @@ func Run() {
 		ReadHeaderTimeout: 3 * time.Second,
 	}
 
-	err = srv.ListenAndServe()
-	if err != nil {
+	if err = srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		log.Error("unable to start metrics listener", "error", err)
 		os.Exit(1)
 	}
