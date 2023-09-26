@@ -25,7 +25,7 @@ const (
 // provisioning event to metal-api for each machine that sent at least one
 // phone-home LLDP package to any interface of the host machine
 // during this interval.
-func (c *Core) ConstantlyPhoneHome() {
+func (c *Core) ConstantlyPhoneHome(ctx context.Context) {
 	// FIXME this list of interfaces is only read on startup
 	// if additional interfaces are configured, no new lldpd client is started and therefore no
 	// phoned home events are sent for these interfaces.
@@ -40,9 +40,6 @@ func (c *Core) ConstantlyPhoneHome() {
 
 	discoveryResultChan := make(chan lldp.DiscoveryResult)
 	discoveryResultChanWG := sync.WaitGroup{}
-
-	// FIXME context should come from caller and canceled on shutdown
-	ctx := context.Background()
 
 	var phoneHomeMessages sync.Map
 	for _, iface := range ifs {
