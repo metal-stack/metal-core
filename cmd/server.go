@@ -24,6 +24,8 @@ import (
 	"github.com/metal-stack/v"
 )
 
+const phonedHomeInterval = time.Minute // lldpd sends messages every two seconds
+
 func Run() {
 	cfg := &Config{}
 	if err := envconfig.Process("METAL_CORE", cfg); err != nil {
@@ -86,25 +88,24 @@ func Run() {
 	metrics := metrics.New()
 
 	c := core.New(core.Config{
-		Log:                       log,
-		LogLevel:                  cfg.LogLevel,
-		CIDR:                      cfg.CIDR,
-		LoopbackIP:                cfg.LoopbackIP,
-		ASN:                       cfg.ASN,
-		PartitionID:               cfg.PartitionID,
-		RackID:                    cfg.RackID,
-		ReconfigureSwitch:         cfg.ReconfigureSwitch,
-		ReconfigureSwitchInterval: cfg.ReconfigureSwitchInterval,
-		ManagementGateway:         cfg.ManagementGateway,
-		AdditionalBridgePorts:     cfg.AdditionalBridgePorts,
-		AdditionalBridgeVIDs:      cfg.AdditionalBridgeVIDs,
-		SpineUplinks:              cfg.SpineUplinks,
-		NOS:                       nos,
-		Driver:                    driver,
-		EventServiceClient:        grpcClient.NewEventClient(),
-		Metrics:                   metrics,
-		PXEVlanID:                 cfg.PXEVlanID,
-		BGPNeighborStateFile:      cfg.BGPNeighborStateFile,
+		Log:                   log,
+		LogLevel:              cfg.LogLevel,
+		CIDR:                  cfg.CIDR,
+		LoopbackIP:            cfg.LoopbackIP,
+		ASN:                   cfg.ASN,
+		PartitionID:           cfg.PartitionID,
+		RackID:                cfg.RackID,
+		ReconfigureSwitch:     cfg.ReconfigureSwitch,
+		ManagementGateway:     cfg.ManagementGateway,
+		AdditionalBridgePorts: cfg.AdditionalBridgePorts,
+		AdditionalBridgeVIDs:  cfg.AdditionalBridgeVIDs,
+		SpineUplinks:          cfg.SpineUplinks,
+		NOS:                   nos,
+		Driver:                driver,
+		EventServiceClient:    grpcClient.NewEventClient(),
+		Metrics:               metrics,
+		PXEVlanID:             cfg.PXEVlanID,
+		BGPNeighborStateFile:  cfg.BGPNeighborStateFile,
 	})
 
 	err = c.RegisterSwitch()
@@ -115,8 +116,8 @@ func Run() {
 
 	ctx := context.Background()
 
-	go c.ConstantlyReconfigureSwitch(ctx)
-	go c.ConstantlyPhoneHome(ctx)
+	go c.ConstantlyReconfigureSwitch(ctx, cfg.ReconfigureSwitchInterval)
+	go c.ConstantlyPhoneHome(ctx, phonedHomeInterval)
 
 	// Start metrics
 	metricsAddr := fmt.Sprintf("%v:%d", cfg.MetricsServerBindAddress, cfg.MetricsServerPort)

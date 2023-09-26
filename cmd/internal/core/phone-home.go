@@ -17,7 +17,6 @@ import (
 )
 
 const (
-	phonedHomeInterval          = time.Minute // lldpd sends messages every two seconds
 	provisioningEventPhonedHome = "Phoned Home"
 )
 
@@ -25,7 +24,7 @@ const (
 // provisioning event to metal-api for each machine that sent at least one
 // phone-home LLDP package to any interface of the host machine
 // during this interval.
-func (c *Core) ConstantlyPhoneHome(ctx context.Context) {
+func (c *Core) ConstantlyPhoneHome(ctx context.Context, interval time.Duration) {
 	// FIXME this list of interfaces is only read on startup
 	// if additional interfaces are configured, no new lldpd client is started and therefore no
 	// phoned home events are sent for these interfaces.
@@ -78,7 +77,7 @@ func (c *Core) ConstantlyPhoneHome(ctx context.Context) {
 	}()
 
 	// send arrived messages on a ticker basis
-	ticker := time.NewTicker(phonedHomeInterval)
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
 		select {

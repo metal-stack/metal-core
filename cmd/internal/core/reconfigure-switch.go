@@ -20,10 +20,10 @@ import (
 )
 
 // ConstantlyReconfigureSwitch reconfigures the switch.
-func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context) {
+func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval time.Duration) {
 	host, _ := os.Hostname()
 
-	ticker := time.NewTicker(c.reconfigureSwitchInterval)
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
 		select {
