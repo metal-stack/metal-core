@@ -94,7 +94,7 @@ func (c *Core) ConstantlyPhoneHome(ctx context.Context, interval time.Duration) 
 			})
 			c.phoneHome(ctx, msgs)
 		case <-ctx.Done():
-			break
+			return
 		}
 	}
 }
