@@ -115,7 +115,7 @@ func Run() {
 
 	ctx := context.Background()
 
-	go c.ReconfigureSwitch(ctx)
+	go c.ConstantlyReconfigureSwitch(ctx)
 	go c.ConstantlyPhoneHome(ctx)
 
 	// Start metrics

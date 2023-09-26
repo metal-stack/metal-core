@@ -19,16 +19,15 @@ import (
 	"github.com/metal-stack/metal-go/api/models"
 )
 
-// ReconfigureSwitch reconfigures the switch.
-func (c *Core) ReconfigureSwitch(ctx context.Context) {
-	t := time.NewTicker(c.reconfigureSwitchInterval)
-	defer t.Stop()
-
+// ConstantlyReconfigureSwitch reconfigures the switch.
+func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context) {
 	host, _ := os.Hostname()
 
+	ticker := time.NewTicker(c.reconfigureSwitchInterval)
+	defer ticker.Stop()
 	for {
 		select {
-		case <-t.C:
+		case <-ticker.C:
 			c.log.Info("trigger reconfiguration")
 			start := time.Now()
 			s, err := c.reconfigureSwitch(host)
@@ -95,7 +94,7 @@ func (c *Core) ReconfigureSwitch(ctx context.Context) {
 				c.metrics.CountError("reconfiguration-notification")
 			}
 		case <-ctx.Done():
-			return
+			break
 		}
 	}
 }
