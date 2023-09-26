@@ -11,7 +11,10 @@ import (
 	"net/http"
 	httppprof "net/http/pprof"
 	"os"
+	"os/signal"
 	"strings"
+	"sync"
+	"syscall"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
@@ -114,10 +117,21 @@ func Run() {
 		os.Exit(1)
 	}
 
-	ctx := context.Background()
+	var wg sync.WaitGroup
 
-	go c.ConstantlyReconfigureSwitch(ctx, cfg.ReconfigureSwitchInterval)
-	go c.ConstantlyPhoneHome(ctx, phonedHomeInterval)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		c.ConstantlyReconfigureSwitch(ctx, cfg.ReconfigureSwitchInterval)
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		c.ConstantlyPhoneHome(ctx, phonedHomeInterval)
+	}()
 
 	// Start metrics
 	metricsAddr := fmt.Sprintf("%v:%d", cfg.MetricsServerBindAddress, cfg.MetricsServerPort)
@@ -139,8 +153,24 @@ func Run() {
 		ReadHeaderTimeout: 3 * time.Second,
 	}
 
-	if err = srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
-		log.Error("unable to start metrics listener", "error", err)
-		os.Exit(1)
-	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err = srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+			log.Error("unable to start metrics listener", "error", err)
+			os.Exit(1)
+		}
+	}()
+
+	<-ctx.Done()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err = srv.Shutdown(context.Background()); err != nil {
+			log.Error("unable to shutdown metrics listener", "error", err)
+		}
+	}()
+
+	wg.Wait()
 }
