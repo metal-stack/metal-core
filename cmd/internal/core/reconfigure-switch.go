@@ -94,7 +94,7 @@ func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval time.Du
 				c.metrics.CountError("reconfiguration-notification")
 			}
 		case <-ctx.Done():
-			break
+			return
 		}
 	}
 }
