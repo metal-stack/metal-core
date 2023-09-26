@@ -79,26 +79,25 @@ func (c *Core) ConstantlyPhoneHome(ctx context.Context) {
 
 	// send arrived messages on a ticker basis
 	ticker := time.NewTicker(phonedHomeInterval)
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-				msgs := []phoneHomeMessage{}
-				phoneHomeMessages.Range(func(key, value interface{}) bool {
-					msg, ok := value.(phoneHomeMessage)
-					if !ok {
-						return true
-					}
-					phoneHomeMessages.Delete(key)
-					msgs = append(msgs, msg)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			msgs := []phoneHomeMessage{}
+			phoneHomeMessages.Range(func(key, value interface{}) bool {
+				msg, ok := value.(phoneHomeMessage)
+				if !ok {
 					return true
-				})
-				c.phoneHome(ctx, msgs)
-			}
+				}
+				phoneHomeMessages.Delete(key)
+				msgs = append(msgs, msg)
+				return true
+			})
+			c.phoneHome(ctx, msgs)
+		case <-ctx.Done():
+			break
 		}
-	}()
+	}
 }
 
 func (c *Core) send(ctx context.Context, event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error) {

@@ -116,7 +116,7 @@ func Run() {
 	ctx := context.Background()
 
 	go c.ReconfigureSwitch(ctx)
-	c.ConstantlyPhoneHome(ctx)
+	go c.ConstantlyPhoneHome(ctx)
 
 	// Start metrics
 	metricsAddr := fmt.Sprintf("%v:%d", cfg.MetricsServerBindAddress, cfg.MetricsServerPort)
