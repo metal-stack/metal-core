@@ -112,7 +112,7 @@ func checksum(path string) ([]byte, error) {
 func backupAndRename(src, dest string) (backup string, err error) {
 	destStat, err := os.Stat(dest)
 
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
+	if errors.Is(err, os.ErrNotExist) {
 		backup = ""
 	} else if err != nil {
 		return "", fmt.Errorf("could not obtain file info %s: %w", dest, err)
