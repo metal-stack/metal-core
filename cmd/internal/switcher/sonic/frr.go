@@ -25,27 +25,20 @@ func NewFrrApplier(tplPath string) *templates.Applier {
 }
 
 func reloadFrr(previousConf string) error {
-	var errs []error
-
 	err := dbus.Start(frrReloadService)
 	if err == nil {
-		return errors.Join(errs...)
+		return nil
 	}
-	errs = append(errs, fmt.Errorf("reloading %s failed: %w", frrReloadService, err))
 
-	if previousConf == "" {
-		err = os.Remove(frrConfFile)
-		if err != nil {
-			errs = append(errs, fmt.Errorf("failed to remove %s: %w", frrConfFile, err))
+	errs := []error{fmt.Errorf("reloading %s failed: %w", frrReloadService, err)}
+
+	if previousConf != "" {
+		err = os.Rename(previousConf, frrConfFile)
+		if err == nil {
+			return errors.Join(errs...)
 		}
-		return errors.Join(errs...)
+		errs = append(errs, fmt.Errorf("could not restore %s from %s: %w", frrConfFile, previousConf, err))
 	}
-
-	err = os.Rename(previousConf, frrConfFile)
-	if err == nil {
-		return errors.Join(errs...)
-	}
-	errs = append(errs, fmt.Errorf("could not restore %s from %s: %w", frrConfFile, previousConf, err))
 
 	err = os.Remove(frrConfFile)
 	if err != nil {
