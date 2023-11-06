@@ -134,13 +134,13 @@ func (d *ConfigDB) GetVrfMembership(ctx context.Context, interfaceName string) (
 }
 
 func (d *ConfigDB) ExistVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) (bool, error) {
-	key := Key{"VXLAN_TUNNEL_MAP", "vtep", fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
+	key := Key{"VXLAN_TUNNEL_MAP", "vtep-metal", fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
 
 	return d.c.Exists(ctx, key)
 }
 
 func (d *ConfigDB) CreateVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) error {
-	key := Key{"VXLAN_TUNNEL_MAP", "vtep", fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
+	key := Key{"VXLAN_TUNNEL_MAP", "vtep-metal", fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
 	val := Val{
 		"vlan": fmt.Sprintf("Vlan%d", vid),
 		"vni":  fmt.Sprintf("%d", vni),
