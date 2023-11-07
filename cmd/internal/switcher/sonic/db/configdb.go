@@ -3,6 +3,8 @@ package db
 import (
 	"context"
 	"fmt"
+
+	"github.com/redis/go-redis/v9"
 )
 
 const (
@@ -29,9 +31,9 @@ type Port struct {
 	Mtu         string
 }
 
-func newConfigDB(addr string, id int, sep string) *ConfigDB {
+func newConfigDB(rdb *redis.Client, sep string) *ConfigDB {
 	return &ConfigDB{
-		c: NewClient(addr, id, sep),
+		c: NewClient(rdb, sep),
 	}
 }
 

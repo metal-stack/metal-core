@@ -21,12 +21,7 @@ type Client struct {
 	sep string
 }
 
-func NewClient(addr string, id int, sep string) *Client {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     addr,
-		DB:       id,
-		PoolSize: 1,
-	})
+func NewClient(rdb *redis.Client, sep string) *Client {
 	return &Client{
 		rdb: rdb,
 		sep: sep,

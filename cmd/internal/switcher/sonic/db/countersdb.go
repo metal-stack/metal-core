@@ -2,15 +2,17 @@ package db
 
 import (
 	"context"
+
+	"github.com/redis/go-redis/v9"
 )
 
 type CountersDB struct {
 	c *Client
 }
 
-func newCountersDB(addr string, id int, sep string) *CountersDB {
+func newCountersDB(rdb *redis.Client, sep string) *CountersDB {
 	return &CountersDB{
-		c: NewClient(addr, id, sep),
+		c: NewClient(rdb, sep),
 	}
 }
 
