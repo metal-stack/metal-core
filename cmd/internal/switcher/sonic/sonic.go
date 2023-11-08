@@ -92,6 +92,11 @@ func (s *Sonic) GetNics(log *slog.Logger, blacklist []string) (nics []*models.V1
 		return nil, fmt.Errorf("unable to get all ifs: %w", err)
 	}
 
+	portsConfig, err := getPortsConfig(sonicConfigDBPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get ports config")
+	}
+
 	for _, iface := range ifs {
 		name := iface.Name
 		if slices.Contains(blacklist, name) {
@@ -99,8 +104,14 @@ func (s *Sonic) GetNics(log *slog.Logger, blacklist []string) (nics []*models.V1
 			continue
 		}
 
+		id, found := portsConfig[name]
+		if !found {
+			log.Debug("skip interface as no info on it was found in config DB", "interface", name)
+			continue
+		}
+
 		nic := &models.V1SwitchNic{
-			Identifier: &name,
+			Identifier: &id.Alias,
 			Name:       &name,
 		}
 		nics = append(nics, nic)
