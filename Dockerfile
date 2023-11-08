@@ -15,8 +15,7 @@ FROM alpine:3.18
 
 RUN apk add \
     libpcap \
-    ca-certificates \
-    iproute2
+    ca-certificates
 COPY --from=builder /work/bin/metal-core /
 
 ENTRYPOINT ["/metal-core"]
