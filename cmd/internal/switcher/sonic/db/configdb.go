@@ -50,7 +50,7 @@ func (d *ConfigDB) CreateVlan(ctx context.Context, vid uint16) error {
 	vlanId := fmt.Sprintf("%d", vid)
 	key := Key{"VLAN", "Vlan" + vlanId}
 
-	return d.c.HSet(ctx, key, Val{"vlanid": vlanId})
+	return d.c.HSet(ctx, key, Val{"admin_status": "up", "vlanid": vlanId})
 }
 
 func (d *ConfigDB) AreNeighborsSuppressed(ctx context.Context, vid uint16) (bool, error) {
