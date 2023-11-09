@@ -121,7 +121,7 @@ func (d *ConfigDB) ExistVrf(ctx context.Context, vrf string) (bool, error) {
 func (d *ConfigDB) CreateVrf(ctx context.Context, vrf string) error {
 	key := Key{"VRF", vrf}
 
-	return d.c.HSet(ctx, key, Val{"NULL": "NULL"})
+	return d.c.HSet(ctx, key, Val{"fallback": "false"})
 }
 
 func (d *ConfigDB) SetVrfMember(ctx context.Context, interfaceName string, vrf string) error {
