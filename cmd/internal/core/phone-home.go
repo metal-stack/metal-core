@@ -109,7 +109,7 @@ func (c *Core) send(ctx context.Context, event *v1.EventServiceSendRequest) (*v1
 		return nil, err
 	}
 	if s != nil {
-		c.log.Info("event", "send", s.Events, "failed", s.Failed)
+		c.log.Info("event", "send", s.GetEvents(), "failed", s.GetFailed())
 	}
 	return s, err
 }
@@ -135,7 +135,7 @@ func (c *Core) phoneHome(ctx context.Context, msgs []phoneHomeMessage) {
 		c.metrics.CountError("send-provisioning")
 	}
 	if s != nil {
-		c.log.Info("phonehome sent", "machines", s.Events)
+		c.log.Info("phonehome sent", "machines", s.GetEvents())
 	}
 }
 

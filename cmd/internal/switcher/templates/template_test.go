@@ -89,10 +89,10 @@ func renderToString(t *testing.T, tpl *template.Template, c *types.Conf) string 
 func readConf(t *testing.T, i string) types.Conf {
 	c := types.Conf{}
 	b, err := os.ReadFile(i)
-	require.Nil(t, err, "unexpected error when reading testing input")
+	require.NoError(t, err, "unexpected error when reading testing input")
 
 	err = yaml.Unmarshal(b, &c)
-	require.Nil(t, err, "unexpected error when unmarshalling testing input")
+	require.NoError(t, err, "unexpected error when unmarshalling testing input")
 	return c
 }
 
