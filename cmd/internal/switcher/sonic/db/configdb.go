@@ -170,7 +170,8 @@ func (d *ConfigDB) obtainVTEPName(ctx context.Context) error {
 	if len(keys) != 1 {
 		return fmt.Errorf("could not find name of the vtep")
 	}
-	d.vtep = keys[0].toString("")
+	key := []string(keys[0])
+	d.vtep = key[len(key)-1]
 	return nil
 }
 
