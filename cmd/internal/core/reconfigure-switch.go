@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"slices"
 	"strconv"
@@ -19,33 +20,7 @@ import (
 // ReconfigureSwitch reconfigures the switch.
 func (c *Core) ReconfigureSwitch() {
 	host, _ := os.Hostname()
-	var (
-		index int
-		err   error
-	)
-	index, err = strconv.Atoi(host[len(host)-1:])
-	if err != nil {
-		index = 1
-		c.log.Warn("unable to parse leaf number from hostname, not spreading switch reloads", "hostname", host, "error", err)
-	}
-
-	tries := 0
-	for {
-		second := time.Now().Second()
-		if second%(int(c.reconfigureSwitchInterval)/index) == 0 {
-			break
-		}
-		// Ensure we break for sure
-		tries++
-		if tries > 60 {
-			c.log.Warn("unable to find a matching start second, abort calculating spreading")
-			break
-		}
-		time.Sleep(time.Second)
-	}
-
-	c.log.Info("start reconfiguration trigger", "interval", c.reconfigureSwitchInterval)
-	t := time.NewTicker(c.reconfigureSwitchInterval)
+	t := newTicker(host, c.reconfigureSwitchInterval, c.log)
 	for range t.C {
 		c.log.Info("trigger reconfiguration")
 		start := time.Now()
@@ -227,4 +202,36 @@ func fillEth0Info(c *types.Conf, gw string) error {
 	c.Ports.Eth0.AddressCIDR = fmt.Sprintf("%s/%d", ip.String(), s)
 	c.Ports.Eth0.Gateway = gw
 	return nil
+}
+
+// newTicker creates a ticker at a fixed start time if possible
+// start time will be shifted depending on the hostname by 1/2 of the specified interval
+func newTicker(hostname string, interval time.Duration, log *slog.Logger) *time.Ticker {
+	var (
+		index int
+		err   error
+	)
+	index, err = strconv.Atoi(hostname[len(hostname)-1:])
+	if err != nil {
+		index = 1
+		log.Warn("unable to parse leaf number from hostname, not spreading switch reloads", "hostname", hostname, "error", err)
+	}
+
+	tries := 0
+	for {
+		second := time.Now().Second()
+		if second%(int(interval)/index) == 0 {
+			break
+		}
+		// Ensure we break for sure
+		tries++
+		if tries > 60 {
+			log.Warn("unable to find a matching start second, abort calculating spreading")
+			break
+		}
+		time.Sleep(time.Second)
+	}
+
+	log.Info("start reconfiguration trigger", "interval", interval)
+	return time.NewTicker(interval)
 }
