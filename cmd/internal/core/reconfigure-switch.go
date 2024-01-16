@@ -18,8 +18,34 @@ import (
 
 // ReconfigureSwitch reconfigures the switch.
 func (c *Core) ReconfigureSwitch() {
-	t := time.NewTicker(c.reconfigureSwitchInterval)
 	host, _ := os.Hostname()
+	var (
+		index int
+		err   error
+	)
+	index, err = strconv.Atoi(host[len(host)-1:])
+	if err != nil {
+		index = 1
+		c.log.Warn("unable to parse leaf number from hostname, not spreading switch reloads", "hostname", host, "error", err)
+	}
+
+	tries := 0
+	for {
+		second := time.Now().Second()
+		if second%(int(c.reconfigureSwitchInterval)/index) == 0 {
+			break
+		}
+		// Ensure we break for sure
+		tries++
+		if tries > 60 {
+			c.log.Warn("unable to find a matching start second, abort calculating spreading")
+			break
+		}
+		time.Sleep(time.Second)
+	}
+
+	c.log.Info("start reconfiguration trigger", "interval", c.reconfigureSwitchInterval)
+	t := time.NewTicker(c.reconfigureSwitchInterval)
 	for range t.C {
 		c.log.Info("trigger reconfiguration")
 		start := time.Now()
