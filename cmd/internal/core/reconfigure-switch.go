@@ -218,15 +218,14 @@ func waitForTicker(hostname string, interval time.Duration, log *slog.Logger) {
 		index = 1
 		log.Warn("unable to parse leaf number from hostname, not spreading switch reloads", "hostname", hostname, "error", err)
 	}
-	tries := 0
+	startSearch := time.Now()
 	for {
 		second := time.Now().Second()
 		if second%(int(interval)) == 0 {
 			break
 		}
-		// Ensure we break for sure
-		tries++
-		if tries > 20 {
+		// Ensure we break for sure after one minute
+		if time.Since(startSearch) > 1*time.Minute {
 			log.Warn("unable to find a matching start second, abort calculating spreading")
 			break
 		}
