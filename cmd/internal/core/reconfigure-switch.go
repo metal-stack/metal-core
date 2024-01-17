@@ -17,13 +17,23 @@ import (
 )
 
 type ReconfigureSwitch struct {
-	Core *Core
+	Core     *Core
+	lastSync time.Time
 }
 
 // ReconfigureSwitch reconfigures the switch.
 func (r *ReconfigureSwitch) Run() {
 	host, _ := os.Hostname()
 	r.Core.log.Info("trigger reconfiguration")
+
+	// Max every 5 Seconds, TODO configurable ?
+	if time.Since(r.lastSync) < 5*time.Second {
+		r.Core.log.Info("skiping reconfiguration because of last reconfiguration was too recent")
+		return
+	}
+
+	time.Sleep(r.Core.syncDelay)
+
 	start := time.Now()
 	err := r.Core.reconfigureSwitch(host)
 	elapsed := time.Since(start)
@@ -42,6 +52,7 @@ func (r *ReconfigureSwitch) Run() {
 		r.Core.metrics.CountError("switch-reconfiguration")
 	} else {
 		r.Core.log.Info("reconfiguration succeeded")
+		r.lastSync = time.Now()
 	}
 
 	params.Body = nr

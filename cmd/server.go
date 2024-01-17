@@ -100,6 +100,7 @@ func Run() {
 		PartitionID:           cfg.PartitionID,
 		RackID:                cfg.RackID,
 		ReconfigureSwitch:     cfg.ReconfigureSwitch,
+		SyncDelay:             cfg.SyncDelay,
 		ManagementGateway:     cfg.ManagementGateway,
 		AdditionalBridgePorts: cfg.AdditionalBridgePorts,
 		AdditionalBridgeVIDs:  cfg.AdditionalBridgeVIDs,

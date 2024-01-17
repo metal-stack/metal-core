@@ -2,6 +2,7 @@ package core
 
 import (
 	"log/slog"
+	"time"
 
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
@@ -19,6 +20,7 @@ type Core struct {
 	partitionID             string
 	rackID                  string
 	enableReconfigureSwitch bool
+	syncDelay               time.Duration
 	managementGateway       string
 	additionalBridgePorts   []string
 	additionalBridgeVIDs    []string
@@ -42,6 +44,7 @@ type Config struct {
 	PartitionID           string
 	RackID                string
 	ReconfigureSwitch     bool
+	SyncDelay             time.Duration
 	ManagementGateway     string
 	AdditionalBridgePorts []string
 	AdditionalBridgeVIDs  []string
