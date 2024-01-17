@@ -1,9 +1,7 @@
 package core
 
 import (
-	"log/slog"
 	"testing"
-	"time"
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/cumulus"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
@@ -92,26 +90,4 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		AdditionalBridgeVIDs: []string{"201-256", "301-356"},
 	}
 	require.EqualValues(t, expected, actual)
-}
-
-func Test_newTicker(t *testing.T) {
-	// Not really a test
-	tests := []struct {
-		name     string
-		hostname string
-		interval time.Duration
-		log      *slog.Logger
-	}{
-		{
-			name:     "even",
-			hostname: "test02",
-			interval: time.Second * 5,
-			log:      slog.Default(),
-		},
-	}
-	for _, tt := range tests {
-		t.Logf("start wait:%s", time.Now())
-		waitForTicker(tt.hostname, tt.interval, tt.log)
-		t.Logf("start ticker:%s", time.Now())
-	}
 }

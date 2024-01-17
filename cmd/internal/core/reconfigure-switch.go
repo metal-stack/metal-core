@@ -2,7 +2,6 @@ package core
 
 import (
 	"fmt"
-	"log/slog"
 	"os"
 	"slices"
 	"strconv"
@@ -17,40 +16,41 @@ import (
 	"github.com/metal-stack/metal-go/api/models"
 )
 
+type ReconfigureSwitch struct {
+	Core *Core
+}
+
 // ReconfigureSwitch reconfigures the switch.
-func (c *Core) ReconfigureSwitch() {
+func (r *ReconfigureSwitch) Run() {
 	host, _ := os.Hostname()
-	waitForTicker(host, c.reconfigureSwitchInterval, c.log)
-	t := time.NewTicker(c.reconfigureSwitchInterval)
-	for range t.C {
-		c.log.Info("trigger reconfiguration")
-		start := time.Now()
-		err := c.reconfigureSwitch(host)
-		elapsed := time.Since(start)
-		c.log.Info("reconfiguration took", "elapsed", elapsed)
+	r.Core.log.Info("trigger reconfiguration")
+	start := time.Now()
+	err := r.Core.reconfigureSwitch(host)
+	elapsed := time.Since(start)
+	r.Core.log.Info("reconfiguration took", "elapsed", elapsed)
 
-		params := sw.NewNotifySwitchParams()
-		params.ID = host
-		ns := elapsed.Nanoseconds()
-		nr := &models.V1SwitchNotifyRequest{
-			SyncDuration: &ns,
-		}
-		if err != nil {
-			errStr := err.Error()
-			nr.Error = &errStr
-			c.log.Error("reconfiguration failed", "error", err)
-			c.metrics.CountError("switch-reconfiguration")
-		} else {
-			c.log.Info("reconfiguration succeeded")
-		}
-
-		params.Body = nr
-		_, err = c.driver.SwitchOperations().NotifySwitch(params, nil)
-		if err != nil {
-			c.log.Error("notification about switch reconfiguration failed", "error", err)
-			c.metrics.CountError("reconfiguration-notification")
-		}
+	params := sw.NewNotifySwitchParams()
+	params.ID = host
+	ns := elapsed.Nanoseconds()
+	nr := &models.V1SwitchNotifyRequest{
+		SyncDuration: &ns,
 	}
+	if err != nil {
+		errStr := err.Error()
+		nr.Error = &errStr
+		r.Core.log.Error("reconfiguration failed", "error", err)
+		r.Core.metrics.CountError("switch-reconfiguration")
+	} else {
+		r.Core.log.Info("reconfiguration succeeded")
+	}
+
+	params.Body = nr
+	_, err = r.Core.driver.SwitchOperations().NotifySwitch(params, nil)
+	if err != nil {
+		r.Core.log.Error("notification about switch reconfiguration failed", "error", err)
+		r.Core.metrics.CountError("reconfiguration-notification")
+	}
+
 }
 
 func (c *Core) reconfigureSwitch(switchName string) error {
@@ -203,39 +203,4 @@ func fillEth0Info(c *types.Conf, gw string) error {
 	c.Ports.Eth0.AddressCIDR = fmt.Sprintf("%s/%d", ip.String(), s)
 	c.Ports.Eth0.Gateway = gw
 	return nil
-}
-
-// waitForTicker waits to start a ticker at a fixed start time if possible
-// start time will be shifted depending on the hostname by 1/2 of the specified interval
-// TODO: what if the leafs are numbered 00/01 ?
-func waitForTicker(hostname string, interval time.Duration, log *slog.Logger) {
-	var (
-		index int
-		err   error
-	)
-	index, err = strconv.Atoi(hostname[len(hostname)-1:])
-	if err != nil {
-		index = 1
-		log.Warn("unable to parse leaf number from hostname, not spreading switch reloads", "hostname", hostname, "error", err)
-		return
-	}
-	startSearch := time.Now()
-	for {
-		second := time.Now().Second()
-		if second%(int(interval)) == 0 {
-			break
-		}
-		// Ensure we break for sure after one minute
-		if time.Since(startSearch) > 1*time.Minute {
-			log.Warn("unable to find a matching start second, abort calculating spreading")
-			break
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-	// Ensure spread
-	if index > 1 {
-		time.Sleep(interval / time.Duration(index))
-	}
-
-	log.Info("start reconfiguration trigger", "interval", interval)
 }
