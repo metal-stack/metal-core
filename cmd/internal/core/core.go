@@ -68,6 +68,7 @@ func New(c Config) *Core {
 		partitionID:             c.PartitionID,
 		rackID:                  c.RackID,
 		enableReconfigureSwitch: c.ReconfigureSwitch,
+		syncDelay:               c.SyncDelay,
 		managementGateway:       c.ManagementGateway,
 		additionalBridgePorts:   c.AdditionalBridgePorts,
 		additionalBridgeVIDs:    c.AdditionalBridgeVIDs,
