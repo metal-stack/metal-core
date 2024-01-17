@@ -217,6 +217,7 @@ func waitForTicker(hostname string, interval time.Duration, log *slog.Logger) {
 	if err != nil {
 		index = 1
 		log.Warn("unable to parse leaf number from hostname, not spreading switch reloads", "hostname", hostname, "error", err)
+		return
 	}
 	startSearch := time.Now()
 	for {
