@@ -20,7 +20,8 @@ import (
 // ReconfigureSwitch reconfigures the switch.
 func (c *Core) ReconfigureSwitch() {
 	host, _ := os.Hostname()
-	t := newTicker(host, c.reconfigureSwitchInterval, c.log)
+	waitForTicker(host, c.reconfigureSwitchInterval, c.log)
+	t := time.NewTicker(c.reconfigureSwitchInterval)
 	for range t.C {
 		c.log.Info("trigger reconfiguration")
 		start := time.Now()
@@ -204,9 +205,10 @@ func fillEth0Info(c *types.Conf, gw string) error {
 	return nil
 }
 
-// newTicker creates a ticker at a fixed start time if possible
+// waitForTicker waits to start a ticker at a fixed start time if possible
 // start time will be shifted depending on the hostname by 1/2 of the specified interval
-func newTicker(hostname string, interval time.Duration, log *slog.Logger) *time.Ticker {
+// TODO: what if the leafs are numbered 00/01 ?
+func waitForTicker(hostname string, interval time.Duration, log *slog.Logger) {
 	var (
 		index int
 		err   error
@@ -216,22 +218,24 @@ func newTicker(hostname string, interval time.Duration, log *slog.Logger) *time.
 		index = 1
 		log.Warn("unable to parse leaf number from hostname, not spreading switch reloads", "hostname", hostname, "error", err)
 	}
-
 	tries := 0
 	for {
 		second := time.Now().Second()
-		if second%(int(interval)/index) == 0 {
+		if second%(int(interval)) == 0 {
 			break
 		}
 		// Ensure we break for sure
 		tries++
-		if tries > 60 {
+		if tries > 20 {
 			log.Warn("unable to find a matching start second, abort calculating spreading")
 			break
 		}
-		time.Sleep(time.Second)
+		time.Sleep(100 * time.Millisecond)
+	}
+	// Ensure spread
+	if index > 1 {
+		time.Sleep(interval / time.Duration(index))
 	}
 
 	log.Info("start reconfiguration trigger", "interval", interval)
-	return time.NewTicker(interval)
 }
