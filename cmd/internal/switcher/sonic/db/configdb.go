@@ -3,6 +3,8 @@ package db
 import (
 	"context"
 	"fmt"
+
+	"github.com/redis/go-redis/v9"
 )
 
 const (
@@ -23,7 +25,8 @@ const (
 )
 
 type ConfigDB struct {
-	c *Client
+	c    *Client
+	vtep string
 }
 
 type Port struct {
@@ -32,9 +35,9 @@ type Port struct {
 	FecRs       bool
 }
 
-func newConfigDB(addr string, id int, sep string) *ConfigDB {
+func newConfigDB(rdb *redis.Client, sep string) *ConfigDB {
 	return &ConfigDB{
-		c: NewClient(addr, id, sep),
+		c: NewClient(rdb, sep),
 	}
 }
 
@@ -48,7 +51,7 @@ func (d *ConfigDB) CreateVlan(ctx context.Context, vid uint16) error {
 	vlanId := fmt.Sprintf("%d", vid)
 	key := Key{"VLAN", "Vlan" + vlanId}
 
-	return d.c.HSet(ctx, key, Val{"vlanid": vlanId})
+	return d.c.HSet(ctx, key, Val{"admin_status": "up", "vlanid": vlanId})
 }
 
 func (d *ConfigDB) AreNeighborsSuppressed(ctx context.Context, vid uint16) (bool, error) {
@@ -115,10 +118,10 @@ func (d *ConfigDB) ExistVrf(ctx context.Context, vrf string) (bool, error) {
 	return d.c.Exists(ctx, key)
 }
 
-func (d *ConfigDB) CreateVrf(ctx context.Context, vrf string) error {
+func (d *ConfigDB) CreateVrf(ctx context.Context, vrf string, vni uint32) error {
 	key := Key{"VRF", vrf}
 
-	return d.c.HSet(ctx, key, Val{"NULL": "NULL"})
+	return d.c.HSet(ctx, key, Val{"fallback": "false", "vni": fmt.Sprintf("%d", vni)})
 }
 
 func (d *ConfigDB) SetVrfMember(ctx context.Context, interfaceName string, vrf string) error {
@@ -134,18 +137,42 @@ func (d *ConfigDB) GetVrfMembership(ctx context.Context, interfaceName string) (
 }
 
 func (d *ConfigDB) ExistVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) (bool, error) {
-	key := Key{"VXLAN_TUNNEL_MAP", "vtep", fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
+	if d.vtep == "" {
+		if err := d.obtainVTEPName(ctx); err != nil {
+			return false, err
+		}
+	}
+	key := Key{"VXLAN_TUNNEL_MAP", d.vtep, fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
 
 	return d.c.Exists(ctx, key)
 }
 
 func (d *ConfigDB) CreateVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) error {
-	key := Key{"VXLAN_TUNNEL_MAP", "vtep", fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
+	if d.vtep == "" {
+		if err := d.obtainVTEPName(ctx); err != nil {
+			return err
+		}
+	}
+	key := Key{"VXLAN_TUNNEL_MAP", d.vtep, fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
 	val := Val{
 		"vlan": fmt.Sprintf("Vlan%d", vid),
 		"vni":  fmt.Sprintf("%d", vni),
 	}
 	return d.c.HSet(ctx, key, val)
+}
+
+func (d *ConfigDB) obtainVTEPName(ctx context.Context) error {
+	pattern := Key{"VXLAN_TUNNEL", "*"}
+	keys, err := d.c.Keys(ctx, pattern)
+	if err != nil {
+		return err
+	}
+	if len(keys) != 1 {
+		return fmt.Errorf("could not find name of the vtep")
+	}
+	key := []string(keys[0])
+	d.vtep = key[len(key)-1]
+	return nil
 }
 
 func (d *ConfigDB) DeleteInterfaceConfiguration(ctx context.Context, interfaceName string) error {

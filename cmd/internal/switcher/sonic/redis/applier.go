@@ -187,7 +187,7 @@ func (a *Applier) configureVrf(vrfName string, vrf *types.Vrf) error {
 		return err
 	}
 	if !exist {
-		if err := a.db.Config.CreateVrf(ctx, vrfName); err != nil {
+		if err := a.db.Config.CreateVrf(ctx, vrfName, vrf.VNI); err != nil {
 			return fmt.Errorf("could not create vrf %s: %w", vrfName, err)
 		}
 	}
