@@ -1,9 +1,26 @@
 package types
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
+
+type PortStatus string
+
+const (
+	PortStatusUnknown PortStatus = "UNKNOWN"
+	PortStatusUp      PortStatus = "UP"
+	PortStatusDown    PortStatus = "DOWN"
+)
+
+func (ps PortStatus) IsEqual(other *string) bool {
+	if other == nil {
+		return false
+	}
+	return strings.EqualFold(string(ps), *other)
+}
 
 // Conf holds the switch configuration
-// nolint:musttag
 type Conf struct {
 	Name                 string
 	LogLevel             string
@@ -19,6 +36,7 @@ type Ports struct {
 	Underlay      []string
 	Unprovisioned []string
 	BladePorts    []string
+	DownPorts     map[string]bool
 	Vrfs          map[string]*Vrf
 	Firewalls     map[string]*Firewall
 }

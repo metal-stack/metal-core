@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"slices"
 	"strconv"
@@ -23,7 +24,7 @@ func (c *Core) ReconfigureSwitch() {
 	for range t.C {
 		c.log.Info("trigger reconfiguration")
 		start := time.Now()
-		err := c.reconfigureSwitch(host)
+		s, err := c.reconfigureSwitch(host)
 		elapsed := time.Since(start)
 		c.log.Info("reconfiguration took", "elapsed", elapsed)
 
@@ -32,6 +33,7 @@ func (c *Core) ReconfigureSwitch() {
 		ns := elapsed.Nanoseconds()
 		nr := &models.V1SwitchNotifyRequest{
 			SyncDuration: &ns,
+			PortStates:   make(map[string]string),
 		}
 		if err != nil {
 			errStr := err.Error()
@@ -40,6 +42,24 @@ func (c *Core) ReconfigureSwitch() {
 			c.metrics.CountError("switch-reconfiguration")
 		} else {
 			c.log.Info("reconfiguration succeeded")
+		}
+
+		// fill the port states of the switch
+		for _, n := range s.Nics {
+			isup, err := isLinkUp(n.Name)
+			if err != nil {
+				c.log.Error("could not check if link is up", "error", err)
+				if n.Name != nil {
+					nr.PortStates[*n.Name] = string(types.PortStatusUnknown)
+				}
+				c.metrics.CountError("switch-reconfiguration")
+			} else {
+				if isup {
+					nr.PortStates[*n.Name] = string(types.PortStatusUp)
+				} else {
+					nr.PortStates[*n.Name] = string(types.PortStatusDown)
+				}
+			}
 		}
 
 		params.Body = nr
@@ -51,37 +71,37 @@ func (c *Core) ReconfigureSwitch() {
 	}
 }
 
-func (c *Core) reconfigureSwitch(switchName string) error {
+func (c *Core) reconfigureSwitch(switchName string) (*models.V1SwitchResponse, error) {
 	params := sw.NewFindSwitchParams()
 	params.ID = switchName
 	fsr, err := c.driver.SwitchOperations().FindSwitch(params, nil)
 	if err != nil {
-		return fmt.Errorf("could not fetch switch from metal-api: %w", err)
+		return nil, fmt.Errorf("could not fetch switch from metal-api: %w", err)
 	}
 
 	s := fsr.Payload
 	switchConfig, err := c.buildSwitcherConfig(s)
 	if err != nil {
-		return fmt.Errorf("could not build switcher config: %w", err)
+		return nil, fmt.Errorf("could not build switcher config: %w", err)
 	}
 
 	err = fillEth0Info(switchConfig, c.managementGateway)
 	if err != nil {
-		return fmt.Errorf("could not gather information about eth0 nic: %w", err)
+		return nil, fmt.Errorf("could not gather information about eth0 nic: %w", err)
 	}
 
 	c.log.Info("assembled new config for switch", "config", switchConfig)
 	if !c.enableReconfigureSwitch {
 		c.log.Debug("skip config application because of environment setting")
-		return nil
+		return s, nil
 	}
 
 	err = c.nos.Apply(switchConfig)
 	if err != nil {
-		return fmt.Errorf("could not apply switch config: %w", err)
+		return nil, fmt.Errorf("could not apply switch config: %w", err)
 	}
 
-	return nil
+	return s, nil
 }
 
 func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, error) {
@@ -119,6 +139,12 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 				p.Unprovisioned = append(p.Unprovisioned, port)
 			}
 			continue
+		}
+
+		if types.PortStatusDown.IsEqual(nic.Actual) {
+			if has := p.DownPorts[port]; !has {
+				p.DownPorts[port] = true
+			}
 		}
 
 		// Firewall-Port
@@ -201,4 +227,17 @@ func fillEth0Info(c *types.Conf, gw string) error {
 	c.Ports.Eth0.AddressCIDR = fmt.Sprintf("%s/%d", ip.String(), s)
 	c.Ports.Eth0.Gateway = gw
 	return nil
+}
+
+// isLinkUp checks if the interface with the given name is up.
+// It returns a boolean indicating if the interface is up, and an error if there was a problem checking the interface.
+func isLinkUp(nicname *string) (bool, error) {
+	if nicname == nil {
+		return false, fmt.Errorf("cannot determine state of empty nicname")
+	}
+	nic, err := net.InterfaceByName(*nicname)
+	if err != nil {
+		return false, fmt.Errorf("cannot query interface %q : %w", *nicname, err)
+	}
+	return nic.Flags&net.FlagUp != 0, nil
 }
