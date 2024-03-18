@@ -124,6 +124,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 		Unprovisioned: []string{},
 		Vrfs:          map[string]*types.Vrf{},
 		Firewalls:     map[string]*types.Firewall{},
+		DownPorts:     map[string]bool{},
 	}
 	p.BladePorts = c.additionalBridgePorts
 	for _, nic := range s.Nics {

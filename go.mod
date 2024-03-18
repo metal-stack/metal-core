@@ -85,4 +85,4 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231120223509-83a465c0220f // indirect
 )
 
-replace github.com/metal-stack/metal-go v0.23.2 => github.com/metal-stack/metal-go v0.28.1-0.20240305063516-1bb58dffcb24
+replace github.com/metal-stack/metal-go v0.23.2 => github.com/metal-stack/metal-go v0.28.1-0.20240318141721-0b1a1107dfc5
