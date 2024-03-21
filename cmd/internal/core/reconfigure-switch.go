@@ -50,14 +50,14 @@ func (c *Core) ReconfigureSwitch() {
 			if err != nil {
 				c.log.Error("could not check if link is up", "error", err)
 				if n.Name != nil {
-					nr.PortStates[*n.Name] = string(types.PortStatusUnknown)
+					nr.PortStates[*n.Name] = models.V1SwitchNicActualUNKNOWN
 				}
 				c.metrics.CountError("switch-reconfiguration")
 			} else {
 				if isup {
-					nr.PortStates[*n.Name] = string(types.PortStatusUp)
+					nr.PortStates[*n.Name] = models.V1SwitchNicActualUP
 				} else {
-					nr.PortStates[*n.Name] = string(types.PortStatusDown)
+					nr.PortStates[*n.Name] = models.V1SwitchNicActualDOWN
 				}
 			}
 		}
@@ -142,7 +142,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 			continue
 		}
 
-		if types.PortStatusDown.IsEqual(nic.Actual) {
+		if isPortStatusEqual(models.V1SwitchNicActualDOWN, nic.Actual) {
 			if has := p.DownPorts[port]; !has {
 				p.DownPorts[port] = true
 			}
@@ -241,4 +241,11 @@ func isLinkUp(nicname *string) (bool, error) {
 		return false, fmt.Errorf("cannot query interface %q : %w", *nicname, err)
 	}
 	return nic.Flags&net.FlagUp != 0, nil
+}
+
+func isPortStatusEqual(stat string, other *string) bool {
+	if other == nil {
+		return false
+	}
+	return strings.EqualFold(stat, *other)
 }

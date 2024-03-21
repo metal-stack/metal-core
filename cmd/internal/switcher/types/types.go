@@ -2,23 +2,7 @@ package types
 
 import (
 	"fmt"
-	"strings"
 )
-
-type PortStatus string
-
-const (
-	PortStatusUnknown PortStatus = "UNKNOWN"
-	PortStatusUp      PortStatus = "UP"
-	PortStatusDown    PortStatus = "DOWN"
-)
-
-func (ps PortStatus) IsEqual(other *string) bool {
-	if other == nil {
-		return false
-	}
-	return strings.EqualFold(string(ps), *other)
-}
 
 // Conf holds the switch configuration
 type Conf struct {

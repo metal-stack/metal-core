@@ -10,7 +10,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/go-lldpd v0.4.5
 	github.com/metal-stack/metal-api v0.23.2
-	github.com/metal-stack/metal-go v0.23.2
+	github.com/metal-stack/metal-go v0.28.1-0.20240319084850-bee1c98c3a30
 	github.com/metal-stack/v v1.0.3
 	github.com/prometheus/client_golang v1.16.0
 	github.com/redis/go-redis/v9 v9.1.0
@@ -84,5 +84,3 @@ require (
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231120223509-83a465c0220f // indirect
 )
-
-replace github.com/metal-stack/metal-go v0.23.2 => github.com/metal-stack/metal-go v0.28.1-0.20240318141721-0b1a1107dfc5
