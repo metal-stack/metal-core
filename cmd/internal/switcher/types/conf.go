@@ -50,5 +50,26 @@ func (c *Conf) CapitalizeVrfName() {
 	}
 
 	c.Ports.Vrfs = capitalizedVRFs
-	return
+}
+
+func (c *Conf) NewWithoutDownPorts() *Conf {
+	if len(c.Ports.DownPorts) < 1 {
+		return c
+	}
+	newConf := *c
+	newConf.Ports.Vrfs = make(map[string]*Vrf)
+
+	// create a copy of the VRFs and filter out the interfaces which should be down
+	for vrf, vrfConf := range c.Ports.Vrfs {
+		newVrfConf := *vrfConf
+		newVrfConf.Neighbors = []string{}
+		for _, port := range vrfConf.Neighbors {
+			if _, isdown := c.Ports.DownPorts[port]; !isdown {
+				newVrfConf.Neighbors = append(newVrfConf.Neighbors, port)
+			}
+		}
+		newConf.Ports.Vrfs[vrf] = &newVrfConf
+	}
+
+	return &newConf
 }

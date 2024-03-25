@@ -1,9 +1,10 @@
 package types
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Conf holds the switch configuration
-// nolint:musttag
 type Conf struct {
 	Name                 string
 	LogLevel             string
@@ -19,6 +20,7 @@ type Ports struct {
 	Underlay      []string
 	Unprovisioned []string
 	BladePorts    []string
+	DownPorts     map[string]bool
 	Vrfs          map[string]*Vrf
 	Firewalls     map[string]*Firewall
 }
