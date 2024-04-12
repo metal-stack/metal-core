@@ -28,7 +28,7 @@ func (r *ReconfigureSwitch) Run() {
 
 	// Max every 5 Seconds, TODO configurable ?
 	if time.Since(r.lastSync) < 5*time.Second {
-		r.Core.log.Info("skiping reconfiguration because of last reconfiguration was too recent")
+		r.Core.log.Info("skipping reconfiguration because of last reconfiguration was too recent")
 		return
 	}
 
