@@ -14,6 +14,7 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/robfig/cron/v3"
 
 	"github.com/metal-stack/metal-core/cmd/internal/core"
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
@@ -83,24 +84,31 @@ func Run() {
 
 	metrics := metrics.New()
 
+	secondParser := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.DowOptional | cron.Descriptor)
+	syncCronSchedule, err := secondParser.Parse(cfg.SyncCronSchedule)
+	if err != nil {
+		log.Error("failed to parse cron sync schedule", "error", err)
+		os.Exit(1)
+	}
+
 	c := core.New(core.Config{
-		Log:                       log,
-		LogLevel:                  cfg.LogLevel,
-		CIDR:                      cfg.CIDR,
-		LoopbackIP:                cfg.LoopbackIP,
-		ASN:                       cfg.ASN,
-		PartitionID:               cfg.PartitionID,
-		RackID:                    cfg.RackID,
-		ReconfigureSwitch:         cfg.ReconfigureSwitch,
-		ReconfigureSwitchInterval: cfg.ReconfigureSwitchInterval,
-		ManagementGateway:         cfg.ManagementGateway,
-		AdditionalBridgePorts:     cfg.AdditionalBridgePorts,
-		AdditionalBridgeVIDs:      cfg.AdditionalBridgeVIDs,
-		SpineUplinks:              cfg.SpineUplinks,
-		NOS:                       nos,
-		Driver:                    driver,
-		EventServiceClient:        grpcClient.NewEventClient(),
-		Metrics:                   metrics,
+		Log:                   log,
+		LogLevel:              cfg.LogLevel,
+		CIDR:                  cfg.CIDR,
+		LoopbackIP:            cfg.LoopbackIP,
+		ASN:                   cfg.ASN,
+		PartitionID:           cfg.PartitionID,
+		RackID:                cfg.RackID,
+		ReconfigureSwitch:     cfg.ReconfigureSwitch,
+		SyncDelay:             cfg.SyncDelay,
+		ManagementGateway:     cfg.ManagementGateway,
+		AdditionalBridgePorts: cfg.AdditionalBridgePorts,
+		AdditionalBridgeVIDs:  cfg.AdditionalBridgeVIDs,
+		SpineUplinks:          cfg.SpineUplinks,
+		NOS:                   nos,
+		Driver:                driver,
+		EventServiceClient:    grpcClient.NewEventClient(),
+		Metrics:               metrics,
 	})
 
 	err = c.RegisterSwitch()
@@ -109,7 +117,11 @@ func Run() {
 		os.Exit(1)
 	}
 
-	go c.ReconfigureSwitch()
+	syncCron := cron.New(cron.WithSeconds())
+	cronID := syncCron.Schedule(syncCronSchedule, &core.ReconfigureSwitch{Core: c})
+	log.Info("starting reconfiguration of switch", "schedule", syncCronSchedule, "cron entry", cronID)
+	syncCron.Start()
+
 	c.ConstantlyPhoneHome()
 
 	// Start metrics

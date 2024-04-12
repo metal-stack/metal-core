@@ -16,39 +16,52 @@ import (
 	"github.com/metal-stack/metal-go/api/models"
 )
 
+type ReconfigureSwitch struct {
+	Core     *Core
+	lastSync time.Time
+}
+
 // ReconfigureSwitch reconfigures the switch.
-func (c *Core) ReconfigureSwitch() {
-	t := time.NewTicker(c.reconfigureSwitchInterval)
+func (r *ReconfigureSwitch) Run() {
 	host, _ := os.Hostname()
-	for range t.C {
-		c.log.Info("trigger reconfiguration")
-		start := time.Now()
-		err := c.reconfigureSwitch(host)
-		elapsed := time.Since(start)
-		c.log.Info("reconfiguration took", "elapsed", elapsed)
+	r.Core.log.Info("trigger reconfiguration")
 
-		params := sw.NewNotifySwitchParams()
-		params.ID = host
-		ns := elapsed.Nanoseconds()
-		nr := &models.V1SwitchNotifyRequest{
-			SyncDuration: &ns,
-		}
-		if err != nil {
-			errStr := err.Error()
-			nr.Error = &errStr
-			c.log.Error("reconfiguration failed", "error", err)
-			c.metrics.CountError("switch-reconfiguration")
-		} else {
-			c.log.Info("reconfiguration succeeded")
-		}
-
-		params.Body = nr
-		_, err = c.driver.SwitchOperations().NotifySwitch(params, nil)
-		if err != nil {
-			c.log.Error("notification about switch reconfiguration failed", "error", err)
-			c.metrics.CountError("reconfiguration-notification")
-		}
+	// Max every 5 Seconds, TODO configurable ?
+	if time.Since(r.lastSync) < 5*time.Second {
+		r.Core.log.Info("skipping reconfiguration because of last reconfiguration was too recent")
+		return
 	}
+
+	time.Sleep(r.Core.syncDelay)
+
+	start := time.Now()
+	err := r.Core.reconfigureSwitch(host)
+	elapsed := time.Since(start)
+	r.Core.log.Info("reconfiguration took", "elapsed", elapsed)
+
+	params := sw.NewNotifySwitchParams()
+	params.ID = host
+	ns := elapsed.Nanoseconds()
+	nr := &models.V1SwitchNotifyRequest{
+		SyncDuration: &ns,
+	}
+	if err != nil {
+		errStr := err.Error()
+		nr.Error = &errStr
+		r.Core.log.Error("reconfiguration failed", "error", err)
+		r.Core.metrics.CountError("switch-reconfiguration")
+	} else {
+		r.Core.log.Info("reconfiguration succeeded")
+		r.lastSync = time.Now()
+	}
+
+	params.Body = nr
+	_, err = r.Core.driver.SwitchOperations().NotifySwitch(params, nil)
+	if err != nil {
+		r.Core.log.Error("notification about switch reconfiguration failed", "error", err)
+		r.Core.metrics.CountError("reconfiguration-notification")
+	}
+
 }
 
 func (c *Core) reconfigureSwitch(switchName string) error {

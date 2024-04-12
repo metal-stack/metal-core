@@ -154,7 +154,7 @@ func getPortsConfig(filepath string) (map[string]PortInfo, error) {
 	config := struct {
 		Ports map[string]PortInfo `json:"PORT"`
 	}{}
-	err = json.Unmarshal(byteValue, &config)
+	err = json.Unmarshal(byteValue, &config) // nolint:musttag
 
 	return config.Ports, err
 }
