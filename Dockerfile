@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine3.18 as builder
+FROM golang:1.22-alpine3.19 as builder
 WORKDIR /work
 COPY . .
 RUN apk add \
@@ -11,7 +11,7 @@ RUN apk add \
     dbus-libs
 RUN make
 
-FROM alpine:3.18
+FROM alpine:3.19
 
 RUN apk add \
     libpcap \
