@@ -36,7 +36,7 @@ type Sonic struct {
 }
 
 type PortInfo struct {
-	Alias string
+	Alias string `json:"alias"`
 }
 
 func New(log *slog.Logger, frrTplFile string) (*Sonic, error) {

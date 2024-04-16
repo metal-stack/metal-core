@@ -3,7 +3,6 @@ package types
 import "fmt"
 
 // Conf holds the switch configuration
-// nolint:musttag
 type Conf struct {
 	Name                 string
 	LogLevel             string
