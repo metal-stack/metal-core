@@ -1,6 +1,6 @@
 module github.com/metal-stack/metal-core
 
-go 1.21
+go 1.22
 
 require (
 	github.com/avast/retry-go/v4 v4.5.1
@@ -12,13 +12,13 @@ require (
 	github.com/metal-stack/metal-api v0.23.2
 	github.com/metal-stack/metal-go v0.28.1-0.20240402081816-6c1334a9b45e
 	github.com/metal-stack/v v1.0.3
-	github.com/prometheus/client_golang v1.16.0
-	github.com/redis/go-redis/v9 v9.1.0
-	github.com/stretchr/testify v1.8.4
+	github.com/prometheus/client_golang v1.19.0
+	github.com/redis/go-redis/v9 v9.5.1
+	github.com/stretchr/testify v1.9.0
 	github.com/vishvananda/netlink v1.2.1-beta.2
 	golang.org/x/text v0.14.0
 	google.golang.org/grpc v1.59.0
-	google.golang.org/protobuf v1.31.0
+	google.golang.org/protobuf v1.32.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -58,7 +58,6 @@ require (
 	github.com/lestrrat-go/jwx/v2 v2.0.19 // indirect
 	github.com/lestrrat-go/option v1.0.1 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mdlayher/ethernet v0.0.0-20220221185849-529eae5b6118 // indirect
 	github.com/mdlayher/lldp v0.0.0-20150915211757-afd9f83164c5 // indirect
 	github.com/metal-stack/metal-lib v0.14.3 // indirect
@@ -67,9 +66,9 @@ require (
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prometheus/client_model v0.4.0 // indirect
-	github.com/prometheus/common v0.44.0 // indirect
-	github.com/prometheus/procfs v0.11.1 // indirect
+	github.com/prometheus/client_model v0.5.0 // indirect
+	github.com/prometheus/common v0.48.0 // indirect
+	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/vishvananda/netns v0.0.4 // indirect
 	go.mongodb.org/mongo-driver v1.13.1 // indirect

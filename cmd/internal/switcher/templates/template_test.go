@@ -98,8 +98,7 @@ func readConf(t *testing.T, i string) types.Conf {
 	b, err := os.ReadFile(i)
 	require.NoError(t, err, "unexpected error when reading testing input")
 
-	//nolint:musttag
-	err = yaml.Unmarshal(b, &c)
+	err = yaml.Unmarshal(b, &c) // nolint:musttag
 	require.NoError(t, err, "unexpected error when unmarshalling testing input")
 	return c
 }
