@@ -129,6 +129,13 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 	p.BladePorts = c.additionalBridgePorts
 	for _, nic := range s.Nics {
 		port := *nic.Name
+
+		if isPortStatusEqual(models.V1SwitchNicActualDOWN, nic.Actual) {
+			if has := p.DownPorts[port]; !has {
+				p.DownPorts[port] = true
+			}
+		}
+
 		if slices.Contains(p.Underlay, port) {
 			continue
 		}
@@ -140,12 +147,6 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 				p.Unprovisioned = append(p.Unprovisioned, port)
 			}
 			continue
-		}
-
-		if isPortStatusEqual(models.V1SwitchNicActualDOWN, nic.Actual) {
-			if has := p.DownPorts[port]; !has {
-				p.DownPorts[port] = true
-			}
 		}
 
 		// Firewall-Port

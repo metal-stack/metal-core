@@ -70,6 +70,38 @@ func (c *Conf) NewWithoutDownPorts() *Conf {
 		}
 		newConf.Ports.Vrfs[vrf] = &newVrfConf
 	}
+	newConf.Ports.Underlay = []string{}
+	newConf.Ports.Unprovisioned = []string{}
+	newConf.Ports.BladePorts = []string{}
+	newConf.Ports.Firewalls = make(map[string]*Firewall)
+
+	// create a copy of the firewalls and filter out the interfaces which should be down
+	for port, fwConf := range c.Ports.Firewalls {
+		if _, isdown := c.Ports.DownPorts[port]; !isdown {
+			newConf.Ports.Firewalls[port] = fwConf
+		}
+	}
+
+	// create a copy of the underlay ports without the downports
+	for _, port := range c.Ports.Underlay {
+		if _, isdown := c.Ports.DownPorts[port]; !isdown {
+			newConf.Ports.Underlay = append(newConf.Ports.Underlay, port)
+		}
+	}
+
+	// create a copy of the unprovisioned ports without the downports
+	for _, port := range c.Ports.Unprovisioned {
+		if _, isdown := c.Ports.DownPorts[port]; !isdown {
+			newConf.Ports.Unprovisioned = append(newConf.Ports.Unprovisioned, port)
+		}
+	}
+
+	// create a copy of the blade ports without the downports
+	for _, port := range c.Ports.BladePorts {
+		if _, isdown := c.Ports.DownPorts[port]; !isdown {
+			newConf.Ports.BladePorts = append(newConf.Ports.BladePorts, port)
+		}
+	}
 
 	return &newConf
 }
