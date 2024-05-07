@@ -46,20 +46,26 @@ func (c *Core) ReconfigureSwitch() {
 
 		// fill the port states of the switch
 		for _, n := range s.Nics {
-			isup, err := isLinkUp(n.Name)
-			if err != nil {
-				c.log.Error("could not check if link is up", "error", err)
-				if n.Name != nil {
-					nr.PortStates[*n.Name] = models.V1SwitchNicActualUNKNOWN
-				}
+			if n == nil || n.Name == nil {
+				// lets log the whole nic because the name could be empty; lets hope there is some useful information
+				// in the nic
+				c.log.Error("could not check if link is up", "nic", n)
 				c.metrics.CountError("switch-reconfiguration")
-			} else {
-				if isup {
-					nr.PortStates[*n.Name] = models.V1SwitchNicActualUP
-				} else {
-					nr.PortStates[*n.Name] = models.V1SwitchNicActualDOWN
-				}
+				continue
 			}
+			isup, err := isLinkUp(*n.Name)
+			if err != nil {
+				c.log.Error("could not check if link is up", "error", err, "nicname", *n.Name)
+				nr.PortStates[*n.Name] = models.V1SwitchNicActualUNKNOWN
+				c.metrics.CountError("switch-reconfiguration")
+				continue
+			}
+			if isup {
+				nr.PortStates[*n.Name] = models.V1SwitchNicActualUP
+			} else {
+				nr.PortStates[*n.Name] = models.V1SwitchNicActualDOWN
+			}
+
 		}
 
 		params.Body = nr
@@ -233,13 +239,10 @@ func fillEth0Info(c *types.Conf, gw string) error {
 
 // isLinkUp checks if the interface with the given name is up.
 // It returns a boolean indicating if the interface is up, and an error if there was a problem checking the interface.
-func isLinkUp(nicname *string) (bool, error) {
-	if nicname == nil {
-		return false, fmt.Errorf("cannot determine state of empty nicname")
-	}
-	nic, err := net.InterfaceByName(*nicname)
+func isLinkUp(nicname string) (bool, error) {
+	nic, err := net.InterfaceByName(nicname)
 	if err != nil {
-		return false, fmt.Errorf("cannot query interface %q : %w", *nicname, err)
+		return false, fmt.Errorf("cannot query interface %q : %w", nicname, err)
 	}
 	return nic.Flags&net.FlagUp != 0, nil
 }
