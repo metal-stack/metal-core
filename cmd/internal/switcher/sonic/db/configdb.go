@@ -16,6 +16,7 @@ const (
 	portTable       = "PORT"
 	adminStatus     = "admin_status"
 	adminStatusUp   = "up"
+	adminStatusDown = "down"
 	mtu             = "mtu"
 	fec             = "fec"
 	fecRS           = "rs"
@@ -204,8 +205,12 @@ func (d *ConfigDB) SetPortMtu(ctx context.Context, interfaceName string, val str
 	return d.c.HSet(ctx, key, Val{mtu: val})
 }
 
-func (d *ConfigDB) SetAdminStatusUp(ctx context.Context, interfaceName string) error {
+func (d *ConfigDB) SetAdminStatusUp(ctx context.Context, interfaceName string, up bool) error {
 	key := Key{portTable, interfaceName}
 
-	return d.c.HSet(ctx, key, Val{adminStatus: adminStatusUp})
+	status := adminStatusUp
+	if !up {
+		status = adminStatusDown
+	}
+	return d.c.HSet(ctx, key, Val{adminStatus: status})
 }
