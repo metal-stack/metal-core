@@ -13,9 +13,9 @@ type AsicDB struct {
 
 type OID string
 
-func newAsicDB(addr string, id int, sep string) *AsicDB {
+func newAsicDB(rdb *redis.Client, sep string) *AsicDB {
 	return &AsicDB{
-		c: NewClient(addr, id, sep),
+		c: NewClient(rdb, sep),
 	}
 }
 
