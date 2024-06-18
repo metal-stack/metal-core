@@ -29,13 +29,12 @@ func New(log *slog.Logger, frrTplFile, interfacesTplFile string) *Cumulus {
 }
 
 func (c *Cumulus) Apply(cfg *types.Conf) error {
-	withoutDownPorts := cfg.NewWithoutDownPorts()
-	err := c.interfacesApplier.Apply(withoutDownPorts)
+	err := c.interfacesApplier.Apply(cfg)
 	if err != nil {
 		return err
 	}
 
-	return c.frrApplier.Apply(withoutDownPorts)
+	return c.frrApplier.Apply(cfg)
 }
 
 func (c *Cumulus) IsInitialized() (initialized bool, err error) {

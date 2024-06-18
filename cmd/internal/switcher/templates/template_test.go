@@ -26,13 +26,6 @@ func TestInterfacesTemplate(t *testing.T) {
 	}
 }
 
-func TestInterfacesTemplateWithDownPorts(t *testing.T) {
-	c := readConf(t, path.Join("test_down_interfaces", "conf_with_downports.yaml"))
-	c = *c.NewWithoutDownPorts()
-	tpl := InterfacesTemplate("")
-	verifyTemplate(t, tpl, &c, path.Join("test_down_interfaces", "interfaces_with_downports"))
-}
-
 func TestCumulusFrrTemplate(t *testing.T) {
 	tests := listTestCases()
 	for i := range tests {
@@ -83,7 +76,7 @@ func TestCustomSonicFrrTemplate(t *testing.T) {
 func verifyTemplate(t *testing.T, tpl *template.Template, c *types.Conf, expectedFilename string) {
 	actual := renderToString(t, tpl, c)
 	expected := readExpected(t, expectedFilename)
-	require.Equal(t, expected, actual, "Wanted: %s\nGot: %s", expected, actual)
+	require.Equal(t, expected, actual, "Wanted: %s, Got: %s", expected, actual)
 }
 
 func renderToString(t *testing.T, tpl *template.Template, c *types.Conf) string {

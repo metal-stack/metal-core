@@ -49,19 +49,19 @@ func (a *Applier) Apply(cfg *types.Conf) error {
 	}
 
 	for _, interfaceName := range cfg.Ports.Underlay {
-		if err := a.configureUnderlayPort(interfaceName, !cfg.Ports.DownPorts[interfaceName]); err != nil {
+		if err := a.configureUnderlayPort(interfaceName); err != nil {
 			errs = append(errs, err)
 		}
 	}
 
 	for _, interfaceName := range cfg.Ports.Unprovisioned {
-		if err := a.configureUnprovisionedPort(interfaceName, !cfg.Ports.DownPorts[interfaceName]); err != nil {
+		if err := a.configureUnprovisionedPort(interfaceName); err != nil {
 			errs = append(errs, err)
 		}
 	}
 
 	for interfaceName := range cfg.Ports.Firewalls {
-		if err := a.configureFirewallPort(interfaceName, !cfg.Ports.DownPorts[interfaceName]); err != nil {
+		if err := a.configureFirewallPort(interfaceName); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -71,7 +71,7 @@ func (a *Applier) Apply(cfg *types.Conf) error {
 			errs = append(errs, err)
 		}
 		for _, interfaceName := range vrf.Neighbors {
-			if err := a.configureVrfNeighbor(interfaceName, vrfName, !cfg.Ports.DownPorts[interfaceName]); err != nil {
+			if err := a.configureVrfNeighbor(interfaceName, vrfName); err != nil {
 				errs = append(errs, err)
 			}
 		}
@@ -115,7 +115,7 @@ func (a *Applier) refreshOidMaps() error {
 	return nil
 }
 
-func (a *Applier) configureUnprovisionedPort(interfaceName string, isUp bool) error {
+func (a *Applier) configureUnprovisionedPort(interfaceName string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -124,15 +124,14 @@ func (a *Applier) configureUnprovisionedPort(interfaceName string, isUp bool) er
 		return err
 	}
 
-	// unprovisioned ports should be up
-	if err := a.ensurePortConfiguration(ctx, interfaceName, "9000", true, isUp); err != nil {
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "9000", true); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 
 	return a.ensureInterfaceIsVlanMember(ctx, interfaceName, "Vlan4000")
 }
 
-func (a *Applier) configureFirewallPort(interfaceName string, isUp bool) error {
+func (a *Applier) configureFirewallPort(interfaceName string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -141,26 +140,24 @@ func (a *Applier) configureFirewallPort(interfaceName string, isUp bool) error {
 		return err
 	}
 
-	// a firewall port should always be up
-	if err := a.ensurePortConfiguration(ctx, interfaceName, "9216", true, isUp); err != nil {
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "9216", true); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 
 	return a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
 }
 
-func (a *Applier) configureUnderlayPort(interfaceName string, isUp bool) error {
+func (a *Applier) configureUnderlayPort(interfaceName string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// underlay ports should be up
-	if err := a.ensurePortConfiguration(ctx, interfaceName, "9216", false, isUp); err != nil {
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "9216", false); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 	return a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
 }
 
-func (a *Applier) configureVrfNeighbor(interfaceName, vrfName string, isUp bool) error {
+func (a *Applier) configureVrfNeighbor(interfaceName, vrfName string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -174,7 +171,7 @@ func (a *Applier) configureVrfNeighbor(interfaceName, vrfName string, isUp bool)
 		return err
 	}
 
-	if err := a.ensurePortConfiguration(ctx, interfaceName, "9000", true, isUp); err != nil {
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "9000", true); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 
