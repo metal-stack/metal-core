@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strconv"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
@@ -55,7 +56,7 @@ func (a *Applier) Apply(cfg *types.Conf) error {
 	}
 
 	for _, interfaceName := range cfg.Ports.Unprovisioned {
-		if err := a.configureUnprovisionedPort(interfaceName, !cfg.Ports.DownPorts[interfaceName]); err != nil {
+		if err := a.configureUnprovisionedPort(interfaceName, !cfg.Ports.DownPorts[interfaceName], cfg.Vlan); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -115,7 +116,7 @@ func (a *Applier) refreshOidMaps() error {
 	return nil
 }
 
-func (a *Applier) configureUnprovisionedPort(interfaceName string, isUp bool) error {
+func (a *Applier) configureUnprovisionedPort(interfaceName string, isUp bool, vlan uint16) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -129,7 +130,9 @@ func (a *Applier) configureUnprovisionedPort(interfaceName string, isUp bool) er
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 
-	return a.ensureInterfaceIsVlanMember(ctx, interfaceName, "Vlan4000")
+	vl := "Vlan" + strconv.FormatUint(uint64(vlan), 10)
+
+	return a.ensureInterfaceIsVlanMember(ctx, interfaceName, vl)
 }
 
 func (a *Applier) configureFirewallPort(interfaceName string, isUp bool) error {
