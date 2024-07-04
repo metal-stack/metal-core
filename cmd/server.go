@@ -101,7 +101,7 @@ func Run() {
 		Driver:                    driver,
 		EventServiceClient:        grpcClient.NewEventClient(),
 		Metrics:                   metrics,
-		Vlan:                      cfg.Vlan,
+		PXEVlan:                   cfg.PXEVlan,
 	})
 
 	err = c.RegisterSwitch()

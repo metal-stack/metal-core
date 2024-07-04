@@ -33,7 +33,7 @@ type Core struct {
 
 	metrics *metrics.Metrics
 
-	vlan uint16
+	pxeVlan uint16
 }
 
 type Config struct {
@@ -59,7 +59,7 @@ type Config struct {
 
 	Metrics *metrics.Metrics
 
-	Vlan uint16
+	PXEVlan uint16
 }
 
 func New(c Config) *Core {
@@ -81,6 +81,6 @@ func New(c Config) *Core {
 		driver:                    c.Driver,
 		eventServiceClient:        c.EventServiceClient,
 		metrics:                   c.Metrics,
-		vlan:                      c.Vlan,
+		pxeVlan:                   c.PXEVlan,
 	}
 }

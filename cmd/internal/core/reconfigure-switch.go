@@ -117,12 +117,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 		return nil, err
 	}
 
-	m, err := vlan.ReadMapping()
-	if err != nil {
-		return nil, err
-	}
-
-	if c.vlan >= vlan.VlanIDMin && c.vlan <= vlan.VlanIDMax {
+	if c.pxeVlan >= vlan.VlanIDMin && c.pxeVlan <= vlan.VlanIDMax {
 		return nil, fmt.Errorf("configured VLAN is in the reserved area of %v, %v", vlan.VlanIDMin, vlan.VlanIDMax)
 	}
 
@@ -133,7 +128,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 		Loopback:             c.loopbackIP,
 		MetalCoreCIDR:        c.cidr,
 		AdditionalBridgeVIDs: c.additionalBridgeVIDs,
-		Vlan:                 c.vlan,
+		PXEVlan:              c.pxeVlan,
 	}
 
 	p := types.Ports{
@@ -198,7 +193,10 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 
 	c.nos.SanitizeConfig(switcherConfig)
 	switcherConfig.FillRouteMapsAndIPPrefixLists()
-
+	m, err := vlan.ReadMapping()
+	if err != nil {
+		return nil, err
+	}
 	err = switcherConfig.FillVLANIDs(m)
 	if err != nil {
 		return nil, err
