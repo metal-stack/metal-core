@@ -118,7 +118,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 	}
 
 	if c.pxeVlanID >= vlan.VlanIDMin && c.pxeVlanID <= vlan.VlanIDMax {
-		return nil, fmt.Errorf("configured VLAN is in the reserved area of %v, %v", vlan.VlanIDMin, vlan.VlanIDMax)
+		return nil, fmt.Errorf("configured VLAN ID is in the reserved area of %v, %v", vlan.VlanIDMin, vlan.VlanIDMax)
 	}
 
 	switcherConfig := &types.Conf{
