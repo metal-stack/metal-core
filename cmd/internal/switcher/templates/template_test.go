@@ -8,6 +8,7 @@ import (
 	"testing"
 	"text/template"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 
@@ -83,7 +84,9 @@ func TestCustomSonicFrrTemplate(t *testing.T) {
 func verifyTemplate(t *testing.T, tpl *template.Template, c *types.Conf, expectedFilename string) {
 	actual := renderToString(t, tpl, c)
 	expected := readExpected(t, expectedFilename)
-	require.Equal(t, expected, actual, "Wanted: %s\nGot: %s", expected, actual)
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Errorf("%s render differs:%s", expectedFilename, diff)
+	}
 }
 
 func renderToString(t *testing.T, tpl *template.Template, c *types.Conf) string {

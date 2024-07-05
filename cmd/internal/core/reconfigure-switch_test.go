@@ -73,8 +73,9 @@ func TestBuildSwitcherConfig(t *testing.T) {
 				Filter: types.Filter{
 					IPPrefixLists: []types.IPPrefixList{
 						{
-							Name: "vrf104001-in-prefixes",
-							Spec: "permit 10.240.0.0/12 le 32",
+							AddressFamily: "ip",
+							Name:          "vrf104001-in-prefixes",
+							Spec:          "permit 10.240.0.0/12 le 32",
 						},
 					},
 					RouteMaps: []types.RouteMap{

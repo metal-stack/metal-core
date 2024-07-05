@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"net/netip"
 )
 
 // Conf holds the switch configuration
@@ -62,12 +63,14 @@ type RouteMap struct {
 
 // IPPrefixList represents 'ip prefix-list' filtering mechanism to be used in combination with route-maps.
 type IPPrefixList struct {
-	Name string
-	Spec string
+	AddressFamily string
+	Name          string
+	Spec          string
 }
 
 func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
-	if len(cidrs) > 0 {
+	cidrMap := sortCIDRByAddressfamily(cidrs)
+	if len(cidrMap["ipv4"]) > 0 {
 		prefixRouteMapName := fmt.Sprintf("%s-in", rmPrefix)
 		prefixListName := fmt.Sprintf("%s-in-prefixes", rmPrefix)
 		rm := RouteMap{
@@ -77,15 +80,19 @@ func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
 			Order:   10,
 		}
 		s.RouteMaps = append(s.RouteMaps, rm)
-
-		for _, cidr := range cidrs {
-			spec := fmt.Sprintf("permit %s le 32", cidr)
-			prefixList := IPPrefixList{
-				Name: prefixListName,
-				Spec: spec,
-			}
-			s.IPPrefixLists = append(s.IPPrefixLists, prefixList)
+		s.addPrefixList(prefixListName, cidrMap["ipv4"], "ip")
+	}
+	if len(cidrMap["ipv6"]) > 0 {
+		prefixRouteMapName := fmt.Sprintf("%s-in6", rmPrefix)
+		prefixListName := fmt.Sprintf("%s-in6-prefixes", rmPrefix)
+		rm := RouteMap{
+			Name:    prefixRouteMapName,
+			Entries: []string{fmt.Sprintf("match ipv6 address prefix-list %s", prefixListName)},
+			Policy:  "permit",
+			Order:   10,
 		}
+		s.RouteMaps = append(s.RouteMaps, rm)
+		s.addPrefixList(prefixListName, cidrMap["ipv6"], "ipv6")
 	}
 	if len(vnis) > 0 {
 		vniRouteMapName := fmt.Sprintf("%s-vni", rmPrefix)
@@ -99,4 +106,39 @@ func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
 			s.RouteMaps = append(s.RouteMaps, rm)
 		}
 	}
+}
+
+func (s *Filter) addPrefixList(prefixListName string, cidrs []string, af string) {
+	for _, cidr := range cidrs {
+		prefix, err := netip.ParsePrefix(cidr)
+		if err != nil {
+			continue
+		}
+		spec := fmt.Sprintf("permit %s le %d", cidr, prefix.Addr().BitLen())
+		prefixList := IPPrefixList{
+			AddressFamily: af,
+			Name:          prefixListName,
+			Spec:          spec,
+		}
+		s.IPPrefixLists = append(s.IPPrefixLists, prefixList)
+	}
+}
+
+func sortCIDRByAddressfamily(cidrs []string) map[string][]string {
+	sortedCIDRs := make(map[string][]string)
+	sortedCIDRs["ipv4"] = []string{}
+	sortedCIDRs["ipv6"] = []string{}
+	for _, cidr := range cidrs {
+		prefix, err := netip.ParsePrefix(cidr)
+		if err != nil {
+			continue
+		}
+		if prefix.Addr().Is4() {
+			sortedCIDRs["ipv4"] = append(sortedCIDRs["ipv4"], cidr)
+		}
+		if prefix.Addr().Is6() {
+			sortedCIDRs["ipv6"] = append(sortedCIDRs["ipv6"], cidr)
+		}
+	}
+	return sortedCIDRs
 }

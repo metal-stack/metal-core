@@ -60,6 +60,14 @@ router bgp {{ $ASN }}
   {{- end }}
  exit-address-family
  !
+ address-family ipv6 unicast
+  redistribute connected route-map LOOPBACKS
+  neighbor FIREWALL allowas-in 2
+  {{- range $k, $f := .Ports.Firewalls }}
+  neighbor {{ $f.Port }} route-map fw-{{ $k }}-in in
+  {{- end }}
+ exit-address-family
+ !
  address-family l2vpn evpn
   advertise-all-vni
   neighbor FABRIC activate
@@ -105,6 +113,14 @@ router bgp {{ $ASN }} vrf {{ $vrf }}
   neighbor MACHINE maximum-prefix 24000
   {{- if gt (len $t.IPPrefixLists) 0 }}
   neighbor MACHINE route-map {{ $vrf }}-in in
+  {{- end }}
+ exit-address-family
+ !
+ address-family ipv6 unicast
+  redistribute connected
+  neighbor MACHINE maximum-prefix 24000
+  {{- if gt (len $t.IPPrefixLists) 0 }}
+  neighbor MACHINE route-map {{ $vrf }}-in6 in
   {{- end }}
  exit-address-family
  !
