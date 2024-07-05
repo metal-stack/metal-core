@@ -3,16 +3,16 @@ package vlan
 import "fmt"
 
 const (
-	// vlanIDMin specifies the min VLAN-ID we want to use on our switches
-	vlanIDMin uint16 = 1001
+	// VlanIDMin specifies the min VLAN ID we want to use on our switches
+	VlanIDMin uint16 = 1001
 
-	// vlanIDMax specifies the max VLAN-ID we want to use on our switches
-	vlanIDMax uint16 = 2000
+	// VlanIDMax specifies the max VLAN ID we want to use on our switches
+	VlanIDMax uint16 = 2000
 )
 
-// ReserveVlanIDs tries to reserve n VLAN-IDs given the current switch configuration
+// ReserveVlanIDs tries to reserve n VLAN IDs given the current switch configuration
 func (m Mapping) ReserveVlanIDs(n uint16) ([]uint16, error) {
-	return m.reserveVlanIDs(vlanIDMin, vlanIDMax, n)
+	return m.reserveVlanIDs(VlanIDMin, VlanIDMax, n)
 }
 
 func (m Mapping) reserveVlanIDs(min, max, n uint16) ([]uint16, error) {

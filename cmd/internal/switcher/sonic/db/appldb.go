@@ -2,15 +2,17 @@ package db
 
 import (
 	"context"
+
+	"github.com/redis/go-redis/v9"
 )
 
 type ApplDB struct {
 	c *Client
 }
 
-func newApplDB(addr string, id int, sep string) *ApplDB {
+func newApplDB(rdb *redis.Client, sep string) *ApplDB {
 	return &ApplDB{
-		c: NewClient(addr, id, sep),
+		c: NewClient(rdb, sep),
 	}
 }
 
