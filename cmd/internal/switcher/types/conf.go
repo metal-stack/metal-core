@@ -6,9 +6,9 @@ import (
 	"golang.org/x/text/language"
 )
 
-// FillVLANIDs fills the given configuration object with switch-local VLAN-IDs
+// FillVLANIDs fills the given configuration object with switch-local VLAN IDs
 // if they are present in the given VLAN-Mapping
-// otherwise: new available VLAN-IDs will be used
+// otherwise: new available VLAN IDs will be used
 func (c *Conf) FillVLANIDs(m vlan.Mapping) error {
 outer_loop:
 	for _, t := range c.Ports.Vrfs {

@@ -11,6 +11,7 @@ type Conf struct {
 	Ports                Ports
 	MetalCoreCIDR        string
 	AdditionalBridgeVIDs []string
+	PXEVlanID            uint16
 }
 
 type Ports struct {

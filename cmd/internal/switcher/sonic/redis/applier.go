@@ -55,7 +55,8 @@ func (a *Applier) Apply(cfg *types.Conf) error {
 	}
 
 	for _, interfaceName := range cfg.Ports.Unprovisioned {
-		if err := a.configureUnprovisionedPort(interfaceName); err != nil {
+		pxeVlan := fmt.Sprintf("Vlan%d", cfg.PXEVlanID)
+		if err := a.configureUnprovisionedPort(interfaceName, pxeVlan); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -115,7 +116,7 @@ func (a *Applier) refreshOidMaps() error {
 	return nil
 }
 
-func (a *Applier) configureUnprovisionedPort(interfaceName string) error {
+func (a *Applier) configureUnprovisionedPort(interfaceName string, isUp bool, pxeVlan string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -128,7 +129,7 @@ func (a *Applier) configureUnprovisionedPort(interfaceName string) error {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 
-	return a.ensureInterfaceIsVlanMember(ctx, interfaceName, "Vlan4000")
+	return a.ensureInterfaceIsVlanMember(ctx, interfaceName, pxeVlan)
 }
 
 func (a *Applier) configureFirewallPort(interfaceName string) error {

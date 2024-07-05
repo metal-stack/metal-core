@@ -90,6 +90,11 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 	if err != nil {
 		return nil, err
 	}
+
+	if c.pxeVlanID >= vlan.VlanIDMin && c.pxeVlanID <= vlan.VlanIDMax {
+		return nil, fmt.Errorf("configured PXE VLAN ID is in the reserved area of %d, %d", vlan.VlanIDMin, vlan.VlanIDMax)
+	}
+
 	switcherConfig := &types.Conf{
 		Name:                 s.Name,
 		LogLevel:             mapLogLevel(c.logLevel),
@@ -97,6 +102,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 		Loopback:             c.loopbackIP,
 		MetalCoreCIDR:        c.cidr,
 		AdditionalBridgeVIDs: c.additionalBridgeVIDs,
+		PXEVlanID:            c.pxeVlanID,
 	}
 
 	p := types.Ports{
