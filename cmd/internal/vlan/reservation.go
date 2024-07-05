@@ -3,10 +3,10 @@ package vlan
 import "fmt"
 
 const (
-	// vlanIDMin specifies the min VLAN-ID we want to use on our switches
+	// VlanIDMin specifies the min VLAN-ID we want to use on our switches
 	VlanIDMin uint16 = 1001
 
-	// vlanIDMax specifies the max VLAN-ID we want to use on our switches
+	// VlanIDMax specifies the max VLAN-ID we want to use on our switches
 	VlanIDMax uint16 = 2000
 )
 
