@@ -68,6 +68,7 @@ router bgp {{ $ASN }}
  address-family ipv6 unicast
   redistribute connected route-map DENY_MGMT
   neighbor FIREWALL allowas-in 2
+  neighbor FIREWALL activate
   {{- range $k, $f := .Ports.Firewalls }}
   neighbor {{ $f.Port }} route-map fw-{{ $k }}-in in
   {{- end }}
@@ -127,6 +128,7 @@ router bgp {{ $ASN }} vrf {{ $vrf }}
  address-family ipv6 unicast
   redistribute connected
   neighbor MACHINE maximum-prefix 24000
+  neighbor MACHINE activate
   {{- if gt (len $t.IPPrefixLists) 0 }}
   neighbor MACHINE route-map {{ $vrf }}-in6 in
   {{- end }}
@@ -134,6 +136,7 @@ router bgp {{ $ASN }} vrf {{ $vrf }}
  !
  address-family l2vpn evpn
   advertise ipv4 unicast
+  advertise ipv6 unicast
  exit-address-family
 !
 {{- if gt (len $t.IPPrefixLists) 0 }}

@@ -111,6 +111,7 @@ router bgp {{ $ASN }} vrf {{ $vrf }}
  !
  address-family l2vpn evpn
   advertise ipv4 unicast
+  advertise ipv6 unicast
  exit-address-family
 !
 {{- if gt (len $t.IPPrefixLists) 0 }}

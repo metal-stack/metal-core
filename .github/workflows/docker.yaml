@@ -40,7 +40,7 @@ jobs:
       run: sudo apt-get install -y libpcap-dev
 
     - name: Lint
-      uses: golangci/golangci-lint-action@v4
+      uses: golangci/golangci-lint-action@v6
       with:
         args: --build-tags client -p bugs -p unused --timeout=3m
 
