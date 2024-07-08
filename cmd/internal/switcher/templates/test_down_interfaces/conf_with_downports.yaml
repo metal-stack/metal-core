@@ -24,3 +24,4 @@ ports:
     - swp2
   downports:
     swp3: True
+pxevlanid: 966

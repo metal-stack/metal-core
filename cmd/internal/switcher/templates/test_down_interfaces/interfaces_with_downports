@@ -30,8 +30,8 @@ iface swp32
 
 auto bridge
 iface bridge
-    bridge-ports vni104000 swp1 swp2 vni1
-    bridge-vids 4000 2
+    bridge-ports vni10966 swp1 swp2 vni1
+    bridge-vids 966 2
     bridge-vlan-aware yes
 
 # Tenants
@@ -59,29 +59,29 @@ iface vni1
     vxlan-local-tunnelip 10.0.0.10
 
 # PXE-Config
-auto vlan4000
-iface vlan4000
+auto vlan966
+iface vlan966
     mtu 9000
     address 10.255.255.2/24
-    vlan-id 4000
+    vlan-id 966
     vlan-raw-device bridge
 
-auto vni104000
-iface vni104000
+auto vni10966
+iface vni10966
     mtu 9000
-    bridge-access 4000
+    bridge-access 966
     bridge-learning off
     mstpctl-bpduguard yes
     mstpctl-portbpdufilter yes
-    vxlan-id 104000
+    vxlan-id 10966
     vxlan-local-tunnelip 10.0.0.10
 
 auto swp1
 iface swp1
     mtu 9000
-    bridge-access 4000
+    bridge-access 966
 
 auto swp2
 iface swp2
     mtu 9000
-    bridge-access 4000
+    bridge-access 966
