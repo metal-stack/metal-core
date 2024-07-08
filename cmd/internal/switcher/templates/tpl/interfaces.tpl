@@ -75,21 +75,21 @@ iface vni{{ $t.VNI }}
 {{- end }}
 
 # PXE-Config
-auto vlan4000
-iface vlan4000
+auto vlan{{ PXEVlanID }}
+iface vlan{{ PXEVlanID }}
     mtu 9000
     address {{ .MetalCoreCIDR }}
-    vlan-id 4000
+    vlan-id {{ PXEVlanID }}
     vlan-raw-device bridge
 
-auto vni104000
-iface vni104000
+auto vni10{{ PXEVlanID }}
+iface vni10{{ PXEVlanID }}
     mtu 9000
-    bridge-access 4000
+    bridge-access {{ PXEVlanID }}
     bridge-learning off
     mstpctl-bpduguard yes
     mstpctl-portbpdufilter yes
-    vxlan-id 104000
+    vxlan-id 10{{ PXEVlanID }}
     vxlan-local-tunnelip {{ $IPLoopback }}
 
 {{- range .Ports.Unprovisioned }}
@@ -97,5 +97,5 @@ iface vni104000
 auto {{ . }}
 iface {{ . }}
     mtu 9000
-    bridge-access 4000
+    bridge-access {{ PXEVlanID }}
 {{- end }}
