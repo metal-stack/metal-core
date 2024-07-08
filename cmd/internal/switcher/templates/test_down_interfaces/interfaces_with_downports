@@ -30,7 +30,7 @@ iface swp32
 
 auto bridge
 iface bridge
-    bridge-ports vni10966 swp1 swp2 vni1
+    bridge-ports vni100966 swp1 swp2 vni1
     bridge-vids 966 2
     bridge-vlan-aware yes
 
@@ -66,14 +66,14 @@ iface vlan966
     vlan-id 966
     vlan-raw-device bridge
 
-auto vni10966
-iface vni10966
+auto vni100966
+iface vni100966
     mtu 9000
     bridge-access 966
     bridge-learning off
     mstpctl-bpduguard yes
     mstpctl-portbpdufilter yes
-    vxlan-id 10966
+    vxlan-id 100966
     vxlan-local-tunnelip 10.0.0.10
 
 auto swp1

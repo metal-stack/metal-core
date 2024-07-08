@@ -1,5 +1,6 @@
 {{- $IPLoopback := .Loopback -}}
 {{- $PXEVlanID := .PXEVlanID -}}
+{{- $PXEVni := printf "10%04d" $PXEVlanID -}}
 # This file describes the network interfaces available on your system
 # and how to activate them. For more information, see interfaces(5).
 
@@ -36,7 +37,7 @@ iface {{ .Port }}
 
 auto bridge
 iface bridge
-    bridge-ports vni10{{ $PXEVlanID }}{{ range .Ports.Unprovisioned }} {{ . }}{{ end }}{{ range .Ports.BladePorts }} {{ . }}{{ end }}{{ range $vrf, $t := .Ports.Vrfs }} vni{{ $t.VNI }}{{ end }}
+    bridge-ports vni{{ $PXEVni }}{{ range .Ports.Unprovisioned }} {{ . }}{{ end }}{{ range .Ports.BladePorts }} {{ . }}{{ end }}{{ range $vrf, $t := .Ports.Vrfs }} vni{{ $t.VNI }}{{ end }}
     bridge-vids {{ $PXEVlanID }}{{ range $vrf, $t := .Ports.Vrfs }} {{ $t.VLANID }}{{ end }}{{ range $vids := .AdditionalBridgeVIDs }} {{ $vids }}{{ end }}
     bridge-vlan-aware yes
 
@@ -83,14 +84,14 @@ iface vlan{{ $PXEVlanID }}
     vlan-id {{ $PXEVlanID }}
     vlan-raw-device bridge
 
-auto vni10{{ $PXEVlanID }}
-iface vni10{{ $PXEVlanID }}
+auto vni{{ $PXEVni }}
+iface vni{{ $PXEVni }}
     mtu 9000
     bridge-access {{ $PXEVlanID }}
     bridge-learning off
     mstpctl-bpduguard yes
     mstpctl-portbpdufilter yes
-    vxlan-id 10{{ $PXEVlanID }}
+    vxlan-id {{ $PXEVni }}
     vxlan-local-tunnelip {{ $IPLoopback }}
 
 {{- range .Ports.Unprovisioned }}
