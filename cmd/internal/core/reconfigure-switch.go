@@ -45,7 +45,11 @@ func (c *Core) ReconfigureSwitch() {
 		}
 
 		// fill the port states of the switch
-		for _, n := range s.Nics {
+		var nics []*models.V1SwitchNic
+		if s != nil {
+			nics = s.Nics
+		}
+		for _, n := range nics {
 			if n == nil || n.Name == nil {
 				// lets log the whole nic because the name could be empty; lets hope there is some useful information
 				// in the nic
