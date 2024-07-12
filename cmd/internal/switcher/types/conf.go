@@ -34,6 +34,7 @@ func (c *Conf) FillRouteMapsAndIPPrefixLists() {
 		f.Assemble("fw-"+port, f.Vnis, f.Cidrs)
 	}
 	for vrf, t := range c.Ports.Vrfs {
+		// FIXME hardcoded and IPv6 missing
 		podCidr := "10.240.0.0/12"
 		t.Cidrs = append(t.Cidrs, podCidr)
 		t.Assemble(vrf, []string{}, t.Cidrs)
