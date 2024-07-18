@@ -14,3 +14,4 @@ ports:
   unprovisioned:
     - swp1
     - swp2
+pxevlanid: 966

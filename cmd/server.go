@@ -101,6 +101,7 @@ func Run() {
 		Driver:                    driver,
 		EventServiceClient:        grpcClient.NewEventClient(),
 		Metrics:                   metrics,
+		PXEVlanID:                 cfg.PXEVlanID,
 	})
 
 	err = c.RegisterSwitch()
