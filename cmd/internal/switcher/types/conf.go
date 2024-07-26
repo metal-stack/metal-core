@@ -37,7 +37,7 @@ func (c *Conf) FillRouteMapsAndIPPrefixLists() error {
 		f.Assemble("fw-"+port, f.Vnis, f.Cidrs)
 	}
 	for vrf, t := range c.Ports.Vrfs {
-		t.Cidrs = append(t.Cidrs, c.PodCidrs...)
+		t.Cidrs = append(t.Cidrs, c.AdditionalRouteMapCIDRs...)
 		ipv4, ipv6, err := addressFamilies(t.Cidrs)
 		if err != nil {
 			return fmt.Errorf("unable to parse addressfamilies from cidrs:%w", err)
