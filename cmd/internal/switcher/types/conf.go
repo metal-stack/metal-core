@@ -1,6 +1,8 @@
 package types
 
 import (
+	"net/netip"
+
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -37,8 +39,27 @@ func (c *Conf) FillRouteMapsAndIPPrefixLists() {
 		// FIXME hardcoded and IPv6 missing
 		podCidr := "10.240.0.0/12"
 		t.Cidrs = append(t.Cidrs, podCidr)
+		ipv4, ipv6 := addressFamilies(t.Cidrs)
+		t.Has4 = ipv4
+		t.Has6 = ipv6
 		t.Assemble(vrf, []string{}, t.Cidrs)
 	}
+}
+
+func addressFamilies(cidrs []string) (ipv4, ipv6 bool) {
+	for _, cidr := range cidrs {
+		parsed, err := netip.ParsePrefix(cidr)
+		if err != nil {
+			continue
+		}
+		if parsed.Addr().Is4() {
+			ipv4 = true
+		}
+		if parsed.Addr().Is6() {
+			ipv6 = true
+		}
+	}
+	return ipv4, ipv6
 }
 
 // CapitalizeVrfName capitalizes VRF names, which is requirement for SONiC

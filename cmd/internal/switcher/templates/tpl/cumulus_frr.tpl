@@ -109,6 +109,7 @@ router bgp {{ $ASN }} vrf {{ $vrf }}
  neighbor {{ . }} interface peer-group MACHINE
  {{- end }}
  !
+ {{- if $t.Has4 }}
  address-family ipv4 unicast
   redistribute connected
   neighbor MACHINE maximum-prefix 24000
@@ -117,6 +118,8 @@ router bgp {{ $ASN }} vrf {{ $vrf }}
   {{- end }}
  exit-address-family
  !
+ {{- end }}
+ {{- if $t.Has6 }}
  address-family ipv6 unicast
   redistribute connected
   neighbor MACHINE maximum-prefix 24000
@@ -126,9 +129,12 @@ router bgp {{ $ASN }} vrf {{ $vrf }}
   {{- end }}
  exit-address-family
  !
+ {{- end }}
  address-family l2vpn evpn
   advertise ipv4 unicast
+ {{- if $t.Has6 }}
   advertise ipv6 unicast
+ {{- end }}
  exit-address-family
 !
 {{- if gt (len $t.IPPrefixLists) 0 }}

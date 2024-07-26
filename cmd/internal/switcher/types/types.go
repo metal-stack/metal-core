@@ -34,6 +34,8 @@ type Vrf struct {
 	VLANID    uint16
 	Neighbors []string
 	Cidrs     []string
+	Has4      bool
+	Has6      bool
 }
 
 type Firewall struct {

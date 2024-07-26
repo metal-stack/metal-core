@@ -88,6 +88,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 					},
 				},
 				Cidrs: []string{"10.240.0.0/12"},
+				Has4:  true,
 			}},
 		},
 		AdditionalBridgeVIDs: []string{"201-256", "301-356"},
