@@ -139,7 +139,9 @@ router bgp {{ $ASN }} vrf {{ $vrf }}
  !
  {{- end }}
  address-family l2vpn evpn
+ {{- if $t.Has4 }}
   advertise ipv4 unicast
+ {{- end }}
  {{- if $t.Has6 }}
   advertise ipv6 unicast
  {{- end }}
