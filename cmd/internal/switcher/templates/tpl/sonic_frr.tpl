@@ -68,6 +68,8 @@ router bgp {{ $ASN }}
  address-family ipv6 unicast
   redistribute connected route-map DENY_MGMT
   neighbor FIREWALL allowas-in 2
+  # see https://docs.frrouting.org/en/latest/bgp.html#clicmd-neighbor-A.B.C.D-activate
+  # why activate is required
   neighbor FIREWALL activate
   {{- range $k, $f := .Ports.Firewalls }}
   neighbor {{ $f.Port }} route-map fw-{{ $k }}-in in
@@ -131,6 +133,8 @@ router bgp {{ $ASN }} vrf {{ $vrf }}
  address-family ipv6 unicast
   redistribute connected
   neighbor MACHINE maximum-prefix 24000
+  # see https://docs.frrouting.org/en/latest/bgp.html#clicmd-neighbor-A.B.C.D-activate
+  # why activate is required
   neighbor MACHINE activate
   {{- if gt (len $t.IPPrefixLists) 0 }}
   neighbor MACHINE route-map {{ $vrf }}-in6 in

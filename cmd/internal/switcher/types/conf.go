@@ -5,6 +5,7 @@ import (
 	"net/netip"
 
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
+	"go4.org/netipx"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -37,7 +38,14 @@ func (c *Conf) FillRouteMapsAndIPPrefixLists() error {
 		f.Assemble("fw-"+port, f.Vnis, f.Cidrs)
 	}
 	for vrf, t := range c.Ports.Vrfs {
-		t.Cidrs = append(t.Cidrs, c.PodCidrs...)
+		t.Cidrs = append(t.Cidrs, c.AdditionalRouteMapCIDRs...)
+
+		var err error
+		t.Cidrs, err = compactCidrs(t.Cidrs)
+		if err != nil {
+			return err
+		}
+
 		ipv4, ipv6, err := addressFamilies(t.Cidrs)
 		if err != nil {
 			return fmt.Errorf("unable to parse addressfamilies from cidrs:%w", err)
@@ -47,6 +55,29 @@ func (c *Conf) FillRouteMapsAndIPPrefixLists() error {
 		t.Assemble(vrf, []string{}, t.Cidrs)
 	}
 	return nil
+}
+func compactCidrs(cidrs []string) ([]string, error) {
+	var (
+		compacted    []string
+		ipsetBuilder netipx.IPSetBuilder
+	)
+
+	for _, cidr := range cidrs {
+		parsed, err := netip.ParsePrefix(cidr)
+		if err != nil {
+			return nil, err
+		}
+		ipsetBuilder.AddPrefix(parsed)
+	}
+	set, err := ipsetBuilder.IPSet()
+	if err != nil {
+		return nil, fmt.Errorf("unable to create ipset:%w", err)
+	}
+	for _, pfx := range set.Prefixes() {
+		compacted = append(compacted, pfx.String())
+	}
+
+	return compacted, nil
 }
 
 func addressFamilies(cidrs []string) (ipv4, ipv6 bool, err error) {

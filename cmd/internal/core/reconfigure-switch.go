@@ -126,14 +126,14 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 	}
 
 	switcherConfig := &types.Conf{
-		Name:                 s.Name,
-		LogLevel:             mapLogLevel(c.logLevel),
-		ASN:                  asn,
-		Loopback:             c.loopbackIP,
-		MetalCoreCIDR:        c.cidr,
-		AdditionalBridgeVIDs: c.additionalBridgeVIDs,
-		PXEVlanID:            c.pxeVlanID,
-		PodCidrs:             c.podCidrs,
+		Name:                    s.Name,
+		LogLevel:                mapLogLevel(c.logLevel),
+		ASN:                     asn,
+		Loopback:                c.loopbackIP,
+		MetalCoreCIDR:           c.cidr,
+		AdditionalBridgeVIDs:    c.additionalBridgeVIDs,
+		PXEVlanID:               c.pxeVlanID,
+		AdditionalRouteMapCIDRs: c.additionalRouteMapCIDRs,
 	}
 
 	p := types.Ports{
