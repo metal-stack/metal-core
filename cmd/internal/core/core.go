@@ -34,6 +34,7 @@ type Core struct {
 	metrics *metrics.Metrics
 
 	pxeVlanID uint16
+	podCidrs  []string
 }
 
 type Config struct {
@@ -60,6 +61,7 @@ type Config struct {
 	Metrics *metrics.Metrics
 
 	PXEVlanID uint16
+	PodCidrs  []string
 }
 
 func New(c Config) *Core {
@@ -82,5 +84,6 @@ func New(c Config) *Core {
 		eventServiceClient:        c.EventServiceClient,
 		metrics:                   c.Metrics,
 		pxeVlanID:                 c.PXEVlanID,
+		podCidrs:                  c.PodCidrs,
 	}
 }

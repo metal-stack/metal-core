@@ -20,6 +20,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		spineUplinks:         []string{"swp31", "swp32"},
 		additionalBridgeVIDs: []string{"201-256", "301-356"},
 		nos:                  &cumulus.Cumulus{},
+		podCidrs:             []string{"10.240.0.0/12"},
 	}
 
 	n1 := "swp1"
@@ -57,6 +58,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		Loopback:      "10.0.0.1",
 		MetalCoreCIDR: "10.255.255.2/24",
 		ASN:           420000001,
+		PodCidrs:      []string{"10.240.0.0/12"},
 		Ports: types.Ports{
 			DownPorts:     map[string]bool{},
 			Underlay:      []string{"swp31", "swp32"},

@@ -133,6 +133,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 		MetalCoreCIDR:        c.cidr,
 		AdditionalBridgeVIDs: c.additionalBridgeVIDs,
 		PXEVlanID:            c.pxeVlanID,
+		PodCidrs:             c.podCidrs,
 	}
 
 	p := types.Ports{
@@ -196,7 +197,10 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 	switcherConfig.Ports = p
 
 	c.nos.SanitizeConfig(switcherConfig)
-	switcherConfig.FillRouteMapsAndIPPrefixLists()
+	err = switcherConfig.FillRouteMapsAndIPPrefixLists()
+	if err != nil {
+		return nil, err
+	}
 	m, err := vlan.ReadMapping()
 	if err != nil {
 		return nil, err

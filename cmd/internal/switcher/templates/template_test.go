@@ -40,7 +40,8 @@ func TestCumulusFrrTemplate(t *testing.T) {
 		tt := tests[i]
 		t.Run(tt, func(t *testing.T) {
 			c := readConf(t, path.Join("test_data", tt, "conf.yaml"))
-			c.FillRouteMapsAndIPPrefixLists()
+			err := c.FillRouteMapsAndIPPrefixLists()
+			require.NoError(t, err)
 			tpl := CumulusFrrTemplate("")
 			verifyTemplate(t, tpl, &c, path.Join("test_data", tt, "cumulus_frr.conf"))
 		})
@@ -54,7 +55,8 @@ func TestSonicFrrTpl(t *testing.T) {
 		t.Run(tt, func(t *testing.T) {
 			c := readConf(t, path.Join("test_data", tt, "conf.yaml"))
 			c.CapitalizeVrfName()
-			c.FillRouteMapsAndIPPrefixLists()
+			err := c.FillRouteMapsAndIPPrefixLists()
+			require.NoError(t, err)
 			tpl := SonicFrrTemplate("")
 			verifyTemplate(t, tpl, &c, path.Join("test_data", tt, "sonic_frr.conf"))
 		})
@@ -69,14 +71,16 @@ func TestCustomInterfacesTemplate(t *testing.T) {
 
 func TestCustomCumulusFrrTemplate(t *testing.T) {
 	c := readConf(t, "test_data/dev/conf.yaml")
-	c.FillRouteMapsAndIPPrefixLists()
+	err := c.FillRouteMapsAndIPPrefixLists()
+	require.NoError(t, err)
 	tpl := CumulusFrrTemplate("test_data/dev/customtpl/frr.tpl")
 	verifyTemplate(t, tpl, &c, "test_data/dev/customtpl/frr.conf")
 }
 
 func TestCustomSonicFrrTemplate(t *testing.T) {
 	c := readConf(t, "test_data/dev/conf.yaml")
-	c.FillRouteMapsAndIPPrefixLists()
+	err := c.FillRouteMapsAndIPPrefixLists()
+	require.NoError(t, err)
 	tpl := SonicFrrTemplate("test_data/dev/customtpl/frr.tpl")
 	verifyTemplate(t, tpl, &c, "test_data/dev/customtpl/frr.conf")
 }

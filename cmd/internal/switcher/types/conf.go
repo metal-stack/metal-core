@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"net/netip"
 
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
@@ -31,26 +32,28 @@ outer_loop:
 	return nil
 }
 
-func (c *Conf) FillRouteMapsAndIPPrefixLists() {
+func (c *Conf) FillRouteMapsAndIPPrefixLists() error {
 	for port, f := range c.Ports.Firewalls {
 		f.Assemble("fw-"+port, f.Vnis, f.Cidrs)
 	}
 	for vrf, t := range c.Ports.Vrfs {
-		// FIXME hardcoded and IPv6 missing
-		podCidr := "10.240.0.0/12"
-		t.Cidrs = append(t.Cidrs, podCidr)
-		ipv4, ipv6 := addressFamilies(t.Cidrs)
+		t.Cidrs = append(t.Cidrs, c.PodCidrs...)
+		ipv4, ipv6, err := addressFamilies(t.Cidrs)
+		if err != nil {
+			return fmt.Errorf("unable to parse addressfamilies from cidrs:%w", err)
+		}
 		t.Has4 = ipv4
 		t.Has6 = ipv6
 		t.Assemble(vrf, []string{}, t.Cidrs)
 	}
+	return nil
 }
 
-func addressFamilies(cidrs []string) (ipv4, ipv6 bool) {
+func addressFamilies(cidrs []string) (ipv4, ipv6 bool, err error) {
 	for _, cidr := range cidrs {
 		parsed, err := netip.ParsePrefix(cidr)
 		if err != nil {
-			continue
+			return false, false, err
 		}
 		if parsed.Addr().Is4() {
 			ipv4 = true
@@ -59,7 +62,7 @@ func addressFamilies(cidrs []string) (ipv4, ipv6 bool) {
 			ipv6 = true
 		}
 	}
-	return ipv4, ipv6
+	return ipv4, ipv6, nil
 }
 
 // CapitalizeVrfName capitalizes VRF names, which is requirement for SONiC
