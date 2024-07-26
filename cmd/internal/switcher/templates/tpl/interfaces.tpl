@@ -1,4 +1,6 @@
 {{- $IPLoopback := .Loopback -}}
+{{- $PXEVlanID := .PXEVlanID -}}
+{{- $PXEVni := printf "10%04d" $PXEVlanID -}}
 # This file describes the network interfaces available on your system
 # and how to activate them. For more information, see interfaces(5).
 
@@ -35,8 +37,8 @@ iface {{ .Port }}
 
 auto bridge
 iface bridge
-    bridge-ports vni104000{{ range .Ports.Unprovisioned }} {{ . }}{{ end }}{{ range .Ports.BladePorts }} {{ . }}{{ end }}{{ range $vrf, $t := .Ports.Vrfs }} vni{{ $t.VNI }}{{ end }}
-    bridge-vids 4000{{ range $vrf, $t := .Ports.Vrfs }} {{ $t.VLANID }}{{ end }}{{ range $vids := .AdditionalBridgeVIDs }} {{ $vids }}{{ end }}
+    bridge-ports vni{{ $PXEVni }}{{ range .Ports.Unprovisioned }} {{ . }}{{ end }}{{ range .Ports.BladePorts }} {{ . }}{{ end }}{{ range $vrf, $t := .Ports.Vrfs }} vni{{ $t.VNI }}{{ end }}
+    bridge-vids {{ $PXEVlanID }}{{ range $vrf, $t := .Ports.Vrfs }} {{ $t.VLANID }}{{ end }}{{ range $vids := .AdditionalBridgeVIDs }} {{ $vids }}{{ end }}
     bridge-vlan-aware yes
 
 # Tenants
@@ -75,21 +77,21 @@ iface vni{{ $t.VNI }}
 {{- end }}
 
 # PXE-Config
-auto vlan4000
-iface vlan4000
+auto vlan{{ $PXEVlanID }}
+iface vlan{{ $PXEVlanID }}
     mtu 9000
     address {{ .MetalCoreCIDR }}
-    vlan-id 4000
+    vlan-id {{ $PXEVlanID }}
     vlan-raw-device bridge
 
-auto vni104000
-iface vni104000
+auto vni{{ $PXEVni }}
+iface vni{{ $PXEVni }}
     mtu 9000
-    bridge-access 4000
+    bridge-access {{ $PXEVlanID }}
     bridge-learning off
     mstpctl-bpduguard yes
     mstpctl-portbpdufilter yes
-    vxlan-id 104000
+    vxlan-id {{ $PXEVni }}
     vxlan-local-tunnelip {{ $IPLoopback }}
 
 {{- range .Ports.Unprovisioned }}
@@ -97,5 +99,5 @@ iface vni104000
 auto {{ . }}
 iface {{ . }}
     mtu 9000
-    bridge-access 4000
+    bridge-access {{ $PXEVlanID }}
 {{- end }}

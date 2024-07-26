@@ -40,3 +40,4 @@ ports:
 additionalbridgevids:
   - 201-256
   - 301-356
+pxevlanid: 966
