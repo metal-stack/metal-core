@@ -4,6 +4,8 @@ loglevel: debugging
 loopback: 10.0.0.10
 asn: 4200000010
 metalcorecidr: 10.255.255.2/24
+additionalroutemapcidrs:
+  - "10.240.0.0/12"
 ports:
   eth0:
     addresscidr: 192.168.0.11

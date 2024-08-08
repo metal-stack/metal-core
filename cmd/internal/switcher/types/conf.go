@@ -1,6 +1,9 @@
 package types
 
 import (
+	"fmt"
+	"net/netip"
+
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -29,15 +32,37 @@ outer_loop:
 	return nil
 }
 
-func (c *Conf) FillRouteMapsAndIPPrefixLists() {
+func (c *Conf) FillRouteMapsAndIPPrefixLists() error {
 	for port, f := range c.Ports.Firewalls {
 		f.Assemble("fw-"+port, f.Vnis, f.Cidrs)
 	}
 	for vrf, t := range c.Ports.Vrfs {
-		podCidr := "10.240.0.0/12"
-		t.Cidrs = append(t.Cidrs, podCidr)
+		t.Cidrs = append(t.Cidrs, c.AdditionalRouteMapCIDRs...)
+		ipv4, ipv6, err := addressFamilies(t.Cidrs)
+		if err != nil {
+			return fmt.Errorf("unable to parse addressfamilies from cidrs:%w", err)
+		}
+		t.Has4 = ipv4
+		t.Has6 = ipv6
 		t.Assemble(vrf, []string{}, t.Cidrs)
 	}
+	return nil
+}
+
+func addressFamilies(cidrs []string) (ipv4, ipv6 bool, err error) {
+	for _, cidr := range cidrs {
+		parsed, err := netip.ParsePrefix(cidr)
+		if err != nil {
+			return false, false, err
+		}
+		if parsed.Addr().Is4() {
+			ipv4 = true
+		}
+		if parsed.Addr().Is6() {
+			ipv6 = true
+		}
+	}
+	return ipv4, ipv6, nil
 }
 
 // CapitalizeVrfName capitalizes VRF names, which is requirement for SONiC
