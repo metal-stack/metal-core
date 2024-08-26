@@ -116,11 +116,9 @@ func (c *Core) reconfigureSwitch(switchName string) (*models.V1SwitchResponse, e
 
 func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, error) {
 	asn64, err := strconv.ParseUint(c.asn, 10, 32)
-	asn := uint32(asn64)
 	if err != nil {
 		return nil, err
 	}
-
 	if c.pxeVlanID >= vlan.VlanIDMin && c.pxeVlanID <= vlan.VlanIDMax {
 		return nil, fmt.Errorf("configured PXE VLAN ID is in the reserved area of %d, %d", vlan.VlanIDMin, vlan.VlanIDMax)
 	}
@@ -128,7 +126,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 	switcherConfig := &types.Conf{
 		Name:                    s.Name,
 		LogLevel:                mapLogLevel(c.logLevel),
-		ASN:                     asn,
+		ASN:                     uint32(asn64), // nolint:gosec
 		Loopback:                c.loopbackIP,
 		MetalCoreCIDR:           c.cidr,
 		AdditionalBridgeVIDs:    c.additionalBridgeVIDs,
@@ -187,7 +185,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 		if err != nil {
 			return nil, err
 		}
-		vrf.VNI = uint32(vni64)
+		vrf.VNI = uint32(vni64) // nolint:gosec
 		vrf.Neighbors = append(vrf.Neighbors, port)
 		if nic.Filter != nil {
 			vrf.Cidrs = nic.Filter.Cidrs

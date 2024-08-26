@@ -23,12 +23,12 @@ func ReadMapping() (Mapping, error) {
 		if nic.Type() == "vxlan" {
 			vx := nic.(*netlink.Vxlan)
 			vni := vx.VxlanId
-			ifindex := int32(nic.Attrs().Index)
+			ifindex := int32(nic.Attrs().Index) // nolint:gosec
 			if len(bvl[ifindex]) < 1 {
 				return nil, fmt.Errorf("no vlan mapping could be determined for vxlan interface %s", nic.Attrs().Name)
 			}
 			vlan := bvl[ifindex][0].Vid
-			m[vlan] = uint32(vni)
+			m[vlan] = uint32(vni) // nolint:gosec
 		}
 	}
 	return m, nil
