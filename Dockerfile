@@ -4,6 +4,7 @@ COPY . .
 RUN apk add \
     make \
     binutils \
+    coreutils \
     git \
     gcc \
     libpcap-dev \
