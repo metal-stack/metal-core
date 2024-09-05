@@ -46,12 +46,9 @@ func (c *Conf) FillRouteMapsAndIPPrefixLists() error {
 			return err
 		}
 
-		ipv4, ipv6, err := addressFamilies(t.Cidrs)
-		if err != nil {
-			return fmt.Errorf("unable to parse addressfamilies from cidrs:%w", err)
-		}
-		t.Has4 = ipv4
-		t.Has6 = ipv6
+		cidrsByAf := cidrsByAddressfamily(t.Cidrs)
+		t.Has4 = len(cidrsByAf.ipv4Cidrs) > 0
+		t.Has6 = len(cidrsByAf.ipv6Cidrs) > 0
 		t.Assemble(vrf, []string{}, t.Cidrs)
 	}
 	return nil
@@ -78,22 +75,6 @@ func compactCidrs(cidrs []string) ([]string, error) {
 	}
 
 	return compacted, nil
-}
-
-func addressFamilies(cidrs []string) (ipv4, ipv6 bool, err error) {
-	for _, cidr := range cidrs {
-		parsed, err := netip.ParsePrefix(cidr)
-		if err != nil {
-			return false, false, err
-		}
-		if parsed.Addr().Is4() {
-			ipv4 = true
-		}
-		if parsed.Addr().Is6() {
-			ipv6 = true
-		}
-	}
-	return ipv4, ipv6, nil
 }
 
 // CapitalizeVrfName capitalizes VRF names, which is requirement for SONiC
