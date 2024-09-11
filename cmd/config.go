@@ -31,4 +31,5 @@ type Config struct {
 	GrpcClientCertFile        string        `required:"false" desc:"the gRPC client certificate file" envconfig:"grpc_client_cert_file"`
 	GrpcClientKeyFile         string        `required:"false" desc:"the gRPC client key file" envconfig:"grpc_client_key_file"`
 	PXEVlanID                 uint16        `required:"false" default:"4000" desc:"the id of the pxe vlan" envconfig:"pxe_vlan_id"`
+	AdditionalRouteMapCIDRs   []string      `required:"false" default:"10.240.0.0/12" desc:"additional route map entries, typically the pod/service CIDRs, one or more CIDR for ipv4 or ipv6, separated by comma" envconfig:"additional_route_map_cidrs"`
 }

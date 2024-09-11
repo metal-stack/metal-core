@@ -8,6 +8,7 @@ import (
 	"testing"
 	"text/template"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 
@@ -39,7 +40,8 @@ func TestCumulusFrrTemplate(t *testing.T) {
 		tt := tests[i]
 		t.Run(tt, func(t *testing.T) {
 			c := readConf(t, path.Join("test_data", tt, "conf.yaml"))
-			c.FillRouteMapsAndIPPrefixLists()
+			err := c.FillRouteMapsAndIPPrefixLists()
+			require.NoError(t, err)
 			tpl := CumulusFrrTemplate("")
 			verifyTemplate(t, tpl, &c, path.Join("test_data", tt, "cumulus_frr.conf"))
 		})
@@ -53,7 +55,8 @@ func TestSonicFrrTpl(t *testing.T) {
 		t.Run(tt, func(t *testing.T) {
 			c := readConf(t, path.Join("test_data", tt, "conf.yaml"))
 			c.CapitalizeVrfName()
-			c.FillRouteMapsAndIPPrefixLists()
+			err := c.FillRouteMapsAndIPPrefixLists()
+			require.NoError(t, err)
 			tpl := SonicFrrTemplate("")
 			verifyTemplate(t, tpl, &c, path.Join("test_data", tt, "sonic_frr.conf"))
 		})
@@ -68,14 +71,16 @@ func TestCustomInterfacesTemplate(t *testing.T) {
 
 func TestCustomCumulusFrrTemplate(t *testing.T) {
 	c := readConf(t, "test_data/dev/conf.yaml")
-	c.FillRouteMapsAndIPPrefixLists()
+	err := c.FillRouteMapsAndIPPrefixLists()
+	require.NoError(t, err)
 	tpl := CumulusFrrTemplate("test_data/dev/customtpl/frr.tpl")
 	verifyTemplate(t, tpl, &c, "test_data/dev/customtpl/frr.conf")
 }
 
 func TestCustomSonicFrrTemplate(t *testing.T) {
 	c := readConf(t, "test_data/dev/conf.yaml")
-	c.FillRouteMapsAndIPPrefixLists()
+	err := c.FillRouteMapsAndIPPrefixLists()
+	require.NoError(t, err)
 	tpl := SonicFrrTemplate("test_data/dev/customtpl/frr.tpl")
 	verifyTemplate(t, tpl, &c, "test_data/dev/customtpl/frr.conf")
 }
@@ -83,7 +88,9 @@ func TestCustomSonicFrrTemplate(t *testing.T) {
 func verifyTemplate(t *testing.T, tpl *template.Template, c *types.Conf, expectedFilename string) {
 	actual := renderToString(t, tpl, c)
 	expected := readExpected(t, expectedFilename)
-	require.Equal(t, expected, actual, "Wanted: %s\nGot: %s", expected, actual)
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Errorf("%s render differs:%s", expectedFilename, diff)
+	}
 }
 
 func renderToString(t *testing.T, tpl *template.Template, c *types.Conf) string {
