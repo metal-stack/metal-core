@@ -1,7 +1,6 @@
 package vlan
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -53,7 +52,7 @@ func TestReserveVlanIDs(t *testing.T) {
 				m[t] = uint32(t)
 			}
 			a, _ := m.reserveVlanIDs(tt.input.min, tt.input.max, tt.input.n)
-			assert.Equal(t, tt.expected, a, fmt.Sprintf("reservation differs (taken: %v)", tt.input.taken))
+			assert.Equal(t, tt.expected, a, "reservation differs (taken: %v)", tt.input.taken)
 		})
 	}
 }

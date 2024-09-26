@@ -12,14 +12,15 @@ import (
 
 func TestBuildSwitcherConfig(t *testing.T) {
 	c := &Core{
-		cidr:                 "10.255.255.2/24",
-		partitionID:          "fra-equ01",
-		rackID:               "rack01",
-		asn:                  "420000001",
-		loopbackIP:           "10.0.0.1",
-		spineUplinks:         []string{"swp31", "swp32"},
-		additionalBridgeVIDs: []string{"201-256", "301-356"},
-		nos:                  &cumulus.Cumulus{},
+		cidr:                    "10.255.255.2/24",
+		partitionID:             "fra-equ01",
+		rackID:                  "rack01",
+		asn:                     "420000001",
+		loopbackIP:              "10.0.0.1",
+		spineUplinks:            []string{"swp31", "swp32"},
+		additionalBridgeVIDs:    []string{"201-256", "301-356"},
+		nos:                     &cumulus.Cumulus{},
+		additionalRouteMapCIDRs: []string{"10.240.0.0/12"},
 	}
 
 	n1 := "swp1"
@@ -53,10 +54,11 @@ func TestBuildSwitcherConfig(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, actual)
 	expected := &types.Conf{
-		LogLevel:      "warnings",
-		Loopback:      "10.0.0.1",
-		MetalCoreCIDR: "10.255.255.2/24",
-		ASN:           420000001,
+		LogLevel:                "warnings",
+		Loopback:                "10.0.0.1",
+		MetalCoreCIDR:           "10.255.255.2/24",
+		ASN:                     420000001,
+		AdditionalRouteMapCIDRs: []string{"10.240.0.0/12"},
 		Ports: types.Ports{
 			Underlay:      []string{"swp31", "swp32"},
 			Unprovisioned: []string{"swp1"},
@@ -72,8 +74,9 @@ func TestBuildSwitcherConfig(t *testing.T) {
 				Filter: types.Filter{
 					IPPrefixLists: []types.IPPrefixList{
 						{
-							Name: "vrf104001-in-prefixes",
-							Spec: "permit 10.240.0.0/12 le 32",
+							AddressFamily: "ip",
+							Name:          "vrf104001-in-prefixes",
+							Spec:          "permit 10.240.0.0/12 le 32",
 						},
 					},
 					RouteMaps: []types.RouteMap{
@@ -86,6 +89,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 					},
 				},
 				Cidrs: []string{"10.240.0.0/12"},
+				Has4:  true,
 			}},
 		},
 		AdditionalBridgeVIDs: []string{"201-256", "301-356"},
