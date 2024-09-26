@@ -60,7 +60,6 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		ASN:                     420000001,
 		AdditionalRouteMapCIDRs: []string{"10.240.0.0/12"},
 		Ports: types.Ports{
-			DownPorts:     map[string]bool{},
 			Underlay:      []string{"swp31", "swp32"},
 			Unprovisioned: []string{"swp1"},
 			Firewalls: map[string]*types.Firewall{

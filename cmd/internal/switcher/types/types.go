@@ -23,7 +23,6 @@ type Ports struct {
 	Underlay      []string
 	Unprovisioned []string
 	BladePorts    []string
-	DownPorts     map[string]bool
 	Vrfs          map[string]*Vrf
 	Firewalls     map[string]*Firewall
 }

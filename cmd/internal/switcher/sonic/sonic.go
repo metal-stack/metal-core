@@ -44,7 +44,10 @@ func New(log *slog.Logger, frrTplFile string) (*Sonic, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to load database config for SONiC: %w", err)
 	}
-	sonicDb := db.New(cfg)
+	sonicDb, err := db.New(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to SONiC databases: %w", err)
+	}
 
 	return &Sonic{
 		db:           sonicDb,
@@ -89,11 +92,6 @@ func (s *Sonic) GetNics(log *slog.Logger, blacklist []string) (nics []*models.V1
 		return nil, fmt.Errorf("unable to get all ifs: %w", err)
 	}
 
-	portsConfig, err := getPortsConfig(sonicConfigDBPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get ports config")
-	}
-
 	for _, iface := range ifs {
 		name := iface.Name
 		if slices.Contains(blacklist, name) {
@@ -101,14 +99,8 @@ func (s *Sonic) GetNics(log *slog.Logger, blacklist []string) (nics []*models.V1
 			continue
 		}
 
-		id, found := portsConfig[name]
-		if !found {
-			log.Debug("skip interface as no info on it was found in config DB", "interface", name)
-			continue
-		}
-
 		nic := &models.V1SwitchNic{
-			Identifier: &id.Alias,
+			Identifier: &name,
 			Name:       &name,
 		}
 		nics = append(nics, nic)
@@ -154,7 +146,6 @@ func getPortsConfig(filepath string) (map[string]PortInfo, error) {
 	config := struct {
 		Ports map[string]PortInfo `json:"PORT"`
 	}{}
-	//nolint:musttag
 	err = json.Unmarshal(byteValue, &config)
 
 	return config.Ports, err
