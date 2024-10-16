@@ -55,13 +55,3 @@ func (d *AsicDB) ExistRouterInterface(ctx context.Context, rif OID) (bool, error
 
 	return d.c.Exists(ctx, key)
 }
-
-func (d *AsicDB) InFecModeRs(ctx context.Context, port OID) (bool, error) {
-	key := Key{"ASIC_STATE", "SAI_OBJECT_TYPE_PORT", string(port)}
-
-	result, err := d.c.HGet(ctx, key, "SAI_PORT_ATTR_FEC_MODE")
-	if err != nil {
-		return false, err
-	}
-	return result == "SAI_PORT_FEC_MODE_RS", err
-}
