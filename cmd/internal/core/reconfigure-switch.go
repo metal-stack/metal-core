@@ -45,7 +45,11 @@ func (c *Core) ReconfigureSwitch() {
 		}
 
 		// fill the port states of the switch
-		for _, n := range s.Nics {
+		var nics []*models.V1SwitchNic
+		if s != nil {
+			nics = s.Nics
+		}
+		for _, n := range nics {
 			if n == nil || n.Name == nil {
 				// lets log the whole nic because the name could be empty; lets hope there is some useful information
 				// in the nic
@@ -112,17 +116,22 @@ func (c *Core) reconfigureSwitch(switchName string) (*models.V1SwitchResponse, e
 
 func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, error) {
 	asn64, err := strconv.ParseUint(c.asn, 10, 32)
-	asn := uint32(asn64)
 	if err != nil {
 		return nil, err
 	}
+	if c.pxeVlanID >= vlan.VlanIDMin && c.pxeVlanID <= vlan.VlanIDMax {
+		return nil, fmt.Errorf("configured PXE VLAN ID is in the reserved area of %d, %d", vlan.VlanIDMin, vlan.VlanIDMax)
+	}
+
 	switcherConfig := &types.Conf{
-		Name:                 s.Name,
-		LogLevel:             mapLogLevel(c.logLevel),
-		ASN:                  asn,
-		Loopback:             c.loopbackIP,
-		MetalCoreCIDR:        c.cidr,
-		AdditionalBridgeVIDs: c.additionalBridgeVIDs,
+		Name:                    s.Name,
+		LogLevel:                mapLogLevel(c.logLevel),
+		ASN:                     uint32(asn64), // nolint:gosec
+		Loopback:                c.loopbackIP,
+		MetalCoreCIDR:           c.cidr,
+		AdditionalBridgeVIDs:    c.additionalBridgeVIDs,
+		PXEVlanID:               c.pxeVlanID,
+		AdditionalRouteMapCIDRs: c.additionalRouteMapCIDRs,
 	}
 
 	p := types.Ports{
@@ -176,7 +185,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 		if err != nil {
 			return nil, err
 		}
-		vrf.VNI = uint32(vni64)
+		vrf.VNI = uint32(vni64) // nolint:gosec
 		vrf.Neighbors = append(vrf.Neighbors, port)
 		if nic.Filter != nil {
 			vrf.Cidrs = nic.Filter.Cidrs
@@ -186,7 +195,10 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 	switcherConfig.Ports = p
 
 	c.nos.SanitizeConfig(switcherConfig)
-	switcherConfig.FillRouteMapsAndIPPrefixLists()
+	err = switcherConfig.FillRouteMapsAndIPPrefixLists()
+	if err != nil {
+		return nil, err
+	}
 	m, err := vlan.ReadMapping()
 	if err != nil {
 		return nil, err

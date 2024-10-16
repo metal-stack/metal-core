@@ -1,9 +1,10 @@
-FROM golang:1.22-alpine3.19 as builder
+FROM golang:1.23-alpine3.20 AS builder
 WORKDIR /work
 COPY . .
 RUN apk add \
     make \
     binutils \
+    coreutils \
     git \
     gcc \
     libpcap-dev \
@@ -11,7 +12,7 @@ RUN apk add \
     dbus-libs
 RUN make
 
-FROM alpine:3.19
+FROM alpine:3.20
 
 RUN apk add \
     libpcap \
