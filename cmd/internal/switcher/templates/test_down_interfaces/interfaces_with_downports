@@ -28,50 +28,34 @@ auto swp32
 iface swp32
     mtu 9216
 
-auto swp3
-iface swp3
-    mtu 9216
-
 auto bridge
 iface bridge
-    bridge-ports vni100966 swp4 swp5 vni104001
-    bridge-vids 966 4001
+    bridge-ports vni100966 swp1 swp2 vni1
+    bridge-vids 966 2
     bridge-vlan-aware yes
 
 # Tenants
 
-auto vrf104001
-iface vrf104001
+auto vrf1
+iface vrf1
     vrf-table auto
 
-auto swp1
-iface swp1
+auto vlan2
+iface vlan2
     mtu 9000
-    post-up sysctl -w net.ipv6.conf.swp1.disable_ipv6=0
-    vrf vrf104001
-
-auto swp2
-iface swp2
-    mtu 9000
-    post-up sysctl -w net.ipv6.conf.swp2.disable_ipv6=0
-    vrf vrf104001
-
-auto vlan4001
-iface vlan4001
-    mtu 9000
-    vlan-id 4001
+    vlan-id 2
     vlan-raw-device bridge
-    vrf vrf104001
+    vrf vrf1
 
-auto vni104001
-iface vni104001
+auto vni1
+iface vni1
     mtu 9000
-    bridge-access 4001
+    bridge-access 2
     bridge-arp-nd-suppress on
     bridge-learning off
     mstpctl-bpduguard yes
     mstpctl-portbpdufilter yes
-    vxlan-id 104001
+    vxlan-id 1
     vxlan-local-tunnelip 10.0.0.10
 
 # PXE-Config
@@ -92,12 +76,12 @@ iface vni100966
     vxlan-id 100966
     vxlan-local-tunnelip 10.0.0.10
 
-auto swp4
-iface swp4
+auto swp1
+iface swp1
     mtu 9000
     bridge-access 966
 
-auto swp5
-iface swp5
+auto swp2
+iface swp2
     mtu 9000
     bridge-access 966

@@ -49,19 +49,20 @@ func (a *Applier) Apply(cfg *types.Conf) error {
 	}
 
 	for _, interfaceName := range cfg.Ports.Underlay {
-		if err := a.configureUnderlayPort(interfaceName); err != nil {
+		if err := a.configureUnderlayPort(interfaceName, !cfg.Ports.DownPorts[interfaceName]); err != nil {
 			errs = append(errs, err)
 		}
 	}
 
 	for _, interfaceName := range cfg.Ports.Unprovisioned {
-		if err := a.configureUnprovisionedPort(interfaceName); err != nil {
+		pxeVlan := fmt.Sprintf("Vlan%d", cfg.PXEVlanID)
+		if err := a.configureUnprovisionedPort(interfaceName, !cfg.Ports.DownPorts[interfaceName], pxeVlan); err != nil {
 			errs = append(errs, err)
 		}
 	}
 
 	for interfaceName := range cfg.Ports.Firewalls {
-		if err := a.configureFirewallPort(interfaceName); err != nil {
+		if err := a.configureFirewallPort(interfaceName, !cfg.Ports.DownPorts[interfaceName]); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -71,7 +72,7 @@ func (a *Applier) Apply(cfg *types.Conf) error {
 			errs = append(errs, err)
 		}
 		for _, interfaceName := range vrf.Neighbors {
-			if err := a.configureVrfNeighbor(interfaceName, vrfName); err != nil {
+			if err := a.configureVrfNeighbor(interfaceName, vrfName, !cfg.Ports.DownPorts[interfaceName]); err != nil {
 				errs = append(errs, err)
 			}
 		}
@@ -115,7 +116,7 @@ func (a *Applier) refreshOidMaps() error {
 	return nil
 }
 
-func (a *Applier) configureUnprovisionedPort(interfaceName string) error {
+func (a *Applier) configureUnprovisionedPort(interfaceName string, isUp bool, pxeVlan string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -124,14 +125,15 @@ func (a *Applier) configureUnprovisionedPort(interfaceName string) error {
 		return err
 	}
 
-	if err := a.ensurePortConfiguration(ctx, interfaceName, "9000", true); err != nil {
+	// unprovisioned ports should be up
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "9000", isUp); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 
-	return a.ensureInterfaceIsVlanMember(ctx, interfaceName, "Vlan4000")
+	return a.ensureInterfaceIsVlanMember(ctx, interfaceName, pxeVlan)
 }
 
-func (a *Applier) configureFirewallPort(interfaceName string) error {
+func (a *Applier) configureFirewallPort(interfaceName string, isUp bool) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -140,24 +142,26 @@ func (a *Applier) configureFirewallPort(interfaceName string) error {
 		return err
 	}
 
-	if err := a.ensurePortConfiguration(ctx, interfaceName, "9216", true); err != nil {
+	// a firewall port should always be up
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "9216", isUp); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 
 	return a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
 }
 
-func (a *Applier) configureUnderlayPort(interfaceName string) error {
+func (a *Applier) configureUnderlayPort(interfaceName string, isUp bool) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := a.ensurePortConfiguration(ctx, interfaceName, "9216", false); err != nil {
+	// underlay ports should be up
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "9216", isUp); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 	return a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
 }
 
-func (a *Applier) configureVrfNeighbor(interfaceName, vrfName string) error {
+func (a *Applier) configureVrfNeighbor(interfaceName, vrfName string, isUp bool) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -171,7 +175,7 @@ func (a *Applier) configureVrfNeighbor(interfaceName, vrfName string) error {
 		return err
 	}
 
-	if err := a.ensurePortConfiguration(ctx, interfaceName, "9000", true); err != nil {
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "9000", isUp); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 

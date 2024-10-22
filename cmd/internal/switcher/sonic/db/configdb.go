@@ -16,10 +16,8 @@ const (
 	portTable       = "PORT"
 	adminStatus     = "admin_status"
 	adminStatusUp   = "up"
+	adminStatusDown = "down"
 	mtu             = "mtu"
-	fec             = "fec"
-	fecRS           = "rs"
-	fecNone         = "none"
 )
 
 type ConfigDB struct {
@@ -29,7 +27,6 @@ type ConfigDB struct {
 type Port struct {
 	AdminStatus bool
 	Mtu         string
-	FecRs       bool
 }
 
 func newConfigDB(addr string, id int, sep string) *ConfigDB {
@@ -181,21 +178,7 @@ func (d *ConfigDB) GetPort(ctx context.Context, interfaceName string) (*Port, er
 	return &Port{
 		AdminStatus: result[adminStatus] == adminStatusUp,
 		Mtu:         result[mtu],
-		FecRs:       result[fec] == fecRS,
 	}, nil
-}
-
-func (d *ConfigDB) SetPortFecMode(ctx context.Context, interfaceName string, isFecRs bool) error {
-	key := Key{portTable, interfaceName}
-
-	var mode string
-	if isFecRs {
-		mode = fecRS
-	} else {
-		mode = fecNone
-	}
-
-	return d.c.HSet(ctx, key, Val{fec: mode})
 }
 
 func (d *ConfigDB) SetPortMtu(ctx context.Context, interfaceName string, val string) error {
@@ -204,8 +187,12 @@ func (d *ConfigDB) SetPortMtu(ctx context.Context, interfaceName string, val str
 	return d.c.HSet(ctx, key, Val{mtu: val})
 }
 
-func (d *ConfigDB) SetAdminStatusUp(ctx context.Context, interfaceName string) error {
+func (d *ConfigDB) SetAdminStatusUp(ctx context.Context, interfaceName string, up bool) error {
 	key := Key{portTable, interfaceName}
 
-	return d.c.HSet(ctx, key, Val{adminStatus: adminStatusUp})
+	status := adminStatusUp
+	if !up {
+		status = adminStatusDown
+	}
+	return d.c.HSet(ctx, key, Val{adminStatus: status})
 }
