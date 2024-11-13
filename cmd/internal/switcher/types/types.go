@@ -7,15 +7,14 @@ import (
 
 // Conf holds the switch configuration
 type Conf struct {
-	Name                    string
-	LogLevel                string
-	Loopback                string
-	ASN                     uint32
-	Ports                   Ports
-	MetalCoreCIDR           string
-	AdditionalBridgeVIDs    []string
-	PXEVlanID               uint16
-	AdditionalRouteMapCIDRs []string
+	Name                 string
+	LogLevel             string
+	Loopback             string
+	ASN                  uint32
+	Ports                Ports
+	MetalCoreCIDR        string
+	AdditionalBridgeVIDs []string
+	PXEVlanID            uint16
 }
 
 type Ports struct {
