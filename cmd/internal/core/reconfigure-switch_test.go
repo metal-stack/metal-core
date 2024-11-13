@@ -36,7 +36,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		Vrf:  "vrf104001",
 		Filter: &models.V1BGPFilter{
 			Cidrs: []string{
-				"10.240.0.0/12",
+				"10.240.0.0/12", // pod and service ipv4 cidrs
 			},
 		},
 	}
