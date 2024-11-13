@@ -4,9 +4,6 @@ loglevel: warnings
 loopback: 10.0.0.10
 asn: 4200000010
 metalcorecidr: 10.255.255.2/24
-additionalroutemapcidrs:
-  - "10.240.0.0/12"
-  - "fd00:10::/64"
 ports:
   eth0:
     addresscidr: 192.168.101.12/24
@@ -40,6 +37,8 @@ ports:
         - "100.127.131.0/24"
         - "212.17.234.17/32"
         - "2001:db8:3::1/128"
+        - "10.240.0.0/12" # pod and service ipv4 cidrs
+        - "fd00:10::/64" # pod and service ipv6 cidrs
 additionalbridgevids:
   - 201-256
   - 301-356

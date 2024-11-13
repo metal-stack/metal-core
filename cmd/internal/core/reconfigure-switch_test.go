@@ -34,6 +34,11 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		Name: &n2,
 		Mac:  &m2,
 		Vrf:  "vrf104001",
+		Filter: &models.V1BGPFilter{
+			Cidrs: []string{
+				"10.240.0.0/12",
+			},
+		},
 	}
 	n3 := "swp3"
 	m3 := "00:00:00:00:00:03"
