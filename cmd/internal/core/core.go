@@ -33,8 +33,7 @@ type Core struct {
 
 	metrics *metrics.Metrics
 
-	pxeVlanID               uint16
-	additionalRouteMapCIDRs []string
+	pxeVlanID uint16
 }
 
 type Config struct {
@@ -60,8 +59,7 @@ type Config struct {
 
 	Metrics *metrics.Metrics
 
-	PXEVlanID               uint16
-	AdditionalRouteMapCIDRs []string
+	PXEVlanID uint16
 }
 
 func New(c Config) *Core {
@@ -84,6 +82,5 @@ func New(c Config) *Core {
 		eventServiceClient:        c.EventServiceClient,
 		metrics:                   c.Metrics,
 		pxeVlanID:                 c.PXEVlanID,
-		additionalRouteMapCIDRs:   c.AdditionalRouteMapCIDRs,
 	}
 }

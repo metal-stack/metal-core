@@ -12,15 +12,14 @@ import (
 
 func TestBuildSwitcherConfig(t *testing.T) {
 	c := &Core{
-		cidr:                    "10.255.255.2/24",
-		partitionID:             "fra-equ01",
-		rackID:                  "rack01",
-		asn:                     "420000001",
-		loopbackIP:              "10.0.0.1",
-		spineUplinks:            []string{"swp31", "swp32"},
-		additionalBridgeVIDs:    []string{"201-256", "301-356"},
-		nos:                     &cumulus.Cumulus{},
-		additionalRouteMapCIDRs: []string{"10.240.0.0/12"},
+		cidr:                 "10.255.255.2/24",
+		partitionID:          "fra-equ01",
+		rackID:               "rack01",
+		asn:                  "420000001",
+		loopbackIP:           "10.0.0.1",
+		spineUplinks:         []string{"swp31", "swp32"},
+		additionalBridgeVIDs: []string{"201-256", "301-356"},
+		nos:                  &cumulus.Cumulus{},
 	}
 
 	n1 := "swp1"
@@ -35,6 +34,11 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		Name: &n2,
 		Mac:  &m2,
 		Vrf:  "vrf104001",
+		Filter: &models.V1BGPFilter{
+			Cidrs: []string{
+				"10.240.0.0/12", // pod ipv4 cidrs
+			},
+		},
 	}
 	n3 := "swp3"
 	m3 := "00:00:00:00:00:03"
@@ -54,11 +58,10 @@ func TestBuildSwitcherConfig(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, actual)
 	expected := &types.Conf{
-		LogLevel:                "warnings",
-		Loopback:                "10.0.0.1",
-		MetalCoreCIDR:           "10.255.255.2/24",
-		ASN:                     420000001,
-		AdditionalRouteMapCIDRs: []string{"10.240.0.0/12"},
+		LogLevel:      "warnings",
+		Loopback:      "10.0.0.1",
+		MetalCoreCIDR: "10.255.255.2/24",
+		ASN:           420000001,
 		Ports: types.Ports{
 			DownPorts:     map[string]bool{},
 			Underlay:      []string{"swp31", "swp32"},

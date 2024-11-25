@@ -38,8 +38,6 @@ func (c *Conf) FillRouteMapsAndIPPrefixLists() error {
 		f.Assemble("fw-"+port, f.Vnis, f.Cidrs)
 	}
 	for vrf, t := range c.Ports.Vrfs {
-		t.Cidrs = append(t.Cidrs, c.AdditionalRouteMapCIDRs...)
-
 		var err error
 		t.Cidrs, err = compactCidrs(t.Cidrs)
 		if err != nil {
