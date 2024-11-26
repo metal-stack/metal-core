@@ -79,7 +79,6 @@ func (c *Core) ReconfigureSwitch() {
 				c.log.Error("could not get BGP states", "error", err)
 				c.metrics.CountError("switch-reconfiguration")
 			}
-			c.log.Debug("bgp port states", "bgpportstates", bgpportstates)
 			nr.BgpPortStates = bgpportstates
 		}
 		params.Body = nr
