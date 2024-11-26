@@ -11,6 +11,7 @@ import (
 
 	"github.com/vishvananda/netlink"
 
+	"github.com/metal-stack/metal-core/cmd/internal/frr"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
@@ -32,8 +33,9 @@ func (c *Core) ReconfigureSwitch() {
 		params.ID = host
 		ns := elapsed.Nanoseconds()
 		nr := &models.V1SwitchNotifyRequest{
-			SyncDuration: &ns,
-			PortStates:   make(map[string]string),
+			SyncDuration:  &ns,
+			PortStates:    make(map[string]string),
+			BgpPortStates: make(map[string]models.V1SwitchBGPPortState),
 		}
 		if err != nil {
 			errStr := err.Error()
@@ -69,9 +71,16 @@ func (c *Core) ReconfigureSwitch() {
 			} else {
 				nr.PortStates[*n.Name] = models.V1SwitchNicActualDOWN
 			}
-
 		}
 
+		if c.bgpNeighborStateFile != "" {
+			bgpportstates, err := frr.GetBGPStates(c.bgpNeighborStateFile)
+			if err != nil {
+				c.log.Error("could not get BGP states", "error", err)
+				c.metrics.CountError("switch-reconfiguration")
+			}
+			nr.BgpPortStates = bgpportstates
+		}
 		params.Body = nr
 		_, err = c.driver.SwitchOperations().NotifySwitch(params, nil)
 		if err != nil {

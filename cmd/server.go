@@ -102,6 +102,7 @@ func Run() {
 		EventServiceClient:        grpcClient.NewEventClient(),
 		Metrics:                   metrics,
 		PXEVlanID:                 cfg.PXEVlanID,
+		BGPNeighborStateFile:      cfg.BGPNeighborStateFile,
 	})
 
 	err = c.RegisterSwitch()

@@ -5,12 +5,17 @@ go 1.23.0
 require (
 	github.com/avast/retry-go/v4 v4.6.0
 	github.com/coreos/go-systemd/v22 v22.5.0
+	github.com/go-openapi/errors v0.22.0
+	github.com/go-openapi/runtime v0.28.0
+	github.com/go-openapi/strfmt v0.23.0
+	github.com/go-openapi/swag v0.23.0
+	github.com/go-openapi/validate v0.24.0
 	github.com/go-redis/redismock/v9 v9.2.0
 	github.com/google/go-cmp v0.6.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/go-lldpd v0.4.8
 	github.com/metal-stack/metal-api v0.39.4
-	github.com/metal-stack/metal-go v0.39.4
+	github.com/metal-stack/metal-go v0.39.5-0.20241125142836-85a6ff656afd
 	github.com/metal-stack/v v1.0.3
 	github.com/prometheus/client_golang v1.20.5
 	github.com/redis/go-redis/v9 v9.7.0
@@ -35,15 +40,10 @@ require (
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/analysis v0.23.0 // indirect
-	github.com/go-openapi/errors v0.22.0 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.21.0 // indirect
 	github.com/go-openapi/loads v0.22.0 // indirect
-	github.com/go-openapi/runtime v0.28.0 // indirect
 	github.com/go-openapi/spec v0.21.0 // indirect
-	github.com/go-openapi/strfmt v0.23.0 // indirect
-	github.com/go-openapi/swag v0.23.0 // indirect
-	github.com/go-openapi/validate v0.24.0 // indirect
 	github.com/goccy/go-json v0.10.3 // indirect
 	github.com/godbus/dbus/v5 v5.1.1-0.20230522191255-76236955d466 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
