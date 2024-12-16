@@ -109,7 +109,7 @@ func (c *Core) reconfigureSwitch(switchName string) (*models.V1SwitchResponse, e
 		return nil, fmt.Errorf("could not gather information about eth0 nic: %w", err)
 	}
 
-	c.log.Info("assembled new config for switch", "config", switchConfig)
+	c.log.Debug("assembled new config for switch", "config", switchConfig)
 	if !c.enableReconfigureSwitch {
 		c.log.Debug("skip config application because of environment setting")
 		return s, nil

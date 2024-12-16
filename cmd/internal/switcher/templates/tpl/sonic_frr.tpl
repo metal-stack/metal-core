@@ -4,6 +4,7 @@ hostname {{ .Name }}
 password zebra
 enable password zebra
 !
+agentx
 log syslog {{ .LogLevel }}
 log facility local4
 debug bgp updates
