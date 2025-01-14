@@ -102,7 +102,6 @@ func Run() {
 		EventServiceClient:        grpcClient.NewEventClient(),
 		Metrics:                   metrics,
 		PXEVlanID:                 cfg.PXEVlanID,
-		AdditionalRouteMapCIDRs:   cfg.AdditionalRouteMapCIDRs,
 	})
 
 	err = c.RegisterSwitch()

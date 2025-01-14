@@ -70,7 +70,7 @@ func (c *Core) reconfigureSwitch(switchName string) error {
 		return fmt.Errorf("could not gather information about eth0 nic: %w", err)
 	}
 
-	c.log.Info("assembled new config for switch", "config", switchConfig)
+	c.log.Debug("assembled new config for switch", "config", switchConfig)
 	if !c.enableReconfigureSwitch {
 		c.log.Debug("skip config application because of environment setting")
 		return nil
@@ -94,14 +94,13 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 	}
 
 	switcherConfig := &types.Conf{
-		Name:                    s.Name,
-		LogLevel:                mapLogLevel(c.logLevel),
-		ASN:                     uint32(asn64), // nolint:gosec
-		Loopback:                c.loopbackIP,
-		MetalCoreCIDR:           c.cidr,
-		AdditionalBridgeVIDs:    c.additionalBridgeVIDs,
-		PXEVlanID:               c.pxeVlanID,
-		AdditionalRouteMapCIDRs: c.additionalRouteMapCIDRs,
+		Name:                 s.Name,
+		LogLevel:             mapLogLevel(c.logLevel),
+		ASN:                  uint32(asn64), // nolint:gosec
+		Loopback:             c.loopbackIP,
+		MetalCoreCIDR:        c.cidr,
+		AdditionalBridgeVIDs: c.additionalBridgeVIDs,
+		PXEVlanID:            c.pxeVlanID,
 	}
 
 	p := types.Ports{
