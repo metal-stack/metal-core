@@ -19,9 +19,6 @@ const (
 	adminStatus     = "admin_status"
 	adminStatusUp   = "up"
 	mtu             = "mtu"
-	fec             = "fec"
-	fecRS           = "rs"
-	fecNone         = "none"
 )
 
 type ConfigDB struct {
@@ -32,7 +29,6 @@ type ConfigDB struct {
 type Port struct {
 	AdminStatus bool
 	Mtu         string
-	FecRs       bool
 }
 
 func newConfigDB(rdb *redis.Client, sep string) *ConfigDB {
@@ -208,21 +204,7 @@ func (d *ConfigDB) GetPort(ctx context.Context, interfaceName string) (*Port, er
 	return &Port{
 		AdminStatus: result[adminStatus] == adminStatusUp,
 		Mtu:         result[mtu],
-		FecRs:       result[fec] == fecRS,
 	}, nil
-}
-
-func (d *ConfigDB) SetPortFecMode(ctx context.Context, interfaceName string, isFecRs bool) error {
-	key := Key{portTable, interfaceName}
-
-	var mode string
-	if isFecRs {
-		mode = fecRS
-	} else {
-		mode = fecNone
-	}
-
-	return d.c.HSet(ctx, key, Val{fec: mode})
 }
 
 func (d *ConfigDB) SetPortMtu(ctx context.Context, interfaceName string, val string) error {
