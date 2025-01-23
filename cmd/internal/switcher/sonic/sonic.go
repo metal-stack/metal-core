@@ -44,7 +44,10 @@ func New(log *slog.Logger, frrTplFile string) (*Sonic, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to load database config for SONiC: %w", err)
 	}
-	sonicDb := db.New(cfg)
+	sonicDb, err := db.New(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to SONiC databases: %w", err)
+	}
 
 	return &Sonic{
 		db:           sonicDb,
