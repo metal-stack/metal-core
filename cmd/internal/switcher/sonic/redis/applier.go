@@ -78,6 +78,20 @@ func (a *Applier) Apply(cfg *types.Conf) error {
 		}
 	}
 
+	for vrfName, vrf := range a.previousCfg.Ports.Vrfs {
+		if _, found := cfg.Ports.Vrfs[vrfName]; found {
+			continue
+		}
+		for _, interfaceName := range vrf.Neighbors {
+			if err := a.cleanupVrfNeighbor(interfaceName, vrfName, !cfg.Ports.DownPorts[interfaceName]); err != nil {
+				errs = append(errs, err)
+			}
+		}
+		if err := a.cleanupVrf(vrfName, vrf); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
 	// config is only treated as applied if no errors are encountered
 	if len(errs) == 0 {
 		a.previousCfg = cfg
@@ -235,6 +249,33 @@ func (a *Applier) configureVrf(vrfName string, vrf *types.Vrf) error {
 			return fmt.Errorf("could not create vxlan tunnel between vlan %d and vni %d: %w", vrf.VLANID, vrf.VNI, err)
 		}
 	}
+
+	return nil
+}
+
+func (a *Applier) cleanupVrf(vrfName string, vrf *types.Vrf) error {
+	// remove vxlan tunnel map for vrf
+
+	// remove vrf vlan interface
+
+	// deactivate neighbor suppression
+
+	// remove vrf vlan
+
+	// remove vrf
+	return nil
+}
+
+func (a *Applier) cleanupVrfNeighbor(interfaceName, vrfName string, isUp bool) error {
+	// remove vrf membership for interface
+
+	// add interface to pxe vlan
+
+	// ensure port configuration?
+
+	// remove link local only?
+
+	// or simply configureUnprovisioned Port?
 
 	return nil
 }
