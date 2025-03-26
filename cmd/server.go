@@ -45,28 +45,26 @@ func Run() {
 	log.Info("metal-core version", "version", v.V)
 	log.Info("configuration", "cfg", cfg)
 
-	transport := &http.Transport{
-		DialContext: (&net.Dialer{
-			LocalAddr: &net.TCPAddr{
-				IP:   net.ParseIP(cfg.LoopbackIP),
-				Port: 0,
-			},
-			Timeout: 30 * time.Second,
+	clientOptions := []metalgo.ClientOption{
+		metalgo.HMACAuth(cfg.HMACKey, "Metal-Edit"),
+	}
+
+	if cfg.ClientDialIP != nil {
+		localAddr := &net.TCPAddr{
+			IP:   net.ParseIP(cfg.ClientDialIP),
+			Port: 0,
+		}
+		dialContext := &net.Dialer{
+			LocalAddr: localAddr,
+			Timeout:   30 * time.Second,
 			KeepAliveConfig: net.KeepAliveConfig{
 				Enable:   true,
 				Interval: 30 * time.Second,
 			},
-		}).DialContext,
-		MaxIdleConns:          100,
-		IdleConnTimeout:       90 * time.Second,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
+		}
+		clientOptions = append(clientOptions, metalgo.DialContextClientConfig(dialContext.DialContext))
 	}
 
-	clientOptions := []metalgo.ClientOption{
-		metalgo.HMACAuth(cfg.HMACKey, "Metal-Edit"),
-		metalgo.Transport(transport),
-	}
 	driver, err := metalgo.NewClient(
 		fmt.Sprintf("%s://%s:%d%s", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort, cfg.ApiBasePath),
 		clientOptions...,
@@ -92,7 +90,7 @@ func Run() {
 		os.Exit(1)
 	}
 
-	grpcClient, err := NewGrpcClient(log, cfg.LoopbackIP, cfg.GrpcAddress, cert, key, cacert)
+	grpcClient, err := NewGrpcClient(log, cfg.ClientDialIP, cfg.GrpcAddress, cert, key, cacert)
 	if err != nil {
 		log.Error("failed to create grpc client", "error", err)
 		os.Exit(1)
