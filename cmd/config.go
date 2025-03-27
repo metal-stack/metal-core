@@ -31,5 +31,5 @@ type Config struct {
 	GrpcClientCertFile        string        `required:"false" desc:"the gRPC client certificate file" envconfig:"grpc_client_cert_file"`
 	GrpcClientKeyFile         string        `required:"false" desc:"the gRPC client key file" envconfig:"grpc_client_key_file"`
 	PXEVlanID                 uint16        `required:"false" default:"4000" desc:"the id of the pxe vlan" envconfig:"pxe_vlan_id"`
-	ClientDialIP              string        `required:"false" default:"" desc:"the ip address used for the dial connection to the metalgo client" envconfig:"client_dial_ip"`
+	ClientDialIP              string        `required:"false" default:"" desc:"the ip address used for the client connection to the metal-api" envconfig:"client_dial_ip"`
 }
