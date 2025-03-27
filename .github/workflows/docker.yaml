@@ -9,6 +9,7 @@ on:
   push:
     branches:
       - master
+      - configure-client-context
 
 env:
   REGISTRY: ghcr.io
