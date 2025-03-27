@@ -49,7 +49,7 @@ func Run() {
 		metalgo.HMACAuth(cfg.HMACKey, "Metal-Edit"),
 	}
 
-	if cfg.ClientDialIP != nil {
+	if cfg.ClientDialIP != "" {
 		localAddr := &net.TCPAddr{
 			IP:   net.ParseIP(cfg.ClientDialIP),
 			Port: 0,
