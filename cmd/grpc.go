@@ -1,16 +1,19 @@
 package cmd
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
 	"log/slog"
+	"net"
 	"time"
 
-	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
+
+	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 )
 
 type GrpcClient struct {
@@ -20,7 +23,7 @@ type GrpcClient struct {
 
 // NewGrpcClient fetches the address and certificates from metal-core needed to communicate with metal-api via grpc,
 // and returns a new grpc client that can be used to invoke all provided grpc endpoints.
-func NewGrpcClient(log *slog.Logger, address string, cert, key, caCert []byte) (*GrpcClient, error) {
+func NewGrpcClient(log *slog.Logger, source, target string, cert, key, caCert []byte) (*GrpcClient, error) {
 	clientCert, err := tls.X509KeyPair(cert, key)
 	if err != nil {
 		return nil, err
@@ -45,11 +48,23 @@ func NewGrpcClient(log *slog.Logger, address string, cert, key, caCert []byte) (
 	}
 
 	dialOpts := []grpc.DialOption{
+		grpc.WithContextDialer(func(ctx context.Context, address string) (net.Conn, error) {
+			dialer := &net.Dialer{
+				LocalAddr: &net.TCPAddr{
+					IP:   net.ParseIP(source),
+					Port: 0,
+				},
+				KeepAliveConfig: net.KeepAliveConfig{
+					Enable: true,
+				},
+			}
+			return dialer.DialContext(ctx, "tcp", address)
+		}),
 		grpc.WithKeepaliveParams(kacp),
 		grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
 	}
 
-	conn, err := grpc.NewClient(address, dialOpts...)
+	conn, err := grpc.NewClient(target, dialOpts...)
 	if err != nil {
 		return nil, err
 	}
