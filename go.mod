@@ -13,7 +13,7 @@ require (
 	github.com/metal-stack/metal-go v0.40.3
 	github.com/metal-stack/v v1.0.3
 	github.com/prometheus/client_golang v1.21.0
-	github.com/redis/go-redis/v9 v9.7.1
+	github.com/redis/go-redis/v9 v9.7.3
 	github.com/stretchr/testify v1.10.0
 	github.com/vishvananda/netlink v1.3.0
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
