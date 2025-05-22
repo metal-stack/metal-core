@@ -78,6 +78,15 @@ func (a *Applier) Apply(cfg *types.Conf) error {
 		}
 	}
 
+	for vrfName, vrf := range a.previousCfg.Ports.Vrfs {
+		if _, found := cfg.Ports.Vrfs[vrfName]; found {
+			continue
+		}
+		if err := a.cleanupVrf(vrfName, vrf); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
 	// config is only treated as applied if no errors are encountered
 	if len(errs) == 0 {
 		a.previousCfg = cfg
@@ -236,5 +245,64 @@ func (a *Applier) configureVrf(vrfName string, vrf *types.Vrf) error {
 		}
 	}
 
+	return nil
+}
+
+func (a *Applier) cleanupVrf(vrfName string, vrf *types.Vrf) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	exists, err := a.db.Config.ExistVxlanTunnelMap(ctx, vrf.VLANID, vrf.VNI)
+	if err != nil {
+		return err
+	}
+	if exists {
+		err = a.db.Config.DeleteVxlanTunnelMap(ctx, vrf.VLANID, vrf.VNI)
+		if err != nil {
+			return fmt.Errorf("could not remove vxlan tunnel map for vlan %d and vni %d: %w", vrf.VLANID, vrf.VNI, err)
+		}
+	}
+
+	exists, err = a.db.Config.ExistVlanInterface(ctx, vrf.VLANID)
+	if err != nil {
+		return err
+	}
+	if exists {
+		err = a.db.Config.DeleteVlanInterface(ctx, vrf.VLANID)
+		if err != nil {
+			return fmt.Errorf("could not remove vlan interface %d: %w", vrf.VLANID, err)
+		}
+	}
+
+	neighborSuppression, err := a.db.Config.AreNeighborsSuppressed(ctx, vrf.VLANID)
+	if err != nil {
+		return err
+	}
+	if neighborSuppression {
+		if err := a.db.Config.DeleteNeighborSuppression(ctx, vrf.VLANID); err != nil {
+			return fmt.Errorf("could not delete neighbor suppression for vlan %d: %w", vrf.VLANID, err)
+		}
+	}
+
+	exists, err = a.db.Config.ExistVlan(ctx, vrf.VLANID)
+	if err != nil {
+		return err
+	}
+	if exists {
+		err = a.db.Config.DeleteVlan(ctx, vrf.VLANID)
+		if err != nil {
+			return fmt.Errorf("could not remove vlan %d: %w", vrf.VLANID, err)
+		}
+	}
+
+	exists, err = a.db.Config.ExistVrf(ctx, vrfName)
+	if err != nil {
+		return err
+	}
+	if exists {
+		if err := a.db.Config.DeleteVrf(ctx, vrfName); err != nil {
+			return fmt.Errorf("could not delete vrf %s: %w", vrfName, err)
+		}
+	}
 	return nil
 }

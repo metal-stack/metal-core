@@ -50,6 +50,13 @@ func (d *ConfigDB) CreateVlan(ctx context.Context, vid uint16) error {
 	return d.c.HSet(ctx, key, Val{"vlanid": vlanId})
 }
 
+func (d *ConfigDB) DeleteVlan(ctx context.Context, vid uint16) error {
+	vlanId := fmt.Sprintf("%d", vid)
+	key := Key{"VLAN", "Vlan" + vlanId}
+
+	return d.c.Del(ctx, key)
+}
+
 func (d *ConfigDB) AreNeighborsSuppressed(ctx context.Context, vid uint16) (bool, error) {
 	key := Key{"SUPPRESS_VLAN_NEIGH", fmt.Sprintf("Vlan%d", vid)}
 
@@ -66,6 +73,12 @@ func (d *ConfigDB) SuppressNeighbors(ctx context.Context, vid uint16) error {
 	return d.c.HSet(ctx, key, Val{"suppress": "on"})
 }
 
+func (d *ConfigDB) DeleteNeighborSuppression(ctx context.Context, vid uint16) error {
+	key := Key{"SUPPRESS_VLAN_NEIGH", fmt.Sprintf("Vlan%d", vid)}
+
+	return d.c.Del(ctx, key)
+}
+
 func (d *ConfigDB) ExistVlanInterface(ctx context.Context, vid uint16) (bool, error) {
 	key := Key{"VLAN_INTERFACE", fmt.Sprintf("Vlan%d", vid)}
 
@@ -76,6 +89,12 @@ func (d *ConfigDB) CreateVlanInterface(ctx context.Context, vid uint16, vrf stri
 	key := Key{"VLAN_INTERFACE", "Vlan" + fmt.Sprintf("%d", vid)}
 
 	return d.c.HSet(ctx, key, Val{vrfName: vrf})
+}
+
+func (d *ConfigDB) DeleteVlanInterface(ctx context.Context, vid uint16) error {
+	key := Key{"VLAN_INTERFACE", "Vlan" + fmt.Sprintf("%d", vid)}
+
+	return d.c.Del(ctx, key)
 }
 
 func (d *ConfigDB) GetVlanMembership(ctx context.Context, interfaceName string) ([]string, error) {
@@ -120,6 +139,12 @@ func (d *ConfigDB) CreateVrf(ctx context.Context, vrf string) error {
 	return d.c.HSet(ctx, key, Val{"NULL": "NULL"})
 }
 
+func (d *ConfigDB) DeleteVrf(ctx context.Context, vrf string) error {
+	key := Key{"VRF", vrf}
+
+	return d.c.Del(ctx, key)
+}
+
 func (d *ConfigDB) SetVrfMember(ctx context.Context, interfaceName string, vrf string) error {
 	key := Key{interfaceTable, interfaceName}
 
@@ -145,6 +170,12 @@ func (d *ConfigDB) CreateVxlanTunnelMap(ctx context.Context, vid uint16, vni uin
 		"vni":  fmt.Sprintf("%d", vni),
 	}
 	return d.c.HSet(ctx, key, val)
+}
+
+func (d *ConfigDB) DeleteVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) error {
+	key := Key{"VXLAN_TUNNEL_MAP", "vtep", fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
+
+	return d.c.Del(ctx, key)
 }
 
 func (d *ConfigDB) DeleteInterfaceConfiguration(ctx context.Context, interfaceName string) error {
