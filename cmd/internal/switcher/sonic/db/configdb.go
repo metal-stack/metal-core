@@ -31,6 +31,11 @@ type Port struct {
 	Mtu         string
 }
 
+type VxlanMap struct {
+	Vni  string
+	Vlan string
+}
+
 func newConfigDB(rdb *redis.Client, sep string) *ConfigDB {
 	return &ConfigDB{
 		c: NewClient(rdb, sep),
@@ -127,6 +132,12 @@ func (d *ConfigDB) DeleteVlanMember(ctx context.Context, interfaceName, vlan str
 	return d.c.Del(ctx, key)
 }
 
+func (d *ConfigDB) GetVrfs(ctx context.Context) (Val, error) {
+	key := Key{"VRF"}
+
+	return d.c.HGetAll(ctx, key)
+}
+
 func (d *ConfigDB) ExistVrf(ctx context.Context, vrf string) (bool, error) {
 	key := Key{"VRF", vrf}
 
@@ -176,6 +187,32 @@ func (d *ConfigDB) DeleteVxlanTunnelMap(ctx context.Context, vid uint16, vni uin
 	key := Key{"VXLAN_TUNNEL_MAP", "vtep", fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
 
 	return d.c.Del(ctx, key)
+}
+
+func (d *ConfigDB) FindVxlanTunnelMapByVni(ctx context.Context, vni uint32) (*VxlanMap, error) {
+	key := Key{"VXLAN_TUNNEL_MAP"}
+
+	tunnelMaps, err := d.c.HGetAll(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+
+	for k := range tunnelMaps {
+		key = append(key, k)
+		result, err := d.c.HGetAll(ctx, key)
+		if err != nil {
+			return nil, err
+		}
+
+		if result["vni"] == fmt.Sprintf("%d", vni) {
+			return &VxlanMap{
+				Vni:  result["vni"],
+				Vlan: result["vlan"],
+			}, nil
+		}
+	}
+
+	return nil, nil
 }
 
 func (d *ConfigDB) DeleteInterfaceConfiguration(ctx context.Context, interfaceName string) error {
