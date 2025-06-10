@@ -152,12 +152,6 @@ router bgp {{ $ASN }} vrf {{ $vrf }}
  {{- end }}
  exit-address-family
 !
-route-map RM_SET_SRC permit 10
- set src {{ .Loopback }}
-exit
-!
-ip protocol bgp route-map RM_SET_SRC
-!
 {{- if gt (len $t.IPPrefixLists) 0 }}
 # route-maps for {{ $vrf }}
         {{- range $t.IPPrefixLists }}
@@ -170,5 +164,11 @@ route-map {{ .Name }} {{ .Policy }} {{ .Order }}
                 {{- end }}
         {{- end }}
 !{{- end }}{{- end }}
+route-map RM_SET_SRC permit 10
+ set src {{ .Loopback }}
+exit
+!
+ip protocol bgp route-map RM_SET_SRC
+!
 line vty
 !
