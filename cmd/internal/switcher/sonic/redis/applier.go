@@ -254,11 +254,13 @@ func (a *Applier) cleanupVrfs(cfg *types.Conf) error {
 	if err != nil {
 		return fmt.Errorf("could not retrieve vrfs: %w", err)
 	}
+	a.log.Debug("cleanup vrfs", "vrfs", vrfs)
 
 	for vrfName := range vrfs {
 		if _, found := cfg.Ports.Vrfs[vrfName]; found {
 			continue
 		}
+		a.log.Debug("cleanup vrf", "vrf", vrfName)
 
 		vni, err := strconv.ParseUint(strings.TrimPrefix(vrfName, "vrf"), 10, 32)
 		if err != nil {
