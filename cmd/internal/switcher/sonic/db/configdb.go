@@ -220,6 +220,8 @@ func (d *ConfigDB) FindVxlanTunnelMapByVni(ctx context.Context, vni uint32) (*Vx
 			return nil, err
 		}
 
+		fmt.Printf("tunnel map %s result %v", k, result)
+
 		if result["vni"] == fmt.Sprintf("%d", vni) {
 			return &VxlanMap{
 				Vni:  result["vni"],
