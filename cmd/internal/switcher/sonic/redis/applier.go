@@ -260,7 +260,6 @@ func (a *Applier) cleanupVrfs(cfg *types.Conf) error {
 		if _, found := cfg.Ports.Vrfs[vrfName]; found {
 			continue
 		}
-		a.log.Debug("cleanup vrf", "vrf", vrfName)
 
 		vni, err := strconv.ParseUint(strings.TrimPrefix(vrfName, "Vrf"), 10, 32)
 		if err != nil {
@@ -293,6 +292,8 @@ func (a *Applier) cleanupVrfs(cfg *types.Conf) error {
 }
 
 func (a *Applier) cleanupVrf(vrfName string, vrf *types.Vrf) error {
+	a.log.Debug("cleanup vrf", "vrf", vrf)
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
