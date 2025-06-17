@@ -132,10 +132,20 @@ func (d *ConfigDB) DeleteVlanMember(ctx context.Context, interfaceName, vlan str
 	return d.c.Del(ctx, key)
 }
 
-func (d *ConfigDB) GetVrfs(ctx context.Context) (Val, error) {
-	key := Key{"VRF"}
+func (d *ConfigDB) GetVrfs(ctx context.Context) ([]string, error) {
+	t := d.c.GetTable(Key{"VRF"})
 
-	return d.c.HGetAll(ctx, key)
+	res, err := t.GetView(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	vrfs := make([]string, 0)
+	for vrf := range res {
+		vrfs = append(vrfs, vrf)
+	}
+
+	return vrfs, nil
 }
 
 func (d *ConfigDB) ExistVrf(ctx context.Context, vrf string) (bool, error) {
@@ -191,13 +201,19 @@ func (d *ConfigDB) DeleteVxlanTunnelMap(ctx context.Context, vid uint16, vni uin
 
 func (d *ConfigDB) FindVxlanTunnelMapByVni(ctx context.Context, vni uint32) (*VxlanMap, error) {
 	key := Key{"VXLAN_TUNNEL_MAP"}
+	t := d.c.GetTable(key)
 
-	tunnelMaps, err := d.c.HGetAll(ctx, key)
+	res, err := t.GetView(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	for k := range tunnelMaps {
+	tunnelMaps := make([]string, 0)
+	for k := range res {
+		tunnelMaps = append(tunnelMaps, k)
+	}
+
+	for _, k := range tunnelMaps {
 		key = append(key, k)
 		result, err := d.c.HGetAll(ctx, key)
 		if err != nil {

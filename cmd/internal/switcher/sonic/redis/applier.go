@@ -256,7 +256,7 @@ func (a *Applier) cleanupVrfs(cfg *types.Conf) error {
 	}
 	a.log.Debug("cleanup vrfs", "vrfs", vrfs)
 
-	for vrfName := range vrfs {
+	for _, vrfName := range vrfs {
 		if _, found := cfg.Ports.Vrfs[vrfName]; found {
 			continue
 		}
