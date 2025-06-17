@@ -254,7 +254,6 @@ func (a *Applier) cleanupVrfs(cfg *types.Conf) error {
 	if err != nil {
 		return fmt.Errorf("could not retrieve vrfs: %w", err)
 	}
-	a.log.Debug("cleanup vrfs", "vrfs", vrfs)
 
 	for _, vrfName := range vrfs {
 		if _, found := cfg.Ports.Vrfs[vrfName]; found {
@@ -292,7 +291,7 @@ func (a *Applier) cleanupVrfs(cfg *types.Conf) error {
 }
 
 func (a *Applier) cleanupVrf(vrfName string, vrf *types.Vrf) error {
-	a.log.Debug("cleanup vrf", "vrf", vrf)
+	a.log.Debug("cleanup unused vrf", "vrf", vrf)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
