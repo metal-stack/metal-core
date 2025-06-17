@@ -276,7 +276,7 @@ func (a *Applier) cleanupVrfs(cfg *types.Conf) error {
 		}
 
 		if tunnelMap != nil {
-			vlan, err := strconv.ParseUint(tunnelMap.Vlan, 10, 16)
+			vlan, err := strconv.ParseUint(strings.TrimPrefix(tunnelMap.Vlan, "Vlan"), 10, 16)
 			if err != nil {
 				return fmt.Errorf("could not parse vlan id %s: %w", tunnelMap.Vlan, err)
 			}
