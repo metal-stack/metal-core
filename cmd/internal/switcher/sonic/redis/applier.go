@@ -262,7 +262,7 @@ func (a *Applier) cleanupVrfs(cfg *types.Conf) error {
 		}
 		a.log.Debug("cleanup vrf", "vrf", vrfName)
 
-		vni, err := strconv.ParseUint(strings.TrimPrefix(vrfName, "vrf"), 10, 32)
+		vni, err := strconv.ParseUint(strings.TrimPrefix(vrfName, "Vrf"), 10, 32)
 		if err != nil {
 			return fmt.Errorf("could not parse vni for vrf %s: %w", vrfName, err)
 		}
