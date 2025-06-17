@@ -200,8 +200,7 @@ func (d *ConfigDB) DeleteVxlanTunnelMap(ctx context.Context, vid uint16, vni uin
 }
 
 func (d *ConfigDB) FindVxlanTunnelMapByVni(ctx context.Context, vni uint32) (*VxlanMap, error) {
-	key := Key{"VXLAN_TUNNEL_MAP", "vtep"}
-	t := d.c.GetTable(key)
+	t := d.c.GetTable(Key{"VXLAN_TUNNEL_MAP", "vtep"})
 
 	res, err := t.GetView(ctx)
 	if err != nil {
@@ -214,8 +213,7 @@ func (d *ConfigDB) FindVxlanTunnelMapByVni(ctx context.Context, vni uint32) (*Vx
 	}
 
 	for _, k := range tunnelMaps {
-		key = append(key, k)
-		result, err := d.c.HGetAll(ctx, key)
+		result, err := d.c.HGetAll(ctx, Key{"VXLAN_TUNNEL_MAP", "vtep", k})
 		if err != nil {
 			return nil, err
 		}
