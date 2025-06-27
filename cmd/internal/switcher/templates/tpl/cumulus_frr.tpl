@@ -75,9 +75,6 @@ router bgp {{ $ASN }}
   neighbor FABRIC allowas-in 2
   neighbor FIREWALL activate
   neighbor FIREWALL allowas-in 2
-  {{- range $k, $f := .Ports.Firewalls }}
-  neighbor {{ $f.Port }} route-map fw-{{ $k }}-vni out
-  {{- end }}
  exit-address-family
 !
 route-map LOOPBACKS permit 10
