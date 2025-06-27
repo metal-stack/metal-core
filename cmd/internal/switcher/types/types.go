@@ -97,18 +97,6 @@ func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
 		s.RouteMaps = append(s.RouteMaps, rm)
 		s.addPrefixList(prefixListName, cidrsByAf.ipv6Cidrs, "ipv6")
 	}
-	if len(vnis) > 0 {
-		vniRouteMapName := fmt.Sprintf("%s-vni", rmPrefix)
-		for j, vni := range vnis {
-			rm := RouteMap{
-				Name:    vniRouteMapName,
-				Entries: []string{fmt.Sprintf("match evpn vni %s", vni)},
-				Policy:  "permit",
-				Order:   10 + j,
-			}
-			s.RouteMaps = append(s.RouteMaps, rm)
-		}
-	}
 }
 
 func (s *Filter) addPrefixList(prefixListName string, cidrs []string, af string) {
