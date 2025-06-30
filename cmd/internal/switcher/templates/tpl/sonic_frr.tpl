@@ -83,9 +83,6 @@ router bgp {{ $ASN }}
   neighbor FABRIC allowas-in 2
   neighbor FIREWALL activate
   neighbor FIREWALL allowas-in 2
-  {{- range $k, $f := .Ports.Firewalls }}
-  neighbor {{ $f.Port }} route-map fw-{{ $k }}-vni out
-  {{- end }}
  exit-address-family
 !
 route-map DENY_MGMT deny 10
@@ -164,5 +161,11 @@ route-map {{ .Name }} {{ .Policy }} {{ .Order }}
                 {{- end }}
         {{- end }}
 !{{- end }}{{- end }}
+route-map RM_SET_SRC permit 10
+ set src {{ .Loopback }}
+exit
+!
+ip protocol bgp route-map RM_SET_SRC
+!
 line vty
 !
