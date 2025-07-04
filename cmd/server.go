@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	httppprof "net/http/pprof"
 	"os"
@@ -51,9 +52,31 @@ func Run() {
 	log.Info("metal-core version", "version", v.V)
 	log.Info("configuration", "cfg", cfg)
 
-	driver, err := metalgo.NewDriver(
+	transport := &http.Transport{
+		DialContext: (&net.Dialer{
+			LocalAddr: &net.TCPAddr{
+				IP:   net.ParseIP(cfg.LoopbackIP),
+				Port: 0,
+			},
+			Timeout: 30 * time.Second,
+			KeepAliveConfig: net.KeepAliveConfig{
+				Enable:   true,
+				Interval: 30 * time.Second,
+			},
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+
+	clientOptions := []metalgo.ClientOption{
+		metalgo.HMACAuth(cfg.HMACKey, "Metal-Edit"),
+		metalgo.Transport(transport),
+	}
+	driver, err := metalgo.NewClient(
 		fmt.Sprintf("%s://%s:%d%s", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort, cfg.ApiBasePath),
-		"", cfg.HMACKey, metalgo.AuthType("Metal-Edit"),
+		clientOptions...,
 	)
 	if err != nil {
 		log.Error("unable to create metal-api driver", "error", err)
@@ -76,7 +99,7 @@ func Run() {
 		os.Exit(1)
 	}
 
-	grpcClient, err := NewGrpcClient(log, cfg.GrpcAddress, cert, key, cacert)
+	grpcClient, err := NewGrpcClient(log, cfg.LoopbackIP, cfg.GrpcAddress, cert, key, cacert)
 	if err != nil {
 		log.Error("failed to create grpc client", "error", err)
 		os.Exit(1)
