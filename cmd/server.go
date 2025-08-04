@@ -4,12 +4,17 @@
 package cmd
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 	httppprof "net/http/pprof"
 	"os"
+	"os/signal"
 	"strings"
+	"sync"
+	"syscall"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
@@ -21,6 +26,8 @@ import (
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/v"
 )
+
+const phonedHomeInterval = time.Minute // lldpd sends messages every two seconds
 
 func Run() {
 	cfg := &Config{}
@@ -84,25 +91,24 @@ func Run() {
 	metrics := metrics.New()
 
 	c := core.New(core.Config{
-		Log:                       log,
-		LogLevel:                  cfg.LogLevel,
-		CIDR:                      cfg.CIDR,
-		LoopbackIP:                cfg.LoopbackIP,
-		ASN:                       cfg.ASN,
-		PartitionID:               cfg.PartitionID,
-		RackID:                    cfg.RackID,
-		ReconfigureSwitch:         cfg.ReconfigureSwitch,
-		ReconfigureSwitchInterval: cfg.ReconfigureSwitchInterval,
-		ManagementGateway:         cfg.ManagementGateway,
-		AdditionalBridgePorts:     cfg.AdditionalBridgePorts,
-		AdditionalBridgeVIDs:      cfg.AdditionalBridgeVIDs,
-		SpineUplinks:              cfg.SpineUplinks,
-		NOS:                       nos,
-		Driver:                    driver,
-		EventServiceClient:        grpcClient.NewEventClient(),
-		Metrics:                   metrics,
-		PXEVlanID:                 cfg.PXEVlanID,
-		BGPNeighborStateFile:      cfg.BGPNeighborStateFile,
+		Log:                   log,
+		LogLevel:              cfg.LogLevel,
+		CIDR:                  cfg.CIDR,
+		LoopbackIP:            cfg.LoopbackIP,
+		ASN:                   cfg.ASN,
+		PartitionID:           cfg.PartitionID,
+		RackID:                cfg.RackID,
+		ReconfigureSwitch:     cfg.ReconfigureSwitch,
+		ManagementGateway:     cfg.ManagementGateway,
+		AdditionalBridgePorts: cfg.AdditionalBridgePorts,
+		AdditionalBridgeVIDs:  cfg.AdditionalBridgeVIDs,
+		SpineUplinks:          cfg.SpineUplinks,
+		NOS:                   nos,
+		Driver:                driver,
+		EventServiceClient:    grpcClient.NewEventClient(),
+		Metrics:               metrics,
+		PXEVlanID:             cfg.PXEVlanID,
+		BGPNeighborStateFile:  cfg.BGPNeighborStateFile,
 	})
 
 	err = c.RegisterSwitch()
@@ -111,8 +117,21 @@ func Run() {
 		os.Exit(1)
 	}
 
-	go c.ReconfigureSwitch()
-	c.ConstantlyPhoneHome()
+	var wg sync.WaitGroup
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		c.ConstantlyReconfigureSwitch(ctx, cfg.ReconfigureSwitchInterval)
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		c.ConstantlyPhoneHome(ctx, phonedHomeInterval)
+	}()
 
 	// Start metrics
 	metricsAddr := fmt.Sprintf("%v:%d", cfg.MetricsServerBindAddress, cfg.MetricsServerPort)
@@ -134,9 +153,24 @@ func Run() {
 		ReadHeaderTimeout: 3 * time.Second,
 	}
 
-	err = srv.ListenAndServe()
-	if err != nil {
-		log.Error("unable to start metrics listener", "error", err)
-		os.Exit(1)
-	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err = srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+			log.Error("unable to start metrics listener", "error", err)
+			os.Exit(1)
+		}
+	}()
+
+	<-ctx.Done()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		if err = srv.Shutdown(context.Background()); err != nil {
+			log.Error("unable to shutdown metrics listener", "error", err)
+		}
+	}()
+
+	wg.Wait()
 }
