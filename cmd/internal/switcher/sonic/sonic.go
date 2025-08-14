@@ -87,31 +87,19 @@ func (s *Sonic) IsInitialized() (initialized bool, err error) {
 }
 
 func (s *Sonic) GetNics(log *slog.Logger, blacklist []string) (nics []*models.V1SwitchNic, err error) {
-	ifs, err := s.GetSwitchPorts()
-	if err != nil {
-		return nil, fmt.Errorf("unable to get all ifs: %w", err)
-	}
-
-	portsConfig, err := getPortsConfig(sonicConfigDBPath)
+	ports, err := getPortsConfig(sonicConfigDBPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get ports config")
 	}
 
-	for _, iface := range ifs {
-		name := iface.Name
+	for name, portConfig := range ports {
 		if slices.Contains(blacklist, name) {
 			log.Debug("skip interface, because it is contained in the blacklist", "interface", name, "blacklist", blacklist)
 			continue
 		}
 
-		id, found := portsConfig[name]
-		if !found {
-			log.Debug("skip interface as no info on it was found in config DB", "interface", name)
-			continue
-		}
-
 		nic := &models.V1SwitchNic{
-			Identifier: &id.Alias,
+			Identifier: &portConfig.Alias,
 			Name:       &name,
 		}
 		nics = append(nics, nic)
@@ -125,21 +113,27 @@ func (s *Sonic) SanitizeConfig(cfg *types.Conf) {
 }
 
 func (s *Sonic) GetSwitchPorts() ([]*net.Interface, error) {
-	ifs, err := net.Interfaces()
+	ports, err := getPortsConfig(sonicConfigDBPath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get all interfaces: %w", err)
 	}
 
-	switchPorts := make([]*net.Interface, 0, len(ifs))
-	for i := range ifs {
-		iface := &ifs[i]
-		if !strings.HasPrefix(iface.Name, "Ethernet") {
-			s.log.Debug("skip interface, because only Ethernet* interface are front panels", "interface", iface.Name)
-			continue
-		}
-		switchPorts = append(switchPorts, iface)
+	return portsToInterfaces(ports), nil
+}
+
+func portsToInterfaces(ports map[string]PortInfo) []*net.Interface {
+	interfaces := make([]*net.Interface, 0)
+
+	for portName := range ports {
+		interfaces = append(interfaces, &net.Interface{
+			Name: portName,
+		})
 	}
-	return switchPorts, nil
+	slices.SortStableFunc(interfaces, func(a, b *net.Interface) int {
+		return strings.Compare(a.Name, b.Name)
+	})
+
+	return interfaces
 }
 
 func getPortsConfig(filepath string) (map[string]PortInfo, error) {
