@@ -66,7 +66,6 @@ func (c *Core) ConstantlyPhoneHome(ctx context.Context, interval time.Duration) 
 	// extract phone home messages from fetched LLDP packages
 	go func() {
 		for phoneHome := range discoveryResultChan {
-			phoneHome := phoneHome
 			msg := toPhoneHomeMessage(phoneHome)
 			if msg == nil {
 				continue
