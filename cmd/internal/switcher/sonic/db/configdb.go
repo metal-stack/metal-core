@@ -154,10 +154,10 @@ func (d *ConfigDB) ExistVrf(ctx context.Context, vrf string) (bool, error) {
 	return d.c.Exists(ctx, key)
 }
 
-func (d *ConfigDB) CreateVrf(ctx context.Context, vrf string) error {
+func (d *ConfigDB) CreateVrf(ctx context.Context, vrf string, vni uint32) error {
 	key := Key{"VRF", vrf}
 
-	return d.c.HSet(ctx, key, Val{"NULL": "NULL"})
+	return d.c.HSet(ctx, key, Val{"vni": fmt.Sprintf("%d", vni)})
 }
 
 func (d *ConfigDB) DeleteVrf(ctx context.Context, vrf string) error {
