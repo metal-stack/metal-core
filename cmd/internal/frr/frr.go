@@ -60,7 +60,9 @@ func GetBGPStates(filepath string) (map[string]models.V1SwitchBGPPortState, erro
 	if err != nil {
 		return nil, fmt.Errorf("error opening frr bgp state json file %s: %w", filepath, err)
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	byteValue, err := io.ReadAll(file)
 	if err != nil {
