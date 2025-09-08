@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
@@ -76,6 +78,11 @@ func (a *Applier) Apply(cfg *types.Conf) error {
 				errs = append(errs, err)
 			}
 		}
+	}
+
+	err := a.cleanupVrfs(cfg)
+	if err != nil {
+		errs = append(errs, err)
 	}
 
 	// config is only treated as applied if no errors are encountered
@@ -233,5 +240,110 @@ func (a *Applier) configureVrf(vrfName string, vrf *types.Vrf) error {
 		}
 	}
 
+	return nil
+}
+
+func (a *Applier) cleanupVrfs(cfg *types.Conf) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	vrfs, err := a.db.Config.GetVrfs(ctx)
+	if err != nil {
+		return fmt.Errorf("could not retrieve vrfs: %w", err)
+	}
+
+	for _, vrfName := range vrfs {
+		if _, found := cfg.Ports.Vrfs[vrfName]; found {
+			continue
+		}
+
+		vni, err := strconv.ParseUint(strings.TrimPrefix(vrfName, "Vrf"), 10, 32)
+		if err != nil {
+			return fmt.Errorf("could not parse vni for vrf %s: %w", vrfName, err)
+		}
+
+		vrf := &types.Vrf{
+			VNI: uint32(vni),
+		}
+
+		tunnelMap, err := a.db.Config.FindVxlanTunnelMapByVni(ctx, uint32(vni))
+		if err != nil {
+			return fmt.Errorf("could not look up vxlan tunnel map for vni %d: %w", vni, err)
+		}
+
+		if tunnelMap != nil {
+			vlan, err := strconv.ParseUint(strings.TrimPrefix(tunnelMap.Vlan, "Vlan"), 10, 16)
+			if err != nil {
+				return fmt.Errorf("could not parse vlan id %s: %w", tunnelMap.Vlan, err)
+			}
+			vrf.VLANID = uint16(vlan)
+		}
+
+		if err := a.cleanupVrf(vrfName, vrf); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (a *Applier) cleanupVrf(vrfName string, vrf *types.Vrf) error {
+	a.log.Debug("cleanup unused vrf", "vrf", vrf)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	exists, err := a.db.Config.ExistVxlanTunnelMap(ctx, vrf.VLANID, vrf.VNI)
+	if err != nil {
+		return err
+	}
+	if exists {
+		err = a.db.Config.DeleteVxlanTunnelMap(ctx, vrf.VLANID, vrf.VNI)
+		if err != nil {
+			return fmt.Errorf("could not remove vxlan tunnel map for vlan %d and vni %d: %w", vrf.VLANID, vrf.VNI, err)
+		}
+	}
+
+	exists, err = a.db.Config.ExistVlanInterface(ctx, vrf.VLANID)
+	if err != nil {
+		return err
+	}
+	if exists {
+		err = a.db.Config.DeleteVlanInterface(ctx, vrf.VLANID)
+		if err != nil {
+			return fmt.Errorf("could not remove vlan interface %d: %w", vrf.VLANID, err)
+		}
+	}
+
+	neighborSuppression, err := a.db.Config.AreNeighborsSuppressed(ctx, vrf.VLANID)
+	if err != nil {
+		return err
+	}
+	if neighborSuppression {
+		if err := a.db.Config.DeleteNeighborSuppression(ctx, vrf.VLANID); err != nil {
+			return fmt.Errorf("could not delete neighbor suppression for vlan %d: %w", vrf.VLANID, err)
+		}
+	}
+
+	exists, err = a.db.Config.ExistVlan(ctx, vrf.VLANID)
+	if err != nil {
+		return err
+	}
+	if exists {
+		err = a.db.Config.DeleteVlan(ctx, vrf.VLANID)
+		if err != nil {
+			return fmt.Errorf("could not remove vlan %d: %w", vrf.VLANID, err)
+		}
+	}
+
+	exists, err = a.db.Config.ExistVrf(ctx, vrfName)
+	if err != nil {
+		return err
+	}
+	if exists {
+		if err := a.db.Config.DeleteVrf(ctx, vrfName); err != nil {
+			return fmt.Errorf("could not delete vrf %s: %w", vrfName, err)
+		}
+	}
 	return nil
 }

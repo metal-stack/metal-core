@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"slices"
@@ -10,43 +11,60 @@ import (
 
 	"github.com/vishvananda/netlink"
 
+	"github.com/metal-stack/metal-core/cmd/internal/frr"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
 	"github.com/metal-stack/metal-go/api/models"
 )
 
-// ReconfigureSwitch reconfigures the switch.
-func (c *Core) ReconfigureSwitch() {
-	t := time.NewTicker(c.reconfigureSwitchInterval)
+// ConstantlyReconfigureSwitch reconfigures the switch.
+func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval time.Duration) {
 	host, _ := os.Hostname()
-	for range t.C {
-		c.log.Info("trigger reconfiguration")
-		start := time.Now()
-		err := c.reconfigureSwitch(host)
-		elapsed := time.Since(start)
-		c.log.Info("reconfiguration took", "elapsed", elapsed)
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			c.log.Info("trigger reconfiguration")
+			start := time.Now()
+			err := c.reconfigureSwitch(host)
+			elapsed := time.Since(start)
+			c.log.Info("reconfiguration took", "elapsed", elapsed)
 
-		params := sw.NewNotifySwitchParams()
-		params.ID = host
-		ns := elapsed.Nanoseconds()
-		nr := &models.V1SwitchNotifyRequest{
-			SyncDuration: &ns,
-		}
-		if err != nil {
-			errStr := err.Error()
-			nr.Error = &errStr
-			c.log.Error("reconfiguration failed", "error", err)
-			c.metrics.CountError("switch-reconfiguration")
-		} else {
-			c.log.Info("reconfiguration succeeded")
-		}
+			params := sw.NewNotifySwitchParams()
+			params.ID = host
+			ns := elapsed.Nanoseconds()
+			nr := &models.V1SwitchNotifyRequest{
+				SyncDuration:  &ns,
+				BgpPortStates: make(map[string]models.V1SwitchBGPPortState),
+			}
+			if err != nil {
+				errStr := err.Error()
+				nr.Error = &errStr
+				c.log.Error("reconfiguration failed", "error", err)
+				c.metrics.CountError("switch-reconfiguration")
+			} else {
+				c.log.Info("reconfiguration succeeded")
+			}
 
-		params.Body = nr
-		_, err = c.driver.SwitchOperations().NotifySwitch(params, nil)
-		if err != nil {
-			c.log.Error("notification about switch reconfiguration failed", "error", err)
-			c.metrics.CountError("reconfiguration-notification")
+			if c.bgpNeighborStateFile != "" {
+				bgpportstates, err := frr.GetBGPStates(c.bgpNeighborStateFile)
+				if err != nil {
+					c.log.Error("could not get BGP states", "error", err)
+					c.metrics.CountError("switch-reconfiguration")
+				}
+				nr.BgpPortStates = bgpportstates
+			}
+
+			params.Body = nr
+			_, err = c.driver.SwitchOperations().NotifySwitch(params, nil)
+			if err != nil {
+				c.log.Error("notification about switch reconfiguration failed", "error", err)
+				c.metrics.CountError("reconfiguration-notification")
+			}
+		case <-ctx.Done():
+			return
 		}
 	}
 }
