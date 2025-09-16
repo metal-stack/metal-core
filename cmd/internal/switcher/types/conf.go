@@ -85,5 +85,4 @@ func (c *Conf) CapitalizeVrfName() {
 	}
 
 	c.Ports.Vrfs = capitalizedVRFs
-	return
 }
