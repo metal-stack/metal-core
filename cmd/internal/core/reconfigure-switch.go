@@ -222,7 +222,7 @@ func fillEth0Info(c *types.Conf, gw string) error {
 	}
 
 	ip := addrs[0].IP
-	s, _ := addrs[0].IPNet.Mask.Size()
+	s, _ := addrs[0].Mask.Size()
 	c.Ports.Eth0.AddressCIDR = fmt.Sprintf("%s/%d", ip.String(), s)
 	c.Ports.Eth0.Gateway = gw
 	return nil

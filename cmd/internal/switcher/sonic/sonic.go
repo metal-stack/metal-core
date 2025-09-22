@@ -141,7 +141,9 @@ func getPortsConfig(filepath string) (map[string]PortInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer jsonFile.Close()
+	defer func() {
+		_ = jsonFile.Close()
+	}()
 
 	byteValue, err := io.ReadAll(jsonFile)
 	if err != nil {
