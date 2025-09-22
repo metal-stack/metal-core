@@ -18,12 +18,12 @@ const (
 	portTable       = "PORT"
 	adminStatus     = "admin_status"
 	adminStatusUp   = "up"
-	adminStatusDown = "down"
 	mtu             = "mtu"
 )
 
 type ConfigDB struct {
-	c *Client
+	c    *Client
+	vtep string
 }
 
 type Port struct {
@@ -52,7 +52,7 @@ func (d *ConfigDB) CreateVlan(ctx context.Context, vid uint16) error {
 	vlanId := fmt.Sprintf("%d", vid)
 	key := Key{"VLAN", "Vlan" + vlanId}
 
-	return d.c.HSet(ctx, key, Val{"vlanid": vlanId})
+	return d.c.HSet(ctx, key, Val{"admin_status": "up", "vlanid": vlanId})
 }
 
 func (d *ConfigDB) DeleteVlan(ctx context.Context, vid uint16) error {
@@ -157,7 +157,7 @@ func (d *ConfigDB) ExistVrf(ctx context.Context, vrf string) (bool, error) {
 func (d *ConfigDB) CreateVrf(ctx context.Context, vrf string, vni uint32) error {
 	key := Key{"VRF", vrf}
 
-	return d.c.HSet(ctx, key, Val{"vni": fmt.Sprintf("%d", vni)})
+	return d.c.HSet(ctx, key, Val{"fallback": "false", "vni": fmt.Sprintf("%d", vni)})
 }
 
 func (d *ConfigDB) DeleteVrf(ctx context.Context, vrf string) error {
@@ -179,18 +179,42 @@ func (d *ConfigDB) GetVrfMembership(ctx context.Context, interfaceName string) (
 }
 
 func (d *ConfigDB) ExistVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) (bool, error) {
-	key := Key{"VXLAN_TUNNEL_MAP", "vtep", fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
+	if d.vtep == "" {
+		if err := d.obtainVTEPName(ctx); err != nil {
+			return false, err
+		}
+	}
+	key := Key{"VXLAN_TUNNEL_MAP", d.vtep, fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
 
 	return d.c.Exists(ctx, key)
 }
 
 func (d *ConfigDB) CreateVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) error {
-	key := Key{"VXLAN_TUNNEL_MAP", "vtep", fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
+	if d.vtep == "" {
+		if err := d.obtainVTEPName(ctx); err != nil {
+			return err
+		}
+	}
+	key := Key{"VXLAN_TUNNEL_MAP", d.vtep, fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
 	val := Val{
 		"vlan": fmt.Sprintf("Vlan%d", vid),
 		"vni":  fmt.Sprintf("%d", vni),
 	}
 	return d.c.HSet(ctx, key, val)
+}
+
+func (d *ConfigDB) obtainVTEPName(ctx context.Context) error {
+	pattern := Key{"VXLAN_TUNNEL", "*"}
+	keys, err := d.c.Keys(ctx, pattern)
+	if err != nil {
+		return err
+	}
+	if len(keys) != 1 {
+		return fmt.Errorf("could not find name of the vtep")
+	}
+	key := []string(keys[0])
+	d.vtep = key[len(key)-1]
+	return nil
 }
 
 func (d *ConfigDB) DeleteVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) error {
@@ -271,12 +295,8 @@ func (d *ConfigDB) SetPortMtu(ctx context.Context, interfaceName string, val str
 	return d.c.HSet(ctx, key, Val{mtu: val})
 }
 
-func (d *ConfigDB) SetAdminStatusUp(ctx context.Context, interfaceName string, up bool) error {
+func (d *ConfigDB) SetAdminStatusUp(ctx context.Context, interfaceName string) error {
 	key := Key{portTable, interfaceName}
 
-	status := adminStatusUp
-	if !up {
-		status = adminStatusDown
-	}
-	return d.c.HSet(ctx, key, Val{adminStatus: status})
+	return d.c.HSet(ctx, key, Val{adminStatus: adminStatusUp})
 }
