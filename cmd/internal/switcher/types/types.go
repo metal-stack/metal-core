@@ -108,6 +108,13 @@ func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
 			}
 			s.RouteMaps = append(s.RouteMaps, rm)
 		}
+		deny := RouteMap{
+			Name:    vniRouteMapName,
+			Entries: []string{},
+			Policy:  "deny",
+			Order:   10 + len(vnis),
+		}
+		s.RouteMaps = append(s.RouteMaps, deny)
 	}
 }
 
