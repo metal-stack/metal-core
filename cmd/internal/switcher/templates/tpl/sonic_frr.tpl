@@ -59,7 +59,6 @@ router bgp {{ $ASN }}
  {{- end }}
  !
  address-family ipv4 unicast
-  redistribute connected route-map DENY_MGMT
   redistribute connected route-map LOOPBACKS
   neighbor FIREWALL allowas-in 2
   {{- range $k, $f := .Ports.Firewalls }}
