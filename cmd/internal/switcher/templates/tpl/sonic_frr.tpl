@@ -60,6 +60,7 @@ router bgp {{ $ASN }}
  !
  address-family ipv4 unicast
   redistribute connected route-map DENY_MGMT
+  redistribute kernel route-map DENY_MGMT
   neighbor FIREWALL allowas-in 2
   {{- range $k, $f := .Ports.Firewalls }}
   neighbor {{ $f.Port }} route-map fw-{{ $k }}-in in
@@ -68,6 +69,7 @@ router bgp {{ $ASN }}
  !
  address-family ipv6 unicast
   redistribute connected route-map DENY_MGMT
+  redistribute kernel route-map DENY_MGMT
   neighbor FIREWALL allowas-in 2
   # see https://docs.frrouting.org/en/latest/bgp.html#clicmd-neighbor-A.B.C.D-activate
   # why activate is required
