@@ -1,6 +1,6 @@
 module github.com/metal-stack/metal-core
 
-go 1.25.1
+go 1.25
 
 require (
 	github.com/avast/retry-go/v4 v4.6.1
