@@ -15,6 +15,8 @@ type Config struct {
 	ApiIP                     string        `required:"false" default:"localhost" desc:"set metal api address" envconfig:"metal_api_ip"`
 	ApiPort                   int           `required:"false" default:"8080" desc:"set metal api port" envconfig:"metal_api_port"`
 	ApiBasePath               string        `required:"false" default:"" desc:"set metal api basepath" envconfig:"metal_api_basepath"`
+	ApiURL                    string        `required:"true" default:"" desc:"set metal-apiserver api url" envconfig:"metal_apiserver_api_url"`
+	ApiToken                  string        `required:"true" default:"" desc:"set metal-apiserver authentication token" envconfig:"metal_apiserver_token"`
 	LoopbackIP                string        `required:"false" default:"10.0.0.11" desc:"set the loopback ip address that is used with BGP unnumbered" split_words:"true"`
 	ASN                       string        `required:"false" default:"420000011" desc:"set the ASN that is used with BGP"`
 	SpineUplinks              []string      `required:"false" default:"swp31,swp32" desc:"set the ports that are connected to spines" envconfig:"spine_uplinks"`

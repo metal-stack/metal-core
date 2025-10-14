@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
+	clientv2 "github.com/metal-stack/api/go/client"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/metal-stack/metal-core/cmd/internal/core"
@@ -57,6 +58,12 @@ func Run() {
 	)
 	if err != nil {
 		log.Error("unable to create metal-api driver", "error", err)
+		os.Exit(1)
+	}
+
+	client, err := newApiClient(cfg.ApiURL, cfg.ApiToken)
+	if err != nil {
+		log.Error("failed to create metal-apiserver client", "error", err)
 		os.Exit(1)
 	}
 
@@ -105,6 +112,7 @@ func Run() {
 		SpineUplinks:          cfg.SpineUplinks,
 		NOS:                   nos,
 		Driver:                driver,
+		Client:                client,
 		EventServiceClient:    grpcClient.NewEventClient(),
 		Metrics:               metrics,
 		PXEVlanID:             cfg.PXEVlanID,
@@ -173,4 +181,15 @@ func Run() {
 	}()
 
 	wg.Wait()
+}
+
+func newApiClient(apiURL, token string) (clientv2.Client, error) {
+	dialConfig := &clientv2.DialConfig{
+		BaseURL:   apiURL,
+		Token:     token,
+		UserAgent: "metal-stack-cli",
+		Log:       slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})),
+	}
+
+	return clientv2.New(dialConfig)
 }

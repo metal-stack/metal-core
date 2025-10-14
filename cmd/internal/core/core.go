@@ -3,6 +3,7 @@ package core
 import (
 	"log/slog"
 
+	clientv2 "github.com/metal-stack/api/go/client"
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
@@ -27,6 +28,7 @@ type Core struct {
 	nos switcher.NOS
 
 	driver             metalgo.Client
+	client             clientv2.Client
 	eventServiceClient v1.EventServiceClient
 
 	metrics *metrics.Metrics
@@ -54,6 +56,7 @@ type Config struct {
 	NOS switcher.NOS
 
 	Driver             metalgo.Client
+	Client             clientv2.Client
 	EventServiceClient v1.EventServiceClient
 
 	Metrics *metrics.Metrics
@@ -79,6 +82,7 @@ func New(c Config) *Core {
 		spineUplinks:            c.SpineUplinks,
 		nos:                     c.NOS,
 		driver:                  c.Driver,
+		client:                  c.Client,
 		eventServiceClient:      c.EventServiceClient,
 		metrics:                 c.Metrics,
 		pxeVlanID:               c.PXEVlanID,

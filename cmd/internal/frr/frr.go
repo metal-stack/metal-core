@@ -47,7 +47,7 @@ type Port struct {
 type Vrfs map[string]Vrf
 type Ports map[string]Port
 
-func GetBGPStates(filepath string) (map[string]apiv2.SwitchBGPPortState, error) {
+func GetBGPStates(filepath string) (map[string]*apiv2.SwitchBGPPortState, error) {
 
 	fileInfo, err := os.Stat(filepath)
 	if err != nil {
@@ -76,7 +76,7 @@ func GetBGPStates(filepath string) (map[string]apiv2.SwitchBGPPortState, error) 
 		return nil, fmt.Errorf("error unmarshalling bgp vrf all neigh output: %w", err)
 	}
 
-	bgpstates := make(map[string]apiv2.SwitchBGPPortState)
+	bgpstates := make(map[string]*apiv2.SwitchBGPPortState)
 	for _, vrfData := range tempData {
 
 		var VrfName string
@@ -107,7 +107,7 @@ func GetBGPStates(filepath string) (map[string]apiv2.SwitchBGPPortState, error) 
 				return nil, fmt.Errorf("failed to determine bgp state of port: %w", err)
 			}
 
-			bgpstates[key] = apiv2.SwitchBGPPortState{
+			bgpstates[key] = &apiv2.SwitchBGPPortState{
 				Neighbor:              port.Hostname,
 				PeerGroup:             port.PeerGroup,
 				BgpState:              bgpState,
