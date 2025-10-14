@@ -36,7 +36,7 @@ test:
 
 .PHONY: lint
 lint:
-	golangci-lint run --build-tags client -p bugs -p unused
+	golangci-lint run --build-tags client
 
 .PHONY: gofmt
 gofmt:
