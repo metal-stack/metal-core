@@ -24,7 +24,6 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/core"
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
-	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/v"
 )
 
@@ -51,15 +50,6 @@ func Run() {
 
 	log.Info("metal-core version", "version", v.V)
 	log.Info("configuration", "cfg", cfg)
-
-	driver, err := metalgo.NewDriver(
-		fmt.Sprintf("%s://%s:%d%s", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort, cfg.ApiBasePath),
-		"", cfg.HMACKey, metalgo.AuthType("Metal-Edit"),
-	)
-	if err != nil {
-		log.Error("unable to create metal-api driver", "error", err)
-		os.Exit(1)
-	}
 
 	client, err := newApiClient(cfg.ApiURL, cfg.ApiToken)
 	if err != nil {
@@ -111,7 +101,6 @@ func Run() {
 		AdditionalBridgeVIDs:  cfg.AdditionalBridgeVIDs,
 		SpineUplinks:          cfg.SpineUplinks,
 		NOS:                   nos,
-		Driver:                driver,
 		Client:                client,
 		EventServiceClient:    grpcClient.NewEventClient(),
 		Metrics:               metrics,

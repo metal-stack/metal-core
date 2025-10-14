@@ -14,12 +14,12 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	"github.com/metal-stack/metal-core/cmd/internal"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
-	"github.com/metal-stack/metal-go/api/models"
 )
 
 const (
@@ -57,19 +57,6 @@ func New(log *slog.Logger, frrTplFile string) (*Sonic, error) {
 	}, nil
 }
 
-func loadRedisConfig(path string) (*db.Config, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	cfg := &db.Config{}
-	err = json.Unmarshal(data, cfg)
-	if err != nil {
-		return nil, err
-	}
-	return cfg, nil
-}
-
 func (s *Sonic) Apply(cfg *types.Conf) error {
 	err := s.redisApplier.Apply(cfg)
 	if err != nil {
@@ -86,7 +73,7 @@ func (s *Sonic) IsInitialized() (initialized bool, err error) {
 	return s.db.Appl.ExistPortInitDone(ctx)
 }
 
-func (s *Sonic) GetNics(log *slog.Logger, blacklist []string) (nics []*models.V1SwitchNic, err error) {
+func (s *Sonic) GetNics(log *slog.Logger, blacklist []string) (nics []*apiv2.SwitchNic, err error) {
 	ports, err := getPortsConfig(sonicConfigDBPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get ports config")
@@ -98,9 +85,9 @@ func (s *Sonic) GetNics(log *slog.Logger, blacklist []string) (nics []*models.V1
 			continue
 		}
 
-		nic := &models.V1SwitchNic{
-			Identifier: &portConfig.Alias,
-			Name:       &name,
+		nic := &apiv2.SwitchNic{
+			Identifier: portConfig.Alias,
+			Name:       name,
 		}
 		nics = append(nics, nic)
 	}
@@ -119,6 +106,45 @@ func (s *Sonic) GetSwitchPorts() ([]*net.Interface, error) {
 	}
 
 	return portsToInterfaces(ports), nil
+}
+
+func (s *Sonic) GetOS() (*apiv2.SwitchOS, error) {
+	versionBytes, err := os.ReadFile(SonicVersionFile)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read sonic_version: %w", err)
+	}
+
+	var sonicVersion struct {
+		BuildVersion string `yaml:"build_version"`
+	}
+	err = yaml.Unmarshal(versionBytes, &sonicVersion)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse sonic_version: %w", err)
+	}
+	return &apiv2.SwitchOS{
+		Vendor:  apiv2.SwitchOSVendor_SWITCH_OS_VENDOR_SONIC,
+		Version: sonicVersion.BuildVersion,
+	}, nil
+}
+func (s *Sonic) GetManagement() (ip, user string, err error) {
+	ip, err = internal.GetManagementIP("eth0")
+	if err != nil {
+		return "", "", err
+	}
+	return ip, "admin", nil
+}
+
+func loadRedisConfig(path string) (*db.Config, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	cfg := &db.Config{}
+	err = json.Unmarshal(data, cfg)
+	if err != nil {
+		return nil, err
+	}
+	return cfg, nil
 }
 
 func portsToInterfaces(ports map[string]PortInfo) []*net.Interface {
@@ -157,32 +183,4 @@ func getPortsConfig(filepath string) (map[string]PortInfo, error) {
 	err = json.Unmarshal(byteValue, &config)
 
 	return config.Ports, err
-}
-
-type sonic_version struct {
-	BuildVersion string `yaml:"build_version"`
-}
-
-func (s *Sonic) GetOS() (*models.V1SwitchOS, error) {
-	versionBytes, err := os.ReadFile(SonicVersionFile)
-	if err != nil {
-		return nil, fmt.Errorf("unable to read sonic_version: %w", err)
-	}
-
-	var sonicVersion sonic_version
-	err = yaml.Unmarshal(versionBytes, &sonicVersion)
-	if err != nil {
-		return nil, fmt.Errorf("unable to parse sonic_version: %w", err)
-	}
-	return &models.V1SwitchOS{
-		Vendor:  "SONiC",
-		Version: sonicVersion.BuildVersion,
-	}, nil
-}
-func (s *Sonic) GetManagement() (ip, user string, err error) {
-	ip, err = internal.GetManagementIP("eth0")
-	if err != nil {
-		return "", "", err
-	}
-	return ip, "admin", nil
 }
