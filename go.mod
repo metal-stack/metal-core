@@ -9,7 +9,7 @@ require (
 	github.com/go-redis/redismock/v9 v9.2.0
 	github.com/google/go-cmp v0.7.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/metal-stack/api v0.0.28-0.20251014100219-a6f933d5c01e
+	github.com/metal-stack/api v0.0.29
 	github.com/metal-stack/go-lldpd v0.4.9
 	github.com/metal-stack/metal-api v0.42.1
 	github.com/metal-stack/metal-lib v0.23.4
@@ -19,7 +19,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/vishvananda/netlink v1.3.1
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
-	golang.org/x/text v0.29.0
+	golang.org/x/text v0.30.0
 	google.golang.org/grpc v1.75.0
 	google.golang.org/protobuf v1.36.10
 	gopkg.in/yaml.v3 v3.0.1

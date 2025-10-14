@@ -11,6 +11,7 @@ import (
 
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	infrav2 "github.com/metal-stack/api/go/metalstack/infra/v2"
+	"github.com/metal-stack/metal-lib/pkg/pointer"
 	"github.com/metal-stack/v"
 )
 
@@ -64,7 +65,7 @@ func (c *Core) RegisterSwitch() error {
 			Partition:      c.partitionID,
 			ReplaceMode:    apiv2.SwitchReplaceMode_SWITCH_REPLACE_MODE_OPERATIONAL,
 			ManagementIp:   managementIP,
-			ManagementUser: managementUser,
+			ManagementUser: pointer.Pointer(managementUser),
 			Nics:           nics,
 			Os:             switchOS,
 		},
