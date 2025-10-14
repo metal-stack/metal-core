@@ -9,7 +9,7 @@ require (
 	github.com/go-redis/redismock/v9 v9.2.0
 	github.com/google/go-cmp v0.7.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/metal-stack/api v0.0.28-0.20251013093417-7dc4ea8f3d0d
+	github.com/metal-stack/api v0.0.28-0.20251014100219-a6f933d5c01e
 	github.com/metal-stack/go-lldpd v0.4.9
 	github.com/metal-stack/metal-api v0.42.1
 	github.com/metal-stack/metal-lib v0.23.4

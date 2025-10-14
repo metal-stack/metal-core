@@ -14,7 +14,6 @@ import (
 	"github.com/vishvananda/netlink"
 	"google.golang.org/protobuf/types/known/durationpb"
 
-	adminv2 "github.com/metal-stack/api/go/metalstack/admin/v2"
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	infrav2 "github.com/metal-stack/api/go/metalstack/infra/v2"
 	"github.com/metal-stack/metal-core/cmd/internal/frr"
@@ -99,11 +98,11 @@ func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval time.Du
 }
 
 func (c *Core) reconfigureSwitch(ctx context.Context, hostname string) (*apiv2.Switch, error) {
-	req := &adminv2.SwitchServiceGetRequest{
+	req := &infrav2.SwitchServiceGetRequest{
 		Id: hostname,
 	}
 
-	res, err := c.client.Adminv2().Switch().Get(ctx, connect.NewRequest(req))
+	res, err := c.client.Infrav2().Switch().Get(ctx, connect.NewRequest(req))
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch switch: %w", err)
 	}
