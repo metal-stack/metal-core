@@ -176,7 +176,7 @@ func newApiClient(apiURL, token string) (clientv2.Client, error) {
 	dialConfig := &clientv2.DialConfig{
 		BaseURL:   apiURL,
 		Token:     token,
-		UserAgent: "metal-stack-cli",
+		UserAgent: "metal-core",
 		Log:       slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})),
 	}
 
