@@ -38,12 +38,12 @@ func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval time.Du
 			elapsed := time.Since(start)
 			c.log.Info("reconfiguration took", "elapsed", elapsed)
 
-			req := (&infrav2.SwitchServiceHeartbeatRequest{
+			req := &infrav2.SwitchServiceHeartbeatRequest{
 				Id:            host,
 				Duration:      durationpb.New(time.Duration(elapsed.Nanoseconds())),
 				PortStates:    map[string]apiv2.SwitchPortStatus{},
 				BgpPortStates: map[string]*apiv2.SwitchBGPPortState{},
-			})
+			}
 
 			if err != nil {
 				req.Error = pointer.Pointer(err.Error())
