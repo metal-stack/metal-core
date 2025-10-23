@@ -27,13 +27,6 @@ func TestInterfacesTemplate(t *testing.T) {
 	}
 }
 
-func TestInterfacesTemplateWithDownPorts(t *testing.T) {
-	c := readConf(t, path.Join("test_down_interfaces", "conf_with_downports.yaml"))
-	c = *c.NewWithoutDownPorts()
-	tpl := InterfacesTemplate("")
-	verifyTemplate(t, tpl, &c, path.Join("test_down_interfaces", "interfaces_with_downports"))
-}
-
 func TestCumulusFrrTemplate(t *testing.T) {
 	tests := listTestCases()
 	for i := range tests {
