@@ -181,7 +181,7 @@ func (s *Sonic) GetOS() (*models.V1SwitchOS, error) {
 }
 func (s *Sonic) GetManagement() (ip, user string, err error) {
 	// problem
-	ip, err = internal.GetManagementIP("Ethernet0")
+	ip, err = internal.GetManagementIP("Loopback0")
 	if err != nil {
 		return "", "", err
 	}
