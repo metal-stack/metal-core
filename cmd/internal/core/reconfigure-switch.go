@@ -247,7 +247,7 @@ func mapLogLevel(level string) string {
 
 func fillEth0Info(c *types.Conf, gw string) error {
 	c.Ports.Eth0 = types.Nic{}
-	eth0, err := netlink.LinkByName("eth0")
+	eth0, err := netlink.LinkByName("Loopback0")
 	if err != nil {
 		return err
 	}
