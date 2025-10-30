@@ -180,6 +180,7 @@ func (s *Sonic) GetOS() (*models.V1SwitchOS, error) {
 	}, nil
 }
 func (s *Sonic) GetManagement() (ip, user string, err error) {
+	// problem
 	ip, err = internal.GetManagementIP("eth0")
 	if err != nil {
 		return "", "", err
