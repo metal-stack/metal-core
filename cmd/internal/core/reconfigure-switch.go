@@ -133,6 +133,7 @@ func (c *Core) reconfigureSwitch(switchName string) (*models.V1SwitchResponse, e
 }
 
 func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, error) {
+	c.log.Info("input core values", "c", c)
 	asn64, err := strconv.ParseUint(c.asn, 10, 32)
 	if err != nil {
 		return nil, err
@@ -150,6 +151,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 		AdditionalBridgeVIDs: c.additionalBridgeVIDs,
 		PXEVlanID:            c.pxeVlanID,
 	}
+	c.log.Info("switcher config", "c", switcherConfig)
 
 	p := types.Ports{
 		Underlay:      c.spineUplinks,
@@ -158,13 +160,16 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 		Firewalls:     map[string]*types.Firewall{},
 		DownPorts:     map[string]bool{},
 	}
+
+	c.log.Info("ports", "p", p)
 	p.BladePorts = c.additionalBridgePorts
 	for _, nic := range s.Nics {
 		port := *nic.Name
-
+		c.log.Info("nics", "n", nic)
 		if isPortStatusEqual(models.V1SwitchNicActualDOWN, nic.Actual) {
 			if has := p.DownPorts[port]; !has {
 				p.DownPorts[port] = true
+				c.log.Info("down port", "down", "port", p.DownPorts[port], port)
 			}
 		}
 
@@ -212,19 +217,23 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 	switcherConfig.Ports = p
 
 	c.nos.SanitizeConfig(switcherConfig)
+	c.log.Info("after sanitizing")
 	err = switcherConfig.FillRouteMapsAndIPPrefixLists()
+	c.log.Info("after FillRouteMapsAndIPPrefixLists")
 	if err != nil {
 		return nil, err
 	}
 	m, err := vlan.ReadMapping()
+	c.log.Info("after Readmapping")
 	if err != nil {
 		return nil, err
 	}
 	err = switcherConfig.FillVLANIDs(m)
+	c.log.Info("after FillVLANIDs")
 	if err != nil {
 		return nil, err
 	}
-
+	c.log.Info("switcher config")
 	return switcherConfig, nil
 }
 
@@ -247,7 +256,7 @@ func mapLogLevel(level string) string {
 
 func fillEth0Info(c *types.Conf, gw string) error {
 	c.Ports.Eth0 = types.Nic{}
-	eth0, err := netlink.LinkByName("Loopback0")
+	eth0, err := netlink.LinkByName("eth0")
 	if err != nil {
 		return err
 	}
