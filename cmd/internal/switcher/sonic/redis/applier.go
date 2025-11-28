@@ -256,6 +256,10 @@ func (a *Applier) cleanupVrfs(cfg *types.Conf) error {
 	}
 
 	for _, vrfName := range vrfs {
+		if vrfName == "default" {
+			continue
+		}
+
 		if _, found := cfg.Ports.Vrfs[vrfName]; found {
 			continue
 		}
