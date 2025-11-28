@@ -157,7 +157,7 @@ func (d *ConfigDB) ExistVrf(ctx context.Context, vrf string) (bool, error) {
 func (d *ConfigDB) CreateVrf(ctx context.Context, vrf string, vni uint32) error {
 	key := Key{"VRF", vrf}
 
-	return d.c.HSet(ctx, key, Val{"vni": fmt.Sprintf("%d", vni)})
+	return d.c.HSet(ctx, key, Val{"fallback": "false", "vni": fmt.Sprintf("%d", vni)})
 }
 
 func (d *ConfigDB) DeleteVrf(ctx context.Context, vrf string) error {
@@ -179,13 +179,21 @@ func (d *ConfigDB) GetVrfMembership(ctx context.Context, interfaceName string) (
 }
 
 func (d *ConfigDB) ExistVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) (bool, error) {
-	key := Key{"VXLAN_TUNNEL_MAP", "vtep", fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
+	vtep, err := d.getVTEPName(ctx)
+	if err != nil {
+		return false, err
+	}
+	key := Key{"VXLAN_TUNNEL_MAP", vtep, fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
 
 	return d.c.Exists(ctx, key)
 }
 
 func (d *ConfigDB) CreateVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) error {
-	key := Key{"VXLAN_TUNNEL_MAP", "vtep", fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
+	vtep, err := d.getVTEPName(ctx)
+	if err != nil {
+		return err
+	}
+	key := Key{"VXLAN_TUNNEL_MAP", vtep, fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
 	val := Val{
 		"vlan": fmt.Sprintf("Vlan%d", vid),
 		"vni":  fmt.Sprintf("%d", vni),
@@ -194,13 +202,21 @@ func (d *ConfigDB) CreateVxlanTunnelMap(ctx context.Context, vid uint16, vni uin
 }
 
 func (d *ConfigDB) DeleteVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) error {
-	key := Key{"VXLAN_TUNNEL_MAP", "vtep", fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
+	vtep, err := d.getVTEPName(ctx)
+	if err != nil {
+		return err
+	}
+	key := Key{"VXLAN_TUNNEL_MAP", vtep, fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
 
 	return d.c.Del(ctx, key)
 }
 
 func (d *ConfigDB) FindVxlanTunnelMapByVni(ctx context.Context, vni uint32) (*VxlanMap, error) {
-	t := d.c.GetTable(Key{"VXLAN_TUNNEL_MAP", "vtep"})
+	vtep, err := d.getVTEPName(ctx)
+	if err != nil {
+		return nil, err
+	}
+	t := d.c.GetTable(Key{"VXLAN_TUNNEL_MAP", vtep})
 
 	res, err := t.GetView(ctx)
 	if err != nil {
@@ -213,7 +229,7 @@ func (d *ConfigDB) FindVxlanTunnelMapByVni(ctx context.Context, vni uint32) (*Vx
 	}
 
 	for _, k := range tunnelMaps {
-		result, err := d.c.HGetAll(ctx, Key{"VXLAN_TUNNEL_MAP", "vtep", k})
+		result, err := d.c.HGetAll(ctx, Key{"VXLAN_TUNNEL_MAP", vtep, k})
 		if err != nil {
 			return nil, err
 		}
@@ -227,6 +243,19 @@ func (d *ConfigDB) FindVxlanTunnelMapByVni(ctx context.Context, vni uint32) (*Vx
 	}
 
 	return nil, nil
+}
+
+func (d *ConfigDB) getVTEPName(ctx context.Context) (string, error) {
+	pattern := Key{"VXLAN_TUNNEL", "*"}
+	keys, err := d.c.Keys(ctx, pattern)
+	if err != nil {
+		return "", err
+	}
+	if len(keys) != 1 {
+		return "", fmt.Errorf("could not find name of the vtep")
+	}
+	key := []string(keys[0])
+	return key[len(key)-1], nil
 }
 
 func (d *ConfigDB) DeleteInterfaceConfiguration(ctx context.Context, interfaceName string) error {
