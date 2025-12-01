@@ -6,7 +6,6 @@ package core
 import (
 	"context"
 	"encoding/json"
-	"os"
 	"os/exec"
 	"strings"
 	"sync"
@@ -39,11 +38,6 @@ type LLDPInterface struct {
 // phone-home LLDP package to any interface of the host machine
 // during this interval.
 func (c *Core) ConstantlyPhoneHome(ctx context.Context, interval time.Duration) {
-	ifs, err := c.nos.GetSwitchPorts()
-	if err != nil {
-		c.log.Error("unable to find interfaces", "error", err)
-		os.Exit(1)
-	}
 
 	discoveryResultChan := make(chan lldp.DiscoveryResult, 100)
 	var phoneHomeMessages sync.Map
@@ -120,7 +114,6 @@ func (c *Core) pollLLDPD(ctx context.Context, resultChan chan<- lldp.DiscoveryRe
 					// Each interface can have chassis info
 					for chassisName, chassisData := range ifaceData.Chassis {
 						discoveryResult := lldp.DiscoveryResult{
-							InterfaceName:  ifaceName,
 							SysName:        chassisName,
 							SysDescription: chassisData.Descr,
 						}
