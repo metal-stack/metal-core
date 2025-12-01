@@ -133,7 +133,7 @@ func (a *Applier) configureUnprovisionedPort(interfaceName string, isUp bool, px
 	}
 
 	// unprovisioned ports should be up
-	if err := a.ensurePortConfiguration(ctx, interfaceName, "9000", isUp); err != nil {
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "1400", isUp); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 
@@ -150,7 +150,7 @@ func (a *Applier) configureFirewallPort(interfaceName string, isUp bool) error {
 	}
 
 	// a firewall port should always be up
-	if err := a.ensurePortConfiguration(ctx, interfaceName, "9216", isUp); err != nil {
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "1500", isUp); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 
@@ -162,7 +162,7 @@ func (a *Applier) configureUnderlayPort(interfaceName string, isUp bool) error {
 	defer cancel()
 
 	// underlay ports should be up
-	if err := a.ensurePortConfiguration(ctx, interfaceName, "9216", isUp); err != nil {
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "1500", isUp); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 	return a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
@@ -182,7 +182,7 @@ func (a *Applier) configureVrfNeighbor(interfaceName, vrfName string, isUp bool)
 		return err
 	}
 
-	if err := a.ensurePortConfiguration(ctx, interfaceName, "9000", isUp); err != nil {
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "1400", isUp); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 
