@@ -110,7 +110,7 @@ func (c *Core) pollLLDPD(ctx context.Context, resultChan chan<- lldp.DiscoveryRe
 
 			// Extract neighbors from each interface
 			for _, ifaceMap := range result.Lldp.Interface {
-				for ifaceName, ifaceData := range ifaceMap {
+				for _, ifaceData := range ifaceMap {
 					// Each interface can have chassis info
 					for chassisName, chassisData := range ifaceData.Chassis {
 						discoveryResult := lldp.DiscoveryResult{
@@ -127,7 +127,6 @@ func (c *Core) pollLLDPD(ctx context.Context, resultChan chan<- lldp.DiscoveryRe
 		}
 	}
 }
-
 func (c *Core) send(ctx context.Context, event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
