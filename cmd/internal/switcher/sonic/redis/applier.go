@@ -150,7 +150,7 @@ func (a *Applier) configureFirewallPort(interfaceName string, isUp bool) error {
 	}
 
 	// a firewall port should always be up
-	if err := a.ensurePortConfiguration(ctx, interfaceName, "1500", isUp); err != nil {
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "1400", isUp); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 
@@ -162,7 +162,7 @@ func (a *Applier) configureUnderlayPort(interfaceName string, isUp bool) error {
 	defer cancel()
 
 	// underlay ports should be up
-	if err := a.ensurePortConfiguration(ctx, interfaceName, "1500", isUp); err != nil {
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "1400", isUp); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 	return a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
