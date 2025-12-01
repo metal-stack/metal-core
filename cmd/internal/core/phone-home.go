@@ -5,7 +5,9 @@ package core
 
 import (
 	"context"
+	"encoding/json"
 	"os"
+	"os/exec"
 	"strings"
 	"sync"
 	"time"
@@ -20,48 +22,34 @@ const (
 	provisioningEventPhonedHome = "Phoned Home"
 )
 
+// LLDPInterface represents the parsed LLDP JSON structure
+type LLDPInterface struct {
+	Via     string `json:"via"`
+	Chassis map[string]struct {
+		ID struct {
+			Type  string `json:"type"`
+			Value string `json:"value"`
+		} `json:"id"`
+		Descr string `json:"descr"`
+	} `json:"chassis"`
+}
+
 // ConstantlyPhoneHome sends every minute a single phone-home
 // provisioning event to metal-api for each machine that sent at least one
 // phone-home LLDP package to any interface of the host machine
 // during this interval.
 func (c *Core) ConstantlyPhoneHome(ctx context.Context, interval time.Duration) {
-	// FIXME this list of interfaces is only read on startup
-	// if additional interfaces are configured, no new lldpd client is started and therefore no
-	// phoned home events are sent for these interfaces.
-	// Solution:
-	// - either ensure metal-core is restarted on interfaces added/removed
-	// - dynamically detect changes and stop/start goroutines for the lldpd client per interface
 	ifs, err := c.nos.GetSwitchPorts()
 	if err != nil {
 		c.log.Error("unable to find interfaces", "error", err)
 		os.Exit(1)
 	}
 
-	discoveryResultChan := make(chan lldp.DiscoveryResult)
-	discoveryResultChanWG := sync.WaitGroup{}
-
+	discoveryResultChan := make(chan lldp.DiscoveryResult, 100)
 	var phoneHomeMessages sync.Map
-	for _, iface := range ifs {
-		lldpcli := lldp.NewClient(ctx, *iface)
-		c.log.Info("start lldp client", "interface", iface.Name)
 
-		ifaceName := iface.Name
-		// constantly observe LLDP traffic on current machine and current interface
-		discoveryResultChanWG.Add(1)
-		go func() {
-			defer discoveryResultChanWG.Done()
-			err = lldpcli.Start(c.log, discoveryResultChan)
-			if err != nil {
-				c.log.Error("unable to start lldp discovery for interface", "interface", ifaceName)
-			}
-		}()
-	}
-
-	// wait all lldp routines to finish to close result channel
-	go func() {
-		discoveryResultChanWG.Wait()
-		close(discoveryResultChan)
-	}()
+	// Start polling lldpd instead of raw packet capture
+	go c.pollLLDPD(ctx, discoveryResultChan)
 
 	// extract phone home messages from fetched LLDP packages
 	go func() {
@@ -93,8 +81,55 @@ func (c *Core) ConstantlyPhoneHome(ctx context.Context, interval time.Duration) 
 			})
 			c.phoneHome(ctx, msgs)
 		case <-ctx.Done():
-			// wait until all lldp routines to finish
-			discoveryResultChanWG.Wait()
+			close(discoveryResultChan)
+			return
+		}
+	}
+}
+
+// pollLLDPD queries lldpd periodically via docker exec
+func (c *Core) pollLLDPD(ctx context.Context, resultChan chan<- lldp.DiscoveryResult) {
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			cmd := exec.CommandContext(ctx, "docker", "exec", "lldp", "lldpcli", "show", "neighbors", "-f", "json")
+			output, err := cmd.Output()
+			if err != nil {
+				c.log.Error("failed to query lldpd", "error", err)
+				continue
+			}
+
+			// Parse the JSON structure
+			var result struct {
+				Lldp struct {
+					Interface []map[string]LLDPInterface `json:"interface"`
+				} `json:"lldp"`
+			}
+
+			if err := json.Unmarshal(output, &result); err != nil {
+				c.log.Error("failed to parse lldpd output", "error", err)
+				continue
+			}
+
+			// Extract neighbors from each interface
+			for _, ifaceMap := range result.Lldp.Interface {
+				for ifaceName, ifaceData := range ifaceMap {
+					// Each interface can have chassis info
+					for chassisName, chassisData := range ifaceData.Chassis {
+						discoveryResult := lldp.DiscoveryResult{
+							InterfaceName:  ifaceName,
+							SysName:        chassisName,
+							SysDescription: chassisData.Descr,
+						}
+						resultChan <- discoveryResult
+					}
+				}
+			}
+
+		case <-ctx.Done():
 			return
 		}
 	}
@@ -146,12 +181,15 @@ type phoneHomeMessage struct {
 }
 
 // toPhoneHomeMessage extracts the machineID and payload of the given lldp frame fragment.
-// An error will be returned if the frame fragment does not contain a phone-home message.
+// Now accepts both "provisioned" and "metal-hammer" (waiting for installation) messages.
 func toPhoneHomeMessage(discoveryResult lldp.DiscoveryResult) *phoneHomeMessage {
-	if strings.Contains(discoveryResult.SysDescription, "provisioned") {
+	descr := discoveryResult.SysDescription
+
+	// Accept both provisioned machines and machines waiting for installation
+	if strings.Contains(descr, "provisioned") || strings.Contains(descr, "metal-hammer") {
 		return &phoneHomeMessage{
 			machineID: discoveryResult.SysName,
-			payload:   discoveryResult.SysDescription,
+			payload:   descr,
 			time:      time.Now(),
 		}
 	}
