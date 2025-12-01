@@ -17,7 +17,7 @@ FROM alpine:3.22
 RUN apk add \
     libpcap \
     ca-certificates \
-    lldpd
+    docker-cli
 COPY --from=builder /work/bin/metal-core /
 
 ENTRYPOINT ["/metal-core"]
