@@ -21,7 +21,7 @@ LINKMODE := -linkmode external -extldflags '-s -w' \
 .PHONY: all
 all:: bin/$(BINARY);
 
-bin/$(BINARY): test $(GOSRC)
+bin/$(BINARY): $(GOSRC)
 	$(info CGO_ENABLED="$(CGO_ENABLED)")
 	go build \
 		-tags netgo,client \

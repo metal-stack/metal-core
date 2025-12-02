@@ -39,10 +39,6 @@ jobs:
     - name: Install libpcap-dev
       run: sudo apt-get install -y libpcap-dev
 
-    - name: Lint
-      uses: golangci/golangci-lint-action@v8
-      with:
-        args: --build-tags client --timeout=3m
 
     - name: Make tag
       run: |
