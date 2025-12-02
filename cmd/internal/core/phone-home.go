@@ -51,7 +51,7 @@ func (c *Core) ConstantlyPhoneHome(ctx context.Context, interval time.Duration) 
 			defer discoveryResultChanWG.Done()
 			err = lldpcli.Start(c.log, discoveryResultChan)
 			if err != nil {
-				c.log.Error("unable to start lldp discovery for interface", "interface", ifaceName)
+				c.log.Error("unable to start lldp discovery for interface", "interface", ifaceName, "error", err)
 			}
 		}()
 	}
