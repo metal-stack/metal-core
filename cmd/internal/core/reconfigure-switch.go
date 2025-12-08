@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"connectrpc.com/connect"
 	"github.com/vishvananda/netlink"
 	"google.golang.org/protobuf/types/known/durationpb"
 
@@ -86,7 +85,7 @@ func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval time.Du
 				req.BgpPortStates = bgpportstates
 			}
 
-			_, err = c.client.Infrav2().Switch().Heartbeat(ctx, connect.NewRequest(req))
+			_, err = c.client.Infrav2().Switch().Heartbeat(ctx, req)
 			if err != nil {
 				c.log.Error("notification about switch reconfiguration failed", "error", err)
 				c.metrics.CountError("reconfiguration-notification")
@@ -102,12 +101,12 @@ func (c *Core) reconfigureSwitch(ctx context.Context, hostname string) (*apiv2.S
 		Id: hostname,
 	}
 
-	res, err := c.client.Infrav2().Switch().Get(ctx, connect.NewRequest(req))
+	res, err := c.client.Infrav2().Switch().Get(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch switch: %w", err)
 	}
 
-	s := res.Msg.Switch
+	s := res.Switch
 	switchConfig, err := c.buildSwitcherConfig(s)
 	if err != nil {
 		return nil, fmt.Errorf("could not build switcher config: %w", err)

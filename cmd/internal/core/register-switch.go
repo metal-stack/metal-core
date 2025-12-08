@@ -6,7 +6,6 @@ import (
 	"os"
 	"time"
 
-	"connectrpc.com/connect"
 	"github.com/avast/retry-go/v4"
 
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
@@ -73,7 +72,7 @@ func (c *Core) RegisterSwitch() error {
 
 	_ = retry.Do(
 		func() error {
-			if _, err := c.client.Infrav2().Switch().Register(context.TODO(), connect.NewRequest(req)); err == nil {
+			if _, err := c.client.Infrav2().Switch().Register(context.TODO(), req); err == nil {
 				return nil
 			}
 			c.log.Error("failed to register switch, retrying", "error", err)
