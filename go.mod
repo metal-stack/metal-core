@@ -10,7 +10,6 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/api v0.0.36-0.20251208153216-c157322cf0b3
 	github.com/metal-stack/go-lldpd v0.4.11
-	github.com/metal-stack/metal-api v0.42.4
 	github.com/metal-stack/metal-lib v0.23.5
 	github.com/metal-stack/v v1.0.3
 	github.com/prometheus/client_golang v1.23.2
@@ -19,7 +18,6 @@ require (
 	github.com/vishvananda/netlink v1.3.1
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
 	golang.org/x/text v0.31.0
-	google.golang.org/grpc v1.77.0
 	google.golang.org/protobuf v1.36.10
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -31,6 +29,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
+	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/godbus/dbus/v5 v5.2.0 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
@@ -49,5 +48,4 @@ require (
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20251124214823-79d6a2a48846 // indirect
 )
