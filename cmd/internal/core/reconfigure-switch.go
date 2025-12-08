@@ -11,12 +11,15 @@ import (
 	"time"
 
 	"github.com/vishvananda/netlink"
+	"google.golang.org/protobuf/types/known/durationpb"
 
+	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
+	infrav2 "github.com/metal-stack/api/go/metalstack/infra/v2"
 	"github.com/metal-stack/metal-core/cmd/internal/frr"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
+	"github.com/metal-stack/metal-lib/pkg/pointer"
+
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
-	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
-	"github.com/metal-stack/metal-go/api/models"
 )
 
 // ConstantlyReconfigureSwitch reconfigures the switch.
@@ -30,51 +33,46 @@ func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval time.Du
 		case <-ticker.C:
 			c.log.Info("trigger reconfiguration")
 			start := time.Now()
-			s, err := c.reconfigureSwitch(host)
+			s, err := c.reconfigureSwitch(ctx, host)
 			elapsed := time.Since(start)
 			c.log.Info("reconfiguration took", "elapsed", elapsed)
 
-			params := sw.NewNotifySwitchParams()
-			params.ID = host
-			ns := elapsed.Nanoseconds()
-			nr := &models.V1SwitchNotifyRequest{
-				SyncDuration:  &ns,
-				PortStates:    make(map[string]string),
-				BgpPortStates: make(map[string]models.V1SwitchBGPPortState),
+			req := &infrav2.SwitchServiceHeartbeatRequest{
+				Id:            host,
+				Duration:      durationpb.New(time.Duration(elapsed.Nanoseconds())),
+				PortStates:    map[string]apiv2.SwitchPortStatus{},
+				BgpPortStates: map[string]*apiv2.SwitchBGPPortState{},
 			}
+
 			if err != nil {
-				errStr := err.Error()
-				nr.Error = &errStr
+				req.Error = pointer.Pointer(err.Error())
 				c.log.Error("reconfiguration failed", "error", err)
 				c.metrics.CountError("switch-reconfiguration")
 			} else {
 				c.log.Info("reconfiguration succeeded")
 			}
 
-			// fill the port states of the switch
-			var nics []*models.V1SwitchNic
+			var nics []*apiv2.SwitchNic
 			if s != nil {
 				nics = s.Nics
 			}
-			for _, n := range nics {
-				if n == nil || n.Name == nil {
-					// lets log the whole nic because the name could be empty; lets hope there is some useful information
-					// in the nic
-					c.log.Error("could not check if link is up", "nic", n)
+			for _, nic := range nics {
+				if nic == nil || nic.Name == "" {
+					c.log.Error("could not check if link is up", "nic", nic)
 					c.metrics.CountError("switch-reconfiguration")
 					continue
 				}
-				isup, err := isLinkUp(*n.Name)
+				isup, err := isLinkUp(nic.Name)
 				if err != nil {
-					c.log.Error("could not check if link is up", "error", err, "nicname", *n.Name)
-					nr.PortStates[*n.Name] = models.V1SwitchNicActualUNKNOWN
+					c.log.Error("could not check if link is up", "error", err, "nicname", nic.Name)
+					req.PortStates[nic.Name] = apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_UNKNOWN
 					c.metrics.CountError("switch-reconfiguration")
 					continue
 				}
 				if isup {
-					nr.PortStates[*n.Name] = models.V1SwitchNicActualUP
+					req.PortStates[nic.Name] = apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_UP
 				} else {
-					nr.PortStates[*n.Name] = models.V1SwitchNicActualDOWN
+					req.PortStates[nic.Name] = apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN
 				}
 			}
 
@@ -84,11 +82,10 @@ func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval time.Du
 					c.log.Error("could not get BGP states", "error", err)
 					c.metrics.CountError("switch-reconfiguration")
 				}
-				nr.BgpPortStates = bgpportstates
+				req.BgpPortStates = bgpportstates
 			}
 
-			params.Body = nr
-			_, err = c.driver.SwitchOperations().NotifySwitch(params, nil)
+			_, err = c.client.Infrav2().Switch().Heartbeat(ctx, req)
 			if err != nil {
 				c.log.Error("notification about switch reconfiguration failed", "error", err)
 				c.metrics.CountError("reconfiguration-notification")
@@ -99,15 +96,17 @@ func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval time.Du
 	}
 }
 
-func (c *Core) reconfigureSwitch(switchName string) (*models.V1SwitchResponse, error) {
-	params := sw.NewFindSwitchParams()
-	params.ID = switchName
-	fsr, err := c.driver.SwitchOperations().FindSwitch(params, nil)
-	if err != nil {
-		return nil, fmt.Errorf("could not fetch switch from metal-api: %w", err)
+func (c *Core) reconfigureSwitch(ctx context.Context, hostname string) (*apiv2.Switch, error) {
+	req := &infrav2.SwitchServiceGetRequest{
+		Id: hostname,
 	}
 
-	s := fsr.Payload
+	res, err := c.client.Infrav2().Switch().Get(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch switch: %w", err)
+	}
+
+	s := res.Switch
 	switchConfig, err := c.buildSwitcherConfig(s)
 	if err != nil {
 		return nil, fmt.Errorf("could not build switcher config: %w", err)
@@ -132,7 +131,7 @@ func (c *Core) reconfigureSwitch(switchName string) (*models.V1SwitchResponse, e
 	return s, nil
 }
 
-func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, error) {
+func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 	asn64, err := strconv.ParseUint(c.asn, 10, 32)
 	if err != nil {
 		return nil, err
@@ -142,7 +141,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 	}
 
 	switcherConfig := &types.Conf{
-		Name:                 s.Name,
+		Name:                 s.Id,
 		LogLevel:             mapLogLevel(c.logLevel),
 		ASN:                  uint32(asn64), // nolint:gosec
 		Loopback:             c.loopbackIP,
@@ -160,9 +159,9 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 	}
 	p.BladePorts = c.additionalBridgePorts
 	for _, nic := range s.Nics {
-		port := *nic.Name
+		port := nic.Name
 
-		if isPortStatusEqual(models.V1SwitchNicActualDOWN, nic.Actual) {
+		if nic.State != nil && nic.State.Actual == apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN {
 			if has := p.DownPorts[port]; !has {
 				p.DownPorts[port] = true
 			}
@@ -174,7 +173,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 		if slices.Contains(c.additionalBridgePorts, port) {
 			continue
 		}
-		if nic.Vrf == "" {
+		if pointer.SafeDeref(nic.Vrf) == "" {
 			if !slices.Contains(p.Unprovisioned, port) {
 				p.Unprovisioned = append(p.Unprovisioned, port)
 			}
@@ -182,32 +181,33 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 		}
 
 		// Firewall-Port
-		if nic.Vrf == "default" {
+		if pointer.SafeDeref(nic.Vrf) == "default" {
 			fw := &types.Firewall{
 				Port: port,
 			}
-			if nic.Filter != nil {
-				fw.Vnis = nic.Filter.Vnis
-				fw.Cidrs = nic.Filter.Cidrs
+			if nic.BgpFilter != nil {
+				fw.Vnis = nic.BgpFilter.Vnis
+				fw.Cidrs = nic.BgpFilter.Cidrs
 			}
 			p.Firewalls[port] = fw
 			continue
 		}
+
 		// Machine-Port
 		vrf := &types.Vrf{}
-		if v, has := p.Vrfs[nic.Vrf]; has {
+		if v, has := p.Vrfs[pointer.SafeDeref(nic.Vrf)]; has {
 			vrf = v
 		}
-		vni64, err := strconv.ParseUint(strings.TrimPrefix(nic.Vrf, "vrf"), 10, 32)
+		vni64, err := strconv.ParseUint(strings.TrimPrefix(pointer.SafeDeref(nic.Vrf), "vrf"), 10, 32)
 		if err != nil {
 			return nil, err
 		}
 		vrf.VNI = uint32(vni64) // nolint:gosec
 		vrf.Neighbors = append(vrf.Neighbors, port)
-		if nic.Filter != nil {
-			vrf.Cidrs = nic.Filter.Cidrs
+		if nic.BgpFilter != nil {
+			vrf.Cidrs = nic.BgpFilter.Cidrs
 		}
-		p.Vrfs[nic.Vrf] = vrf
+		p.Vrfs[pointer.SafeDeref(nic.Vrf)] = vrf
 	}
 	switcherConfig.Ports = p
 
@@ -266,19 +266,10 @@ func fillEth0Info(c *types.Conf, gw string) error {
 	return nil
 }
 
-// isLinkUp checks if the interface with the given name is up.
-// It returns a boolean indicating if the interface is up, and an error if there was a problem checking the interface.
 func isLinkUp(nicname string) (bool, error) {
 	nic, err := net.InterfaceByName(nicname)
 	if err != nil {
 		return false, fmt.Errorf("cannot query interface %q : %w", nicname, err)
 	}
 	return nic.Flags&net.FlagUp != 0, nil
-}
-
-func isPortStatusEqual(stat string, other *string) bool {
-	if other == nil {
-		return false
-	}
-	return strings.EqualFold(stat, *other)
 }

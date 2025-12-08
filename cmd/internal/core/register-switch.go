@@ -1,29 +1,23 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
 
 	"github.com/avast/retry-go/v4"
 
-	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
-	"github.com/metal-stack/metal-go/api/models"
+	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
+	infrav2 "github.com/metal-stack/api/go/metalstack/infra/v2"
+	"github.com/metal-stack/metal-lib/pkg/pointer"
 	"github.com/metal-stack/v"
 )
 
 func (c *Core) RegisterSwitch() error {
 	c.log.Info("register switch")
-	var (
-		err            error
-		nics           []*models.V1SwitchNic
-		hostname       string
-		switchOS       *models.V1SwitchOS
-		managementIP   string
-		managementUser string
-	)
 
-	err = retry.Do(
+	err := retry.Do(
 		func() error {
 			initialized, err := c.nos.IsInitialized()
 			if err != nil {
@@ -42,44 +36,53 @@ func (c *Core) RegisterSwitch() error {
 		return fmt.Errorf("unable to register switch because it is not initialized: %w", err)
 	}
 
-	if nics, err = c.nos.GetNics(c.log, c.additionalBridgePorts); err != nil {
+	nics, err := c.nos.GetNics(c.log, c.additionalBridgePorts)
+	if err != nil {
 		return fmt.Errorf("unable to get nics: %w", err)
 	}
 
-	if hostname, err = os.Hostname(); err != nil {
+	hostname, err := os.Hostname()
+	if err != nil {
 		return fmt.Errorf("unable to get hostname: %w", err)
 	}
 
-	if switchOS, err = c.nos.GetOS(); err != nil {
+	switchOS, err := c.nos.GetOS()
+	if err != nil {
 		return fmt.Errorf("unable to get switch os: %w", err)
 	}
 	switchOS.MetalCoreVersion = v.V.String()
 
-	if managementIP, managementUser, err = c.nos.GetManagement(); err != nil {
+	managementIP, managementUser, err := c.nos.GetManagement()
+	if err != nil {
 		return fmt.Errorf("unable to get switch management info: %w", err)
 	}
 
-	params := sw.NewRegisterSwitchParams()
-	params.Body = &models.V1SwitchRegisterRequest{
-		ID:             &hostname,
-		Name:           hostname,
-		PartitionID:    &c.partitionID,
-		RackID:         &c.rackID,
-		Nics:           nics,
-		Os:             switchOS,
-		ManagementIP:   managementIP,
-		ManagementUser: managementUser,
+	req := &infrav2.SwitchServiceRegisterRequest{
+		Switch: &apiv2.Switch{
+			Id:             hostname,
+			Rack:           &c.rackID,
+			Partition:      c.partitionID,
+			ReplaceMode:    apiv2.SwitchReplaceMode_SWITCH_REPLACE_MODE_OPERATIONAL,
+			ManagementIp:   managementIP,
+			ManagementUser: pointer.Pointer(managementUser),
+			Nics:           nics,
+			Os:             switchOS,
+		},
 	}
 
-	// TODO could be done with retry-go
-	for {
-		_, _, err := c.driver.SwitchOperations().RegisterSwitch(params, nil)
-		if err == nil {
-			break
-		}
-		c.log.Error("unable to register at metal-api, retrying", "error", err)
-		time.Sleep(30 * time.Second)
-	}
+	_ = retry.Do(
+		func() error {
+			if _, err := c.client.Infrav2().Switch().Register(context.TODO(), req); err == nil {
+				return nil
+			}
+			c.log.Error("failed to register switch, retrying", "error", err)
+			return err
+		},
+		retry.Attempts(0),
+		retry.Delay(30*time.Second),
+		retry.DelayType(retry.FixedDelay),
+	)
+
 	c.log.Info("register switch completed")
 	return nil
 }

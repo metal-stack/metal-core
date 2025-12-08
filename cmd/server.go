@@ -17,12 +17,12 @@ import (
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
+	clientv2 "github.com/metal-stack/api/go/client"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/metal-stack/metal-core/cmd/internal/core"
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
-	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/v"
 )
 
@@ -50,34 +50,9 @@ func Run() {
 	log.Info("metal-core version", "version", v.V)
 	log.Info("configuration", "cfg", cfg)
 
-	driver, err := metalgo.NewDriver(
-		fmt.Sprintf("%s://%s:%d%s", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort, cfg.ApiBasePath),
-		"", cfg.HMACKey, metalgo.AuthType("Metal-Edit"),
-	)
+	client, err := newApiClient(cfg.ApiURL, cfg.ApiToken)
 	if err != nil {
-		log.Error("unable to create metal-api driver", "error", err)
-		os.Exit(1)
-	}
-
-	cert, err := os.ReadFile(cfg.GrpcClientCertFile)
-	if err != nil {
-		log.Error("failed to read cert", "error", err)
-		os.Exit(1)
-	}
-	cacert, err := os.ReadFile(cfg.GrpcCACertFile)
-	if err != nil {
-		log.Error("failed to read ca cert", "error", err)
-		os.Exit(1)
-	}
-	key, err := os.ReadFile(cfg.GrpcClientKeyFile)
-	if err != nil {
-		log.Error("failed to read key", "error", err)
-		os.Exit(1)
-	}
-
-	grpcClient, err := NewGrpcClient(log, cfg.GrpcAddress, cert, key, cacert)
-	if err != nil {
-		log.Error("failed to create grpc client", "error", err)
+		log.Error("failed to create metal-apiserver client", "error", err)
 		os.Exit(1)
 	}
 
@@ -103,8 +78,7 @@ func Run() {
 		AdditionalBridgeVIDs:  cfg.AdditionalBridgeVIDs,
 		SpineUplinks:          cfg.SpineUplinks,
 		NOS:                   nos,
-		Driver:                driver,
-		EventServiceClient:    grpcClient.NewEventClient(),
+		Client:                client,
 		Metrics:               metrics,
 		PXEVlanID:             cfg.PXEVlanID,
 		BGPNeighborStateFile:  cfg.BGPNeighborStateFile,
@@ -172,4 +146,15 @@ func Run() {
 	}()
 
 	wg.Wait()
+}
+
+func newApiClient(apiURL, token string) (clientv2.Client, error) {
+	dialConfig := &clientv2.DialConfig{
+		BaseURL:   apiURL,
+		Token:     token,
+		UserAgent: "metal-core",
+		Log:       slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})),
+	}
+
+	return clientv2.New(dialConfig)
 }
