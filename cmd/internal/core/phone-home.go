@@ -11,12 +11,8 @@ import (
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	infrav2 "github.com/metal-stack/api/go/metalstack/infra/v2"
 	"github.com/metal-stack/go-lldpd/pkg/lldp"
-	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
-)
-
-const (
-	provisioningEventPhonedHome = "Phoned Home"
 )
 
 // ConstantlyPhoneHome sends every minute a single phone-home
@@ -98,10 +94,10 @@ func (c *Core) ConstantlyPhoneHome(ctx context.Context, interval time.Duration) 
 	}
 }
 
-func (c *Core) send(ctx context.Context, event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error) {
+func (c *Core) send(ctx context.Context, event *infrav2.EventServiceSendRequest) (*infrav2.EventServiceSendResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
-	s, err := c.eventServiceClient.Send(ctx, event)
+	s, err := c.client.Infrav2().Event().Send(ctx, event)
 	if err != nil {
 		return nil, err
 	}
@@ -114,19 +110,18 @@ func (c *Core) send(ctx context.Context, event *v1.EventServiceSendRequest) (*v1
 func (c *Core) phoneHome(ctx context.Context, msgs []phoneHomeMessage) {
 	c.log.Info("phonehome", "machines", len(msgs))
 
-	events := make(map[string]*v1.MachineProvisioningEvent)
-	phonedHomeEvent := string(provisioningEventPhonedHome)
+	events := make(map[string]*infrav2.MachineProvisioningEvent)
 	for i := range msgs {
 		msg := msgs[i]
-		event := &v1.MachineProvisioningEvent{
-			Event:   phonedHomeEvent,
+		event := &infrav2.MachineProvisioningEvent{
+			Event:   infrav2.ProvisioningEventType_PROVISIONING_EVENT_TYPE_PHONED_HOME,
 			Message: msg.payload,
 			Time:    timestamppb.New(msg.time),
 		}
 		events[msg.machineID] = event
 	}
 
-	s, err := c.send(ctx, &v1.EventServiceSendRequest{Events: events})
+	s, err := c.send(ctx, &infrav2.EventServiceSendRequest{Events: events})
 	if err != nil {
 		c.log.Error("unable to send provisioning event back to API", "error", err)
 		c.metrics.CountError("send-provisioning")

@@ -4,7 +4,6 @@ import (
 	"log/slog"
 
 	clientv2 "github.com/metal-stack/api/go/client"
-	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 )
@@ -23,17 +22,12 @@ type Core struct {
 	additionalBridgePorts   []string
 	additionalBridgeVIDs    []string
 	spineUplinks            []string
+	pxeVlanID               uint16
+	bgpNeighborStateFile    string
 
-	nos switcher.NOS
-
-	client             clientv2.Client
-	eventServiceClient v1.EventServiceClient
-
+	nos     switcher.NOS
+	client  clientv2.Client
 	metrics *metrics.Metrics
-
-	pxeVlanID uint16
-
-	bgpNeighborStateFile string
 }
 
 type Config struct {
@@ -53,10 +47,9 @@ type Config struct {
 	AdditionalBridgeVIDs  []string
 	SpineUplinks          []string
 
-	NOS                switcher.NOS
-	Client             clientv2.Client
-	EventServiceClient v1.EventServiceClient
-	Metrics            *metrics.Metrics
+	NOS     switcher.NOS
+	Client  clientv2.Client
+	Metrics *metrics.Metrics
 }
 
 func New(c Config) *Core {
@@ -75,7 +68,6 @@ func New(c Config) *Core {
 		spineUplinks:            c.SpineUplinks,
 		nos:                     c.NOS,
 		client:                  c.Client,
-		eventServiceClient:      c.EventServiceClient,
 		metrics:                 c.Metrics,
 		pxeVlanID:               c.PXEVlanID,
 		bgpNeighborStateFile:    c.BGPNeighborStateFile,

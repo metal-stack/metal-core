@@ -56,28 +56,6 @@ func Run() {
 		os.Exit(1)
 	}
 
-	cert, err := os.ReadFile(cfg.GrpcClientCertFile)
-	if err != nil {
-		log.Error("failed to read cert", "error", err)
-		os.Exit(1)
-	}
-	cacert, err := os.ReadFile(cfg.GrpcCACertFile)
-	if err != nil {
-		log.Error("failed to read ca cert", "error", err)
-		os.Exit(1)
-	}
-	key, err := os.ReadFile(cfg.GrpcClientKeyFile)
-	if err != nil {
-		log.Error("failed to read key", "error", err)
-		os.Exit(1)
-	}
-
-	grpcClient, err := NewGrpcClient(log, cfg.GrpcAddress, cert, key, cacert)
-	if err != nil {
-		log.Error("failed to create grpc client", "error", err)
-		os.Exit(1)
-	}
-
 	nos, err := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile)
 	if err != nil {
 		log.Error("failed to create NOS instance", "error", err)
@@ -101,7 +79,6 @@ func Run() {
 		SpineUplinks:          cfg.SpineUplinks,
 		NOS:                   nos,
 		Client:                client,
-		EventServiceClient:    grpcClient.NewEventClient(),
 		Metrics:               metrics,
 		PXEVlanID:             cfg.PXEVlanID,
 		BGPNeighborStateFile:  cfg.BGPNeighborStateFile,
