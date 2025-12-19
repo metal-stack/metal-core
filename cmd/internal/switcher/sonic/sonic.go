@@ -137,6 +137,7 @@ func portsToInterfaces(ports map[string]PortInfo) []*net.Interface {
 }
 
 func getPortsConfig(filepath string) (map[string]PortInfo, error) {
+	// FIXME: use running config instead of config_db.json as it might not contain ports config
 	jsonFile, err := os.Open(filepath)
 	if err != nil {
 		return nil, err

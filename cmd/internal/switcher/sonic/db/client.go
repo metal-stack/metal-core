@@ -48,7 +48,11 @@ func (c *Client) GetTable(table Key) *Table {
 }
 
 func (c *Client) GetView(ctx context.Context, table string) (View, error) {
-	pattern := table + c.sep + "*"
+	var (
+		prefix  = table + c.sep
+		pattern = prefix + "*"
+	)
+
 	keys, err := c.rdb.Keys(ctx, pattern).Result()
 	if err != nil {
 		return nil, err
@@ -56,12 +60,13 @@ func (c *Client) GetView(ctx context.Context, table string) (View, error) {
 
 	view := NewView(len(keys))
 	for _, key := range keys {
-		if len(key) < len(pattern) {
-			return nil, fmt.Errorf("key %s is slower than pattern %s", key, pattern)
+		item, found := strings.CutPrefix(key, prefix)
+		if !found {
+			return nil, fmt.Errorf("key %s does not contain expected prefix %s", key, prefix)
 		}
-		item := key[len(table)+1:]
 		view.Add(item)
 	}
+
 	return view, nil
 }
 
