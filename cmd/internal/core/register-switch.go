@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
@@ -12,7 +13,7 @@ import (
 	"github.com/metal-stack/v"
 )
 
-func (c *Core) RegisterSwitch() error {
+func (c *Core) RegisterSwitch(ctx context.Context) error {
 	c.log.Info("register switch")
 	var (
 		err            error
@@ -42,7 +43,7 @@ func (c *Core) RegisterSwitch() error {
 		return fmt.Errorf("unable to register switch because it is not initialized: %w", err)
 	}
 
-	if nics, err = c.nos.GetNics(c.log, c.additionalBridgePorts); err != nil {
+	if nics, err = c.nos.GetNics(ctx, c.log, c.additionalBridgePorts); err != nil {
 		return fmt.Errorf("unable to get nics: %w", err)
 	}
 
