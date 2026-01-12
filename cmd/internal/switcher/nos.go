@@ -1,6 +1,7 @@
 package switcher
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net"
@@ -16,8 +17,8 @@ type NOS interface {
 	SanitizeConfig(cfg *types.Conf)
 	Apply(cfg *types.Conf) error
 	IsInitialized() (initialized bool, err error)
-	GetNics(log *slog.Logger, blacklist []string) ([]*models.V1SwitchNic, error)
-	GetSwitchPorts() ([]*net.Interface, error)
+	GetNics(ctx context.Context, log *slog.Logger, blacklist []string) ([]*models.V1SwitchNic, error)
+	GetSwitchPorts(ctx context.Context) ([]*net.Interface, error)
 	GetOS() (*models.V1SwitchOS, error)
 	GetManagement() (ip, user string, err error)
 }

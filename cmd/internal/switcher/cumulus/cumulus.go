@@ -1,6 +1,7 @@
 package cumulus
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net"
@@ -43,8 +44,8 @@ func (c *Cumulus) IsInitialized() (initialized bool, err error) {
 	return true, nil
 }
 
-func (c *Cumulus) GetNics(log *slog.Logger, blacklist []string) (nics []*models.V1SwitchNic, err error) {
-	ifs, err := c.GetSwitchPorts()
+func (c *Cumulus) GetNics(ctx context.Context, log *slog.Logger, blacklist []string) (nics []*models.V1SwitchNic, err error) {
+	ifs, err := c.GetSwitchPorts(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get all ifs: %w", err)
 	}
@@ -72,7 +73,7 @@ func (c *Cumulus) GetNics(log *slog.Logger, blacklist []string) (nics []*models.
 	return nics, nil
 }
 
-func (c *Cumulus) GetSwitchPorts() ([]*net.Interface, error) {
+func (c *Cumulus) GetSwitchPorts(_ context.Context) ([]*net.Interface, error) {
 	ifs, err := net.Interfaces()
 	if err != nil {
 		return nil, fmt.Errorf("unable to get all interfaces: %w", err)

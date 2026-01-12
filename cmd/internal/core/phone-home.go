@@ -30,7 +30,7 @@ func (c *Core) ConstantlyPhoneHome(ctx context.Context, interval time.Duration) 
 	// Solution:
 	// - either ensure metal-core is restarted on interfaces added/removed
 	// - dynamically detect changes and stop/start goroutines for the lldpd client per interface
-	ifs, err := c.nos.GetSwitchPorts()
+	ifs, err := c.nos.GetSwitchPorts(ctx)
 	if err != nil {
 		c.log.Error("unable to find interfaces", "error", err)
 		os.Exit(1)

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log/slog"
 	"net"
 	"os"
@@ -23,9 +22,8 @@ import (
 )
 
 const (
-	sonicConfigDBPath = "/etc/sonic/config_db.json"
-	SonicVersionFile  = "/etc/sonic/sonic_version.yml"
-	redisConfigFile   = "/var/run/redis/sonic-db/database_config.json"
+	SonicVersionFile = "/etc/sonic/sonic_version.yml"
+	redisConfigFile  = "/var/run/redis/sonic-db/database_config.json"
 )
 
 type Sonic struct {
@@ -86,8 +84,8 @@ func (s *Sonic) IsInitialized() (initialized bool, err error) {
 	return s.db.Appl.ExistPortInitDone(ctx)
 }
 
-func (s *Sonic) GetNics(log *slog.Logger, blacklist []string) (nics []*models.V1SwitchNic, err error) {
-	ports, err := getPortsConfig(sonicConfigDBPath)
+func (s *Sonic) GetNics(ctx context.Context, log *slog.Logger, blacklist []string) (nics []*models.V1SwitchNic, err error) {
+	ports, err := s.getPortsConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get ports config")
 	}
@@ -112,8 +110,8 @@ func (s *Sonic) SanitizeConfig(cfg *types.Conf) {
 	cfg.CapitalizeVrfName()
 }
 
-func (s *Sonic) GetSwitchPorts() ([]*net.Interface, error) {
-	ports, err := getPortsConfig(sonicConfigDBPath)
+func (s *Sonic) GetSwitchPorts(ctx context.Context) ([]*net.Interface, error) {
+	ports, err := s.getPortsConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get all interfaces: %w", err)
 	}
@@ -136,27 +134,20 @@ func portsToInterfaces(ports map[string]PortInfo) []*net.Interface {
 	return interfaces
 }
 
-func getPortsConfig(filepath string) (map[string]PortInfo, error) {
-	jsonFile, err := os.Open(filepath)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		_ = jsonFile.Close()
-	}()
-
-	byteValue, err := io.ReadAll(jsonFile)
+func (s *Sonic) getPortsConfig(ctx context.Context) (map[string]PortInfo, error) {
+	ports, err := s.redisApplier.GetPorts(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	config := struct {
-		Ports map[string]PortInfo `json:"PORT"`
-	}{}
-	//nolint:musttag
-	err = json.Unmarshal(byteValue, &config)
+	portConfig := map[string]PortInfo{}
+	for _, port := range ports {
+		portConfig[port.Name] = PortInfo{
+			Alias: port.Alias,
+		}
+	}
 
-	return config.Ports, err
+	return portConfig, err
 }
 
 type sonic_version struct {
