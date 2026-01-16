@@ -48,7 +48,6 @@ type Vrfs map[string]Vrf
 type Ports map[string]Port
 
 func GetBGPStates(filepath string) (map[string]*apiv2.SwitchBGPPortState, error) {
-
 	fileInfo, err := os.Stat(filepath)
 	if err != nil {
 		return nil, fmt.Errorf("error getting file info for %s: %w", filepath, err)

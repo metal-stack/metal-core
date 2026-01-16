@@ -8,7 +8,7 @@ require (
 	github.com/go-redis/redismock/v9 v9.2.0
 	github.com/google/go-cmp v0.7.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/metal-stack/api v0.0.36-0.20251208153216-c157322cf0b3
+	github.com/metal-stack/api v0.0.39-0.20260116095847-c9fa8e96a3ef
 	github.com/metal-stack/go-lldpd v0.4.11
 	github.com/metal-stack/metal-lib v0.23.5
 	github.com/metal-stack/v v1.0.3
@@ -17,13 +17,13 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/vishvananda/netlink v1.3.1
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
-	golang.org/x/text v0.31.0
-	google.golang.org/protobuf v1.36.10
+	golang.org/x/text v0.32.0
+	google.golang.org/protobuf v1.36.11
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
-	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.10-20250912141014-52f32327d4b0.1 // indirect
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20251209175733-2a1774d88802.1 // indirect
 	connectrpc.com/connect v1.19.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -33,7 +33,7 @@ require (
 	github.com/godbus/dbus/v5 v5.2.0 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
-	github.com/klauspost/compress v1.18.1 // indirect
+	github.com/klauspost/compress v1.18.2 // indirect
 	github.com/klauspost/connect-compress/v2 v2.1.0 // indirect
 	github.com/mdlayher/ethernet v0.0.0-20220221185849-529eae5b6118 // indirect
 	github.com/mdlayher/lldp v0.0.0-20150915211757-afd9f83164c5 // indirect
