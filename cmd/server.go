@@ -84,17 +84,16 @@ func Run() {
 		BGPNeighborStateFile:  cfg.BGPNeighborStateFile,
 	})
 
-	err = c.RegisterSwitch()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	err = c.RegisterSwitch(ctx)
 	if err != nil {
 		log.Error("failed to register switch", "error", err)
 		os.Exit(1)
 	}
 
 	var wg sync.WaitGroup
-
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-
 	wg.Add(1)
 	go func() {
 		defer wg.Done()

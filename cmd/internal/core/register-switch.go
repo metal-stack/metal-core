@@ -14,7 +14,7 @@ import (
 	"github.com/metal-stack/v"
 )
 
-func (c *Core) RegisterSwitch() error {
+func (c *Core) RegisterSwitch(ctx context.Context) error {
 	c.log.Info("register switch")
 
 	err := retry.Do(
@@ -36,7 +36,7 @@ func (c *Core) RegisterSwitch() error {
 		return fmt.Errorf("unable to register switch because it is not initialized: %w", err)
 	}
 
-	nics, err := c.nos.GetNics(c.log, c.additionalBridgePorts)
+	nics, err := c.nos.GetNics(ctx, c.log, c.additionalBridgePorts)
 	if err != nil {
 		return fmt.Errorf("unable to get nics: %w", err)
 	}
