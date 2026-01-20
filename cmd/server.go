@@ -120,16 +120,12 @@ func Run() {
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		c.ConstantlyReconfigureSwitch(ctx, cfg.ReconfigureSwitchInterval)
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	})
+	wg.Go(func() {
 		c.ConstantlyPhoneHome(ctx, phonedHomeInterval)
-	}()
+	})
 
 	// Start metrics
 	metricsAddr := fmt.Sprintf("%v:%d", cfg.MetricsServerBindAddress, cfg.MetricsServerPort)
@@ -151,24 +147,20 @@ func Run() {
 		ReadHeaderTimeout: 3 * time.Second,
 	}
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		if err = srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			log.Error("unable to start metrics listener", "error", err)
 			os.Exit(1)
 		}
-	}()
+	})
 
 	<-ctx.Done()
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		if err = srv.Shutdown(context.Background()); err != nil {
 			log.Error("unable to shutdown metrics listener", "error", err)
 		}
-	}()
+	})
 
 	wg.Wait()
 }
