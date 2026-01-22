@@ -49,7 +49,7 @@ func New(log *slog.Logger, frrTplFile string) (*Sonic, error) {
 
 	return &Sonic{
 		db:           sonicDb,
-		frrApplier:   NewFrrApplier(frrTplFile),
+		frrApplier:   NewFrrApplier(log, frrTplFile),
 		log:          log,
 		redisApplier: redis.NewApplier(log, sonicDb),
 	}, nil
@@ -74,7 +74,6 @@ func (s *Sonic) Apply(cfg *types.Conf) error {
 		return err
 	}
 
-	s.log.Debug("apply frr config", "config", cfg)
 	return s.frrApplier.Apply(cfg)
 }
 

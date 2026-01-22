@@ -16,21 +16,21 @@ const (
 )
 
 func NewInterfacesApplier(tplPath string) *templates.Applier {
-	return &templates.Applier{
+	return templates.NewApplier(&templates.Config{
 		Dest:              interfacesConfFile,
 		Reloader:          reloadInterfaces,
 		Tpl:               templates.InterfacesTemplate(tplPath),
 		ValidationService: interfacesValidationService,
-	}
+	})
 }
 
 func NewFrrApplier(tplPath string) *templates.Applier {
-	return &templates.Applier{
+	return templates.NewApplier(&templates.Config{
 		Dest:              frrConfFile,
 		Reloader:          reloadFrr,
 		Tpl:               templates.CumulusFrrTemplate(tplPath),
 		ValidationService: frrValidationService,
-	}
+	})
 }
 
 func reloadInterfaces(_ string) error {

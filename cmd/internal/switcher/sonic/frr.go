@@ -3,6 +3,7 @@ package sonic
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/metal-stack/metal-core/cmd/internal/dbus"
@@ -15,13 +16,14 @@ const (
 	frrValidationService = "bgp-validation"
 )
 
-func NewFrrApplier(tplPath string) *templates.Applier {
-	return &templates.Applier{
+func NewFrrApplier(log *slog.Logger, tplPath string) *templates.Applier {
+	return templates.NewApplier(&templates.Config{
 		Dest:              frrConfFile,
 		Reloader:          reloadFrr,
 		Tpl:               templates.SonicFrrTemplate(tplPath),
 		ValidationService: frrValidationService,
-	}
+		Log:               log,
+	})
 }
 
 func reloadFrr(previousConf string) error {

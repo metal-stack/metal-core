@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"text/template"
 
@@ -15,40 +16,68 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
-type Reloader func(previousConf string) error
+type (
+	Reloader func(previousConf string) error
 
-type Applier struct {
-	Dest              string
-	Reloader          Reloader
-	Tpl               *template.Template
-	ValidationService string
+	Applier struct {
+		dest              string
+		reloader          Reloader
+		tpl               *template.Template
+		validationService string
+		log               *slog.Logger
+	}
+
+	Config struct {
+		Dest              string
+		Reloader          Reloader
+		Tpl               *template.Template
+		ValidationService string
+		Log               *slog.Logger
+	}
+)
+
+func NewApplier(c *Config) *Applier {
+	return &Applier{
+		dest:              c.Dest,
+		reloader:          c.Reloader,
+		tpl:               c.Tpl,
+		validationService: c.ValidationService,
+		log:               c.Log,
+	}
 }
 
 func (a *Applier) Apply(c *types.Conf) error {
-	tmp := fmt.Sprintf("%s.tmp", a.Dest)
-	err := write(c, a.Tpl, tmp)
+	a.log.Debug("apply frr config", "config", c)
+	tmp := fmt.Sprintf("%s.tmp", a.dest)
+	err := write(c, a.tpl, tmp)
 	if err != nil {
 		return err
 	}
 
-	equal, err := areEqual(tmp, a.Dest)
+	a.log.Debug("check if config has changed", "current", a.dest, "tmp", tmp)
+	equal, err := areEqual(tmp, a.dest)
 	if err != nil {
 		return err
 	}
 	if equal {
+		a.log.Debug("configs are equal, nothing to do")
 		return os.Remove(tmp)
 	}
 
-	err = validate(a.ValidationService, tmp)
+	a.log.Debug("validate new config", "config", tmp)
+	err = validate(a.validationService, tmp)
 	if err != nil {
 		return err
 	}
 
-	previousConf, err := backupAndRename(tmp, a.Dest)
+	a.log.Debug("backup and rename previous config", "previous", a.dest, "new", tmp)
+	previousConf, err := backupAndRename(tmp, a.dest)
 	if err != nil {
 		return err
 	}
-	return a.Reloader(previousConf)
+
+	a.log.Debug("reload frr")
+	return a.reloader(previousConf)
 }
 
 func write(c *types.Conf, tpl *template.Template, tmpPath string) error {
