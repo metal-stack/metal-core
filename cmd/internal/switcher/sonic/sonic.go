@@ -74,6 +74,7 @@ func (s *Sonic) Apply(cfg *types.Conf) error {
 		return err
 	}
 
+	s.log.Debug("apply frr config", "config", cfg)
 	return s.frrApplier.Apply(cfg)
 }
 

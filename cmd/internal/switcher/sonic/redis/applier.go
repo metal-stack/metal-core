@@ -41,21 +41,22 @@ func (a *Applier) Apply(cfg *types.Conf) error {
 		if diff == "" {
 			a.log.Info("no changes on interfaces detected, nothing to do")
 			return nil
-		} else {
-			a.log.Debug("interface changes", "changes", diff)
 		}
+		a.log.Debug("interface changes", "changes", diff)
 	}
 
 	if err := a.refreshOidMaps(); err != nil {
 		return err
 	}
 
+	a.log.Debug("configure underlay ports", "ports", cfg.Ports.Underlay)
 	for _, interfaceName := range cfg.Ports.Underlay {
 		if err := a.configureUnderlayPort(interfaceName, !cfg.Ports.DownPorts[interfaceName]); err != nil {
 			errs = append(errs, err)
 		}
 	}
 
+	a.log.Debug("configure unprovisioned ports", "ports", cfg.Ports.Unprovisioned)
 	for _, interfaceName := range cfg.Ports.Unprovisioned {
 		pxeVlan := fmt.Sprintf("Vlan%d", cfg.PXEVlanID)
 		if err := a.configureUnprovisionedPort(interfaceName, !cfg.Ports.DownPorts[interfaceName], pxeVlan); err != nil {
@@ -63,12 +64,14 @@ func (a *Applier) Apply(cfg *types.Conf) error {
 		}
 	}
 
+	a.log.Debug("configure firewall ports", "ports", cfg.Ports.Firewalls)
 	for interfaceName := range cfg.Ports.Firewalls {
 		if err := a.configureFirewallPort(interfaceName, !cfg.Ports.DownPorts[interfaceName]); err != nil {
 			errs = append(errs, err)
 		}
 	}
 
+	a.log.Debug("configure port vrfs", "vrfs", cfg.Ports.Vrfs)
 	for vrfName, vrf := range cfg.Ports.Vrfs {
 		if err := a.configureVrf(vrfName, vrf); err != nil {
 			errs = append(errs, err)
@@ -97,6 +100,7 @@ func (a *Applier) GetPorts(ctx context.Context) ([]*db.Port, error) {
 }
 
 func (a *Applier) refreshOidMaps() error {
+	a.log.Debug("refresh oid maps")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -104,12 +108,14 @@ func (a *Applier) refreshOidMaps() error {
 	if err != nil {
 		return fmt.Errorf("could not update port to oid map: %w", err)
 	}
+	a.log.Debug("set port oid map", "map", oidMap)
 	a.portOidMap = oidMap
 
 	oidMap, err = a.db.Counters.GetRifNameMap(ctx)
 	if err != nil {
 		return fmt.Errorf("could not update rif to oid ma: %w", err)
 	}
+	a.log.Debug("set rif oid map", "map", oidMap)
 	a.rifOidMap = oidMap
 
 	bridgePortMap, err := a.db.Asic.GetPortIdBridgePortMap(ctx)
@@ -122,6 +128,7 @@ func (a *Applier) refreshOidMaps() error {
 			oidMap[port] = bridgePort
 		}
 	}
+	a.log.Debug("set bridge port oid map", "map", oidMap)
 	a.bridgePortOidMap = oidMap
 
 	return nil
@@ -309,6 +316,7 @@ func (a *Applier) cleanupVrf(vrfName string, vrf *types.Vrf) error {
 		return err
 	}
 	if exists {
+		a.log.Debug("delete vxlan tunnel map", "vlan id", vrf.VLANID, "vni", vrf.VNI)
 		err = a.db.Config.DeleteVxlanTunnelMap(ctx, vrf.VLANID, vrf.VNI)
 		if err != nil {
 			return fmt.Errorf("could not remove vxlan tunnel map for vlan %d and vni %d: %w", vrf.VLANID, vrf.VNI, err)
@@ -320,6 +328,7 @@ func (a *Applier) cleanupVrf(vrfName string, vrf *types.Vrf) error {
 		return err
 	}
 	if exists {
+		a.log.Debug("delete vlan interface", "vlan id", vrf.VLANID)
 		err = a.db.Config.DeleteVlanInterface(ctx, vrf.VLANID)
 		if err != nil {
 			return fmt.Errorf("could not remove vlan interface %d: %w", vrf.VLANID, err)
@@ -331,6 +340,7 @@ func (a *Applier) cleanupVrf(vrfName string, vrf *types.Vrf) error {
 		return err
 	}
 	if neighborSuppression {
+		a.log.Debug("delete neighbor suppression", "vlan id", vrf.VLANID)
 		if err := a.db.Config.DeleteNeighborSuppression(ctx, vrf.VLANID); err != nil {
 			return fmt.Errorf("could not delete neighbor suppression for vlan %d: %w", vrf.VLANID, err)
 		}
@@ -341,6 +351,7 @@ func (a *Applier) cleanupVrf(vrfName string, vrf *types.Vrf) error {
 		return err
 	}
 	if exists {
+		a.log.Debug("delete vlan", "vlan id", vrf.VLANID)
 		err = a.db.Config.DeleteVlan(ctx, vrf.VLANID)
 		if err != nil {
 			return fmt.Errorf("could not remove vlan %d: %w", vrf.VLANID, err)
@@ -352,6 +363,7 @@ func (a *Applier) cleanupVrf(vrfName string, vrf *types.Vrf) error {
 		return err
 	}
 	if exists {
+		a.log.Debug("delete vrf", "vrf", vrfName)
 		if err := a.db.Config.DeleteVrf(ctx, vrfName); err != nil {
 			return fmt.Errorf("could not delete vrf %s: %w", vrfName, err)
 		}
