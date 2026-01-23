@@ -29,17 +29,17 @@ func New(log *slog.Logger, frrTplFile, interfacesTplFile string) *Cumulus {
 	}
 }
 
-func (c *Cumulus) Apply(cfg *types.Conf) error {
+func (c *Cumulus) Apply(ctx context.Context, cfg *types.Conf) error {
 	withoutDownPorts := cfg.NewWithoutDownPorts()
-	err := c.interfacesApplier.Apply(withoutDownPorts)
+	err := c.interfacesApplier.Apply(ctx, withoutDownPorts)
 	if err != nil {
 		return err
 	}
 
-	return c.frrApplier.Apply(withoutDownPorts)
+	return c.frrApplier.Apply(ctx, withoutDownPorts)
 }
 
-func (c *Cumulus) IsInitialized() (initialized bool, err error) {
+func (c *Cumulus) IsInitialized(context.Context) (initialized bool, err error) {
 	// FIXME decide how we can detect initialization is complete.
 	return true, nil
 }
@@ -101,7 +101,7 @@ func (c *Cumulus) GetOS() (*models.V1SwitchOS, error) {
 	if err != nil {
 		c.log.Error("unable to read /etc/lsb-release", "error", err)
 	} else {
-		for _, line := range strings.Fields(string(lsbReleaseBytes)) {
+		for line := range strings.FieldsSeq(string(lsbReleaseBytes)) {
 			if strings.HasPrefix(line, "DISTRIB_RELEASE") {
 				_, v, found := strings.Cut(line, "=")
 				if found {

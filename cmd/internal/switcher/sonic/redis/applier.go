@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 
@@ -32,7 +31,7 @@ func NewApplier(log *slog.Logger, db *db.DB) *Applier {
 	}
 }
 
-func (a *Applier) Apply(cfg *types.Conf) error {
+func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 	var errs []error
 
 	// only process if changes are detected
@@ -45,13 +44,13 @@ func (a *Applier) Apply(cfg *types.Conf) error {
 		a.log.Debug("interface changes", "changes", diff)
 	}
 
-	if err := a.refreshOidMaps(); err != nil {
+	if err := a.refreshOidMaps(ctx); err != nil {
 		return err
 	}
 
 	a.log.Debug("configure underlay ports", "ports", cfg.Ports.Underlay)
 	for _, interfaceName := range cfg.Ports.Underlay {
-		if err := a.configureUnderlayPort(interfaceName, !cfg.Ports.DownPorts[interfaceName]); err != nil {
+		if err := a.configureUnderlayPort(ctx, interfaceName, !cfg.Ports.DownPorts[interfaceName]); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -59,31 +58,31 @@ func (a *Applier) Apply(cfg *types.Conf) error {
 	a.log.Debug("configure unprovisioned ports", "ports", cfg.Ports.Unprovisioned)
 	for _, interfaceName := range cfg.Ports.Unprovisioned {
 		pxeVlan := fmt.Sprintf("Vlan%d", cfg.PXEVlanID)
-		if err := a.configureUnprovisionedPort(interfaceName, !cfg.Ports.DownPorts[interfaceName], pxeVlan); err != nil {
+		if err := a.configureUnprovisionedPort(ctx, interfaceName, !cfg.Ports.DownPorts[interfaceName], pxeVlan); err != nil {
 			errs = append(errs, err)
 		}
 	}
 
 	a.log.Debug("configure firewall ports", "ports", cfg.Ports.Firewalls)
 	for interfaceName := range cfg.Ports.Firewalls {
-		if err := a.configureFirewallPort(interfaceName, !cfg.Ports.DownPorts[interfaceName]); err != nil {
+		if err := a.configureFirewallPort(ctx, interfaceName, !cfg.Ports.DownPorts[interfaceName]); err != nil {
 			errs = append(errs, err)
 		}
 	}
 
 	a.log.Debug("configure port vrfs", "vrfs", cfg.Ports.Vrfs)
 	for vrfName, vrf := range cfg.Ports.Vrfs {
-		if err := a.configureVrf(vrfName, vrf); err != nil {
+		if err := a.configureVrf(ctx, vrfName, vrf); err != nil {
 			errs = append(errs, err)
 		}
 		for _, interfaceName := range vrf.Neighbors {
-			if err := a.configureVrfNeighbor(interfaceName, vrfName, !cfg.Ports.DownPorts[interfaceName]); err != nil {
+			if err := a.configureVrfNeighbor(ctx, interfaceName, vrfName, !cfg.Ports.DownPorts[interfaceName]); err != nil {
 				errs = append(errs, err)
 			}
 		}
 	}
 
-	err := a.cleanupVrfs(cfg)
+	err := a.cleanupVrfs(ctx, cfg)
 	if err != nil {
 		errs = append(errs, err)
 	}
@@ -99,10 +98,8 @@ func (a *Applier) GetPorts(ctx context.Context) ([]*db.Port, error) {
 	return a.db.Config.GetPorts(ctx)
 }
 
-func (a *Applier) refreshOidMaps() error {
+func (a *Applier) refreshOidMaps(ctx context.Context) error {
 	a.log.Debug("refresh oid maps")
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
 
 	oidMap, err := a.db.Counters.GetPortNameMap(ctx)
 	if err != nil {
@@ -134,10 +131,7 @@ func (a *Applier) refreshOidMaps() error {
 	return nil
 }
 
-func (a *Applier) configureUnprovisionedPort(interfaceName string, isUp bool, pxeVlan string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+func (a *Applier) configureUnprovisionedPort(ctx context.Context, interfaceName string, isUp bool, pxeVlan string) error {
 	err := a.ensureNotRouted(ctx, interfaceName)
 	if err != nil {
 		return err
@@ -151,10 +145,7 @@ func (a *Applier) configureUnprovisionedPort(interfaceName string, isUp bool, px
 	return a.ensureInterfaceIsVlanMember(ctx, interfaceName, pxeVlan)
 }
 
-func (a *Applier) configureFirewallPort(interfaceName string, isUp bool) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+func (a *Applier) configureFirewallPort(ctx context.Context, interfaceName string, isUp bool) error {
 	err := a.ensureNotBridged(ctx, interfaceName)
 	if err != nil {
 		return err
@@ -168,21 +159,14 @@ func (a *Applier) configureFirewallPort(interfaceName string, isUp bool) error {
 	return a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
 }
 
-func (a *Applier) configureUnderlayPort(interfaceName string, isUp bool) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	// underlay ports should be up
+func (a *Applier) configureUnderlayPort(ctx context.Context, interfaceName string, isUp bool) error {
 	if err := a.ensurePortConfiguration(ctx, interfaceName, "9216", isUp); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 	return a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
 }
 
-func (a *Applier) configureVrfNeighbor(interfaceName, vrfName string, isUp bool) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+func (a *Applier) configureVrfNeighbor(ctx context.Context, interfaceName, vrfName string, isUp bool) error {
 	err := a.ensureNotBridged(ctx, interfaceName)
 	if err != nil {
 		return err
@@ -200,10 +184,7 @@ func (a *Applier) configureVrfNeighbor(interfaceName, vrfName string, isUp bool)
 	return a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
 }
 
-func (a *Applier) configureVrf(vrfName string, vrf *types.Vrf) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+func (a *Applier) configureVrf(ctx context.Context, vrfName string, vrf *types.Vrf) error {
 	exist, err := a.db.Config.ExistVrf(ctx, vrfName)
 	if err != nil {
 		return err
@@ -257,10 +238,7 @@ func (a *Applier) configureVrf(vrfName string, vrf *types.Vrf) error {
 	return nil
 }
 
-func (a *Applier) cleanupVrfs(cfg *types.Conf) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+func (a *Applier) cleanupVrfs(ctx context.Context, cfg *types.Conf) error {
 	vrfs, err := a.db.Config.GetVrfs(ctx)
 	if err != nil {
 		return fmt.Errorf("could not retrieve vrfs: %w", err)
@@ -284,6 +262,7 @@ func (a *Applier) cleanupVrfs(cfg *types.Conf) error {
 			VNI: uint32(vni),
 		}
 
+		a.log.Debug("find vxlan tunnel map for vrf", "vrf", vrf)
 		tunnelMap, err := a.db.Config.FindVxlanTunnelMapByVni(ctx, uint32(vni))
 		if err != nil {
 			return fmt.Errorf("could not look up vxlan tunnel map for vni %d: %w", vni, err)
@@ -297,7 +276,7 @@ func (a *Applier) cleanupVrfs(cfg *types.Conf) error {
 			vrf.VLANID = uint16(vlan)
 		}
 
-		if err := a.cleanupVrf(vrfName, vrf); err != nil {
+		if err := a.cleanupVrf(ctx, vrfName, vrf); err != nil {
 			return err
 		}
 	}
@@ -305,12 +284,8 @@ func (a *Applier) cleanupVrfs(cfg *types.Conf) error {
 	return nil
 }
 
-func (a *Applier) cleanupVrf(vrfName string, vrf *types.Vrf) error {
+func (a *Applier) cleanupVrf(ctx context.Context, vrfName string, vrf *types.Vrf) error {
 	a.log.Debug("cleanup unused vrf", "vrf", vrf)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
 	exists, err := a.db.Config.ExistVxlanTunnelMap(ctx, vrf.VLANID, vrf.VNI)
 	if err != nil {
 		return err

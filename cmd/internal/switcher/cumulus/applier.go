@@ -1,6 +1,8 @@
 package cumulus
 
 import (
+	"context"
+
 	"github.com/metal-stack/metal-core/cmd/internal/dbus"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 )
@@ -33,10 +35,10 @@ func NewFrrApplier(tplPath string) *templates.Applier {
 	})
 }
 
-func reloadInterfaces(_ string) error {
-	return dbus.Start(interfacesReloadService)
+func reloadInterfaces(ctx context.Context, _ string) error {
+	return dbus.Start(ctx, interfacesReloadService)
 }
 
-func reloadFrr(_ string) error {
-	return dbus.Reload(frrReloadService)
+func reloadFrr(ctx context.Context, _ string) error {
+	return dbus.Reload(ctx, frrReloadService)
 }

@@ -2,6 +2,7 @@ package templates
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -17,7 +18,7 @@ import (
 )
 
 type (
-	Reloader func(previousConf string) error
+	Reloader func(ctx context.Context, previousConf string) error
 
 	Applier struct {
 		dest              string
@@ -46,7 +47,7 @@ func NewApplier(c *Config) *Applier {
 	}
 }
 
-func (a *Applier) Apply(c *types.Conf) error {
+func (a *Applier) Apply(ctx context.Context, c *types.Conf) error {
 	a.log.Debug("apply frr config", "config", c)
 	tmp := fmt.Sprintf("%s.tmp", a.dest)
 	err := write(c, a.tpl, tmp)
@@ -65,7 +66,7 @@ func (a *Applier) Apply(c *types.Conf) error {
 	}
 
 	a.log.Debug("validate new config", "config", tmp)
-	err = validate(a.validationService, tmp)
+	err = validate(ctx, a.validationService, tmp)
 	if err != nil {
 		return err
 	}
@@ -77,7 +78,7 @@ func (a *Applier) Apply(c *types.Conf) error {
 	}
 
 	a.log.Debug("reload frr")
-	return a.reloader(previousConf)
+	return a.reloader(ctx, previousConf)
 }
 
 func write(c *types.Conf, tpl *template.Template, tmpPath string) error {
@@ -112,9 +113,9 @@ func areEqual(tmp, dest string) (bool, error) {
 	return bytes.Equal(tmpChecksum, destChecksum), nil
 }
 
-func validate(service string, path string) error {
+func validate(ctx context.Context, service string, path string) error {
 	u := fmt.Sprintf("%s@%s.service", service, unit.UnitNamePathEscape(path))
-	if err := dbus.Start(u); err != nil {
+	if err := dbus.Start(ctx, u); err != nil {
 		return fmt.Errorf("%s failed: %w", u, err)
 	}
 	return nil

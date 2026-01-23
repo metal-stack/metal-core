@@ -1,6 +1,7 @@
 package sonic
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -26,8 +27,8 @@ func NewFrrApplier(log *slog.Logger, tplPath string) *templates.Applier {
 	})
 }
 
-func reloadFrr(previousConf string) error {
-	err := dbus.Start(frrReloadService)
+func reloadFrr(ctx context.Context, previousConf string) error {
+	err := dbus.Start(ctx, frrReloadService)
 	if err == nil {
 		return nil
 	}
