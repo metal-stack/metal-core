@@ -20,7 +20,7 @@ import (
 )
 
 // ConstantlyReconfigureSwitch reconfigures the switch.
-func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval time.Duration) {
+func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval, timeout time.Duration) {
 	host, _ := os.Hostname()
 
 	ticker := time.NewTicker(interval)
@@ -28,9 +28,12 @@ func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval time.Du
 	for {
 		select {
 		case <-ticker.C:
+			withTimeout, cancel := context.WithTimeout(ctx, timeout)
+			defer cancel()
+
 			c.log.Info("trigger reconfiguration")
 			start := time.Now()
-			s, err := c.reconfigureSwitch(host)
+			s, err := c.reconfigureSwitch(withTimeout, host)
 			elapsed := time.Since(start)
 			c.log.Info("reconfiguration took", "elapsed", elapsed)
 
@@ -99,7 +102,7 @@ func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval time.Du
 	}
 }
 
-func (c *Core) reconfigureSwitch(switchName string) (*models.V1SwitchResponse, error) {
+func (c *Core) reconfigureSwitch(ctx context.Context, switchName string) (*models.V1SwitchResponse, error) {
 	params := sw.NewFindSwitchParams()
 	params.ID = switchName
 	fsr, err := c.driver.SwitchOperations().FindSwitch(params, nil)
@@ -124,7 +127,7 @@ func (c *Core) reconfigureSwitch(switchName string) (*models.V1SwitchResponse, e
 		return s, nil
 	}
 
-	err = c.nos.Apply(switchConfig)
+	err = c.nos.Apply(ctx, switchConfig)
 	if err != nil {
 		return nil, fmt.Errorf("could not apply switch config: %w", err)
 	}

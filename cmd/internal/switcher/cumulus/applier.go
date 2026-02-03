@@ -1,6 +1,8 @@
 package cumulus
 
 import (
+	"context"
+
 	"github.com/metal-stack/metal-core/cmd/internal/dbus"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 )
@@ -16,27 +18,27 @@ const (
 )
 
 func NewInterfacesApplier(tplPath string) *templates.Applier {
-	return &templates.Applier{
+	return templates.NewApplier(&templates.Config{
 		Dest:              interfacesConfFile,
 		Reloader:          reloadInterfaces,
 		Tpl:               templates.InterfacesTemplate(tplPath),
 		ValidationService: interfacesValidationService,
-	}
+	})
 }
 
 func NewFrrApplier(tplPath string) *templates.Applier {
-	return &templates.Applier{
+	return templates.NewApplier(&templates.Config{
 		Dest:              frrConfFile,
 		Reloader:          reloadFrr,
 		Tpl:               templates.CumulusFrrTemplate(tplPath),
 		ValidationService: frrValidationService,
-	}
+	})
 }
 
-func reloadInterfaces(_ string) error {
-	return dbus.Start(interfacesReloadService)
+func reloadInterfaces(ctx context.Context, _ string) error {
+	return dbus.Start(ctx, interfacesReloadService)
 }
 
-func reloadFrr(_ string) error {
-	return dbus.Reload(frrReloadService)
+func reloadFrr(ctx context.Context, _ string) error {
+	return dbus.Reload(ctx, frrReloadService)
 }

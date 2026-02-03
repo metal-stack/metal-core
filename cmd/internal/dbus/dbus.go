@@ -9,15 +9,15 @@ import (
 
 const done = "done"
 
-func Reload(unitName string) error {
-	dbc, err := dbus.NewWithContext(context.Background())
+func Reload(ctx context.Context, unitName string) error {
+	dbc, err := dbus.NewWithContext(ctx)
 	if err != nil {
 		return fmt.Errorf("unable to connect to dbus: %w", err)
 	}
 	defer dbc.Close()
 
 	c := make(chan string)
-	_, err = dbc.ReloadUnitContext(context.Background(), unitName, "replace", c)
+	_, err = dbc.ReloadUnitContext(ctx, unitName, "replace", c)
 
 	if err != nil {
 		return err
@@ -31,8 +31,8 @@ func Reload(unitName string) error {
 	return nil
 }
 
-func Start(unitName string) error {
-	dbc, err := dbus.NewWithContext(context.Background())
+func Start(ctx context.Context, unitName string) error {
+	dbc, err := dbus.NewWithContext(ctx)
 	if err != nil {
 		return fmt.Errorf("unable to connect to dbus: %w", err)
 	}
@@ -40,7 +40,7 @@ func Start(unitName string) error {
 
 	c := make(chan string)
 
-	_, err = dbc.StartUnitContext(context.Background(), unitName, "replace", c)
+	_, err = dbc.StartUnitContext(ctx, unitName, "replace", c)
 	if err != nil {
 		return err
 	}
