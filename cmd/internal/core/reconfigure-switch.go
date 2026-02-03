@@ -20,7 +20,7 @@ import (
 )
 
 // ConstantlyReconfigureSwitch reconfigures the switch.
-func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval time.Duration) {
+func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval, timeout time.Duration) {
 	host, _ := os.Hostname()
 
 	ticker := time.NewTicker(interval)
@@ -28,7 +28,7 @@ func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval time.Du
 	for {
 		select {
 		case <-ticker.C:
-			withTimeout, cancel := context.WithTimeout(ctx, 15*time.Second)
+			withTimeout, cancel := context.WithTimeout(ctx, timeout)
 			defer cancel()
 
 			c.log.Info("trigger reconfiguration")

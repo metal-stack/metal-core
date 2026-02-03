@@ -13,7 +13,7 @@ import (
 	"github.com/metal-stack/v"
 )
 
-func (c *Core) RegisterSwitch(ctx context.Context) error {
+func (c *Core) RegisterSwitch(ctx context.Context, timeout time.Duration) error {
 	c.log.Info("register switch")
 	var (
 		err            error
@@ -24,7 +24,7 @@ func (c *Core) RegisterSwitch(ctx context.Context) error {
 		managementUser string
 	)
 
-	withTimeout, cancel := context.WithTimeout(ctx, 5*time.Second)
+	withTimeout, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	err = retry.Do(
