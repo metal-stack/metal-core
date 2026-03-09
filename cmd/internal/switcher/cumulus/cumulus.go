@@ -23,8 +23,8 @@ type Cumulus struct {
 
 func New(log *slog.Logger, frrTplFile, interfacesTplFile string) *Cumulus {
 	return &Cumulus{
-		frrApplier:        NewFrrApplier(frrTplFile),
-		interfacesApplier: NewInterfacesApplier(interfacesTplFile),
+		frrApplier:        NewFrrApplier(log, frrTplFile),
+		interfacesApplier: NewInterfacesApplier(log, interfacesTplFile),
 		log:               log,
 	}
 }

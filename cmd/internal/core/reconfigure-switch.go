@@ -165,15 +165,16 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 	for _, nic := range s.Nics {
 		port := *nic.Name
 
+		if slices.Contains(p.Underlay, port) {
+			continue
+		}
+
 		if isPortStatusEqual(models.V1SwitchNicActualDOWN, nic.Actual) {
 			if has := p.DownPorts[port]; !has {
 				p.DownPorts[port] = true
 			}
 		}
 
-		if slices.Contains(p.Underlay, port) {
-			continue
-		}
 		if slices.Contains(c.additionalBridgePorts, port) {
 			continue
 		}
