@@ -7,19 +7,19 @@ import (
 	"net"
 	"os"
 
+	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/cumulus"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
-	"github.com/metal-stack/metal-go/api/models"
 )
 
 type NOS interface {
 	SanitizeConfig(cfg *types.Conf)
 	Apply(ctx context.Context, cfg *types.Conf) error
 	IsInitialized(ctx context.Context) (initialized bool, err error)
-	GetNics(ctx context.Context, log *slog.Logger, blacklist []string) ([]*models.V1SwitchNic, error)
+	GetNics(ctx context.Context, log *slog.Logger, blacklist []string) ([]*apiv2.SwitchNic, error)
+	GetOS() (*apiv2.SwitchOS, error)
 	GetSwitchPorts(ctx context.Context) ([]*net.Interface, error)
-	GetOS() (*models.V1SwitchOS, error)
 	GetManagement() (ip, user string, err error)
 }
 

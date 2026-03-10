@@ -9,10 +9,10 @@ import (
 	"slices"
 	"strings"
 
+	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	"github.com/metal-stack/metal-core/cmd/internal"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
-	"github.com/metal-stack/metal-go/api/models"
 )
 
 type Cumulus struct {
@@ -44,7 +44,7 @@ func (c *Cumulus) IsInitialized(context.Context) (initialized bool, err error) {
 	return true, nil
 }
 
-func (c *Cumulus) GetNics(ctx context.Context, log *slog.Logger, blacklist []string) (nics []*models.V1SwitchNic, err error) {
+func (c *Cumulus) GetNics(ctx context.Context, log *slog.Logger, blacklist []string) (nics []*apiv2.SwitchNic, err error) {
 	ifs, err := c.GetSwitchPorts(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get all ifs: %w", err)
@@ -63,9 +63,9 @@ func (c *Cumulus) GetNics(ctx context.Context, log *slog.Logger, blacklist []str
 			continue
 		}
 
-		nic := &models.V1SwitchNic{
-			Mac:  &mac,
-			Name: &name,
+		nic := &apiv2.SwitchNic{
+			Mac:  mac,
+			Name: name,
 		}
 		nics = append(nics, nic)
 	}
@@ -95,7 +95,7 @@ func (c *Cumulus) SanitizeConfig(cfg *types.Conf) {
 	// nothing required here
 }
 
-func (c *Cumulus) GetOS() (*models.V1SwitchOS, error) {
+func (c *Cumulus) GetOS() (*apiv2.SwitchOS, error) {
 	version := "unknown"
 	lsbReleaseBytes, err := os.ReadFile("/etc/lsb-release")
 	if err != nil {
@@ -110,8 +110,8 @@ func (c *Cumulus) GetOS() (*models.V1SwitchOS, error) {
 			}
 		}
 	}
-	return &models.V1SwitchOS{
-		Vendor:  "Cumulus",
+	return &apiv2.SwitchOS{
+		Vendor:  apiv2.SwitchOSVendor_SWITCH_OS_VENDOR_CUMULUS,
 		Version: version,
 	}, nil
 }
