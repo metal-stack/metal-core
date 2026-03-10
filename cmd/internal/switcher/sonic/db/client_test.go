@@ -4,20 +4,34 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/alicebob/miniredis/v2"
 	"github.com/go-redis/redismock/v9"
+	"github.com/valkey-io/valkey-go"
+
+	"github.com/stretchr/testify/require"
 )
 
-func NewClientMock(sep string) (*Client, redismock.ClientMock) {
-	db, mock := redismock.NewClientMock()
+// FIXME convert away from Mock and use the in-process miniredis DB for the tests.
+
+func NewClientMock(t *testing.T, sep string) (*Client, redismock.ClientMock) {
+	mr := miniredis.RunT(t)
+	vc, err := valkey.NewClient(valkey.ClientOption{
+		InitAddress: []string{mr.Addr()},
+		// This is required because otherwise we get:
+		// unknown subcommand 'TRACKING'. Try CLIENT HELP.: [CLIENT TRACKING ON OPTIN]
+		// ClientOption.DisableCache must be true for valkey not supporting client-side caching or not supporting RESP3
+		DisableCache: true,
+	})
+	require.NoError(t, err)
 	c := &Client{
-		rdb: db,
+		rdb: vc,
 		sep: sep,
 	}
 	return c, mock
 }
 
 func TestClient_Del(t *testing.T) {
-	c, mock := NewClientMock("|")
+	c, mock := NewClientMock(t, "|")
 
 	mock.ExpectDel("table|entry").SetVal(1)
 
@@ -45,7 +59,7 @@ func TestClient_Exists(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c, mock := NewClientMock("|")
+			c, mock := NewClientMock(t, "|")
 
 			mock.ExpectExists("table|key").SetVal(tt.val)
 
@@ -62,7 +76,7 @@ func TestClient_Exists(t *testing.T) {
 }
 
 func TestClient_GetTable(t *testing.T) {
-	c, _ := NewClientMock("|")
+	c, _ := NewClientMock(t, "|")
 	want := &Table{
 		client: c,
 		name:   "table|sub",
@@ -74,7 +88,7 @@ func TestClient_GetTable(t *testing.T) {
 }
 
 func TestClient_GetView(t *testing.T) {
-	c, mock := NewClientMock("|")
+	c, mock := NewClientMock(t, "|")
 	want := View{"key": {}, "key1|key2": {}}
 
 	mock.ExpectKeys("table|*").SetVal([]string{"table|key", "table|key1|key2"})
@@ -89,7 +103,7 @@ func TestClient_GetView(t *testing.T) {
 }
 
 func TestClient_HGet(t *testing.T) {
-	c, mock := NewClientMock("|")
+	c, mock := NewClientMock(t, "|")
 
 	mock.ExpectHGet("table|key", "field").RedisNil()
 
@@ -104,7 +118,7 @@ func TestClient_HGet(t *testing.T) {
 }
 
 func TestClient_HGetAll(t *testing.T) {
-	c, mock := NewClientMock("|")
+	c, mock := NewClientMock(t, "|")
 	want := Val{"key": "test"}
 
 	mock.ExpectHGetAll("table|key").SetVal(map[string]string{"key": "test"})
@@ -120,7 +134,7 @@ func TestClient_HGetAll(t *testing.T) {
 }
 
 func TestClient_HSet(t *testing.T) {
-	c, mock := NewClientMock("|")
+	c, mock := NewClientMock(t, "|")
 
 	val := Val{"key": "test"}
 	mock.ExpectHSet("table|key", "key", "test").SetVal(1)
@@ -132,7 +146,7 @@ func TestClient_HSet(t *testing.T) {
 }
 
 func TestClient_Keys(t *testing.T) {
-	c, mock := NewClientMock("|")
+	c, mock := NewClientMock(t, "|")
 	want := []Key{
 		{"table", "key"},
 		{"table", "key1", "key2"},
