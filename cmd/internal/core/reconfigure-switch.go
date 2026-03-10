@@ -105,6 +105,7 @@ func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval, timeou
 func (c *Core) reconfigureSwitch(ctx context.Context, switchName string) (*models.V1SwitchResponse, error) {
 	params := sw.NewFindSwitchParams()
 	params.ID = switchName
+	params.Context = ctx
 	fsr, err := c.driver.SwitchOperations().FindSwitch(params, nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch switch from metal-api: %w", err)
@@ -156,14 +157,19 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 
 	p := types.Ports{
 		Underlay:      c.spineUplinks,
+		BladePorts:    c.additionalBridgePorts,
 		Unprovisioned: []string{},
 		Vrfs:          map[string]*types.Vrf{},
 		Firewalls:     map[string]*types.Firewall{},
 		DownPorts:     map[string]bool{},
 	}
-	p.BladePorts = c.additionalBridgePorts
+
 	for _, nic := range s.Nics {
 		port := *nic.Name
+
+		if slices.Contains(p.Underlay, port) {
+			continue
+		}
 
 		if isPortStatusEqual(models.V1SwitchNicActualDOWN, nic.Actual) {
 			if has := p.DownPorts[port]; !has {
@@ -171,12 +177,10 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 			}
 		}
 
-		if slices.Contains(p.Underlay, port) {
-			continue
-		}
 		if slices.Contains(c.additionalBridgePorts, port) {
 			continue
 		}
+
 		if nic.Vrf == "" {
 			if !slices.Contains(p.Unprovisioned, port) {
 				p.Unprovisioned = append(p.Unprovisioned, port)
@@ -196,6 +200,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 			p.Firewalls[port] = fw
 			continue
 		}
+
 		// Machine-Port
 		vrf := &types.Vrf{}
 		if v, has := p.Vrfs[nic.Vrf]; has {
