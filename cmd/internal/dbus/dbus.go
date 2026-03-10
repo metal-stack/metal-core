@@ -23,9 +23,13 @@ func Reload(ctx context.Context, unitName string) error {
 		return err
 	}
 
-	job := <-c
-	if job != done {
-		return fmt.Errorf("reloading %s failed", unitName)
+	select {
+	case job := <-c:
+		if job != done {
+			return fmt.Errorf("reloading %s failed", unitName)
+		}
+	case <-ctx.Done():
+		return fmt.Errorf("reloading %s failed: %w", unitName, ctx.Err())
 	}
 
 	return nil
@@ -45,9 +49,13 @@ func Start(ctx context.Context, unitName string) error {
 		return err
 	}
 
-	job := <-c
-	if job != done {
-		return fmt.Errorf("start of %s failed", unitName)
+	select {
+	case job := <-c:
+		if job != done {
+			return fmt.Errorf("start of %s failed", unitName)
+		}
+	case <-ctx.Done():
+		return fmt.Errorf("start of %s failed: %w", unitName, ctx.Err())
 	}
 
 	return nil
