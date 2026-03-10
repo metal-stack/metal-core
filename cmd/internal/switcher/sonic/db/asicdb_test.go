@@ -7,7 +7,7 @@ import (
 )
 
 func TestAsicDB_GetPortIdBridgePortMap(t *testing.T) {
-	c, mock := NewClientMock(":")
+	c, mock := NewClientMock(t, ":")
 	asic := &AsicDB{c: c}
 	bridgePort := "ASIC_STATE:SAI_OBJECT_TYPE_BRIDGE_PORT:oid:0x3a000000001a0a"
 	want := map[OID]OID{OID("oid:0x1000000001251"): "oid:0x3a000000001a0a"}
