@@ -87,23 +87,19 @@ func Run() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	err = c.RegisterSwitch(ctx)
+	err = c.RegisterSwitch(ctx, cfg.Timeout)
 	if err != nil {
 		log.Error("failed to register switch", "error", err)
 		os.Exit(1)
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		c.ConstantlyReconfigureSwitch(ctx, cfg.ReconfigureSwitchInterval)
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
+		c.ConstantlyReconfigureSwitch(ctx, cfg.ReconfigureSwitchInterval, cfg.Timeout)
+	})
+	wg.Go(func() {
 		c.ConstantlyPhoneHome(ctx, phonedHomeInterval)
-	}()
+	})
 
 	// Start metrics
 	metricsAddr := fmt.Sprintf("%v:%d", cfg.MetricsServerBindAddress, cfg.MetricsServerPort)
@@ -125,24 +121,22 @@ func Run() {
 		ReadHeaderTimeout: 3 * time.Second,
 	}
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		if err = srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			log.Error("unable to start metrics listener", "error", err)
 			os.Exit(1)
 		}
-	}()
+	})
 
 	<-ctx.Done()
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if err = srv.Shutdown(context.Background()); err != nil {
+	wg.Go(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err = srv.Shutdown(ctx); err != nil {
 			log.Error("unable to shutdown metrics listener", "error", err)
 		}
-	}()
+	})
 
 	wg.Wait()
 }

@@ -23,23 +23,23 @@ type Cumulus struct {
 
 func New(log *slog.Logger, frrTplFile, interfacesTplFile string) *Cumulus {
 	return &Cumulus{
-		frrApplier:        NewFrrApplier(frrTplFile),
-		interfacesApplier: NewInterfacesApplier(interfacesTplFile),
+		frrApplier:        NewFrrApplier(log, frrTplFile),
+		interfacesApplier: NewInterfacesApplier(log, interfacesTplFile),
 		log:               log,
 	}
 }
 
-func (c *Cumulus) Apply(cfg *types.Conf) error {
+func (c *Cumulus) Apply(ctx context.Context, cfg *types.Conf) error {
 	withoutDownPorts := cfg.NewWithoutDownPorts()
-	err := c.interfacesApplier.Apply(withoutDownPorts)
+	err := c.interfacesApplier.Apply(ctx, withoutDownPorts)
 	if err != nil {
 		return err
 	}
 
-	return c.frrApplier.Apply(withoutDownPorts)
+	return c.frrApplier.Apply(ctx, withoutDownPorts)
 }
 
-func (c *Cumulus) IsInitialized() (initialized bool, err error) {
+func (c *Cumulus) IsInitialized(context.Context) (initialized bool, err error) {
 	// FIXME decide how we can detect initialization is complete.
 	return true, nil
 }

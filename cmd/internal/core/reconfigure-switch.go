@@ -23,7 +23,7 @@ import (
 )
 
 // ConstantlyReconfigureSwitch reconfigures the switch.
-func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval time.Duration) {
+func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval, timeout time.Duration) {
 	host, _ := os.Hostname()
 
 	ticker := time.NewTicker(interval)
@@ -31,9 +31,12 @@ func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval time.Du
 	for {
 		select {
 		case <-ticker.C:
+			withTimeout, cancel := context.WithTimeout(ctx, timeout)
+			defer cancel()
+
 			c.log.Info("trigger reconfiguration")
 			start := time.Now()
-			s, err := c.reconfigureSwitch(ctx, host)
+			s, err := c.reconfigureSwitch(withTimeout, host)
 			elapsed := time.Since(start)
 			c.log.Info("reconfiguration took", "elapsed", elapsed)
 
@@ -45,7 +48,7 @@ func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval time.Du
 			}
 
 			if err != nil {
-				req.Error = pointer.Pointer(err.Error())
+				req.Error = new(err.Error())
 				c.log.Error("reconfiguration failed", "error", err)
 				c.metrics.CountError("switch-reconfiguration")
 			} else {
@@ -123,7 +126,7 @@ func (c *Core) reconfigureSwitch(ctx context.Context, hostname string) (*apiv2.S
 		return s, nil
 	}
 
-	err = c.nos.Apply(switchConfig)
+	err = c.nos.Apply(ctx, switchConfig)
 	if err != nil {
 		return nil, fmt.Errorf("could not apply switch config: %w", err)
 	}
@@ -152,14 +155,19 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 
 	p := types.Ports{
 		Underlay:      c.spineUplinks,
+		BladePorts:    c.additionalBridgePorts,
 		Unprovisioned: []string{},
 		Vrfs:          map[string]*types.Vrf{},
 		Firewalls:     map[string]*types.Firewall{},
 		DownPorts:     map[string]bool{},
 	}
-	p.BladePorts = c.additionalBridgePorts
+
 	for _, nic := range s.Nics {
 		port := nic.Name
+
+		if slices.Contains(p.Underlay, port) {
+			continue
+		}
 
 		if nic.State != nil && nic.State.Actual == apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN {
 			if has := p.DownPorts[port]; !has {
@@ -167,12 +175,10 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 			}
 		}
 
-		if slices.Contains(p.Underlay, port) {
-			continue
-		}
 		if slices.Contains(c.additionalBridgePorts, port) {
 			continue
 		}
+
 		if pointer.SafeDeref(nic.Vrf) == "" {
 			if !slices.Contains(p.Unprovisioned, port) {
 				p.Unprovisioned = append(p.Unprovisioned, port)
@@ -198,28 +204,34 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		if v, has := p.Vrfs[pointer.SafeDeref(nic.Vrf)]; has {
 			vrf = v
 		}
+
 		vni64, err := strconv.ParseUint(strings.TrimPrefix(pointer.SafeDeref(nic.Vrf), "vrf"), 10, 32)
 		if err != nil {
 			return nil, err
 		}
 		vrf.VNI = uint32(vni64) // nolint:gosec
+
 		vrf.Neighbors = append(vrf.Neighbors, port)
 		if nic.BgpFilter != nil {
 			vrf.Cidrs = nic.BgpFilter.Cidrs
 		}
+
 		p.Vrfs[pointer.SafeDeref(nic.Vrf)] = vrf
 	}
-	switcherConfig.Ports = p
 
+	switcherConfig.Ports = p
 	c.nos.SanitizeConfig(switcherConfig)
+
 	err = switcherConfig.FillRouteMapsAndIPPrefixLists()
 	if err != nil {
 		return nil, err
 	}
+
 	m, err := vlan.ReadMapping()
 	if err != nil {
 		return nil, err
 	}
+
 	err = switcherConfig.FillVLANIDs(m)
 	if err != nil {
 		return nil, err

@@ -15,8 +15,8 @@ import (
 
 type NOS interface {
 	SanitizeConfig(cfg *types.Conf)
-	Apply(cfg *types.Conf) error
-	IsInitialized() (initialized bool, err error)
+	Apply(ctx context.Context, cfg *types.Conf) error
+	IsInitialized(ctx context.Context) (initialized bool, err error)
 	GetNics(ctx context.Context, log *slog.Logger, blacklist []string) ([]*apiv2.SwitchNic, error)
 	GetOS() (*apiv2.SwitchOS, error)
 	GetSwitchPorts(ctx context.Context) ([]*net.Interface, error)

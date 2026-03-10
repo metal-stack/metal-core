@@ -9,7 +9,6 @@ import (
 	"os"
 	"slices"
 	"strings"
-	"time"
 
 	"gopkg.in/yaml.v3"
 
@@ -49,25 +48,22 @@ func New(log *slog.Logger, frrTplFile string) (*Sonic, error) {
 
 	return &Sonic{
 		db:           sonicDb,
-		frrApplier:   NewFrrApplier(frrTplFile),
+		frrApplier:   NewFrrApplier(log, frrTplFile),
 		log:          log,
 		redisApplier: redis.NewApplier(log, sonicDb),
 	}, nil
 }
 
-func (s *Sonic) Apply(cfg *types.Conf) error {
-	err := s.redisApplier.Apply(cfg)
+func (s *Sonic) Apply(ctx context.Context, cfg *types.Conf) error {
+	err := s.redisApplier.Apply(ctx, cfg)
 	if err != nil {
 		return err
 	}
 
-	return s.frrApplier.Apply(cfg)
+	return s.frrApplier.Apply(ctx, cfg)
 }
 
-func (s *Sonic) IsInitialized() (initialized bool, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+func (s *Sonic) IsInitialized(ctx context.Context) (initialized bool, err error) {
 	return s.db.Appl.ExistPortInitDone(ctx)
 }
 

@@ -10,16 +10,18 @@ import (
 
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	infrav2 "github.com/metal-stack/api/go/metalstack/infra/v2"
-	"github.com/metal-stack/metal-lib/pkg/pointer"
 	"github.com/metal-stack/v"
 )
 
-func (c *Core) RegisterSwitch(ctx context.Context) error {
+func (c *Core) RegisterSwitch(ctx context.Context, timeout time.Duration) error {
 	c.log.Info("register switch")
+
+	withTimeout, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	err := retry.Do(
 		func() error {
-			initialized, err := c.nos.IsInitialized()
+			initialized, err := c.nos.IsInitialized(withTimeout)
 			if err != nil {
 				return err
 			}
@@ -36,7 +38,7 @@ func (c *Core) RegisterSwitch(ctx context.Context) error {
 		return fmt.Errorf("unable to register switch because it is not initialized: %w", err)
 	}
 
-	nics, err := c.nos.GetNics(ctx, c.log, c.additionalBridgePorts)
+	nics, err := c.nos.GetNics(withTimeout, c.log, c.additionalBridgePorts)
 	if err != nil {
 		return fmt.Errorf("unable to get nics: %w", err)
 	}
@@ -64,7 +66,7 @@ func (c *Core) RegisterSwitch(ctx context.Context) error {
 			Partition:      c.partitionID,
 			ReplaceMode:    apiv2.SwitchReplaceMode_SWITCH_REPLACE_MODE_OPERATIONAL,
 			ManagementIp:   managementIP,
-			ManagementUser: pointer.Pointer(managementUser),
+			ManagementUser: new(managementUser),
 			Nics:           nics,
 			Os:             switchOS,
 		},
