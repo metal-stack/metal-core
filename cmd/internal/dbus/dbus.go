@@ -18,7 +18,6 @@ func Reload(ctx context.Context, unitName string) error {
 
 	c := make(chan string)
 	_, err = dbc.ReloadUnitContext(ctx, unitName, "replace", c)
-
 	if err != nil {
 		return err
 	}
