@@ -166,11 +166,13 @@ route-map {{ .Name }} {{ .Policy }} {{ .Order }}
                 {{- end }}
         {{- end }}
 !{{- end }}{{- end }}
+{{- if .SetSrcLoopback }}
 route-map RM_SET_SRC permit 10
  set src {{ .Loopback }}
 exit
 !
 ip protocol bgp route-map RM_SET_SRC
 !
+{{- end }}
 line vty
 !

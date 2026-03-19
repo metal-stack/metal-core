@@ -153,6 +153,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 		MetalCoreCIDR:        c.cidr,
 		AdditionalBridgeVIDs: c.additionalBridgeVIDs,
 		PXEVlanID:            c.pxeVlanID,
+		SetSrcLoopback:       c.setSrcLoopback,
 	}
 
 	p := types.Ports{
