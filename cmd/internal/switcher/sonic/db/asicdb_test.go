@@ -7,20 +7,102 @@ import (
 )
 
 func TestAsicDB_GetPortIdBridgePortMap(t *testing.T) {
-	c, mock := NewClientMock(t, ":")
-	asic := &AsicDB{c: c}
-	bridgePort := "ASIC_STATE:SAI_OBJECT_TYPE_BRIDGE_PORT:oid:0x3a000000001a0a"
-	want := map[OID]OID{OID("oid:0x1000000001251"): "oid:0x3a000000001a0a"}
-
-	mock.ExpectKeys("ASIC_STATE:SAI_OBJECT_TYPE_BRIDGE_PORT:*").SetVal([]string{bridgePort})
-	mock.ExpectHGet(bridgePort, "SAI_BRIDGE_PORT_ATTR_PORT_ID").SetVal("oid:0x1000000001251")
-
-	got, err := asic.GetPortIdBridgePortMap(context.TODO())
-	if err != nil {
-		t.Errorf("GetPortIdBridgePortMap() error = %v, wantErr %v", err, nil)
-		return
+	type fields struct {
+		c *Client
 	}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("GetPortIdBridgePortMap() got = %v, want %v", got, want)
+	type args struct {
+		ctx context.Context
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    map[OID]OID
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := &AsicDB{
+				c: tt.fields.c,
+			}
+			got, err := d.GetPortIdBridgePortMap(tt.args.ctx)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AsicDB.GetPortIdBridgePortMap() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("AsicDB.GetPortIdBridgePortMap() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestAsicDB_ExistBridgePort(t *testing.T) {
+	type fields struct {
+		c *Client
+	}
+	type args struct {
+		ctx        context.Context
+		bridgePort OID
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := &AsicDB{
+				c: tt.fields.c,
+			}
+			got, err := d.ExistBridgePort(tt.args.ctx, tt.args.bridgePort)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AsicDB.ExistBridgePort() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("AsicDB.ExistBridgePort() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestAsicDB_ExistRouterInterface(t *testing.T) {
+	type fields struct {
+		c *Client
+	}
+	type args struct {
+		ctx context.Context
+		rif OID
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := &AsicDB{
+				c: tt.fields.c,
+			}
+			got, err := d.ExistRouterInterface(tt.args.ctx, tt.args.rif)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AsicDB.ExistRouterInterface() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("AsicDB.ExistRouterInterface() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

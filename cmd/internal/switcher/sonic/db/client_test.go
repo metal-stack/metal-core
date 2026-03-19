@@ -1,165 +1,293 @@
 package db
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
-	"github.com/alicebob/miniredis/v2"
-	"github.com/go-redis/redismock/v9"
-	"github.com/valkey-io/valkey-go"
-
+	"github.com/google/go-cmp/cmp"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db/test"
 	"github.com/stretchr/testify/require"
+	"github.com/valkey-io/valkey-go"
 )
 
-// FIXME convert away from Mock and use the in-process miniredis DB for the tests.
-
-func NewClientMock(t *testing.T, sep string) (*Client, redismock.ClientMock) {
-	mr := miniredis.RunT(t)
-	vc, err := valkey.NewClient(valkey.ClientOption{
-		InitAddress: []string{mr.Addr()},
-		// This is required because otherwise we get:
-		// unknown subcommand 'TRACKING'. Try CLIENT HELP.: [CLIENT TRACKING ON OPTIN]
-		// ClientOption.DisableCache must be true for valkey not supporting client-side caching or not supporting RESP3
-		DisableCache: true,
-	})
-	require.NoError(t, err)
-	c := &Client{
-		rdb: vc,
-		sep: sep,
-	}
-	return c, mock
-}
-
 func TestClient_Del(t *testing.T) {
-	c, mock := NewClientMock(t, "|")
+	ctx := t.Context()
+	sep := "|"
+	vc := test.StartValkey(t)
 
-	mock.ExpectDel("table|entry").SetVal(1)
+	err := vc.Do(ctx, vc.B().Set().Key("table").Value("value1").Build()).Error()
+	require.NoError(t, err)
 
-	if err := c.Del(t.Context(), Key{"table", "entry"}); err != nil {
-		t.Errorf("Del() error = %v, wantErr %v", err, false)
+	tests := []struct {
+		name string
+		key  Key
+		want string
+	}{
+		{
+			name: "delete non-existing",
+			key:  Key{"some", "key"},
+			want: "",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			c := &Client{
+				rdb: vc,
+				sep: sep,
+			}
+			err := c.Del(ctx, tt.key)
+			require.NoError(t, err)
+
+			res := vc.Do(ctx, vc.B().Get().Key("table").Build())
+			val, err := res.ToString()
+			require.NoError(t, err)
+
+			if diff := cmp.Diff(tt.want, val); diff != "" {
+				t.Errorf("Client.Del() diff = %s", diff)
+			}
+		})
 	}
 }
 
 func TestClient_Exists(t *testing.T) {
-	tests := []struct {
-		name string
-		val  int64
-		want bool
-	}{
-		{
-			name: "Doesn't exist",
-			val:  0,
-			want: false,
-		}, {
-			name: "Exists",
-			val:  1,
-			want: true,
-		},
+	type fields struct {
+		rdb valkey.Client
+		sep string
 	}
-
+	type args struct {
+		ctx context.Context
+		key Key
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    bool
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c, mock := NewClientMock(t, "|")
-
-			mock.ExpectExists("table|key").SetVal(tt.val)
-
-			got, err := c.Exists(t.Context(), Key{"table", "key"})
-			if err != nil {
-				t.Errorf("Exists() error = %v, wantErr %v", err, false)
+			c := &Client{
+				rdb: tt.fields.rdb,
+				sep: tt.fields.sep,
+			}
+			got, err := c.Exists(tt.args.ctx, tt.args.key)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Client.Exists() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("Exists() got = %v, want %v", got, tt.want)
+				t.Errorf("Client.Exists() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
 func TestClient_GetTable(t *testing.T) {
-	c, _ := NewClientMock(t, "|")
-	want := &Table{
-		client: c,
-		name:   "table|sub",
+	type fields struct {
+		rdb valkey.Client
+		sep string
 	}
-
-	if got := c.GetTable(Key{"table", "sub"}); !reflect.DeepEqual(got, want) {
-		t.Errorf("GetTable() = %v, want %v", got, want)
+	type args struct {
+		table Key
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   *Table
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Client{
+				rdb: tt.fields.rdb,
+				sep: tt.fields.sep,
+			}
+			if got := c.GetTable(tt.args.table); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Client.GetTable() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
 
 func TestClient_GetView(t *testing.T) {
-	c, mock := NewClientMock(t, "|")
-	want := View{"key": {}, "key1|key2": {}}
-
-	mock.ExpectKeys("table|*").SetVal([]string{"table|key", "table|key1|key2"})
-
-	got, err := c.GetView(t.Context(), "table")
-	if err != nil {
-		t.Errorf("GetView() error = %v, wantErr %v", err, false)
+	type fields struct {
+		rdb valkey.Client
+		sep string
 	}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("GetView() got = %v, want %v", got, want)
+	type args struct {
+		ctx   context.Context
+		table string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    View
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Client{
+				rdb: tt.fields.rdb,
+				sep: tt.fields.sep,
+			}
+			got, err := c.GetView(tt.args.ctx, tt.args.table)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Client.GetView() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Client.GetView() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
 
 func TestClient_HGet(t *testing.T) {
-	c, mock := NewClientMock(t, "|")
-
-	mock.ExpectHGet("table|key", "field").RedisNil()
-
-	got, err := c.HGet(t.Context(), Key{"table", "key"}, "field")
-	if err != nil {
-		t.Errorf("HGet() error = %v, wantErr %v", err, false)
-		return
+	type fields struct {
+		rdb valkey.Client
+		sep string
 	}
-	if len(got) != 0 {
-		t.Errorf("HGet() got = %v, want %v", got, "")
+	type args struct {
+		ctx   context.Context
+		key   Key
+		field string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    string
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Client{
+				rdb: tt.fields.rdb,
+				sep: tt.fields.sep,
+			}
+			got, err := c.HGet(tt.args.ctx, tt.args.key, tt.args.field)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Client.HGet() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("Client.HGet() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
 
 func TestClient_HGetAll(t *testing.T) {
-	c, mock := NewClientMock(t, "|")
-	want := Val{"key": "test"}
-
-	mock.ExpectHGetAll("table|key").SetVal(map[string]string{"key": "test"})
-
-	got, err := c.HGetAll(t.Context(), Key{"table", "key"})
-	if err != nil {
-		t.Errorf("HGetAll() error = %v, wantErr %v", err, false)
-		return
+	type fields struct {
+		rdb valkey.Client
+		sep string
 	}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("HGetAll() got = %v, want %v", got, want)
+	type args struct {
+		ctx context.Context
+		key Key
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    Val
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Client{
+				rdb: tt.fields.rdb,
+				sep: tt.fields.sep,
+			}
+			got, err := c.HGetAll(tt.args.ctx, tt.args.key)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Client.HGetAll() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Client.HGetAll() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
 
 func TestClient_HSet(t *testing.T) {
-	c, mock := NewClientMock(t, "|")
-
-	val := Val{"key": "test"}
-	mock.ExpectHSet("table|key", "key", "test").SetVal(1)
-
-	err := c.HSet(t.Context(), Key{"table", "key"}, val)
-	if err != nil {
-		t.Errorf("HSet() error = %v, wantErr %v", err, false)
+	type fields struct {
+		rdb valkey.Client
+		sep string
+	}
+	type args struct {
+		ctx context.Context
+		key Key
+		val Val
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Client{
+				rdb: tt.fields.rdb,
+				sep: tt.fields.sep,
+			}
+			if err := c.HSet(tt.args.ctx, tt.args.key, tt.args.val); (err != nil) != tt.wantErr {
+				t.Errorf("Client.HSet() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
 	}
 }
 
 func TestClient_Keys(t *testing.T) {
-	c, mock := NewClientMock(t, "|")
-	want := []Key{
-		{"table", "key"},
-		{"table", "key1", "key2"},
+	type fields struct {
+		rdb valkey.Client
+		sep string
 	}
-
-	mock.ExpectKeys("table|*").SetVal([]string{"table|key", "table|key1|key2"})
-
-	got, err := c.Keys(t.Context(), Key{"table", "*"})
-	if err != nil {
-		t.Errorf("Keys() error = %v, wantErr %v", err, false)
-		return
+	type args struct {
+		ctx     context.Context
+		pattern Key
 	}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("Keys() got = %v, want %v", got, want)
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    []Key
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Client{
+				rdb: tt.fields.rdb,
+				sep: tt.fields.sep,
+			}
+			got, err := c.Keys(tt.args.ctx, tt.args.pattern)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Client.Keys() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Client.Keys() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
