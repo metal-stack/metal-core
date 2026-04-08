@@ -1,5 +1,4 @@
 //go:build client
-// +build client
 
 package core
 
@@ -17,7 +16,6 @@ import (
 )
 
 const (
-	phonedHomeInterval          = time.Minute // lldpd sends messages every two seconds
 	provisioningEventPhonedHome = "Phoned Home"
 )
 
@@ -25,14 +23,14 @@ const (
 // provisioning event to metal-api for each machine that sent at least one
 // phone-home LLDP package to any interface of the host machine
 // during this interval.
-func (c *Core) ConstantlyPhoneHome() {
+func (c *Core) ConstantlyPhoneHome(ctx context.Context, interval time.Duration) {
 	// FIXME this list of interfaces is only read on startup
 	// if additional interfaces are configured, no new lldpd client is started and therefore no
 	// phoned home events are sent for these interfaces.
 	// Solution:
 	// - either ensure metal-core is restarted on interfaces added/removed
 	// - dynamically detect changes and stop/start goroutines for the lldpd client per interface
-	ifs, err := c.nos.GetSwitchPorts()
+	ifs, err := c.nos.GetSwitchPorts(ctx)
 	if err != nil {
 		c.log.Error("unable to find interfaces", "error", err)
 		os.Exit(1)
@@ -41,9 +39,6 @@ func (c *Core) ConstantlyPhoneHome() {
 	discoveryResultChan := make(chan lldp.DiscoveryResult)
 	discoveryResultChanWG := sync.WaitGroup{}
 
-	// FIXME context should come from caller and canceled on shutdown
-	ctx := context.Background()
-
 	var phoneHomeMessages sync.Map
 	for _, iface := range ifs {
 		lldpcli := lldp.NewClient(ctx, *iface)
@@ -51,14 +46,12 @@ func (c *Core) ConstantlyPhoneHome() {
 
 		ifaceName := iface.Name
 		// constantly observe LLDP traffic on current machine and current interface
-		discoveryResultChanWG.Add(1)
-		go func() {
-			defer discoveryResultChanWG.Done()
+		discoveryResultChanWG.Go(func() {
 			err = lldpcli.Start(c.log, discoveryResultChan)
 			if err != nil {
-				c.log.Error("unable to start lldp discovery for interface", "interface", ifaceName)
+				c.log.Error("unable to start lldp discovery for interface", "interface", ifaceName, "error", err)
 			}
-		}()
+		})
 	}
 
 	// wait all lldp routines to finish to close result channel
@@ -70,7 +63,6 @@ func (c *Core) ConstantlyPhoneHome() {
 	// extract phone home messages from fetched LLDP packages
 	go func() {
 		for phoneHome := range discoveryResultChan {
-			phoneHome := phoneHome
 			msg := toPhoneHomeMessage(phoneHome)
 			if msg == nil {
 				continue
@@ -81,27 +73,28 @@ func (c *Core) ConstantlyPhoneHome() {
 	}()
 
 	// send arrived messages on a ticker basis
-	ticker := time.NewTicker(phonedHomeInterval)
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-				msgs := []phoneHomeMessage{}
-				phoneHomeMessages.Range(func(key, value interface{}) bool {
-					msg, ok := value.(phoneHomeMessage)
-					if !ok {
-						return true
-					}
-					phoneHomeMessages.Delete(key)
-					msgs = append(msgs, msg)
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			msgs := []phoneHomeMessage{}
+			phoneHomeMessages.Range(func(key, value any) bool {
+				msg, ok := value.(phoneHomeMessage)
+				if !ok {
 					return true
-				})
-				c.phoneHome(ctx, msgs)
-			}
+				}
+				phoneHomeMessages.Delete(key)
+				msgs = append(msgs, msg)
+				return true
+			})
+			c.phoneHome(ctx, msgs)
+		case <-ctx.Done():
+			// wait until all lldp routines to finish
+			discoveryResultChanWG.Wait()
+			return
 		}
-	}()
+	}
 }
 
 func (c *Core) send(ctx context.Context, event *v1.EventServiceSendRequest) (*v1.EventServiceSendResponse, error) {

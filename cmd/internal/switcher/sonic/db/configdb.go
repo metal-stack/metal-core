@@ -8,18 +8,24 @@ import (
 )
 
 const (
-	enable          = "enable"
-	interfaceTable  = "INTERFACE"
-	linkLocalOnly   = "ipv6_use_link_local_only" // nolint:gosec
-	vlanMemberTable = "VLAN_MEMBER"
-	taggingMode     = "tagging_mode"
-	untagged        = "untagged"
-	vrfName         = "vrf_name"
-	portTable       = "PORT"
-	adminStatus     = "admin_status"
-	adminStatusUp   = "up"
-	adminStatusDown = "down"
-	mtu             = "mtu"
+	adminStatus         = "admin_status"
+	adminStatusUp       = "up"
+	adminStatusDown     = "down"
+	alias               = "alias"
+	enable              = "enable"
+	interfaceTable      = "INTERFACE"
+	linkLocalOnly       = "ipv6_use_link_local_only" // nolint:gosec
+	mtu                 = "mtu"
+	portTable           = "PORT"
+	suppressVlanNeigh   = "SUPPRESS_VLAN_NEIGH"
+	taggingMode         = "tagging_mode"
+	untagged            = "untagged"
+	vlanTable           = "VLAN"
+	vlanInterfaceTable  = "VLAN_INTERFACE"
+	vlanMemberTable     = "VLAN_MEMBER"
+	vrfTable            = "VRF"
+	vrfName             = "vrf_name"
+	vxlanTunnelMapTable = "VXLAN_TUNNEL_MAP"
 )
 
 type ConfigDB struct {
@@ -27,8 +33,15 @@ type ConfigDB struct {
 }
 
 type Port struct {
+	Name        string
+	Alias       string
 	AdminStatus bool
 	Mtu         string
+}
+
+type VxlanMap struct {
+	Vni  string
+	Vlan string
 }
 
 func newConfigDB(rdb *redis.Client, sep string) *ConfigDB {
@@ -38,20 +51,27 @@ func newConfigDB(rdb *redis.Client, sep string) *ConfigDB {
 }
 
 func (d *ConfigDB) ExistVlan(ctx context.Context, vid uint16) (bool, error) {
-	key := Key{"VLAN", fmt.Sprintf("Vlan%d", vid)}
+	key := Key{vlanTable, fmt.Sprintf("Vlan%d", vid)}
 
 	return d.c.Exists(ctx, key)
 }
 
 func (d *ConfigDB) CreateVlan(ctx context.Context, vid uint16) error {
 	vlanId := fmt.Sprintf("%d", vid)
-	key := Key{"VLAN", "Vlan" + vlanId}
+	key := Key{vlanTable, "Vlan" + vlanId}
 
 	return d.c.HSet(ctx, key, Val{"vlanid": vlanId})
 }
 
+func (d *ConfigDB) DeleteVlan(ctx context.Context, vid uint16) error {
+	vlanId := fmt.Sprintf("%d", vid)
+	key := Key{vlanTable, "Vlan" + vlanId}
+
+	return d.c.Del(ctx, key)
+}
+
 func (d *ConfigDB) AreNeighborsSuppressed(ctx context.Context, vid uint16) (bool, error) {
-	key := Key{"SUPPRESS_VLAN_NEIGH", fmt.Sprintf("Vlan%d", vid)}
+	key := Key{suppressVlanNeigh, fmt.Sprintf("Vlan%d", vid)}
 
 	suppress, err := d.c.HGet(ctx, key, "suppress")
 	if err != nil {
@@ -61,21 +81,33 @@ func (d *ConfigDB) AreNeighborsSuppressed(ctx context.Context, vid uint16) (bool
 }
 
 func (d *ConfigDB) SuppressNeighbors(ctx context.Context, vid uint16) error {
-	key := Key{"SUPPRESS_VLAN_NEIGH", fmt.Sprintf("Vlan%d", vid)}
+	key := Key{suppressVlanNeigh, fmt.Sprintf("Vlan%d", vid)}
 
 	return d.c.HSet(ctx, key, Val{"suppress": "on"})
 }
 
+func (d *ConfigDB) DeleteNeighborSuppression(ctx context.Context, vid uint16) error {
+	key := Key{suppressVlanNeigh, fmt.Sprintf("Vlan%d", vid)}
+
+	return d.c.Del(ctx, key)
+}
+
 func (d *ConfigDB) ExistVlanInterface(ctx context.Context, vid uint16) (bool, error) {
-	key := Key{"VLAN_INTERFACE", fmt.Sprintf("Vlan%d", vid)}
+	key := Key{vlanInterfaceTable, fmt.Sprintf("Vlan%d", vid)}
 
 	return d.c.Exists(ctx, key)
 }
 
 func (d *ConfigDB) CreateVlanInterface(ctx context.Context, vid uint16, vrf string) error {
-	key := Key{"VLAN_INTERFACE", "Vlan" + fmt.Sprintf("%d", vid)}
+	key := Key{vlanInterfaceTable, "Vlan" + fmt.Sprintf("%d", vid)}
 
 	return d.c.HSet(ctx, key, Val{vrfName: vrf})
+}
+
+func (d *ConfigDB) DeleteVlanInterface(ctx context.Context, vid uint16) error {
+	key := Key{vlanInterfaceTable, "Vlan" + fmt.Sprintf("%d", vid)}
+
+	return d.c.Del(ctx, key)
 }
 
 func (d *ConfigDB) GetVlanMembership(ctx context.Context, interfaceName string) ([]string, error) {
@@ -108,16 +140,38 @@ func (d *ConfigDB) DeleteVlanMember(ctx context.Context, interfaceName, vlan str
 	return d.c.Del(ctx, key)
 }
 
+func (d *ConfigDB) GetVrfs(ctx context.Context) ([]string, error) {
+	t := d.c.GetTable(Key{vrfTable})
+
+	res, err := t.GetView(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	vrfs := make([]string, 0)
+	for vrf := range res {
+		vrfs = append(vrfs, vrf)
+	}
+
+	return vrfs, nil
+}
+
 func (d *ConfigDB) ExistVrf(ctx context.Context, vrf string) (bool, error) {
-	key := Key{"VRF", vrf}
+	key := Key{vrfTable, vrf}
 
 	return d.c.Exists(ctx, key)
 }
 
-func (d *ConfigDB) CreateVrf(ctx context.Context, vrf string) error {
-	key := Key{"VRF", vrf}
+func (d *ConfigDB) CreateVrf(ctx context.Context, vrf string, vni uint32) error {
+	key := Key{vrfTable, vrf}
 
-	return d.c.HSet(ctx, key, Val{"NULL": "NULL"})
+	return d.c.HSet(ctx, key, Val{"fallback": "false", "vni": fmt.Sprintf("%d", vni)})
+}
+
+func (d *ConfigDB) DeleteVrf(ctx context.Context, vrf string) error {
+	key := Key{vrfTable, vrf}
+
+	return d.c.Del(ctx, key)
 }
 
 func (d *ConfigDB) SetVrfMember(ctx context.Context, interfaceName string, vrf string) error {
@@ -133,18 +187,83 @@ func (d *ConfigDB) GetVrfMembership(ctx context.Context, interfaceName string) (
 }
 
 func (d *ConfigDB) ExistVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) (bool, error) {
-	key := Key{"VXLAN_TUNNEL_MAP", "vtep", fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
+	vtep, err := d.getVTEPName(ctx)
+	if err != nil {
+		return false, err
+	}
+	key := Key{vxlanTunnelMapTable, vtep, fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
 
 	return d.c.Exists(ctx, key)
 }
 
 func (d *ConfigDB) CreateVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) error {
-	key := Key{"VXLAN_TUNNEL_MAP", "vtep", fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
+	vtep, err := d.getVTEPName(ctx)
+	if err != nil {
+		return err
+	}
+	key := Key{vxlanTunnelMapTable, vtep, fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
 	val := Val{
 		"vlan": fmt.Sprintf("Vlan%d", vid),
 		"vni":  fmt.Sprintf("%d", vni),
 	}
 	return d.c.HSet(ctx, key, val)
+}
+
+func (d *ConfigDB) DeleteVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) error {
+	vtep, err := d.getVTEPName(ctx)
+	if err != nil {
+		return err
+	}
+	key := Key{vxlanTunnelMapTable, vtep, fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
+
+	return d.c.Del(ctx, key)
+}
+
+func (d *ConfigDB) FindVxlanTunnelMapByVni(ctx context.Context, vni uint32) (*VxlanMap, error) {
+	vtep, err := d.getVTEPName(ctx)
+	if err != nil {
+		return nil, err
+	}
+	t := d.c.GetTable(Key{vxlanTunnelMapTable, vtep})
+
+	res, err := t.GetView(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	tunnelMaps := make([]string, 0)
+	for k := range res {
+		tunnelMaps = append(tunnelMaps, k)
+	}
+
+	for _, k := range tunnelMaps {
+		result, err := d.c.HGetAll(ctx, Key{vxlanTunnelMapTable, vtep, k})
+		if err != nil {
+			return nil, err
+		}
+
+		if result["vni"] == fmt.Sprintf("%d", vni) {
+			return &VxlanMap{
+				Vni:  result["vni"],
+				Vlan: result["vlan"],
+			}, nil
+		}
+	}
+
+	return nil, nil
+}
+
+func (d *ConfigDB) getVTEPName(ctx context.Context) (string, error) {
+	pattern := Key{"VXLAN_TUNNEL", "*"}
+	keys, err := d.c.Keys(ctx, pattern)
+	if err != nil {
+		return "", err
+	}
+	if len(keys) != 1 {
+		return "", fmt.Errorf("could not find name of the vtep")
+	}
+	key := []string(keys[0])
+	return key[len(key)-1], nil
 }
 
 func (d *ConfigDB) DeleteInterfaceConfiguration(ctx context.Context, interfaceName string) error {
@@ -181,6 +300,39 @@ func (d *ConfigDB) GetPort(ctx context.Context, interfaceName string) (*Port, er
 		AdminStatus: result[adminStatus] == adminStatusUp,
 		Mtu:         result[mtu],
 	}, nil
+}
+
+func (d *ConfigDB) GetPorts(ctx context.Context) ([]*Port, error) {
+	var (
+		ports     []*Port
+		portNames []string
+	)
+
+	t := d.c.GetTable(Key{portTable})
+	res, err := t.GetView(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for name := range res {
+		portNames = append(portNames, name)
+	}
+
+	for _, p := range portNames {
+		result, err := d.c.HGetAll(ctx, Key{portTable, p})
+		if err != nil {
+			return nil, err
+		}
+
+		ports = append(ports, &Port{
+			Name:        p,
+			Alias:       result[alias],
+			AdminStatus: result[adminStatus] == adminStatusUp,
+			Mtu:         result[mtu],
+		})
+	}
+
+	return ports, nil
 }
 
 func (d *ConfigDB) SetPortMtu(ctx context.Context, interfaceName string, val string) error {

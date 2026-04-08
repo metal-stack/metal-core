@@ -1,7 +1,6 @@
 package db
 
 import (
-	"context"
 	"reflect"
 	"testing"
 
@@ -22,7 +21,7 @@ func TestClient_Del(t *testing.T) {
 
 	mock.ExpectDel("table|entry").SetVal(1)
 
-	if err := c.Del(context.Background(), Key{"table", "entry"}); err != nil {
+	if err := c.Del(t.Context(), Key{"table", "entry"}); err != nil {
 		t.Errorf("Del() error = %v, wantErr %v", err, false)
 	}
 }
@@ -50,7 +49,7 @@ func TestClient_Exists(t *testing.T) {
 
 			mock.ExpectExists("table|key").SetVal(tt.val)
 
-			got, err := c.Exists(context.Background(), Key{"table", "key"})
+			got, err := c.Exists(t.Context(), Key{"table", "key"})
 			if err != nil {
 				t.Errorf("Exists() error = %v, wantErr %v", err, false)
 				return
@@ -80,7 +79,7 @@ func TestClient_GetView(t *testing.T) {
 
 	mock.ExpectKeys("table|*").SetVal([]string{"table|key", "table|key1|key2"})
 
-	got, err := c.GetView(context.Background(), "table")
+	got, err := c.GetView(t.Context(), "table")
 	if err != nil {
 		t.Errorf("GetView() error = %v, wantErr %v", err, false)
 	}
@@ -94,7 +93,7 @@ func TestClient_HGet(t *testing.T) {
 
 	mock.ExpectHGet("table|key", "field").RedisNil()
 
-	got, err := c.HGet(context.Background(), Key{"table", "key"}, "field")
+	got, err := c.HGet(t.Context(), Key{"table", "key"}, "field")
 	if err != nil {
 		t.Errorf("HGet() error = %v, wantErr %v", err, false)
 		return
@@ -110,7 +109,7 @@ func TestClient_HGetAll(t *testing.T) {
 
 	mock.ExpectHGetAll("table|key").SetVal(map[string]string{"key": "test"})
 
-	got, err := c.HGetAll(context.Background(), Key{"table", "key"})
+	got, err := c.HGetAll(t.Context(), Key{"table", "key"})
 	if err != nil {
 		t.Errorf("HGetAll() error = %v, wantErr %v", err, false)
 		return
@@ -126,7 +125,7 @@ func TestClient_HSet(t *testing.T) {
 	val := Val{"key": "test"}
 	mock.ExpectHSet("table|key", "key", "test").SetVal(1)
 
-	err := c.HSet(context.Background(), Key{"table", "key"}, val)
+	err := c.HSet(t.Context(), Key{"table", "key"}, val)
 	if err != nil {
 		t.Errorf("HSet() error = %v, wantErr %v", err, false)
 	}
@@ -141,7 +140,7 @@ func TestClient_Keys(t *testing.T) {
 
 	mock.ExpectKeys("table|*").SetVal([]string{"table|key", "table|key1|key2"})
 
-	got, err := c.Keys(context.Background(), Key{"table", "*"})
+	got, err := c.Keys(t.Context(), Key{"table", "*"})
 	if err != nil {
 		t.Errorf("Keys() error = %v, wantErr %v", err, false)
 		return

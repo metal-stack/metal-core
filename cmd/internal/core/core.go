@@ -2,7 +2,6 @@ package core
 
 import (
 	"log/slog"
-	"time"
 
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
@@ -14,17 +13,17 @@ type Core struct {
 	log      *slog.Logger
 	logLevel string
 
-	cidr                      string
-	loopbackIP                string
-	asn                       string
-	partitionID               string
-	rackID                    string
-	enableReconfigureSwitch   bool
-	reconfigureSwitchInterval time.Duration
-	managementGateway         string
-	additionalBridgePorts     []string
-	additionalBridgeVIDs      []string
-	spineUplinks              []string
+	cidr                    string
+	loopbackIP              string
+	asn                     string
+	partitionID             string
+	rackID                  string
+	enableReconfigureSwitch bool
+	managementGateway       string
+	additionalBridgePorts   []string
+	additionalBridgeVIDs    []string
+	spineUplinks            []string
+	setSrcLoopback          bool
 
 	nos switcher.NOS
 
@@ -42,17 +41,17 @@ type Config struct {
 	Log      *slog.Logger
 	LogLevel string
 
-	CIDR                      string
-	LoopbackIP                string
-	ASN                       string
-	PartitionID               string
-	RackID                    string
-	ReconfigureSwitch         bool
-	ReconfigureSwitchInterval time.Duration
-	ManagementGateway         string
-	AdditionalBridgePorts     []string
-	AdditionalBridgeVIDs      []string
-	SpineUplinks              []string
+	CIDR                  string
+	LoopbackIP            string
+	ASN                   string
+	PartitionID           string
+	RackID                string
+	ReconfigureSwitch     bool
+	ManagementGateway     string
+	AdditionalBridgePorts []string
+	AdditionalBridgeVIDs  []string
+	SpineUplinks          []string
+	SetSrcLoopback        bool
 
 	NOS switcher.NOS
 
@@ -68,24 +67,24 @@ type Config struct {
 
 func New(c Config) *Core {
 	return &Core{
-		log:                       c.Log,
-		logLevel:                  c.LogLevel,
-		cidr:                      c.CIDR,
-		loopbackIP:                c.LoopbackIP,
-		asn:                       c.ASN,
-		partitionID:               c.PartitionID,
-		rackID:                    c.RackID,
-		enableReconfigureSwitch:   c.ReconfigureSwitch,
-		reconfigureSwitchInterval: c.ReconfigureSwitchInterval,
-		managementGateway:         c.ManagementGateway,
-		additionalBridgePorts:     c.AdditionalBridgePorts,
-		additionalBridgeVIDs:      c.AdditionalBridgeVIDs,
-		spineUplinks:              c.SpineUplinks,
-		nos:                       c.NOS,
-		driver:                    c.Driver,
-		eventServiceClient:        c.EventServiceClient,
-		metrics:                   c.Metrics,
-		pxeVlanID:                 c.PXEVlanID,
-		bgpNeighborStateFile:      c.BGPNeighborStateFile,
+		log:                     c.Log,
+		logLevel:                c.LogLevel,
+		cidr:                    c.CIDR,
+		loopbackIP:              c.LoopbackIP,
+		asn:                     c.ASN,
+		partitionID:             c.PartitionID,
+		rackID:                  c.RackID,
+		enableReconfigureSwitch: c.ReconfigureSwitch,
+		managementGateway:       c.ManagementGateway,
+		additionalBridgePorts:   c.AdditionalBridgePorts,
+		additionalBridgeVIDs:    c.AdditionalBridgeVIDs,
+		spineUplinks:            c.SpineUplinks,
+		setSrcLoopback:          c.SetSrcLoopback,
+		nos:                     c.NOS,
+		driver:                  c.Driver,
+		eventServiceClient:      c.EventServiceClient,
+		metrics:                 c.Metrics,
+		pxeVlanID:               c.PXEVlanID,
+		bgpNeighborStateFile:    c.BGPNeighborStateFile,
 	}
 }

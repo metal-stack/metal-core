@@ -1,6 +1,7 @@
 package cumulus
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net"
@@ -22,29 +23,29 @@ type Cumulus struct {
 
 func New(log *slog.Logger, frrTplFile, interfacesTplFile string) *Cumulus {
 	return &Cumulus{
-		frrApplier:        NewFrrApplier(frrTplFile),
-		interfacesApplier: NewInterfacesApplier(interfacesTplFile),
+		frrApplier:        NewFrrApplier(log, frrTplFile),
+		interfacesApplier: NewInterfacesApplier(log, interfacesTplFile),
 		log:               log,
 	}
 }
 
-func (c *Cumulus) Apply(cfg *types.Conf) error {
+func (c *Cumulus) Apply(ctx context.Context, cfg *types.Conf) error {
 	withoutDownPorts := cfg.NewWithoutDownPorts()
-	err := c.interfacesApplier.Apply(withoutDownPorts)
+	err := c.interfacesApplier.Apply(ctx, withoutDownPorts)
 	if err != nil {
 		return err
 	}
 
-	return c.frrApplier.Apply(withoutDownPorts)
+	return c.frrApplier.Apply(ctx, withoutDownPorts)
 }
 
-func (c *Cumulus) IsInitialized() (initialized bool, err error) {
+func (c *Cumulus) IsInitialized(context.Context) (initialized bool, err error) {
 	// FIXME decide how we can detect initialization is complete.
 	return true, nil
 }
 
-func (c *Cumulus) GetNics(log *slog.Logger, blacklist []string) (nics []*models.V1SwitchNic, err error) {
-	ifs, err := c.GetSwitchPorts()
+func (c *Cumulus) GetNics(ctx context.Context, log *slog.Logger, blacklist []string) (nics []*models.V1SwitchNic, err error) {
+	ifs, err := c.GetSwitchPorts(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get all ifs: %w", err)
 	}
@@ -72,7 +73,7 @@ func (c *Cumulus) GetNics(log *slog.Logger, blacklist []string) (nics []*models.
 	return nics, nil
 }
 
-func (c *Cumulus) GetSwitchPorts() ([]*net.Interface, error) {
+func (c *Cumulus) GetSwitchPorts(_ context.Context) ([]*net.Interface, error) {
 	ifs, err := net.Interfaces()
 	if err != nil {
 		return nil, fmt.Errorf("unable to get all interfaces: %w", err)
@@ -100,7 +101,7 @@ func (c *Cumulus) GetOS() (*models.V1SwitchOS, error) {
 	if err != nil {
 		c.log.Error("unable to read /etc/lsb-release", "error", err)
 	} else {
-		for _, line := range strings.Fields(string(lsbReleaseBytes)) {
+		for line := range strings.FieldsSeq(string(lsbReleaseBytes)) {
 			if strings.HasPrefix(line, "DISTRIB_RELEASE") {
 				_, v, found := strings.Cut(line, "=")
 				if found {

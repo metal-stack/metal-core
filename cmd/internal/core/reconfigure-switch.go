@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -18,81 +19,93 @@ import (
 	"github.com/metal-stack/metal-go/api/models"
 )
 
-// ReconfigureSwitch reconfigures the switch.
-func (c *Core) ReconfigureSwitch() {
-	t := time.NewTicker(c.reconfigureSwitchInterval)
+// ConstantlyReconfigureSwitch reconfigures the switch.
+func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval, timeout time.Duration) {
 	host, _ := os.Hostname()
-	for range t.C {
-		c.log.Info("trigger reconfiguration")
-		start := time.Now()
-		s, err := c.reconfigureSwitch(host)
-		elapsed := time.Since(start)
-		c.log.Info("reconfiguration took", "elapsed", elapsed)
 
-		params := sw.NewNotifySwitchParams()
-		params.ID = host
-		ns := elapsed.Nanoseconds()
-		nr := &models.V1SwitchNotifyRequest{
-			SyncDuration:  &ns,
-			PortStates:    make(map[string]string),
-			BgpPortStates: make(map[string]models.V1SwitchBGPPortState),
-		}
-		if err != nil {
-			errStr := err.Error()
-			nr.Error = &errStr
-			c.log.Error("reconfiguration failed", "error", err)
-			c.metrics.CountError("switch-reconfiguration")
-		} else {
-			c.log.Info("reconfiguration succeeded")
-		}
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			withTimeout, cancel := context.WithTimeout(ctx, timeout)
+			defer cancel()
 
-		// fill the port states of the switch
-		var nics []*models.V1SwitchNic
-		if s != nil {
-			nics = s.Nics
-		}
-		for _, n := range nics {
-			if n == nil || n.Name == nil {
-				// lets log the whole nic because the name could be empty; lets hope there is some useful information
-				// in the nic
-				c.log.Error("could not check if link is up", "nic", n)
-				c.metrics.CountError("switch-reconfiguration")
-				continue
+			c.log.Info("trigger reconfiguration")
+			start := time.Now()
+			s, err := c.reconfigureSwitch(withTimeout, host)
+			elapsed := time.Since(start)
+			c.log.Info("reconfiguration took", "elapsed", elapsed)
+
+			params := sw.NewNotifySwitchParams()
+			params.ID = host
+			ns := elapsed.Nanoseconds()
+			nr := &models.V1SwitchNotifyRequest{
+				SyncDuration:  &ns,
+				PortStates:    make(map[string]string),
+				BgpPortStates: make(map[string]models.V1SwitchBGPPortState),
 			}
-			isup, err := isLinkUp(*n.Name)
 			if err != nil {
-				c.log.Error("could not check if link is up", "error", err, "nicname", *n.Name)
-				nr.PortStates[*n.Name] = models.V1SwitchNicActualUNKNOWN
+				errStr := err.Error()
+				nr.Error = &errStr
+				c.log.Error("reconfiguration failed", "error", err)
 				c.metrics.CountError("switch-reconfiguration")
-				continue
-			}
-			if isup {
-				nr.PortStates[*n.Name] = models.V1SwitchNicActualUP
 			} else {
-				nr.PortStates[*n.Name] = models.V1SwitchNicActualDOWN
+				c.log.Info("reconfiguration succeeded")
 			}
-		}
 
-		if c.bgpNeighborStateFile != "" {
-			bgpportstates, err := frr.GetBGPStates(c.bgpNeighborStateFile)
-			if err != nil {
-				c.log.Error("could not get BGP states", "error", err)
-				c.metrics.CountError("switch-reconfiguration")
+			// fill the port states of the switch
+			var nics []*models.V1SwitchNic
+			if s != nil {
+				nics = s.Nics
 			}
-			nr.BgpPortStates = bgpportstates
-		}
-		params.Body = nr
-		_, err = c.driver.SwitchOperations().NotifySwitch(params, nil)
-		if err != nil {
-			c.log.Error("notification about switch reconfiguration failed", "error", err)
-			c.metrics.CountError("reconfiguration-notification")
+			for _, n := range nics {
+				if n == nil || n.Name == nil {
+					// lets log the whole nic because the name could be empty; lets hope there is some useful information
+					// in the nic
+					c.log.Error("could not check if link is up", "nic", n)
+					c.metrics.CountError("switch-reconfiguration")
+					continue
+				}
+				isup, err := isLinkUp(*n.Name)
+				if err != nil {
+					c.log.Error("could not check if link is up", "error", err, "nicname", *n.Name)
+					nr.PortStates[*n.Name] = models.V1SwitchNicActualUNKNOWN
+					c.metrics.CountError("switch-reconfiguration")
+					continue
+				}
+				if isup {
+					nr.PortStates[*n.Name] = models.V1SwitchNicActualUP
+				} else {
+					nr.PortStates[*n.Name] = models.V1SwitchNicActualDOWN
+				}
+			}
+
+			if c.bgpNeighborStateFile != "" {
+				bgpportstates, err := frr.GetBGPStates(c.bgpNeighborStateFile)
+				if err != nil {
+					c.log.Error("could not get BGP states", "error", err)
+					c.metrics.CountError("switch-reconfiguration")
+				}
+				nr.BgpPortStates = bgpportstates
+			}
+
+			params.Body = nr
+			_, err = c.driver.SwitchOperations().NotifySwitch(params, nil)
+			if err != nil {
+				c.log.Error("notification about switch reconfiguration failed", "error", err)
+				c.metrics.CountError("reconfiguration-notification")
+			}
+		case <-ctx.Done():
+			return
 		}
 	}
 }
 
-func (c *Core) reconfigureSwitch(switchName string) (*models.V1SwitchResponse, error) {
+func (c *Core) reconfigureSwitch(ctx context.Context, switchName string) (*models.V1SwitchResponse, error) {
 	params := sw.NewFindSwitchParams()
 	params.ID = switchName
+	params.Context = ctx
 	fsr, err := c.driver.SwitchOperations().FindSwitch(params, nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not fetch switch from metal-api: %w", err)
@@ -115,7 +128,7 @@ func (c *Core) reconfigureSwitch(switchName string) (*models.V1SwitchResponse, e
 		return s, nil
 	}
 
-	err = c.nos.Apply(switchConfig)
+	err = c.nos.Apply(ctx, switchConfig)
 	if err != nil {
 		return nil, fmt.Errorf("could not apply switch config: %w", err)
 	}
@@ -140,18 +153,24 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 		MetalCoreCIDR:        c.cidr,
 		AdditionalBridgeVIDs: c.additionalBridgeVIDs,
 		PXEVlanID:            c.pxeVlanID,
+		SetSrcLoopback:       c.setSrcLoopback,
 	}
 
 	p := types.Ports{
 		Underlay:      c.spineUplinks,
+		BladePorts:    c.additionalBridgePorts,
 		Unprovisioned: []string{},
 		Vrfs:          map[string]*types.Vrf{},
 		Firewalls:     map[string]*types.Firewall{},
 		DownPorts:     map[string]bool{},
 	}
-	p.BladePorts = c.additionalBridgePorts
+
 	for _, nic := range s.Nics {
 		port := *nic.Name
+
+		if slices.Contains(p.Underlay, port) {
+			continue
+		}
 
 		if isPortStatusEqual(models.V1SwitchNicActualDOWN, nic.Actual) {
 			if has := p.DownPorts[port]; !has {
@@ -159,12 +178,10 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 			}
 		}
 
-		if slices.Contains(p.Underlay, port) {
-			continue
-		}
 		if slices.Contains(c.additionalBridgePorts, port) {
 			continue
 		}
+
 		if nic.Vrf == "" {
 			if !slices.Contains(p.Unprovisioned, port) {
 				p.Unprovisioned = append(p.Unprovisioned, port)
@@ -184,6 +201,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 			p.Firewalls[port] = fw
 			continue
 		}
+
 		// Machine-Port
 		vrf := &types.Vrf{}
 		if v, has := p.Vrfs[nic.Vrf]; has {
@@ -251,7 +269,7 @@ func fillEth0Info(c *types.Conf, gw string) error {
 	}
 
 	ip := addrs[0].IP
-	s, _ := addrs[0].IPNet.Mask.Size()
+	s, _ := addrs[0].Mask.Size()
 	c.Ports.Eth0.AddressCIDR = fmt.Sprintf("%s/%d", ip.String(), s)
 	c.Ports.Eth0.Gateway = gw
 	return nil

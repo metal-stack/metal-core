@@ -4,13 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log/slog"
 	"net"
 	"os"
 	"slices"
 	"strings"
-	"time"
 
 	"gopkg.in/yaml.v3"
 
@@ -23,9 +21,8 @@ import (
 )
 
 const (
-	sonicConfigDBPath = "/etc/sonic/config_db.json"
-	SonicVersionFile  = "/etc/sonic/sonic_version.yml"
-	redisConfigFile   = "/var/run/redis/sonic-db/database_config.json"
+	SonicVersionFile = "/etc/sonic/sonic_version.yml"
+	redisConfigFile  = "/var/run/redis/sonic-db/database_config.json"
 )
 
 type Sonic struct {
@@ -51,7 +48,7 @@ func New(log *slog.Logger, frrTplFile string) (*Sonic, error) {
 
 	return &Sonic{
 		db:           sonicDb,
-		frrApplier:   NewFrrApplier(frrTplFile),
+		frrApplier:   NewFrrApplier(log, frrTplFile),
 		log:          log,
 		redisApplier: redis.NewApplier(log, sonicDb),
 	}, nil
@@ -70,48 +67,33 @@ func loadRedisConfig(path string) (*db.Config, error) {
 	return cfg, nil
 }
 
-func (s *Sonic) Apply(cfg *types.Conf) error {
-	err := s.redisApplier.Apply(cfg)
+func (s *Sonic) Apply(ctx context.Context, cfg *types.Conf) error {
+	err := s.redisApplier.Apply(ctx, cfg)
 	if err != nil {
 		return err
 	}
 
-	return s.frrApplier.Apply(cfg)
+	return s.frrApplier.Apply(ctx, cfg)
 }
 
-func (s *Sonic) IsInitialized() (initialized bool, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+func (s *Sonic) IsInitialized(ctx context.Context) (initialized bool, err error) {
 	return s.db.Appl.ExistPortInitDone(ctx)
 }
 
-func (s *Sonic) GetNics(log *slog.Logger, blacklist []string) (nics []*models.V1SwitchNic, err error) {
-	ifs, err := s.GetSwitchPorts()
-	if err != nil {
-		return nil, fmt.Errorf("unable to get all ifs: %w", err)
-	}
-
-	portsConfig, err := getPortsConfig(sonicConfigDBPath)
+func (s *Sonic) GetNics(ctx context.Context, log *slog.Logger, blacklist []string) (nics []*models.V1SwitchNic, err error) {
+	ports, err := s.getPortsConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get ports config")
 	}
 
-	for _, iface := range ifs {
-		name := iface.Name
+	for name, portConfig := range ports {
 		if slices.Contains(blacklist, name) {
 			log.Debug("skip interface, because it is contained in the blacklist", "interface", name, "blacklist", blacklist)
 			continue
 		}
 
-		id, found := portsConfig[name]
-		if !found {
-			log.Debug("skip interface as no info on it was found in config DB", "interface", name)
-			continue
-		}
-
 		nic := &models.V1SwitchNic{
-			Identifier: &id.Alias,
+			Identifier: &portConfig.Alias,
 			Name:       &name,
 		}
 		nics = append(nics, nic)
@@ -124,43 +106,44 @@ func (s *Sonic) SanitizeConfig(cfg *types.Conf) {
 	cfg.CapitalizeVrfName()
 }
 
-func (s *Sonic) GetSwitchPorts() ([]*net.Interface, error) {
-	ifs, err := net.Interfaces()
+func (s *Sonic) GetSwitchPorts(ctx context.Context) ([]*net.Interface, error) {
+	ports, err := s.getPortsConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get all interfaces: %w", err)
 	}
 
-	switchPorts := make([]*net.Interface, 0, len(ifs))
-	for i := range ifs {
-		iface := &ifs[i]
-		if !strings.HasPrefix(iface.Name, "Ethernet") {
-			s.log.Debug("skip interface, because only Ethernet* interface are front panels", "interface", iface.Name)
-			continue
-		}
-		switchPorts = append(switchPorts, iface)
-	}
-	return switchPorts, nil
+	return portsToInterfaces(ports), nil
 }
 
-func getPortsConfig(filepath string) (map[string]PortInfo, error) {
-	jsonFile, err := os.Open(filepath)
+func portsToInterfaces(ports map[string]PortInfo) []*net.Interface {
+	interfaces := make([]*net.Interface, 0)
+
+	for portName := range ports {
+		interfaces = append(interfaces, &net.Interface{
+			Name: portName,
+		})
+	}
+	slices.SortStableFunc(interfaces, func(a, b *net.Interface) int {
+		return strings.Compare(a.Name, b.Name)
+	})
+
+	return interfaces
+}
+
+func (s *Sonic) getPortsConfig(ctx context.Context) (map[string]PortInfo, error) {
+	ports, err := s.redisApplier.GetPorts(ctx)
 	if err != nil {
 		return nil, err
 	}
-	defer jsonFile.Close()
 
-	byteValue, err := io.ReadAll(jsonFile)
-	if err != nil {
-		return nil, err
+	portConfig := map[string]PortInfo{}
+	for _, port := range ports {
+		portConfig[port.Name] = PortInfo{
+			Alias: port.Alias,
+		}
 	}
 
-	config := struct {
-		Ports map[string]PortInfo `json:"PORT"`
-	}{}
-	//nolint:musttag
-	err = json.Unmarshal(byteValue, &config)
-
-	return config.Ports, err
+	return portConfig, err
 }
 
 type sonic_version struct {
