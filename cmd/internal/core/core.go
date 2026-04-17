@@ -23,6 +23,7 @@ type Core struct {
 	additionalBridgePorts   []string
 	additionalBridgeVIDs    []string
 	spineUplinks            []string
+	setSrcLoopback          bool
 
 	nos switcher.NOS
 
@@ -50,6 +51,7 @@ type Config struct {
 	AdditionalBridgePorts []string
 	AdditionalBridgeVIDs  []string
 	SpineUplinks          []string
+	SetSrcLoopback        bool
 
 	NOS switcher.NOS
 
@@ -77,6 +79,7 @@ func New(c Config) *Core {
 		additionalBridgePorts:   c.AdditionalBridgePorts,
 		additionalBridgeVIDs:    c.AdditionalBridgeVIDs,
 		spineUplinks:            c.SpineUplinks,
+		setSrcLoopback:          c.SetSrcLoopback,
 		nos:                     c.NOS,
 		driver:                  c.Driver,
 		eventServiceClient:      c.EventServiceClient,
