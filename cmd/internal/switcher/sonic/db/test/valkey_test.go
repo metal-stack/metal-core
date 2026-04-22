@@ -5,30 +5,24 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
-	"github.com/valkey-io/valkey-go"
-)
-
-type (
-	hashMap map[string]map[string]string
 )
 
 func TestLoadData(t *testing.T) {
-
 	tests := []struct {
 		name string
-		d    data
+		data stringMap
 		want hashMap
 	}{
 		{
-			name: "empty data",
-			d:    data{},
+			name: "empty stringMap",
+			data: stringMap{},
 			want: nil,
 		},
 		{
 			name: "add empty fields and values to key",
-			d: data{
-				"LOOPBACK_INTERFACE": {
-					"Loopback0": {},
+			data: stringMap{
+				"LOOPBACK_INTERFACE": stringMap{
+					"Loopback0": stringMap{},
 				},
 			},
 			want: hashMap{
@@ -39,13 +33,13 @@ func TestLoadData(t *testing.T) {
 		},
 		{
 			name: "add multiple field-value pairs to multiple keys",
-			d: data{
-				"PORT": {
-					"Ethernet0": {
+			data: stringMap{
+				"PORT": stringMap{
+					"Ethernet0": stringMap{
 						"admin_status": "up",
 						"mtu":          "9000",
 					},
-					"Ethernet1": {
+					"Ethernet1": stringMap{
 						"speed": "25000",
 						"alias": "Eth1/2",
 					},
@@ -72,7 +66,7 @@ func TestLoadData(t *testing.T) {
 			)
 			defer vc.Close()
 
-			err := LoadData(ctx, vc, tt.d, sep)
+			err := LoadData(ctx, vc, tt.data, sep)
 			require.NoError(t, err)
 
 			for k, m := range tt.want {
@@ -101,89 +95,126 @@ func TestLoadData(t *testing.T) {
 	}
 }
 
-func TestGetData(t *testing.T) {
-	var (
-		ctx = t.Context()
-	)
-
+func Test_getKeysAndValues(t *testing.T) {
 	tests := []struct {
-		name       string
-		separator  string
-		beforeFunc func(valkey.Client)
-		want       data
+		name string
+		data stringMap
+		want []keysAndValue
 	}{
 		{
-			name:       "empty data",
-			separator:  "|",
-			beforeFunc: func(valkey.Client) {},
-			want:       data{},
+			name: "empty",
+			data: stringMap{},
 		},
 		{
-			name:      "load NULL correctly",
-			separator: "|",
-			beforeFunc: func(vc valkey.Client) {
-				d := data{
-					"LOOPBACK_INTERFACE": {
-						"Loopback0": {},
-					},
-				}
-				err := LoadData(ctx, vc, d, "|")
-				require.NoError(t, err)
+			name: "one level of nesting",
+			data: stringMap{
+				"PORT": "Ethernet0",
 			},
-			want: data{
-				"LOOPBACK_INTERFACE": {
-					"Loopback0": {},
+			want: []keysAndValue{
+				{
+					keys:  []string{"PORT"},
+					value: "Ethernet0",
 				},
 			},
 		},
 		{
-			name:      "load all values correctly",
-			separator: "|",
-			beforeFunc: func(vc valkey.Client) {
-				d := data{
-					"PORT": {
-						"Ethernet0": {
-							"admin_status": "up",
-							"mtu":          "9000",
-						},
-						"Ethernet1": {
-							"speed": "25000",
-							"alias": "Eth1/2",
-						},
-					},
-				}
-				err := LoadData(ctx, vc, d, "|")
-				require.NoError(t, err)
+			name: "two levels of nesting",
+			data: stringMap{
+				"LOOPBACK_INTERFACE": stringMap{
+					"Loopback0": stringMap{},
+				},
 			},
-			want: data{
-				"PORT": {
-					"Ethernet0": {
+			want: []keysAndValue{
+				{
+					keys:  []string{"LOOPBACK_INTERFACE", "Loopback0"},
+					value: "",
+				},
+			},
+		},
+		{
+			name: "multiple levels of nesting",
+			data: stringMap{
+				"PORT": stringMap{
+					"Ethernet0": stringMap{
 						"admin_status": "up",
-						"mtu":          "9000",
+						"alias":        "Eth1/1",
 					},
-					"Ethernet1": {
-						"speed": "25000",
-						"alias": "Eth1/2",
-					},
+				},
+			},
+			want: []keysAndValue{
+				{
+					keys:  []string{"PORT", "Ethernet0", "admin_status"},
+					value: "up",
+				},
+				{
+					keys:  []string{"PORT", "Ethernet0", "alias"},
+					value: "Eth1/1",
 				},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var (
-				vc = StartValkey(t)
-			)
-			defer vc.Close()
-
-			if tt.beforeFunc != nil {
-				tt.beforeFunc(vc)
+			got := getKeysAndValues(tt.data)
+			if diff := cmp.Diff(tt.want, got, cmp.AllowUnexported(keysAndValue{})); diff != "" {
+				t.Errorf("flatKeys() diff = %s", diff)
 			}
+		})
+	}
+}
 
-			got, err := GetData(ctx, vc, tt.separator)
-			require.NoError(t, err)
+func Test_getHashMap(t *testing.T) {
+	var (
+		separator = "|"
+	)
+
+	tests := []struct {
+		name string
+		kvs  []keysAndValue
+		want hashMap
+	}{
+		{
+			name: "empty",
+			kvs:  []keysAndValue{},
+			want: hashMap{},
+		},
+		{
+			name: "multiple keys with different nesting levels",
+			kvs: []keysAndValue{
+				{
+					keys:  []string{"PORT", "Ethernet0", "admin_status"},
+					value: "up",
+				},
+				{
+					keys:  []string{"PORT", "Ethernet0", "alias"},
+					value: "Eth1/1",
+				},
+				{
+					keys:  []string{"LOOPBACK_INTERFACE", "Loopback0"},
+					value: "",
+				},
+				{
+					keys:  []string{"ASIC_STATE", "SAI_OBJECT_TYPE_BRIDGE_PORT", "oid", "0x3a000000001a4a", "SAI_BRIDGE_PORT_ATTR_ADMIN_STATE"},
+					value: "true",
+				},
+			},
+			want: hashMap{
+				"PORT|Ethernet0": {
+					"admin_status": "up",
+					"alias":        "Eth1/1",
+				},
+				"LOOPBACK_INTERFACE|Loopback0": {},
+				"ASIC_STATE|SAI_OBJECT_TYPE_BRIDGE_PORT|oid|0x3a000000001a4a": {
+					"SAI_BRIDGE_PORT_ATTR_ADMIN_STATE": "true",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := getHashMap(tt.kvs, separator)
 			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("GetData() diff = %s", diff)
+				t.Errorf("getHashMap() diff = %s", diff)
 			}
 		})
 	}

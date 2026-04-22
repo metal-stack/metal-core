@@ -2,7 +2,7 @@ package test
 
 import (
 	"context"
-	"fmt"
+	"slices"
 	"strings"
 	"testing"
 
@@ -12,9 +12,13 @@ import (
 )
 
 type (
-	fields map[string]string
-	obj    map[string]fields
-	data   map[string]obj
+	stringMap map[string]any
+	hashMap   map[string]map[string]string
+
+	keysAndValue struct {
+		keys  []string
+		value string
+	}
 )
 
 func StartValkey(t testing.TB) valkey.Client {
@@ -28,73 +32,71 @@ func StartValkey(t testing.TB) valkey.Client {
 	return vc
 }
 
-func LoadData(ctx context.Context, vc valkey.Client, d data, separator string) error {
-	for key, o := range d {
-		for subkey, f := range o {
-			if len(f) == 0 {
-				// this is how SONiC adds empty maps
-				err := hset(ctx, vc, strings.Join([]string{key, subkey}, separator), "NULL", "NULL")
-				if err != nil {
-					return err
-				}
-				continue
+func LoadData(ctx context.Context, vc valkey.Client, data stringMap, separator string) error {
+	kvs := getKeysAndValues(data)
+	hm := getHashMap(kvs, separator)
+	for k, m := range hm {
+		if len(m) == 0 {
+			err := hset(ctx, vc, k, "NULL", "NULL")
+			if err != nil {
+				return err
 			}
-			for field, value := range f {
-				err := hset(ctx, vc, strings.Join([]string{key, subkey}, separator), field, value)
-				if err != nil {
-					return err
-				}
+			continue
+		}
+		for field, value := range m {
+			err := hset(ctx, vc, k, field, value)
+			if err != nil {
+				return err
 			}
 		}
 	}
 	return nil
 }
 
-func GetData(ctx context.Context, vc valkey.Client, separator string) (data, error) {
-	d := data{}
-
-	cmd := vc.B().Keys().Pattern("*").Build()
-	res := vc.Do(ctx, cmd)
-	if err := res.Error(); err != nil {
-		return nil, err
+func getHashMap(kvs []keysAndValue, separator string) hashMap {
+	m := hashMap{}
+	for _, kv := range kvs {
+		idx := len(kv.keys) - 1
+		key := strings.Join(kv.keys[:idx], separator)
+		if len(kv.keys) <= 2 {
+			key += separator + kv.keys[idx]
+			m[key] = map[string]string{}
+			continue
+		}
+		if m[key] == nil {
+			m[key] = map[string]string{}
+		}
+		m[key][kv.keys[idx]] = kv.value
 	}
+	return m
+}
 
-	keys, err := res.AsStrSlice()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, k := range keys {
-		cmd := vc.B().Hgetall().Key(k).Build()
-		res := vc.Do(ctx, cmd)
-		if err := res.Error(); err != nil {
-			return nil, err
-		}
-
-		m, err := res.AsStrMap()
-		if err != nil {
-			return nil, err
-		}
-
-		key, subkey, found := strings.Cut(k, separator)
-		if !found {
-			return nil, fmt.Errorf("key %s does not contain the expected separator", k)
-		}
-
-		if d[key] == nil {
-			d[key] = obj{}
-		}
-		d[key][subkey] = fields{}
-
-		for f, v := range m {
-			if f == "NULL" || v == "NULL" {
+func getKeysAndValues(data stringMap) []keysAndValue {
+	var keysAndValues []keysAndValue
+	for k, v := range data {
+		kv := keysAndValue{}
+		switch v := v.(type) {
+		case string:
+			kv.keys = append(kv.keys, k)
+			kv.value = v
+			keysAndValues = append(keysAndValues, kv)
+		case stringMap:
+			if len(v) == 0 {
+				keysAndValues = append(keysAndValues, keysAndValue{
+					keys:  []string{k},
+					value: "",
+				})
 				continue
 			}
-			d[key][subkey][f] = v
+			kvs := getKeysAndValues(v)
+			for i, kv := range kvs {
+				kv.keys = slices.Concat([]string{k}, kv.keys)
+				kvs[i] = kv
+			}
+			keysAndValues = append(keysAndValues, kvs...)
 		}
 	}
-
-	return d, nil
+	return keysAndValues
 }
 
 func hset(ctx context.Context, vc valkey.Client, key, field, value string) error {
