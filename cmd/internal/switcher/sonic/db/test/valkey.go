@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"maps"
 	"slices"
 	"strings"
 	"testing"
@@ -12,7 +13,7 @@ import (
 )
 
 type (
-	stringMap map[string]any
+	StringMap map[string]any
 	hashMap   map[string]map[string]string
 
 	keysAndValue struct {
@@ -32,7 +33,7 @@ func StartValkey(t testing.TB) valkey.Client {
 	return vc
 }
 
-func LoadData(ctx context.Context, vc valkey.Client, data stringMap, separator string) error {
+func LoadData(ctx context.Context, vc valkey.Client, data StringMap, separator string) error {
 	kvs := getKeysAndValues(data)
 	hm := getHashMap(kvs, separator)
 	for k, m := range hm {
@@ -53,6 +54,72 @@ func LoadData(ctx context.Context, vc valkey.Client, data stringMap, separator s
 	return nil
 }
 
+func GetData(ctx context.Context, vc valkey.Client, separator string) (StringMap, error) {
+	cmd := vc.B().Keys().Pattern("*").Build()
+	res := vc.Do(ctx, cmd)
+	if err := res.Error(); err != nil {
+		return nil, err
+	}
+	keys, err := res.AsStrSlice()
+	if err != nil {
+		return nil, err
+	}
+	hm := hashMap{}
+	for _, k := range keys {
+		cmd := vc.B().Hgetall().Key(k).Build()
+		res := vc.Do(ctx, cmd)
+		if err := res.Error(); err != nil {
+			return nil, err
+		}
+		m, err := res.AsStrMap()
+		if err != nil {
+			return nil, err
+		}
+		if hm[k] == nil {
+			hm[k] = map[string]string{}
+		}
+		maps.Copy(hm[k], m)
+	}
+	return stringMapFromHashMap(hm, separator), nil
+}
+
+func stringMapFromHashMap(hm hashMap, separator string) StringMap {
+	data := StringMap{}
+	for k, m := range hm {
+		key, _, found := strings.Cut(k, separator)
+		if data[key] == nil {
+			data[key] = StringMap{}
+		}
+		if !found {
+			d := data[key].(StringMap)
+			for f, v := range m {
+				if f == "NULL" || v == "NULL" {
+					continue
+				}
+				d[f] = v
+			}
+			continue
+		}
+		data[key] = stringMapFromHashMap(cutPrefixFromHashMap(hm, key+separator), separator)
+	}
+	return data
+}
+
+func cutPrefixFromHashMap(hm hashMap, prefix string) hashMap {
+	if prefix == "" {
+		return hm
+	}
+	m := hashMap{}
+	for k, v := range hm {
+		if !strings.HasPrefix(k, prefix) {
+			continue
+		}
+		newKey := strings.TrimPrefix(k, prefix)
+		m[newKey] = v
+	}
+	return m
+}
+
 func getHashMap(kvs []keysAndValue, separator string) hashMap {
 	m := hashMap{}
 	for _, kv := range kvs {
@@ -71,7 +138,7 @@ func getHashMap(kvs []keysAndValue, separator string) hashMap {
 	return m
 }
 
-func getKeysAndValues(data stringMap) []keysAndValue {
+func getKeysAndValues(data StringMap) []keysAndValue {
 	var keysAndValues []keysAndValue
 	for k, v := range data {
 		kv := keysAndValue{}
@@ -80,7 +147,7 @@ func getKeysAndValues(data stringMap) []keysAndValue {
 			kv.keys = append(kv.keys, k)
 			kv.value = v
 			keysAndValues = append(keysAndValues, kv)
-		case stringMap:
+		case StringMap:
 			if len(v) == 0 {
 				keysAndValues = append(keysAndValues, keysAndValue{
 					keys:  []string{k},

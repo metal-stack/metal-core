@@ -10,19 +10,19 @@ import (
 func TestLoadData(t *testing.T) {
 	tests := []struct {
 		name string
-		data stringMap
+		data StringMap
 		want hashMap
 	}{
 		{
 			name: "empty stringMap",
-			data: stringMap{},
+			data: StringMap{},
 			want: nil,
 		},
 		{
 			name: "add empty fields and values to key",
-			data: stringMap{
-				"LOOPBACK_INTERFACE": stringMap{
-					"Loopback0": stringMap{},
+			data: StringMap{
+				"LOOPBACK_INTERFACE": StringMap{
+					"Loopback0": StringMap{},
 				},
 			},
 			want: hashMap{
@@ -33,13 +33,13 @@ func TestLoadData(t *testing.T) {
 		},
 		{
 			name: "add multiple field-value pairs to multiple keys",
-			data: stringMap{
-				"PORT": stringMap{
-					"Ethernet0": stringMap{
+			data: StringMap{
+				"PORT": StringMap{
+					"Ethernet0": StringMap{
 						"admin_status": "up",
 						"mtu":          "9000",
 					},
-					"Ethernet1": stringMap{
+					"Ethernet1": StringMap{
 						"speed": "25000",
 						"alias": "Eth1/2",
 					},
@@ -95,19 +95,97 @@ func TestLoadData(t *testing.T) {
 	}
 }
 
+func TestGetData(t *testing.T) {
+	tests := []struct {
+		name      string
+		separator string
+		data      StringMap
+		want      StringMap
+	}{
+		{
+			name:      "empty",
+			separator: "|",
+			want:      StringMap{},
+		},
+		{
+			name:      "get all data",
+			separator: "|",
+			data: StringMap{
+				"LOOPBACK_INTERFACE": StringMap{
+					"Loopback0": StringMap{},
+				},
+				"PORT": StringMap{
+					"Ethernet0": StringMap{
+						"admin_status": "up",
+						"alias":        "Eth1/1",
+					},
+				},
+				"ASIC_STATE": StringMap{
+					"SAI_OBJECT_TYPE_BRIDGE_PORT": StringMap{
+						"oid": StringMap{
+							"0x3a000000001a4a": StringMap{
+								"SAI_BRIDGE_PORT_ATTR_ADMIN_STATE": "true",
+							},
+						},
+					},
+				},
+			},
+			want: StringMap{
+				"LOOPBACK_INTERFACE": StringMap{
+					"Loopback0": StringMap{},
+				},
+				"PORT": StringMap{
+					"Ethernet0": StringMap{
+						"admin_status": "up",
+						"alias":        "Eth1/1",
+					},
+				},
+				"ASIC_STATE": StringMap{
+					"SAI_OBJECT_TYPE_BRIDGE_PORT": StringMap{
+						"oid": StringMap{
+							"0x3a000000001a4a": StringMap{
+								"SAI_BRIDGE_PORT_ATTR_ADMIN_STATE": "true",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				ctx = t.Context()
+				vc  = StartValkey(t)
+			)
+			defer vc.Close()
+
+			err := LoadData(ctx, vc, tt.data, tt.separator)
+			require.NoError(t, err)
+
+			got, err := GetData(ctx, vc, tt.separator)
+			require.NoError(t, err)
+
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("GetData() diff = %s", diff)
+			}
+		})
+	}
+}
+
 func Test_getKeysAndValues(t *testing.T) {
 	tests := []struct {
 		name string
-		data stringMap
+		data StringMap
 		want []keysAndValue
 	}{
 		{
 			name: "empty",
-			data: stringMap{},
+			data: StringMap{},
 		},
 		{
 			name: "one level of nesting",
-			data: stringMap{
+			data: StringMap{
 				"PORT": "Ethernet0",
 			},
 			want: []keysAndValue{
@@ -119,9 +197,9 @@ func Test_getKeysAndValues(t *testing.T) {
 		},
 		{
 			name: "two levels of nesting",
-			data: stringMap{
-				"LOOPBACK_INTERFACE": stringMap{
-					"Loopback0": stringMap{},
+			data: StringMap{
+				"LOOPBACK_INTERFACE": StringMap{
+					"Loopback0": StringMap{},
 				},
 			},
 			want: []keysAndValue{
@@ -133,9 +211,9 @@ func Test_getKeysAndValues(t *testing.T) {
 		},
 		{
 			name: "multiple levels of nesting",
-			data: stringMap{
-				"PORT": stringMap{
-					"Ethernet0": stringMap{
+			data: StringMap{
+				"PORT": StringMap{
+					"Ethernet0": StringMap{
 						"admin_status": "up",
 						"alias":        "Eth1/1",
 					},
@@ -215,6 +293,165 @@ func Test_getHashMap(t *testing.T) {
 			got := getHashMap(tt.kvs, separator)
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("getHashMap() diff = %s", diff)
+			}
+		})
+	}
+}
+
+func Test_stringMapFromHashMap(t *testing.T) {
+	tests := []struct {
+		name      string
+		hm        hashMap
+		separator string
+		want      StringMap
+	}{
+		{
+			name:      "empty",
+			hm:        hashMap{},
+			separator: "|",
+			want:      StringMap{},
+		},
+		{
+			name: "flat map",
+			hm: hashMap{
+				"PORT": {
+					"Ethernet0": "up",
+				},
+			},
+			separator: "|",
+			want: StringMap{
+				"PORT": StringMap{
+					"Ethernet0": "up",
+				},
+			},
+		},
+		{
+			name: "one level of nesting",
+			hm: hashMap{
+				"LOOPBACK_INTERFACE|Loopback0": {},
+			},
+			separator: "|",
+			want: StringMap{
+				"LOOPBACK_INTERFACE": StringMap{
+					"Loopback0": StringMap{},
+				},
+			},
+		},
+		{
+			name: "handle null entries",
+			hm: hashMap{
+				"LOOPBACK_INTERFACE|Loopback0": {
+					"NULL": "NULL",
+				},
+			},
+			separator: "|",
+			want: StringMap{
+				"LOOPBACK_INTERFACE": StringMap{
+					"Loopback0": StringMap{},
+				},
+			},
+		},
+		{
+			name: "multiple levels of nesting",
+			hm: hashMap{
+				"PORT|Ethernet0": {
+					"admin_status": "up",
+					"alias":        "Eth1/1",
+				},
+				"LOOPBACK_INTERFACE|Loopback0": {
+					"NULL": "NULL",
+				},
+				"ASIC_STATE|SAI_OBJECT_TYPE_BRIDGE_PORT|oid|0x3a000000001a4a": {
+					"SAI_BRIDGE_PORT_ATTR_ADMIN_STATE": "true",
+				},
+			},
+			separator: "|",
+			want: StringMap{
+				"LOOPBACK_INTERFACE": StringMap{
+					"Loopback0": StringMap{},
+				},
+				"PORT": StringMap{
+					"Ethernet0": StringMap{
+						"admin_status": "up",
+						"alias":        "Eth1/1",
+					},
+				},
+				"ASIC_STATE": StringMap{
+					"SAI_OBJECT_TYPE_BRIDGE_PORT": StringMap{
+						"oid": StringMap{
+							"0x3a000000001a4a": StringMap{
+								"SAI_BRIDGE_PORT_ATTR_ADMIN_STATE": "true",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := stringMapFromHashMap(tt.hm, tt.separator)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("stringMapFromHashMap() diff = %s", diff)
+			}
+		})
+	}
+}
+
+func Test_cutPrefixFromHashMap(t *testing.T) {
+	tests := []struct {
+		name   string
+		hm     hashMap
+		prefix string
+		want   hashMap
+	}{
+		{
+			name: "empty prefix",
+			hm: hashMap{
+				"LOOPBACK_INTERFACE|Loopback0": {
+					"NULL": "NULL",
+				},
+			},
+			prefix: "",
+			want: hashMap{
+				"LOOPBACK_INTERFACE|Loopback0": {
+					"NULL": "NULL",
+				},
+			},
+		},
+		{
+			name: "prefix not found",
+			hm: hashMap{
+				"LOOPBACK_INTERFACE|Loopback0": {
+					"NULL": "NULL",
+				},
+			},
+			prefix: "PORT|",
+			want:   hashMap{},
+		},
+		{
+			name: "trim prefix where possible and remove the rest",
+			hm: hashMap{
+				"PORT|Ethernet0": {
+					"admin_status": "up",
+				},
+				"ASIC_STATE|SAI_OBJECT_TYPE_BRIDGE_PORT|oid|0x3a000000001a4a": {
+					"SAI_BRIDGE_PORT_ATTR_ADMIN_STATE": "true",
+				},
+			},
+			prefix: "PORT|",
+			want: hashMap{
+				"Ethernet0": {
+					"admin_status": "up",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := cutPrefixFromHashMap(tt.hm, tt.prefix)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("cutPrefixFromHashMap() diff = %s", diff)
 			}
 		})
 	}
