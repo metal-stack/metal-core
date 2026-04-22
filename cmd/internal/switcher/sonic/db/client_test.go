@@ -11,41 +11,93 @@ import (
 	"github.com/valkey-io/valkey-go"
 )
 
+var (
+	testData = test.StringMap{
+		"LOOPBACK_INTERFACE": test.StringMap{
+			"Loopback0": test.StringMap{},
+		},
+		"PORT": test.StringMap{
+			"Ethernet0": test.StringMap{
+				"admin_status": "up",
+				"alias":        "Eth1/1",
+			},
+			"Ethernet1": test.StringMap{
+				"admin_status": "up",
+				"alias":        "Eth1/2",
+			},
+		},
+		"ASIC_STATE": test.StringMap{
+			"SAI_OBJECT_TYPE_BRIDGE_PORT": test.StringMap{
+				"oid": test.StringMap{
+					"0x3a000000001a4a": test.StringMap{
+						"SAI_BRIDGE_PORT_ATTR_ADMIN_STATE": "true",
+					},
+				},
+			},
+		},
+	}
+)
+
 func TestClient_Del(t *testing.T) {
-	ctx := t.Context()
-	sep := "|"
-	vc := test.StartValkey(t)
-
-	err := vc.Do(ctx, vc.B().Set().Key("table").Value("value1").Build()).Error()
-	require.NoError(t, err)
-
 	tests := []struct {
-		name string
-		key  Key
-		want string
+		name      string
+		data      test.StringMap
+		mods      func(test.StringMap)
+		key       Key
+		separator string
 	}{
 		{
-			name: "delete non-existing",
-			key:  Key{"some", "key"},
-			want: "",
+			name:      "delete non-existing",
+			data:      testData,
+			mods:      func(test.StringMap) {},
+			key:       Key{"some", "key"},
+			separator: "|",
+		},
+		{
+			name: "delete existing",
+			data: testData,
+			mods: func(data test.StringMap) {
+				delete(data["PORT"].(test.StringMap), "Ethernet0")
+			},
+			key:       Key{"PORT", "Ethernet0"},
+			separator: "|",
+		},
+		{
+			name: "delete last entry for key",
+			data: testData,
+			mods: func(data test.StringMap) {
+				delete(data, "ASIC_STATE")
+			},
+			key:       Key{"ASIC_STATE", "SAI_OBJECT_TYPE_BRIDGE_PORT", "oid", "0x3a000000001a4a"},
+			separator: ":",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var (
+				ctx = t.Context()
+				vc  = test.StartValkey(t)
+			)
+			defer vc.Close()
+
+			err := test.LoadData(ctx, vc, tt.data, tt.separator)
+			require.NoError(t, err)
 
 			c := &Client{
 				rdb: vc,
-				sep: sep,
+				sep: tt.separator,
 			}
-			err := c.Del(ctx, tt.key)
+			err = c.Del(ctx, tt.key)
 			require.NoError(t, err)
 
-			res := vc.Do(ctx, vc.B().Get().Key("table").Build())
-			val, err := res.ToString()
+			data, err := test.GetData(ctx, vc, tt.separator)
 			require.NoError(t, err)
 
-			if diff := cmp.Diff(tt.want, val); diff != "" {
-				t.Errorf("Client.Del() diff = %s", diff)
+			if tt.mods != nil {
+				tt.mods(tt.data)
+			}
+			if diff := cmp.Diff(tt.data, data); diff != "" {
+				t.Errorf("Client.Del() data differs = %s", diff)
 			}
 		})
 	}
