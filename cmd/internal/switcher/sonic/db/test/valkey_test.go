@@ -1,6 +1,8 @@
 package test
 
 import (
+	"slices"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -234,6 +236,9 @@ func Test_getKeysAndValues(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := getKeysAndValues(tt.data)
+			slices.SortFunc(got, func(a, b keysAndValue) int {
+				return strings.Compare(strings.Join(a.keys, ""), strings.Join(b.keys, ""))
+			})
 			if diff := cmp.Diff(tt.want, got, cmp.AllowUnexported(keysAndValue{})); diff != "" {
 				t.Errorf("flatKeys() diff = %s", diff)
 			}
