@@ -90,10 +90,11 @@ func TestClient_Del(t *testing.T) {
 			data, err := test.GetData(ctx, vc, tt.separator)
 			require.NoError(t, err)
 
+			initData := test.DeepCopy(tt.data)
 			if tt.mods != nil {
-				tt.mods(tt.data)
+				tt.mods(initData)
 			}
-			if diff := cmp.Diff(tt.data, data); diff != "" {
+			if diff := cmp.Diff(initData, data); diff != "" {
 				t.Errorf("Client.Del() data differs = %s", diff)
 			}
 		})
@@ -402,10 +403,11 @@ func TestClient_HSet(t *testing.T) {
 			data, err := test.GetData(ctx, vc, tt.separator)
 			require.NoError(t, err)
 
+			initData := test.DeepCopy(tt.data)
 			if tt.mods != nil {
-				tt.mods(tt.data)
+				tt.mods(initData)
 			}
-			if diff := cmp.Diff(tt.data, data); diff != "" {
+			if diff := cmp.Diff(initData, data); diff != "" {
 				t.Errorf("Client.HSet() data differs = %s", diff)
 			}
 		})

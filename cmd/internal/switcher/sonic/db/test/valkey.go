@@ -83,6 +83,19 @@ func GetData(ctx context.Context, vc valkey.Client, separator string) (StringMap
 	return stringMapFromHashMap(hm, separator), nil
 }
 
+func DeepCopy(src StringMap) StringMap {
+	dst := StringMap{}
+	for k, v := range src {
+		switch v := v.(type) {
+		case string:
+			dst[k] = v
+		case StringMap:
+			dst[k] = DeepCopy(v)
+		}
+	}
+	return dst
+}
+
 func stringMapFromHashMap(hm hashMap, separator string) StringMap {
 	data := StringMap{}
 	for k, m := range hm {

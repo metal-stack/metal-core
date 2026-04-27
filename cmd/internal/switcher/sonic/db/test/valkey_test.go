@@ -461,3 +461,126 @@ func Test_cutPrefixFromHashMap(t *testing.T) {
 		})
 	}
 }
+
+func TestDeepCopy(t *testing.T) {
+	tests := []struct {
+		name string
+		src  StringMap
+		want StringMap
+		mod  func(StringMap)
+	}{
+		{
+			name: "empty",
+			src:  StringMap{},
+			want: StringMap{},
+		},
+		{
+			name: "one level of nesting",
+			src: StringMap{
+				"key": "value",
+			},
+			want: StringMap{
+				"key": "value",
+			},
+			mod: func(sm StringMap) {
+				sm["key"] = "new_value"
+			},
+		},
+		{
+			name: "two levels of nesting",
+			src: StringMap{
+				"key": StringMap{
+					"subkey": "value",
+				},
+				"other_key": "other_value",
+			},
+			want: StringMap{
+				"key": StringMap{
+					"subkey": "value",
+				},
+				"other_key": "other_value",
+			},
+			mod: func(sm StringMap) {
+				sm["other_key"] = StringMap{
+					"subkey": "value",
+				}
+				sm["key"] = "value"
+			},
+		},
+		{
+			name: "multiple levels of nesting",
+			src: StringMap{
+				"LOOPBACK_INTERFACE": StringMap{
+					"Loopback0": StringMap{},
+				},
+				"PORT": StringMap{
+					"Ethernet0": StringMap{
+						"admin_status": "up",
+						"alias":        "Eth1/1",
+					},
+					"Ethernet1": StringMap{
+						"admin_status": "up",
+						"alias":        "Eth1/2",
+					},
+				},
+				"ASIC_STATE": StringMap{
+					"SAI_OBJECT_TYPE_BRIDGE_PORT": StringMap{
+						"oid": StringMap{
+							"0x3a000000001a4a": StringMap{
+								"SAI_BRIDGE_PORT_ATTR_ADMIN_STATE": "true",
+							},
+						},
+					},
+				},
+			},
+			want: StringMap{
+				"LOOPBACK_INTERFACE": StringMap{
+					"Loopback0": StringMap{},
+				},
+				"PORT": StringMap{
+					"Ethernet0": StringMap{
+						"admin_status": "up",
+						"alias":        "Eth1/1",
+					},
+					"Ethernet1": StringMap{
+						"admin_status": "up",
+						"alias":        "Eth1/2",
+					},
+				},
+				"ASIC_STATE": StringMap{
+					"SAI_OBJECT_TYPE_BRIDGE_PORT": StringMap{
+						"oid": StringMap{
+							"0x3a000000001a4a": StringMap{
+								"SAI_BRIDGE_PORT_ATTR_ADMIN_STATE": "true",
+							},
+						},
+					},
+				},
+			},
+			mod: func(sm StringMap) {
+				delete(sm["PORT"].(StringMap), "Ethernet0")
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := DeepCopy(tt.src)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("DeepCopy() diff = %s", diff)
+			}
+
+			if tt.mod == nil {
+				return
+			}
+
+			tt.mod(tt.src)
+			if diff := cmp.Diff(tt.src, got); diff == "" {
+				t.Errorf("DeepCopy() src and dst are equal after modifying src")
+			}
+			tt.mod(got)
+			if diff := cmp.Diff(tt.src, got); diff != "" {
+				t.Errorf("DeepCopy() src and dst differ after applying equal modifications = %s", diff)
+			}
+		})
+	}
+}
