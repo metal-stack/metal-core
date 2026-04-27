@@ -2,38 +2,65 @@ package db
 
 import (
 	"context"
-	"reflect"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db/test"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAsicDB_GetPortIdBridgePortMap(t *testing.T) {
-	type fields struct {
-		c *Client
-	}
-	type args struct {
-		ctx context.Context
-	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    map[OID]OID
-		wantErr bool
+		name string
+		data test.StringMap
+		want map[OID]OID
 	}{
-		// TODO: Add test cases.
+		{
+			name: "",
+			data: test.StringMap{
+				"ASIC_STATE": test.StringMap{
+					"SAI_OBJECT_TYPE_BRIDGE_PORT": test.StringMap{
+						"oid": test.StringMap{
+							"0x3a000000000daa": test.StringMap{
+								"SAI_BRIDGE_PORT_ATTR_PORT_ID": "oid:0x3a000000000daa",
+							},
+							"0x3a000000000dab": test.StringMap{
+								"SAI_BRIDGE_PORT_ATTR_PORT_ID": "oid:0x3a000000000dab",
+							},
+							"0x3a000000000dac": test.StringMap{},
+						},
+					},
+				},
+			},
+			want: map[OID]OID{
+				"oid:0x3a000000000daa": "oid:0x3a000000000daa",
+				"oid:0x3a000000000dab": "oid:0x3a000000000dab",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var (
+				ctx = t.Context()
+				sep = ":"
+				vc  = test.StartValkey(t)
+			)
+			defer vc.Close()
+
+			err := test.LoadData(ctx, vc, tt.data, sep)
+			require.NoError(t, err)
+
+			c := &Client{
+				rdb: vc,
+				sep: sep,
+			}
 			d := &AsicDB{
-				c: tt.fields.c,
+				c: c,
 			}
-			got, err := d.GetPortIdBridgePortMap(tt.args.ctx)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("AsicDB.GetPortIdBridgePortMap() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("AsicDB.GetPortIdBridgePortMap() = %v, want %v", got, tt.want)
+			got, err := d.GetPortIdBridgePortMap(ctx)
+			require.NoError(t, err)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("AsicDB.GetPortIdBridgePortMap() diff = %s", diff)
 			}
 		})
 	}

@@ -28,7 +28,7 @@ func (d *AsicDB) GetPortIdBridgePortMap(ctx context.Context) (map[OID]OID, error
 
 	m := make(map[OID]OID, len(bridges))
 	for bridge := range bridges {
-		port, err := t.client.rdb.Do(ctx, t.client.rdb.B().Hget().Key(bridge).Field("SAI_BRIDGE_PORT_ATTR_PORT_ID").Build()).ToString()
+		port, err := t.HGet(ctx, bridge, "SAI_BRIDGE_PORT_ATTR_PORT_ID")
 
 		if err != nil {
 			if valkey.IsValkeyNil(err) {
