@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/redis/go-redis/v9"
+	"github.com/valkey-io/valkey-go"
 )
 
 type Config struct {
@@ -65,28 +65,41 @@ func New(cfg *Config) (*DB, error) {
 	return db, nil
 }
 
-func newRedisClient(redisInstance instance, redisDatabase int) (*redis.Client, error) {
+func newRedisClient(redisInstance instance, redisDatabase int) (valkey.Client, error) {
 	if redisInstance.PasswordPath != "" {
 		return newRedisClientWithAuth(redisInstance, redisDatabase)
 	}
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     redisInstance.Addr,
-		DB:       redisDatabase,
-		PoolSize: 1,
+
+	valkeyClient, err := valkey.NewClient(valkey.ClientOption{
+		InitAddress: []string{redisInstance.Addr},
+		SelectDB:    redisDatabase,
+		ClientName:  "metal-apiserver",
 	})
-	return rdb, nil
+	if err != nil {
+		return nil, fmt.Errorf("unable to create valkey client: %w", err)
+	}
+
+	return valkeyClient, nil
 }
 
-func newRedisClientWithAuth(redisInstance instance, redisDatabase int) (*redis.Client, error) {
+func newRedisClientWithAuth(redisInstance instance, redisDatabase int) (valkey.Client, error) {
 	passwd, err := os.ReadFile(redisInstance.PasswordPath)
 	if err != nil {
 		return nil, fmt.Errorf("could not read password from %s: %w", redisInstance.PasswordPath, err)
 	}
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     redisInstance.Addr,
-		DB:       redisDatabase,
-		PoolSize: 1,
-		Password: string(passwd),
+	valkeyClient, err := valkey.NewClient(valkey.ClientOption{
+		InitAddress: []string{redisInstance.Addr},
+		AuthCredentialsFn: func(acc valkey.AuthCredentialsContext) (valkey.AuthCredentials, error) {
+			return valkey.AuthCredentials{
+				Password: string(passwd),
+			}, nil
+		},
+		SelectDB:   redisDatabase,
+		ClientName: "metal-apiserver",
 	})
-	return rdb, nil
+	if err != nil {
+		return nil, fmt.Errorf("unable to create valkey client: %w", err)
+	}
+
+	return valkeyClient, nil
 }
