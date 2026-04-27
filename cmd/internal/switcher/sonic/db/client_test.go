@@ -1,14 +1,11 @@
 package db
 
 import (
-	"context"
-	"reflect"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db/test"
 	"github.com/stretchr/testify/require"
-	"github.com/valkey-io/valkey-go"
 )
 
 var (
@@ -104,34 +101,46 @@ func TestClient_Del(t *testing.T) {
 }
 
 func TestClient_Exists(t *testing.T) {
-	type fields struct {
-		rdb valkey.Client
-		sep string
-	}
-	type args struct {
-		ctx context.Context
-		key Key
-	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    bool
-		wantErr bool
+		name      string
+		data      test.StringMap
+		key       Key
+		separator string
+		want      bool
 	}{
-		// TODO: Add test cases.
+		{
+			name:      "not existing",
+			data:      testData,
+			key:       Key{"some", "key"},
+			separator: "|",
+			want:      false,
+		},
+		{
+			name:      "existing",
+			data:      testData,
+			key:       Key{"LOOPBACK_INTERFACE", "Loopback0"},
+			separator: "|",
+			want:      true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var (
+				ctx = t.Context()
+				vc  = test.StartValkey(t)
+			)
+			defer vc.Close()
+
+			err := test.LoadData(ctx, vc, tt.data, tt.separator)
+			require.NoError(t, err)
+
 			c := &Client{
-				rdb: tt.fields.rdb,
-				sep: tt.fields.sep,
+				rdb: vc,
+				sep: tt.separator,
 			}
-			got, err := c.Exists(tt.args.ctx, tt.args.key)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Client.Exists() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+
+			got, err := c.Exists(ctx, tt.key)
+			require.NoError(t, err)
 			if got != tt.want {
 				t.Errorf("Client.Exists() = %v, want %v", got, tt.want)
 			}
@@ -139,101 +148,123 @@ func TestClient_Exists(t *testing.T) {
 	}
 }
 
-func TestClient_GetTable(t *testing.T) {
-	type fields struct {
-		rdb valkey.Client
-		sep string
-	}
-	type args struct {
-		table Key
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   *Table
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &Client{
-				rdb: tt.fields.rdb,
-				sep: tt.fields.sep,
-			}
-			if got := c.GetTable(tt.args.table); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Client.GetTable() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestClient_GetView(t *testing.T) {
-	type fields struct {
-		rdb valkey.Client
-		sep string
-	}
-	type args struct {
-		ctx   context.Context
-		table string
-	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    View
-		wantErr bool
+		name      string
+		table     string
+		data      test.StringMap
+		separator string
+		want      View
 	}{
-		// TODO: Add test cases.
+		{
+			name:      "table does not exist",
+			table:     "some key",
+			data:      testData,
+			separator: "|",
+			want:      View{},
+		},
+		{
+			name:      "table exists but empty",
+			table:     "LOOPBACK_INTERFACE|Loopback0",
+			data:      testData,
+			separator: "|",
+			want:      View{},
+		},
+		{
+			name:      "table exists",
+			table:     "PORT",
+			data:      testData,
+			separator: "|",
+			want: View{
+				"Ethernet0": struct{}{},
+				"Ethernet1": struct{}{},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var (
+				ctx = t.Context()
+				vc  = test.StartValkey(t)
+			)
+			defer vc.Close()
+
+			err := test.LoadData(ctx, vc, tt.data, tt.separator)
+			require.NoError(t, err)
+
 			c := &Client{
-				rdb: tt.fields.rdb,
-				sep: tt.fields.sep,
+				rdb: vc,
+				sep: tt.separator,
 			}
-			got, err := c.GetView(tt.args.ctx, tt.args.table)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Client.GetView() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Client.GetView() = %v, want %v", got, tt.want)
+
+			got, err := c.GetView(ctx, tt.table)
+			require.NoError(t, err)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("Client.GetView() diff = %s", diff)
 			}
 		})
 	}
 }
 
 func TestClient_HGet(t *testing.T) {
-	type fields struct {
-		rdb valkey.Client
-		sep string
-	}
-	type args struct {
-		ctx   context.Context
-		key   Key
-		field string
-	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    string
-		wantErr bool
+		name      string
+		data      test.StringMap
+		separator string
+		key       Key
+		field     string
+		want      string
 	}{
-		// TODO: Add test cases.
+		{
+			name:      "not existing",
+			data:      testData,
+			separator: "|",
+			key:       Key{"some", "key"},
+			field:     "some_field",
+			want:      "",
+		},
+		{
+			name:      "get empty",
+			data:      testData,
+			separator: "|",
+			key:       Key{"LOOPBACK_INTERFACE", "Loopback0"},
+			field:     "NULL",
+			want:      "NULL",
+		},
+		{
+			name:      "get partial key",
+			data:      testData,
+			separator: ":",
+			key:       Key{"ASIC_STATE", "SAI_OBJECT_TYPE_BRIDGE_PORT", "oid"},
+			field:     "0x3a000000001a4a",
+			want:      "",
+		},
+		{
+			name:      "get existing",
+			data:      testData,
+			separator: ":",
+			key:       Key{"ASIC_STATE", "SAI_OBJECT_TYPE_BRIDGE_PORT", "oid", "0x3a000000001a4a"},
+			field:     "SAI_BRIDGE_PORT_ATTR_ADMIN_STATE",
+			want:      "true",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var (
+				ctx = t.Context()
+				vc  = test.StartValkey(t)
+			)
+			defer vc.Close()
+
+			err := test.LoadData(ctx, vc, tt.data, tt.separator)
+			require.NoError(t, err)
+
 			c := &Client{
-				rdb: tt.fields.rdb,
-				sep: tt.fields.sep,
+				rdb: vc,
+				sep: tt.separator,
 			}
-			got, err := c.HGet(tt.args.ctx, tt.args.key, tt.args.field)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Client.HGet() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			got, err := c.HGet(ctx, tt.key, tt.field)
+			require.NoError(t, err)
 			if got != tt.want {
 				t.Errorf("Client.HGet() = %v, want %v", got, tt.want)
 			}
@@ -242,103 +273,202 @@ func TestClient_HGet(t *testing.T) {
 }
 
 func TestClient_HGetAll(t *testing.T) {
-	type fields struct {
-		rdb valkey.Client
-		sep string
-	}
-	type args struct {
-		ctx context.Context
-		key Key
-	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    Val
-		wantErr bool
+		name      string
+		data      test.StringMap
+		separator string
+		key       Key
+		want      Val
 	}{
-		// TODO: Add test cases.
+		{
+			name:      "not existing",
+			data:      testData,
+			separator: "|",
+			key:       Key{"some", "key"},
+			want:      Val{},
+		},
+		{
+			name:      "get empty",
+			data:      testData,
+			separator: "|",
+			key:       Key{"LOOPBACK_INTERFACE", "Loopback0"},
+			want: Val{
+				"NULL": "NULL",
+			},
+		},
+		{
+			name:      "get partial key",
+			data:      testData,
+			separator: "|",
+			key:       Key{"ASIC_STATE", "SAI_OBJECT_TYPE_BRIDGE_PORT", "oid"},
+			want:      Val{},
+		},
+		{
+			name:      "get existing",
+			data:      testData,
+			separator: ":",
+			key:       Key{"PORT", "Ethernet1"},
+			want: Val{
+				"admin_status": "up",
+				"alias":        "Eth1/2",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Client{
-				rdb: tt.fields.rdb,
-				sep: tt.fields.sep,
-			}
-			got, err := c.HGetAll(tt.args.ctx, tt.args.key)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Client.HGetAll() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Client.HGetAll() = %v, want %v", got, tt.want)
-			}
+			t.Run(tt.name, func(t *testing.T) {
+				var (
+					ctx = t.Context()
+					vc  = test.StartValkey(t)
+				)
+				defer vc.Close()
+
+				err := test.LoadData(ctx, vc, tt.data, tt.separator)
+				require.NoError(t, err)
+
+				c := &Client{
+					rdb: vc,
+					sep: tt.separator,
+				}
+				got, err := c.HGetAll(ctx, tt.key)
+				require.NoError(t, err)
+				if diff := cmp.Diff(tt.want, got); diff != "" {
+					t.Errorf("Client.HGet() diff = %s", diff)
+				}
+			})
 		})
 	}
 }
 
 func TestClient_HSet(t *testing.T) {
-	type fields struct {
-		rdb valkey.Client
-		sep string
-	}
-	type args struct {
-		ctx context.Context
-		key Key
-		val Val
-	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
+		name      string
+		data      test.StringMap
+		mods      func(test.StringMap)
+		separator string
+		key       Key
+		val       Val
 	}{
-		// TODO: Add test cases.
+		{
+			name: "set value for new key",
+			data: testData,
+			mods: func(data test.StringMap) {
+				data["some"] = test.StringMap{
+					"new": test.StringMap{
+						"key": test.StringMap{
+							"some_field": "some_value",
+						},
+					},
+				}
+			},
+			separator: "|",
+			key:       Key{"some", "new", "key"},
+			val: Val{
+				"some_field": "some_value",
+			},
+		},
+		{
+			name: "set value for existing key",
+			data: testData,
+			mods: func(data test.StringMap) {
+				data["PORT"].(test.StringMap)["Ethernet0"].(test.StringMap)["admin_status"] = "down"
+			},
+			separator: "|",
+			key:       Key{"PORT", "Ethernet0"},
+			val: Val{
+				"admin_status": "down",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var (
+				ctx = t.Context()
+				vc  = test.StartValkey(t)
+			)
+			defer vc.Close()
+
+			err := test.LoadData(ctx, vc, tt.data, tt.separator)
+			require.NoError(t, err)
+
 			c := &Client{
-				rdb: tt.fields.rdb,
-				sep: tt.fields.sep,
+				rdb: vc,
+				sep: tt.separator,
 			}
-			if err := c.HSet(tt.args.ctx, tt.args.key, tt.args.val); (err != nil) != tt.wantErr {
-				t.Errorf("Client.HSet() error = %v, wantErr %v", err, tt.wantErr)
+
+			err = c.HSet(ctx, tt.key, tt.val)
+			require.NoError(t, err)
+
+			data, err := test.GetData(ctx, vc, tt.separator)
+			require.NoError(t, err)
+
+			if tt.mods != nil {
+				tt.mods(tt.data)
+			}
+			if diff := cmp.Diff(tt.data, data); diff != "" {
+				t.Errorf("Client.HSet() data differs = %s", diff)
 			}
 		})
 	}
 }
 
 func TestClient_Keys(t *testing.T) {
-	type fields struct {
-		rdb valkey.Client
-		sep string
-	}
-	type args struct {
-		ctx     context.Context
-		pattern Key
-	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    []Key
-		wantErr bool
+		name      string
+		data      test.StringMap
+		separator string
+		pattern   Key
+		want      []Key
 	}{
-		// TODO: Add test cases.
+		{
+			name:      "get all keys",
+			data:      testData,
+			separator: "|",
+			pattern:   Key{"*"},
+			want: []Key{
+				{"ASIC_STATE", "SAI_OBJECT_TYPE_BRIDGE_PORT", "oid", "0x3a000000001a4a"},
+				{"LOOPBACK_INTERFACE", "Loopback0"},
+				{"PORT", "Ethernet0"},
+				{"PORT", "Ethernet1"},
+			},
+		},
+		{
+			name:      "get all keys with prefix",
+			data:      testData,
+			separator: "|",
+			pattern:   Key{"PORT|*"},
+			want: []Key{
+				{"PORT", "Ethernet0"},
+				{"PORT", "Ethernet1"},
+			},
+		},
+		{
+			name:      "get non-existing",
+			data:      testData,
+			separator: "|",
+			pattern:   Key{"VLAN|*"},
+			want:      []Key{},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var (
+				ctx = t.Context()
+				vc  = test.StartValkey(t)
+			)
+			defer vc.Close()
+
+			err := test.LoadData(ctx, vc, tt.data, tt.separator)
+			require.NoError(t, err)
+
 			c := &Client{
-				rdb: tt.fields.rdb,
-				sep: tt.fields.sep,
+				rdb: vc,
+				sep: tt.separator,
 			}
-			got, err := c.Keys(tt.args.ctx, tt.args.pattern)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Client.Keys() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Client.Keys() = %v, want %v", got, tt.want)
+			got, err := c.Keys(ctx, tt.pattern)
+			require.NoError(t, err)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("Client.Keys() diff = %s", diff)
 			}
 		})
 	}
