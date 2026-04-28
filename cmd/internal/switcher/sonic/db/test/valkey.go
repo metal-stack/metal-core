@@ -22,6 +22,10 @@ type (
 	}
 )
 
+const (
+	null = "NULL"
+)
+
 func StartValkey(t testing.TB) valkey.Client {
 	mr := miniredis.RunT(t)
 	vc, err := valkey.NewClient(valkey.ClientOption{
@@ -38,7 +42,7 @@ func LoadData(ctx context.Context, vc valkey.Client, data StringMap, separator s
 	hm := getHashMap(kvs, separator)
 	for k, m := range hm {
 		if len(m) == 0 {
-			err := hset(ctx, vc, k, "NULL", "NULL")
+			err := hset(ctx, vc, k, null, null)
 			if err != nil {
 				return err
 			}
@@ -106,7 +110,7 @@ func stringMapFromHashMap(hm hashMap, separator string) StringMap {
 		if !found {
 			d := data[key].(StringMap)
 			for f, v := range m {
-				if f == "NULL" || v == "NULL" {
+				if f == null || v == null {
 					continue
 				}
 				d[f] = v
@@ -138,7 +142,7 @@ func getHashMap(kvs []keysAndValue, separator string) hashMap {
 	for _, kv := range kvs {
 		idx := len(kv.keys) - 1
 		key := strings.Join(kv.keys[:idx], separator)
-		if len(kv.keys) <= 2 {
+		if len(kv.keys) <= 2 && kv.value == null {
 			key += separator + kv.keys[idx]
 			m[key] = map[string]string{}
 			continue
@@ -164,7 +168,7 @@ func getKeysAndValues(data StringMap) []keysAndValue {
 			if len(v) == 0 {
 				keysAndValues = append(keysAndValues, keysAndValue{
 					keys:  []string{k},
-					value: "",
+					value: null,
 				})
 				continue
 			}

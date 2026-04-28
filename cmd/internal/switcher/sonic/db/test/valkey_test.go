@@ -29,7 +29,7 @@ func TestLoadData(t *testing.T) {
 			},
 			want: hashMap{
 				"LOOPBACK_INTERFACE|Loopback0": {
-					"NULL": "NULL",
+					null: null,
 				},
 			},
 		},
@@ -57,6 +57,24 @@ func TestLoadData(t *testing.T) {
 					"alias": "Eth1/2",
 				},
 			},
+		},
+		{
+			name: "add map with one level of nesting and string values",
+			data: StringMap{
+				"COUNTERS_PORT_NAME_MAP": StringMap{
+					"Ethernet0": "oid:0x1000000000020",
+					"Ethernet1": "oid:0x1000000000021",
+					"Ethernet2": "oid:0x1000000000022",
+					"Ethernet3": "",
+				},
+			},
+			want: hashMap{
+				"COUNTERS_PORT_NAME_MAP": {
+					"Ethernet0": "oid:0x1000000000020",
+					"Ethernet1": "oid:0x1000000000021",
+					"Ethernet2": "oid:0x1000000000022",
+					"Ethernet3": "",
+				}},
 		},
 	}
 	for _, tt := range tests {
@@ -198,7 +216,7 @@ func Test_getKeysAndValues(t *testing.T) {
 			},
 		},
 		{
-			name: "two levels of nesting",
+			name: "two levels of nesting with empty value",
 			data: StringMap{
 				"LOOPBACK_INTERFACE": StringMap{
 					"Loopback0": StringMap{},
@@ -207,7 +225,36 @@ func Test_getKeysAndValues(t *testing.T) {
 			want: []keysAndValue{
 				{
 					keys:  []string{"LOOPBACK_INTERFACE", "Loopback0"},
-					value: "",
+					value: null,
+				},
+			},
+		},
+		{
+			name: "two levels of nesting with string value",
+			data: StringMap{
+				"COUNTERS_PORT_NAME_MAP": StringMap{
+					"Ethernet0": "oid:0x1000000000020",
+					"Ethernet1": "oid:0x1000000000021",
+					"Ethernet2": "oid:0x1000000000022",
+					"Ethernet3": "oid:0x1000000000023",
+				},
+			},
+			want: []keysAndValue{
+				{
+					keys:  []string{"COUNTERS_PORT_NAME_MAP", "Ethernet0"},
+					value: "oid:0x1000000000020",
+				},
+				{
+					keys:  []string{"COUNTERS_PORT_NAME_MAP", "Ethernet1"},
+					value: "oid:0x1000000000021",
+				},
+				{
+					keys:  []string{"COUNTERS_PORT_NAME_MAP", "Ethernet2"},
+					value: "oid:0x1000000000022",
+				},
+				{
+					keys:  []string{"COUNTERS_PORT_NAME_MAP", "Ethernet3"},
+					value: "oid:0x1000000000023",
 				},
 			},
 		},
@@ -274,11 +321,19 @@ func Test_getHashMap(t *testing.T) {
 				},
 				{
 					keys:  []string{"LOOPBACK_INTERFACE", "Loopback0"},
-					value: "",
+					value: null,
 				},
 				{
 					keys:  []string{"ASIC_STATE", "SAI_OBJECT_TYPE_BRIDGE_PORT", "oid", "0x3a000000001a4a", "SAI_BRIDGE_PORT_ATTR_ADMIN_STATE"},
 					value: "true",
+				},
+				{
+					keys:  []string{"COUNTERS_PORT_NAME_MAP", "Ethernet0"},
+					value: "oid:0x1000000000020",
+				},
+				{
+					keys:  []string{"COUNTERS_PORT_NAME_MAP", "Ethernet1"},
+					value: "oid:0x1000000000021",
 				},
 			},
 			want: hashMap{
@@ -289,6 +344,10 @@ func Test_getHashMap(t *testing.T) {
 				"LOOPBACK_INTERFACE|Loopback0": {},
 				"ASIC_STATE|SAI_OBJECT_TYPE_BRIDGE_PORT|oid|0x3a000000001a4a": {
 					"SAI_BRIDGE_PORT_ATTR_ADMIN_STATE": "true",
+				},
+				"COUNTERS_PORT_NAME_MAP": {
+					"Ethernet0": "oid:0x1000000000020",
+					"Ethernet1": "oid:0x1000000000021",
 				},
 			},
 		},
@@ -346,7 +405,7 @@ func Test_stringMapFromHashMap(t *testing.T) {
 			name: "handle null entries",
 			hm: hashMap{
 				"LOOPBACK_INTERFACE|Loopback0": {
-					"NULL": "NULL",
+					null: null,
 				},
 			},
 			separator: "|",
@@ -364,7 +423,7 @@ func Test_stringMapFromHashMap(t *testing.T) {
 					"alias":        "Eth1/1",
 				},
 				"LOOPBACK_INTERFACE|Loopback0": {
-					"NULL": "NULL",
+					null: null,
 				},
 				"ASIC_STATE|SAI_OBJECT_TYPE_BRIDGE_PORT|oid|0x3a000000001a4a": {
 					"SAI_BRIDGE_PORT_ATTR_ADMIN_STATE": "true",
@@ -414,13 +473,13 @@ func Test_cutPrefixFromHashMap(t *testing.T) {
 			name: "empty prefix",
 			hm: hashMap{
 				"LOOPBACK_INTERFACE|Loopback0": {
-					"NULL": "NULL",
+					null: null,
 				},
 			},
 			prefix: "",
 			want: hashMap{
 				"LOOPBACK_INTERFACE|Loopback0": {
-					"NULL": "NULL",
+					null: null,
 				},
 			},
 		},
@@ -428,7 +487,7 @@ func Test_cutPrefixFromHashMap(t *testing.T) {
 			name: "prefix not found",
 			hm: hashMap{
 				"LOOPBACK_INTERFACE|Loopback0": {
-					"NULL": "NULL",
+					null: null,
 				},
 			},
 			prefix: "PORT|",
