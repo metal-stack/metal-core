@@ -62,19 +62,43 @@ func TestLoadData(t *testing.T) {
 			name: "add map with one level of nesting and string values",
 			data: StringMap{
 				"COUNTERS_PORT_NAME_MAP": StringMap{
-					"Ethernet0": "oid:0x1000000000020",
-					"Ethernet1": "oid:0x1000000000021",
-					"Ethernet2": "oid:0x1000000000022",
+					"Ethernet0": "oid|0x1000000000020",
+					"Ethernet1": "oid|0x1000000000021",
+					"Ethernet2": "oid|0x1000000000022",
 					"Ethernet3": "",
 				},
 			},
 			want: hashMap{
 				"COUNTERS_PORT_NAME_MAP": {
-					"Ethernet0": "oid:0x1000000000020",
-					"Ethernet1": "oid:0x1000000000021",
-					"Ethernet2": "oid:0x1000000000022",
+					"Ethernet0": "oid|0x1000000000020",
+					"Ethernet1": "oid|0x1000000000021",
+					"Ethernet2": "oid|0x1000000000022",
 					"Ethernet3": "",
-				}},
+				},
+			},
+		},
+		{
+			name: "map with nested keys and null values",
+			data: StringMap{
+				"VLAN_INTERFACE": StringMap{
+					"Vlan1001": StringMap{
+						"vrf_name": "Vrf50",
+					},
+					"Vlan4000":               StringMap{},
+					"Vlan4000|10.255.0.1/24": StringMap{},
+				},
+			},
+			want: hashMap{
+				"VLAN_INTERFACE|Vlan1001": map[string]string{
+					"vrf_name": "Vrf50",
+				},
+				"VLAN_INTERFACE|Vlan4000|10.255.0.1/24": map[string]string{
+					null: null,
+				},
+				"VLAN_INTERFACE|Vlan4000": map[string]string{
+					null: null,
+				},
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -149,6 +173,13 @@ func TestGetData(t *testing.T) {
 						},
 					},
 				},
+				"VLAN_INTERFACE": StringMap{
+					"Vlan1001": StringMap{
+						"vrf_name": "Vrf50",
+					},
+					"Vlan4000":               StringMap{},
+					"Vlan4000|10.255.0.1/24": StringMap{},
+				},
 			},
 			want: StringMap{
 				"LOOPBACK_INTERFACE": StringMap{
@@ -168,6 +199,13 @@ func TestGetData(t *testing.T) {
 							},
 						},
 					},
+				},
+				"VLAN_INTERFACE": StringMap{
+					"Vlan1001": StringMap{
+						"vrf_name": "Vrf50",
+					},
+					"Vlan4000":               StringMap{},
+					"Vlan4000|10.255.0.1/24": StringMap{},
 				},
 			},
 		},
@@ -279,6 +317,32 @@ func Test_getKeysAndValues(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "multiple levels of nesting with null values",
+			data: StringMap{
+				"VLAN_INTERFACE": StringMap{
+					"Vlan1001": StringMap{
+						"vrf_name": "Vrf50",
+					},
+					"Vlan4000":               StringMap{},
+					"Vlan4000|10.255.0.1/24": StringMap{},
+				},
+			},
+			want: []keysAndValue{
+				{
+					keys:  []string{"VLAN_INTERFACE", "Vlan1001", "vrf_name"},
+					value: "Vrf50",
+				},
+				{
+					keys:  []string{"VLAN_INTERFACE", "Vlan4000"},
+					value: null,
+				},
+				{
+					keys:  []string{"VLAN_INTERFACE", "Vlan4000|10.255.0.1/24"},
+					value: null,
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -335,6 +399,18 @@ func Test_getHashMap(t *testing.T) {
 					keys:  []string{"COUNTERS_PORT_NAME_MAP", "Ethernet1"},
 					value: "oid:0x1000000000021",
 				},
+				{
+					keys:  []string{"VLAN_INTERFACE", "Vlan1001", "vrf_name"},
+					value: "Vrf50",
+				},
+				{
+					keys:  []string{"VLAN_INTERFACE", "Vlan4000"},
+					value: null,
+				},
+				{
+					keys:  []string{"VLAN_INTERFACE", "Vlan4000|10.255.0.1/24"},
+					value: null,
+				},
 			},
 			want: hashMap{
 				"PORT|Ethernet0": {
@@ -349,6 +425,11 @@ func Test_getHashMap(t *testing.T) {
 					"Ethernet0": "oid:0x1000000000020",
 					"Ethernet1": "oid:0x1000000000021",
 				},
+				"VLAN_INTERFACE|Vlan1001": {
+					"vrf_name": "Vrf50",
+				},
+				"VLAN_INTERFACE|Vlan4000":               {},
+				"VLAN_INTERFACE|Vlan4000|10.255.0.1/24": {},
 			},
 		},
 	}
@@ -380,12 +461,14 @@ func Test_stringMapFromHashMap(t *testing.T) {
 			hm: hashMap{
 				"PORT": {
 					"Ethernet0": "up",
+					"Ethernet1": "down",
 				},
 			},
 			separator: "|",
 			want: StringMap{
 				"PORT": StringMap{
 					"Ethernet0": "up",
+					"Ethernet1": "down",
 				},
 			},
 		},
@@ -422,18 +505,12 @@ func Test_stringMapFromHashMap(t *testing.T) {
 					"admin_status": "up",
 					"alias":        "Eth1/1",
 				},
-				"LOOPBACK_INTERFACE|Loopback0": {
-					null: null,
-				},
 				"ASIC_STATE|SAI_OBJECT_TYPE_BRIDGE_PORT|oid|0x3a000000001a4a": {
 					"SAI_BRIDGE_PORT_ATTR_ADMIN_STATE": "true",
 				},
 			},
 			separator: "|",
 			want: StringMap{
-				"LOOPBACK_INTERFACE": StringMap{
-					"Loopback0": StringMap{},
-				},
 				"PORT": StringMap{
 					"Ethernet0": StringMap{
 						"admin_status": "up",
@@ -448,6 +525,28 @@ func Test_stringMapFromHashMap(t *testing.T) {
 							},
 						},
 					},
+				},
+			},
+		},
+		{
+			name: "key prefix of other keys",
+			hm: hashMap{
+				"VLAN_INTERFACE|Vlan1001": {
+					"vrf_name": "Vrf50",
+				},
+				"VLAN_INTERFACE|Vlan2000":               {},
+				"VLAN_INTERFACE|Vlan4000":               {},
+				"VLAN_INTERFACE|Vlan4000|10.255.0.1/24": {},
+			},
+			separator: "|",
+			want: StringMap{
+				"VLAN_INTERFACE": StringMap{
+					"Vlan1001": StringMap{
+						"vrf_name": "Vrf50",
+					},
+					"Vlan2000":               StringMap{},
+					"Vlan4000":               StringMap{},
+					"Vlan4000|10.255.0.1/24": StringMap{},
 				},
 			},
 		},

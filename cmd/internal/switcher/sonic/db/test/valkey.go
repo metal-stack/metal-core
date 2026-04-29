@@ -101,19 +101,26 @@ func DeepCopy(src StringMap) StringMap {
 }
 
 func stringMapFromHashMap(hm hashMap, separator string) StringMap {
+	// FIXME: better variable names and maybe some refactoring
 	data := StringMap{}
 	for k, m := range hm {
 		key, _, found := strings.Cut(k, separator)
-		if data[key] == nil {
-			data[key] = StringMap{}
+		if data[key] != nil {
+			continue
 		}
 		if !found {
-			d := data[key].(StringMap)
+			for k2 := range hm {
+				if strings.HasPrefix(k2, k) && k2 != k {
+					data[k2] = stringMapFromHashMap(cutPrefixFromHashMap(hm, k2+separator), separator)
+				}
+			}
+			data[k] = StringMap{}
 			for f, v := range m {
 				if f == null || v == null {
+					data[key] = StringMap{}
 					continue
 				}
-				d[f] = v
+				data[key].(StringMap)[f] = v
 			}
 			continue
 		}
@@ -142,7 +149,7 @@ func getHashMap(kvs []keysAndValue, separator string) hashMap {
 	for _, kv := range kvs {
 		idx := len(kv.keys) - 1
 		key := strings.Join(kv.keys[:idx], separator)
-		if len(kv.keys) <= 2 && kv.value == null {
+		if kv.value == null {
 			key += separator + kv.keys[idx]
 			m[key] = map[string]string{}
 			continue
