@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	testData = test.StringMap{
+	clientTestData = test.StringMap{
 		"LOOPBACK_INTERFACE": test.StringMap{
 			"Loopback0": test.StringMap{},
 		},
@@ -39,31 +39,31 @@ func TestClient_Del(t *testing.T) {
 	tests := []struct {
 		name      string
 		data      test.StringMap
-		mods      func(test.StringMap)
+		mods      func(test.HashMap)
 		key       Key
 		separator string
 	}{
 		{
 			name:      "delete non-existing",
-			data:      testData,
-			mods:      func(test.StringMap) {},
+			data:      clientTestData,
+			mods:      func(test.HashMap) {},
 			key:       Key{"some", "key"},
 			separator: "|",
 		},
 		{
 			name: "delete existing",
-			data: testData,
-			mods: func(data test.StringMap) {
-				delete(data["PORT"].(test.StringMap), "Ethernet0")
+			data: clientTestData,
+			mods: func(data test.HashMap) {
+				delete(data, "PORT|Ethernet0")
 			},
 			key:       Key{"PORT", "Ethernet0"},
 			separator: "|",
 		},
 		{
 			name: "delete last entry for key",
-			data: testData,
-			mods: func(data test.StringMap) {
-				delete(data, "ASIC_STATE")
+			data: clientTestData,
+			mods: func(data test.HashMap) {
+				delete(data, "ASIC_STATE:SAI_OBJECT_TYPE_BRIDGE_PORT:oid:0x3a000000001a4a")
 			},
 			key:       Key{"ASIC_STATE", "SAI_OBJECT_TYPE_BRIDGE_PORT", "oid", "0x3a000000001a4a"},
 			separator: ":",
@@ -79,6 +79,11 @@ func TestClient_Del(t *testing.T) {
 
 			err := test.LoadData(ctx, vc, tt.data, tt.separator)
 			require.NoError(t, err)
+			initData, err := test.GetData(ctx, vc, tt.separator)
+			require.NoError(t, err)
+			if tt.mods != nil {
+				tt.mods(initData)
+			}
 
 			c := &Client{
 				rdb: vc,
@@ -89,11 +94,6 @@ func TestClient_Del(t *testing.T) {
 
 			data, err := test.GetData(ctx, vc, tt.separator)
 			require.NoError(t, err)
-
-			initData := test.DeepCopy(tt.data)
-			if tt.mods != nil {
-				tt.mods(initData)
-			}
 			if diff := cmp.Diff(initData, data); diff != "" {
 				t.Errorf("Client.Del() data differs = %s", diff)
 			}
@@ -111,14 +111,14 @@ func TestClient_Exists(t *testing.T) {
 	}{
 		{
 			name:      "not existing",
-			data:      testData,
+			data:      clientTestData,
 			key:       Key{"some", "key"},
 			separator: "|",
 			want:      false,
 		},
 		{
 			name:      "existing",
-			data:      testData,
+			data:      clientTestData,
 			key:       Key{"LOOPBACK_INTERFACE", "Loopback0"},
 			separator: "|",
 			want:      true,
@@ -160,21 +160,21 @@ func TestClient_GetView(t *testing.T) {
 		{
 			name:      "table does not exist",
 			table:     "some key",
-			data:      testData,
+			data:      clientTestData,
 			separator: "|",
 			want:      View{},
 		},
 		{
 			name:      "table exists but empty",
 			table:     "LOOPBACK_INTERFACE|Loopback0",
-			data:      testData,
+			data:      clientTestData,
 			separator: "|",
 			want:      View{},
 		},
 		{
 			name:      "table exists",
 			table:     "PORT",
-			data:      testData,
+			data:      clientTestData,
 			separator: "|",
 			want: View{
 				"Ethernet0": struct{}{},
@@ -218,7 +218,7 @@ func TestClient_HGet(t *testing.T) {
 	}{
 		{
 			name:      "not existing",
-			data:      testData,
+			data:      clientTestData,
 			separator: "|",
 			key:       Key{"some", "key"},
 			field:     "some_field",
@@ -226,7 +226,7 @@ func TestClient_HGet(t *testing.T) {
 		},
 		{
 			name:      "get empty",
-			data:      testData,
+			data:      clientTestData,
 			separator: "|",
 			key:       Key{"LOOPBACK_INTERFACE", "Loopback0"},
 			field:     "NULL",
@@ -234,7 +234,7 @@ func TestClient_HGet(t *testing.T) {
 		},
 		{
 			name:      "get partial key",
-			data:      testData,
+			data:      clientTestData,
 			separator: ":",
 			key:       Key{"ASIC_STATE", "SAI_OBJECT_TYPE_BRIDGE_PORT", "oid"},
 			field:     "0x3a000000001a4a",
@@ -242,7 +242,7 @@ func TestClient_HGet(t *testing.T) {
 		},
 		{
 			name:      "get existing",
-			data:      testData,
+			data:      clientTestData,
 			separator: ":",
 			key:       Key{"ASIC_STATE", "SAI_OBJECT_TYPE_BRIDGE_PORT", "oid", "0x3a000000001a4a"},
 			field:     "SAI_BRIDGE_PORT_ATTR_ADMIN_STATE",
@@ -283,14 +283,14 @@ func TestClient_HGetAll(t *testing.T) {
 	}{
 		{
 			name:      "not existing",
-			data:      testData,
+			data:      clientTestData,
 			separator: "|",
 			key:       Key{"some", "key"},
 			want:      Val{},
 		},
 		{
 			name:      "get empty",
-			data:      testData,
+			data:      clientTestData,
 			separator: "|",
 			key:       Key{"LOOPBACK_INTERFACE", "Loopback0"},
 			want: Val{
@@ -299,14 +299,14 @@ func TestClient_HGetAll(t *testing.T) {
 		},
 		{
 			name:      "get partial key",
-			data:      testData,
+			data:      clientTestData,
 			separator: "|",
 			key:       Key{"ASIC_STATE", "SAI_OBJECT_TYPE_BRIDGE_PORT", "oid"},
 			want:      Val{},
 		},
 		{
 			name:      "get existing",
-			data:      testData,
+			data:      clientTestData,
 			separator: ":",
 			key:       Key{"PORT", "Ethernet1"},
 			want: Val{
@@ -345,21 +345,17 @@ func TestClient_HSet(t *testing.T) {
 	tests := []struct {
 		name      string
 		data      test.StringMap
-		mods      func(test.StringMap)
+		mods      func(test.HashMap)
 		separator string
 		key       Key
 		val       Val
 	}{
 		{
 			name: "set value for new key",
-			data: testData,
-			mods: func(data test.StringMap) {
-				data["some"] = test.StringMap{
-					"new": test.StringMap{
-						"key": test.StringMap{
-							"some_field": "some_value",
-						},
-					},
+			data: clientTestData,
+			mods: func(data test.HashMap) {
+				data["some|new|key"] = map[string]string{
+					"some_field": "some_value",
 				}
 			},
 			separator: "|",
@@ -370,9 +366,9 @@ func TestClient_HSet(t *testing.T) {
 		},
 		{
 			name: "set value for existing key",
-			data: testData,
-			mods: func(data test.StringMap) {
-				data["PORT"].(test.StringMap)["Ethernet0"].(test.StringMap)["admin_status"] = "down"
+			data: clientTestData,
+			mods: func(data test.HashMap) {
+				data["PORT|Ethernet0"]["admin_status"] = "down"
 			},
 			separator: "|",
 			key:       Key{"PORT", "Ethernet0"},
@@ -391,6 +387,11 @@ func TestClient_HSet(t *testing.T) {
 
 			err := test.LoadData(ctx, vc, tt.data, tt.separator)
 			require.NoError(t, err)
+			initData, err := test.GetData(ctx, vc, tt.separator)
+			require.NoError(t, err)
+			if tt.mods != nil {
+				tt.mods(initData)
+			}
 
 			c := &Client{
 				rdb: vc,
@@ -402,11 +403,6 @@ func TestClient_HSet(t *testing.T) {
 
 			data, err := test.GetData(ctx, vc, tt.separator)
 			require.NoError(t, err)
-
-			initData := test.DeepCopy(tt.data)
-			if tt.mods != nil {
-				tt.mods(initData)
-			}
 			if diff := cmp.Diff(initData, data); diff != "" {
 				t.Errorf("Client.HSet() data differs = %s", diff)
 			}
@@ -424,7 +420,7 @@ func TestClient_Keys(t *testing.T) {
 	}{
 		{
 			name:      "get all keys",
-			data:      testData,
+			data:      clientTestData,
 			separator: "|",
 			pattern:   Key{"*"},
 			want: []Key{
@@ -436,7 +432,7 @@ func TestClient_Keys(t *testing.T) {
 		},
 		{
 			name:      "get all keys with prefix",
-			data:      testData,
+			data:      clientTestData,
 			separator: "|",
 			pattern:   Key{"PORT|*"},
 			want: []Key{
@@ -446,7 +442,7 @@ func TestClient_Keys(t *testing.T) {
 		},
 		{
 			name:      "get non-existing",
-			data:      testData,
+			data:      clientTestData,
 			separator: "|",
 			pattern:   Key{"VLAN|*"},
 			want:      []Key{},

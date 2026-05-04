@@ -13,7 +13,7 @@ func TestLoadData(t *testing.T) {
 	tests := []struct {
 		name string
 		data StringMap
-		want hashMap
+		want HashMap
 	}{
 		{
 			name: "empty stringMap",
@@ -27,7 +27,7 @@ func TestLoadData(t *testing.T) {
 					"Loopback0": StringMap{},
 				},
 			},
-			want: hashMap{
+			want: HashMap{
 				"LOOPBACK_INTERFACE|Loopback0": {
 					null: null,
 				},
@@ -47,7 +47,7 @@ func TestLoadData(t *testing.T) {
 					},
 				},
 			},
-			want: hashMap{
+			want: HashMap{
 				"PORT|Ethernet0": {
 					"admin_status": "up",
 					"mtu":          "9000",
@@ -68,7 +68,7 @@ func TestLoadData(t *testing.T) {
 					"Ethernet3": "",
 				},
 			},
-			want: hashMap{
+			want: HashMap{
 				"COUNTERS_PORT_NAME_MAP": {
 					"Ethernet0": "oid|0x1000000000020",
 					"Ethernet1": "oid|0x1000000000021",
@@ -88,7 +88,7 @@ func TestLoadData(t *testing.T) {
 					"Vlan4000|10.255.0.1/24": StringMap{},
 				},
 			},
-			want: hashMap{
+			want: HashMap{
 				"VLAN_INTERFACE|Vlan1001": map[string]string{
 					"vrf_name": "Vrf50",
 				},
@@ -144,12 +144,12 @@ func TestGetData(t *testing.T) {
 		name      string
 		separator string
 		data      StringMap
-		want      StringMap
+		want      HashMap
 	}{
 		{
 			name:      "empty",
 			separator: "|",
-			want:      StringMap{},
+			want:      HashMap{},
 		},
 		{
 			name:      "get all data",
@@ -181,31 +181,25 @@ func TestGetData(t *testing.T) {
 					"Vlan4000|10.255.0.1/24": StringMap{},
 				},
 			},
-			want: StringMap{
-				"LOOPBACK_INTERFACE": StringMap{
-					"Loopback0": StringMap{},
+			want: HashMap{
+				"LOOPBACK_INTERFACE|Loopback0": map[string]string{
+					"NULL": "NULL",
 				},
-				"PORT": StringMap{
-					"Ethernet0": StringMap{
-						"admin_status": "up",
-						"alias":        "Eth1/1",
-					},
+				"PORT|Ethernet0": map[string]string{
+					"admin_status": "up",
+					"alias":        "Eth1/1",
 				},
-				"ASIC_STATE": StringMap{
-					"SAI_OBJECT_TYPE_BRIDGE_PORT": StringMap{
-						"oid": StringMap{
-							"0x3a000000001a4a": StringMap{
-								"SAI_BRIDGE_PORT_ATTR_ADMIN_STATE": "true",
-							},
-						},
-					},
+				"ASIC_STATE|SAI_OBJECT_TYPE_BRIDGE_PORT|oid|0x3a000000001a4a": map[string]string{
+					"SAI_BRIDGE_PORT_ATTR_ADMIN_STATE": "true",
 				},
-				"VLAN_INTERFACE": StringMap{
-					"Vlan1001": StringMap{
-						"vrf_name": "Vrf50",
-					},
-					"Vlan4000":               StringMap{},
-					"Vlan4000|10.255.0.1/24": StringMap{},
+				"VLAN_INTERFACE|Vlan1001": map[string]string{
+					"vrf_name": "Vrf50",
+				},
+				"VLAN_INTERFACE|Vlan4000": map[string]string{
+					"NULL": "NULL",
+				},
+				"VLAN_INTERFACE|Vlan4000|10.255.0.1/24": map[string]string{
+					"NULL": "NULL",
 				},
 			},
 		},
@@ -365,12 +359,12 @@ func Test_getHashMap(t *testing.T) {
 	tests := []struct {
 		name string
 		kvs  []keysAndValue
-		want hashMap
+		want HashMap
 	}{
 		{
 			name: "empty",
 			kvs:  []keysAndValue{},
-			want: hashMap{},
+			want: HashMap{},
 		},
 		{
 			name: "multiple keys with different nesting levels",
@@ -412,7 +406,7 @@ func Test_getHashMap(t *testing.T) {
 					value: null,
 				},
 			},
-			want: hashMap{
+			want: HashMap{
 				"PORT|Ethernet0": {
 					"admin_status": "up",
 					"alias":        "Eth1/1",
@@ -443,140 +437,22 @@ func Test_getHashMap(t *testing.T) {
 	}
 }
 
-func Test_stringMapFromHashMap(t *testing.T) {
-	tests := []struct {
-		name      string
-		hm        hashMap
-		separator string
-		want      StringMap
-	}{
-		{
-			name:      "empty",
-			hm:        hashMap{},
-			separator: "|",
-			want:      StringMap{},
-		},
-		{
-			name: "flat map",
-			hm: hashMap{
-				"PORT": {
-					"Ethernet0": "up",
-					"Ethernet1": "down",
-				},
-			},
-			separator: "|",
-			want: StringMap{
-				"PORT": StringMap{
-					"Ethernet0": "up",
-					"Ethernet1": "down",
-				},
-			},
-		},
-		{
-			name: "one level of nesting",
-			hm: hashMap{
-				"LOOPBACK_INTERFACE|Loopback0": {},
-			},
-			separator: "|",
-			want: StringMap{
-				"LOOPBACK_INTERFACE": StringMap{
-					"Loopback0": StringMap{},
-				},
-			},
-		},
-		{
-			name: "handle null entries",
-			hm: hashMap{
-				"LOOPBACK_INTERFACE|Loopback0": {
-					null: null,
-				},
-			},
-			separator: "|",
-			want: StringMap{
-				"LOOPBACK_INTERFACE": StringMap{
-					"Loopback0": StringMap{},
-				},
-			},
-		},
-		{
-			name: "multiple levels of nesting",
-			hm: hashMap{
-				"PORT|Ethernet0": {
-					"admin_status": "up",
-					"alias":        "Eth1/1",
-				},
-				"ASIC_STATE|SAI_OBJECT_TYPE_BRIDGE_PORT|oid|0x3a000000001a4a": {
-					"SAI_BRIDGE_PORT_ATTR_ADMIN_STATE": "true",
-				},
-			},
-			separator: "|",
-			want: StringMap{
-				"PORT": StringMap{
-					"Ethernet0": StringMap{
-						"admin_status": "up",
-						"alias":        "Eth1/1",
-					},
-				},
-				"ASIC_STATE": StringMap{
-					"SAI_OBJECT_TYPE_BRIDGE_PORT": StringMap{
-						"oid": StringMap{
-							"0x3a000000001a4a": StringMap{
-								"SAI_BRIDGE_PORT_ATTR_ADMIN_STATE": "true",
-							},
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "key prefix of other keys",
-			hm: hashMap{
-				"VLAN_INTERFACE|Vlan1001": {
-					"vrf_name": "Vrf50",
-				},
-				"VLAN_INTERFACE|Vlan2000":               {},
-				"VLAN_INTERFACE|Vlan4000":               {},
-				"VLAN_INTERFACE|Vlan4000|10.255.0.1/24": {},
-			},
-			separator: "|",
-			want: StringMap{
-				"VLAN_INTERFACE": StringMap{
-					"Vlan1001": StringMap{
-						"vrf_name": "Vrf50",
-					},
-					"Vlan2000":               StringMap{},
-					"Vlan4000":               StringMap{},
-					"Vlan4000|10.255.0.1/24": StringMap{},
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := stringMapFromHashMap(tt.hm, tt.separator)
-			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("stringMapFromHashMap() diff = %s", diff)
-			}
-		})
-	}
-}
-
 func Test_cutPrefixFromHashMap(t *testing.T) {
 	tests := []struct {
 		name   string
-		hm     hashMap
+		hm     HashMap
 		prefix string
-		want   hashMap
+		want   HashMap
 	}{
 		{
 			name: "empty prefix",
-			hm: hashMap{
+			hm: HashMap{
 				"LOOPBACK_INTERFACE|Loopback0": {
 					null: null,
 				},
 			},
 			prefix: "",
-			want: hashMap{
+			want: HashMap{
 				"LOOPBACK_INTERFACE|Loopback0": {
 					null: null,
 				},
@@ -584,17 +460,17 @@ func Test_cutPrefixFromHashMap(t *testing.T) {
 		},
 		{
 			name: "prefix not found",
-			hm: hashMap{
+			hm: HashMap{
 				"LOOPBACK_INTERFACE|Loopback0": {
 					null: null,
 				},
 			},
 			prefix: "PORT|",
-			want:   hashMap{},
+			want:   HashMap{},
 		},
 		{
 			name: "trim prefix where possible and remove the rest",
-			hm: hashMap{
+			hm: HashMap{
 				"PORT|Ethernet0": {
 					"admin_status": "up",
 				},
@@ -603,7 +479,7 @@ func Test_cutPrefixFromHashMap(t *testing.T) {
 				},
 			},
 			prefix: "PORT|",
-			want: hashMap{
+			want: HashMap{
 				"Ethernet0": {
 					"admin_status": "up",
 				},
@@ -615,129 +491,6 @@ func Test_cutPrefixFromHashMap(t *testing.T) {
 			got := cutPrefixFromHashMap(tt.hm, tt.prefix)
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("cutPrefixFromHashMap() diff = %s", diff)
-			}
-		})
-	}
-}
-
-func TestDeepCopy(t *testing.T) {
-	tests := []struct {
-		name string
-		src  StringMap
-		want StringMap
-		mod  func(StringMap)
-	}{
-		{
-			name: "empty",
-			src:  StringMap{},
-			want: StringMap{},
-		},
-		{
-			name: "one level of nesting",
-			src: StringMap{
-				"key": "value",
-			},
-			want: StringMap{
-				"key": "value",
-			},
-			mod: func(sm StringMap) {
-				sm["key"] = "new_value"
-			},
-		},
-		{
-			name: "two levels of nesting",
-			src: StringMap{
-				"key": StringMap{
-					"subkey": "value",
-				},
-				"other_key": "other_value",
-			},
-			want: StringMap{
-				"key": StringMap{
-					"subkey": "value",
-				},
-				"other_key": "other_value",
-			},
-			mod: func(sm StringMap) {
-				sm["other_key"] = StringMap{
-					"subkey": "value",
-				}
-				sm["key"] = "value"
-			},
-		},
-		{
-			name: "multiple levels of nesting",
-			src: StringMap{
-				"LOOPBACK_INTERFACE": StringMap{
-					"Loopback0": StringMap{},
-				},
-				"PORT": StringMap{
-					"Ethernet0": StringMap{
-						"admin_status": "up",
-						"alias":        "Eth1/1",
-					},
-					"Ethernet1": StringMap{
-						"admin_status": "up",
-						"alias":        "Eth1/2",
-					},
-				},
-				"ASIC_STATE": StringMap{
-					"SAI_OBJECT_TYPE_BRIDGE_PORT": StringMap{
-						"oid": StringMap{
-							"0x3a000000001a4a": StringMap{
-								"SAI_BRIDGE_PORT_ATTR_ADMIN_STATE": "true",
-							},
-						},
-					},
-				},
-			},
-			want: StringMap{
-				"LOOPBACK_INTERFACE": StringMap{
-					"Loopback0": StringMap{},
-				},
-				"PORT": StringMap{
-					"Ethernet0": StringMap{
-						"admin_status": "up",
-						"alias":        "Eth1/1",
-					},
-					"Ethernet1": StringMap{
-						"admin_status": "up",
-						"alias":        "Eth1/2",
-					},
-				},
-				"ASIC_STATE": StringMap{
-					"SAI_OBJECT_TYPE_BRIDGE_PORT": StringMap{
-						"oid": StringMap{
-							"0x3a000000001a4a": StringMap{
-								"SAI_BRIDGE_PORT_ATTR_ADMIN_STATE": "true",
-							},
-						},
-					},
-				},
-			},
-			mod: func(sm StringMap) {
-				delete(sm["PORT"].(StringMap), "Ethernet0")
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := DeepCopy(tt.src)
-			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("DeepCopy() diff = %s", diff)
-			}
-
-			if tt.mod == nil {
-				return
-			}
-
-			tt.mod(tt.src)
-			if diff := cmp.Diff(tt.src, got); diff == "" {
-				t.Errorf("DeepCopy() src and dst are equal after modifying src")
-			}
-			tt.mod(got)
-			if diff := cmp.Diff(tt.src, got); diff != "" {
-				t.Errorf("DeepCopy() src and dst differ after applying equal modifications = %s", diff)
 			}
 		})
 	}

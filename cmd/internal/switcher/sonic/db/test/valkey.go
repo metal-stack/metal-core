@@ -14,7 +14,7 @@ import (
 
 type (
 	StringMap map[string]any
-	hashMap   map[string]map[string]string
+	HashMap   map[string]map[string]string
 
 	keysAndValue struct {
 		keys  []string
@@ -58,7 +58,7 @@ func LoadData(ctx context.Context, vc valkey.Client, data StringMap, separator s
 	return nil
 }
 
-func GetData(ctx context.Context, vc valkey.Client, separator string) (StringMap, error) {
+func GetData(ctx context.Context, vc valkey.Client, separator string) (HashMap, error) {
 	cmd := vc.B().Keys().Pattern("*").Build()
 	res := vc.Do(ctx, cmd)
 	if err := res.Error(); err != nil {
@@ -68,7 +68,7 @@ func GetData(ctx context.Context, vc valkey.Client, separator string) (StringMap
 	if err != nil {
 		return nil, err
 	}
-	hm := hashMap{}
+	hm := HashMap{}
 	for _, k := range keys {
 		cmd := vc.B().Hgetall().Key(k).Build()
 		res := vc.Do(ctx, cmd)
@@ -84,56 +84,14 @@ func GetData(ctx context.Context, vc valkey.Client, separator string) (StringMap
 		}
 		maps.Copy(hm[k], m)
 	}
-	return stringMapFromHashMap(hm, separator), nil
+	return hm, nil
 }
 
-func DeepCopy(src StringMap) StringMap {
-	dst := StringMap{}
-	for k, v := range src {
-		switch v := v.(type) {
-		case string:
-			dst[k] = v
-		case StringMap:
-			dst[k] = DeepCopy(v)
-		}
-	}
-	return dst
-}
-
-func stringMapFromHashMap(hm hashMap, separator string) StringMap {
-	// FIXME: better variable names and maybe some refactoring
-	data := StringMap{}
-	for k, m := range hm {
-		key, _, found := strings.Cut(k, separator)
-		if data[key] != nil {
-			continue
-		}
-		if !found {
-			for k2 := range hm {
-				if strings.HasPrefix(k2, k) && k2 != k {
-					data[k2] = stringMapFromHashMap(cutPrefixFromHashMap(hm, k2+separator), separator)
-				}
-			}
-			data[k] = StringMap{}
-			for f, v := range m {
-				if f == null || v == null {
-					data[key] = StringMap{}
-					continue
-				}
-				data[key].(StringMap)[f] = v
-			}
-			continue
-		}
-		data[key] = stringMapFromHashMap(cutPrefixFromHashMap(hm, key+separator), separator)
-	}
-	return data
-}
-
-func cutPrefixFromHashMap(hm hashMap, prefix string) hashMap {
+func cutPrefixFromHashMap(hm HashMap, prefix string) HashMap {
 	if prefix == "" {
 		return hm
 	}
-	m := hashMap{}
+	m := HashMap{}
 	for k, v := range hm {
 		if !strings.HasPrefix(k, prefix) {
 			continue
@@ -144,8 +102,8 @@ func cutPrefixFromHashMap(hm hashMap, prefix string) hashMap {
 	return m
 }
 
-func getHashMap(kvs []keysAndValue, separator string) hashMap {
-	m := hashMap{}
+func getHashMap(kvs []keysAndValue, separator string) HashMap {
+	m := HashMap{}
 	for _, kv := range kvs {
 		idx := len(kv.keys) - 1
 		key := strings.Join(kv.keys[:idx], separator)
