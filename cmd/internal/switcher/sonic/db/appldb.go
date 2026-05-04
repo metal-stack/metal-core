@@ -3,14 +3,14 @@ package db
 import (
 	"context"
 
-	"github.com/redis/go-redis/v9"
+	"github.com/valkey-io/valkey-go"
 )
 
 type ApplDB struct {
 	c *Client
 }
 
-func newApplDB(rdb *redis.Client, sep string) *ApplDB {
+func newApplDB(rdb valkey.Client, sep string) *ApplDB {
 	return &ApplDB{
 		c: NewClient(rdb, sep),
 	}
