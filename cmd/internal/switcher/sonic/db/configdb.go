@@ -296,7 +296,13 @@ func (d *ConfigDB) GetPort(ctx context.Context, interfaceName string) (*Port, er
 		return nil, err
 	}
 
+	if len(result) == 0 {
+		return nil, nil
+	}
+
 	return &Port{
+		Name:        interfaceName,
+		Alias:       result[alias],
 		AdminStatus: result[adminStatus] == adminStatusUp,
 		Mtu:         result[mtu],
 	}, nil
