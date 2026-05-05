@@ -78,7 +78,9 @@ func TestAsicDB_ExistBridgePort(t *testing.T) {
 				"ASIC_STATE": test.StringMap{
 					"SAI_OBJECT_TYPE_BRIDGE_PORT": test.StringMap{
 						"oid": test.StringMap{
-							"0x3a000000000dac": test.StringMap{},
+							"0x3a000000000daa": test.StringMap{
+								"SAI_BRIDGE_PORT_ATTR_PORT_ID": "oid:0x3a000000000daa",
+							},
 						},
 					},
 				},
@@ -144,7 +146,9 @@ func TestAsicDB_ExistRouterInterface(t *testing.T) {
 				"ASIC_STATE": test.StringMap{
 					"SAI_OBJECT_TYPE_ROUTER_INTERFACE": test.StringMap{
 						"oid": test.StringMap{
-							"0x3a000000000dac": test.StringMap{},
+							"0x3a000000000daa": test.StringMap{
+								"SAI_ROUTER_INTERFACE_ATTR_TYPE": "SAI_ROUTER_INTERFACE_TYPE_PORT",
+							},
 						},
 					},
 				},
@@ -158,14 +162,14 @@ func TestAsicDB_ExistRouterInterface(t *testing.T) {
 				"ASIC_STATE": test.StringMap{
 					"SAI_OBJECT_TYPE_ROUTER_INTERFACE": test.StringMap{
 						"oid": test.StringMap{
-							"0x3a000000000dac": test.StringMap{
+							"0x3a000000000daa": test.StringMap{
 								"SAI_ROUTER_INTERFACE_ATTR_TYPE": "SAI_ROUTER_INTERFACE_TYPE_PORT",
 							},
 						},
 					},
 				},
 			},
-			rif:  "oid:0x3a000000000dac",
+			rif:  "oid:0x3a000000000daa",
 			want: true,
 		},
 	}
