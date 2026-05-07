@@ -2,9 +2,8 @@ package db
 
 import (
 	"context"
-	"errors"
 
-	"github.com/redis/go-redis/v9"
+	"github.com/valkey-io/valkey-go"
 )
 
 type AsicDB struct {
@@ -13,7 +12,7 @@ type AsicDB struct {
 
 type OID string
 
-func newAsicDB(rdb *redis.Client, sep string) *AsicDB {
+func newAsicDB(rdb valkey.Client, sep string) *AsicDB {
 	return &AsicDB{
 		c: NewClient(rdb, sep),
 	}
@@ -30,8 +29,9 @@ func (d *AsicDB) GetPortIdBridgePortMap(ctx context.Context) (map[OID]OID, error
 	m := make(map[OID]OID, len(bridges))
 	for bridge := range bridges {
 		port, err := t.HGet(ctx, bridge, "SAI_BRIDGE_PORT_ATTR_PORT_ID")
+
 		if err != nil {
-			if errors.Is(err, redis.Nil) {
+			if valkey.IsValkeyNil(err) {
 				continue
 			}
 			return nil, err

@@ -3,14 +3,14 @@ package db
 import (
 	"context"
 
-	"github.com/redis/go-redis/v9"
+	"github.com/valkey-io/valkey-go"
 )
 
 type CountersDB struct {
 	c *Client
 }
 
-func newCountersDB(rdb *redis.Client, sep string) *CountersDB {
+func newCountersDB(rdb valkey.Client, sep string) *CountersDB {
 	return &CountersDB{
 		c: NewClient(rdb, sep),
 	}
