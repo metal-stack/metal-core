@@ -73,7 +73,7 @@ func newRedisClient(redisInstance instance, redisDatabase int) (valkey.Client, e
 	valkeyClient, err := valkey.NewClient(valkey.ClientOption{
 		InitAddress: []string{redisInstance.Addr},
 		SelectDB:    redisDatabase,
-		ClientName:  "metal-apiserver",
+		ClientName:  "metal-core",
 	})
 	if err != nil {
 		return nil, fmt.Errorf("unable to create valkey client: %w", err)
