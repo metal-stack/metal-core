@@ -95,7 +95,7 @@ func newRedisClientWithAuth(redisInstance instance, redisDatabase int) (valkey.C
 			}, nil
 		},
 		SelectDB:   redisDatabase,
-		ClientName: "metal-apiserver",
+		ClientName: "metal-core",
 	})
 	if err != nil {
 		return nil, fmt.Errorf("unable to create valkey client: %w", err)
