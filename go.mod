@@ -15,7 +15,6 @@ require (
 	github.com/prometheus/client_golang v1.23.2
 	github.com/stretchr/testify v1.11.1
 	github.com/valkey-io/valkey-go v1.0.74
-	github.com/valkey-io/valkey-go/valkeycompat v1.0.74
 	github.com/vishvananda/netlink v1.3.1
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
 	golang.org/x/text v0.36.0

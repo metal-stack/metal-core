@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/valkey-io/valkey-go"
-	"github.com/valkey-io/valkey-go/valkeycompat"
 )
 
 type Key []string
@@ -86,9 +85,14 @@ func (c *Client) HGetAll(ctx context.Context, key Key) (Val, error) {
 }
 
 func (c *Client) HSet(ctx context.Context, key Key, val Val) error {
-	compat := valkeycompat.NewAdapter(c.rdb)
-	// FIXME migrate to native
-	return compat.HSet(ctx, key.toString(c.sep), map[string]string(val)).Err()
+	if len(val) == 0 {
+		return nil
+	}
+	cmd := c.rdb.B().Hset().Key(key.toString(c.sep)).FieldValue()
+	for f, v := range val {
+		cmd = cmd.FieldValue(f, v)
+	}
+	return c.rdb.Do(ctx, cmd.Build()).Error()
 }
 
 func (c *Client) Keys(ctx context.Context, pattern Key) ([]Key, error) {
