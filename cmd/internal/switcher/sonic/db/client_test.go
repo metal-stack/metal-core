@@ -317,26 +317,24 @@ func TestClient_HGetAll(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Run(tt.name, func(t *testing.T) {
-				var (
-					ctx = t.Context()
-					vc  = test.StartValkey(t)
-				)
-				defer vc.Close()
+			var (
+				ctx = t.Context()
+				vc  = test.StartValkey(t)
+			)
+			defer vc.Close()
 
-				err := test.LoadData(ctx, vc, tt.data, tt.separator)
-				require.NoError(t, err)
+			err := test.LoadData(ctx, vc, tt.data, tt.separator)
+			require.NoError(t, err)
 
-				c := &Client{
-					rdb: vc,
-					sep: tt.separator,
-				}
-				got, err := c.HGetAll(ctx, tt.key)
-				require.NoError(t, err)
-				if diff := cmp.Diff(tt.want, got); diff != "" {
-					t.Errorf("Client.HGet() diff = %s", diff)
-				}
-			})
+			c := &Client{
+				rdb: vc,
+				sep: tt.separator,
+			}
+			got, err := c.HGetAll(ctx, tt.key)
+			require.NoError(t, err)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("Client.HGet() diff = %s", diff)
+			}
 		})
 	}
 }
