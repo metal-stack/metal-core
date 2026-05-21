@@ -1,0 +1,2355 @@
+{
+"default":{
+  "vrfId":0,
+  "vrfName":"default",
+  "swp31":{
+    "bgpNeighborAddr":"fe80::6f8:f8ff:fea8:c8",
+    "remoteAs":4200018001,
+    "localAs":4200017001,
+    "nbrExternalLink":true,
+    "hostname":"fra-equ01-spine02",
+    "peerGroup":"FABRIC",
+    "bgpVersion":4,
+    "remoteRouterId":"10.0.8.2",
+    "bgpState":"Established",
+    "bgpTimerUp":40531218000,
+    "bgpTimerUpMsec":40531218000,
+    "bgpTimerUpString":"01y14w6d",
+    "bgpTimerUpEstablishedEpoch":1737530383,
+    "bgpTimerLastRead":0,
+    "bgpTimerLastWrite":0,
+    "bgpInUpdateElapsedTimeMsecs":443000,
+    "bgpTimerHoldTimeMsecs":3000,
+    "bgpTimerKeepAliveIntervalMsecs":1000,
+    "bgpTimerConfiguredHoldTimeMsecs":8000,
+    "bgpTimerConfiguredKeepAliveIntervalMsecs":2000,
+    "neighborCapabilities":{
+      "4byteAs":"advertisedAndReceived",
+      "addPath":{
+        "IPv4 Unicast":{
+          "rxAdvertisedAndReceived":true
+        },
+        "L2VPN EVPN":{
+          "rxAdvertisedAndReceived":true
+        }
+      },
+      "extendedNexthop":"advertisedAndReceived",
+      "extendedNexthopFamililesByPeer":{
+        "IPv4 Unicast":"recieved"
+      },
+      "routeRefresh":"advertisedAndReceivedOldNew",
+      "multiprotocolExtensions":{
+        "IPv4 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "L2VPN EVPN":{
+          "advertisedAndReceived":true
+        }
+      },
+      "hostName":{
+        "advHostName":"fra-equ01-r01leaf01",
+        "advDomainName":"n\/a",
+        "rcvHostName":"fra-equ01-spine02",
+        "rcvDomainName":"n\/a"
+      },
+      "gracefulRestart":"advertisedAndReceived",
+      "gracefulRestartRemoteTimerMsecs":120000,
+      "addressFamiliesByPeer":"none"
+    },
+    "gracefulRestartInfo":{
+      "endOfRibSend":{
+        "IPv4 Unicast":true,
+        "L2VPN EVPN":true
+      },
+      "endOfRibRecv":{
+        "IPv4 Unicast":true,
+        "L2VPN EVPN":true
+      }
+    },
+    "messageStats":{
+      "depthInq":0,
+      "depthOutq":0,
+      "opensSent":2,
+      "opensRecv":2,
+      "notificationsSent":2,
+      "notificationsRecv":0,
+      "updatesSent":1025258,
+      "updatesRecv":1378681,
+      "keepalivesSent":40529826,
+      "keepalivesRecv":40527473,
+      "routeRefreshSent":0,
+      "routeRefreshRecv":0,
+      "capabilitySent":0,
+      "capabilityRecv":0,
+      "totalSent":41555088,
+      "totalRecv":41906156
+    },
+    "minBtwnAdvertisementRunsTimerMsecs":0,
+    "addressFamilyInfo":{
+      "IPv4 Unicast":{
+        "peerGroupMember":"FABRIC",
+        "updateGroupId":2,
+        "subGroupId":2,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "acceptedPrefixCounter":50
+      },
+      "L2VPN EVPN":{
+        "peerGroupMember":"FABRIC",
+        "updateGroupId":3,
+        "subGroupId":3,
+        "packetQueueLength":0,
+        "unchangedNextHopPropogatedToNbr":true,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "advertiseAllVnis":true,
+        "acceptedPrefixCounter":781
+      }
+    },
+    "connectionsEstablished":2,
+    "connectionsDropped":1,
+    "lastResetTimerMsecs":9620000,
+    "lastResetDueTo":"BGP Notification send",
+    "lastErrorCodeSubcode":"0606",
+    "lastNotificationReason":"Cease\/Other Configuration Change",
+    "hostLocal":"fe80::ba6a:97ff:fe74:b3",
+    "portLocal":179,
+    "hostForeign":"fe80::6f8:f8ff:fea8:c8",
+    "portForeign":33898,
+    "nexthop":"10.0.7.1",
+    "nexthopGlobal":"fe80::ba6a:97ff:fe74:b3",
+    "nexthopLocal":"fe80::ba6a:97ff:fe74:b3",
+    "bgpConnection":"sharedNetwork",
+    "connectRetryTimer":10,
+    "readThread":"on",
+    "writeThread":"on"
+  },
+  "swp32":{
+    "bgpNeighborAddr":"fe80::ba6a:97ff:fe37:907c",
+    "remoteAs":4200018001,
+    "localAs":4200017001,
+    "nbrExternalLink":true,
+    "hostname":"fra-equ01-spine01",
+    "peerGroup":"FABRIC",
+    "bgpVersion":4,
+    "remoteRouterId":"10.0.8.1",
+    "bgpState":"Established",
+    "bgpTimerUp":5252468000,
+    "bgpTimerUpMsec":5252468000,
+    "bgpTimerUpString":"08w4d19h",
+    "bgpTimerUpEstablishedEpoch":1772809133,
+    "bgpTimerLastRead":0,
+    "bgpTimerLastWrite":0,
+    "bgpInUpdateElapsedTimeMsecs":443000,
+    "bgpTimerHoldTimeMsecs":3000,
+    "bgpTimerKeepAliveIntervalMsecs":1000,
+    "bgpTimerConfiguredHoldTimeMsecs":8000,
+    "bgpTimerConfiguredKeepAliveIntervalMsecs":2000,
+    "neighborCapabilities":{
+      "4byteAs":"advertisedAndReceived",
+      "addPath":{
+        "IPv4 Unicast":{
+          "rxAdvertisedAndReceived":true
+        },
+        "L2VPN EVPN":{
+          "rxAdvertisedAndReceived":true
+        }
+      },
+      "extendedNexthop":"advertisedAndReceived",
+      "extendedNexthopFamililesByPeer":{
+        "IPv4 Unicast":"recieved"
+      },
+      "routeRefresh":"advertisedAndReceivedOldNew",
+      "multiprotocolExtensions":{
+        "IPv4 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "L2VPN EVPN":{
+          "advertisedAndReceived":true
+        }
+      },
+      "hostName":{
+        "advHostName":"fra-equ01-r01leaf01",
+        "advDomainName":"n\/a",
+        "rcvHostName":"fra-equ01-spine01",
+        "rcvDomainName":"n\/a"
+      },
+      "gracefulRestart":"advertisedAndReceived",
+      "gracefulRestartRemoteTimerMsecs":120000,
+      "addressFamiliesByPeer":"none"
+    },
+    "gracefulRestartInfo":{
+      "endOfRibSend":{
+        "IPv4 Unicast":true,
+        "L2VPN EVPN":true
+      },
+      "endOfRibRecv":{
+        "IPv4 Unicast":true,
+        "L2VPN EVPN":true
+      }
+    },
+    "messageStats":{
+      "depthInq":0,
+      "depthOutq":0,
+      "opensSent":1,
+      "opensRecv":1,
+      "notificationsSent":0,
+      "notificationsRecv":0,
+      "updatesSent":108742,
+      "updatesRecv":139179,
+      "keepalivesSent":5252289,
+      "keepalivesRecv":5251983,
+      "routeRefreshSent":0,
+      "routeRefreshRecv":0,
+      "capabilitySent":0,
+      "capabilityRecv":0,
+      "totalSent":5361032,
+      "totalRecv":5391163
+    },
+    "minBtwnAdvertisementRunsTimerMsecs":0,
+    "addressFamilyInfo":{
+      "IPv4 Unicast":{
+        "peerGroupMember":"FABRIC",
+        "updateGroupId":2,
+        "subGroupId":2,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "acceptedPrefixCounter":50
+      },
+      "L2VPN EVPN":{
+        "peerGroupMember":"FABRIC",
+        "updateGroupId":3,
+        "subGroupId":3,
+        "packetQueueLength":0,
+        "unchangedNextHopPropogatedToNbr":true,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "advertiseAllVnis":true,
+        "acceptedPrefixCounter":781
+      }
+    },
+    "connectionsEstablished":1,
+    "connectionsDropped":0,
+    "lastReset":"never",
+    "hostLocal":"fe80::ba6a:97ff:fe74:b7",
+    "portLocal":39326,
+    "hostForeign":"fe80::ba6a:97ff:fe37:907c",
+    "portForeign":179,
+    "nexthop":"10.0.7.1",
+    "nexthopGlobal":"fe80::ba6a:97ff:fe74:b7",
+    "nexthopLocal":"fe80::ba6a:97ff:fe74:b7",
+    "bgpConnection":"sharedNetwork",
+    "connectRetryTimer":10,
+    "readThread":"on",
+    "writeThread":"on"
+  },
+  "swp6s0":{
+    "bgpNeighborAddr":"fe80::b696:91ff:fea5:8be6",
+    "remoteAs":4210000065,
+    "localAs":4200017001,
+    "nbrExternalLink":true,
+    "hostname":"shoot--pcfgbt--inttest20-firewall-9f9ac",
+    "peerGroup":"FIREWALL",
+    "bgpVersion":4,
+    "remoteRouterId":"10.0.0.3",
+    "bgpState":"Established",
+    "bgpTimerUp":1982765000,
+    "bgpTimerUpMsec":1982765000,
+    "bgpTimerUpString":"03w1d22h",
+    "bgpTimerUpEstablishedEpoch":1776078836,
+    "bgpTimerLastRead":0,
+    "bgpTimerLastWrite":0,
+    "bgpInUpdateElapsedTimeMsecs":83806000,
+    "bgpTimerHoldTimeMsecs":8000,
+    "bgpTimerKeepAliveIntervalMsecs":2000,
+    "bgpTimerConfiguredHoldTimeMsecs":8000,
+    "bgpTimerConfiguredKeepAliveIntervalMsecs":2000,
+    "neighborCapabilities":{
+      "4byteAs":"advertisedAndReceived",
+      "addPath":{
+        "IPv4 Unicast":{
+          "rxAdvertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "rxAdvertisedAndReceived":true
+        },
+        "L2VPN EVPN":{
+          "rxAdvertisedAndReceived":true
+        }
+      },
+      "dynamic":"received",
+      "extendedNexthop":"advertisedAndReceived",
+      "extendedNexthopFamililesByPeer":{
+        "IPv4 Unicast":"recieved"
+      },
+      "routeRefresh":"advertisedAndReceivedNew",
+      "multiprotocolExtensions":{
+        "IPv4 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "L2VPN EVPN":{
+          "advertisedAndReceived":true
+        }
+      },
+      "hostName":{
+        "advHostName":"fra-equ01-r01leaf01",
+        "advDomainName":"n\/a",
+        "rcvHostName":"shoot--pcfgbt--inttest20-firewall-9f9ac",
+        "rcvDomainName":"n\/a"
+      },
+      "gracefulRestart":"advertisedAndReceived",
+      "gracefulRestartRemoteTimerMsecs":120000,
+      "addressFamiliesByPeer":"none"
+    },
+    "gracefulRestartInfo":{
+      "endOfRibSend":{
+        "IPv4 Unicast":true,
+        "IPv6 Unicast":true,
+        "L2VPN EVPN":true
+      },
+      "endOfRibRecv":{
+        "IPv4 Unicast":true,
+        "IPv6 Unicast":true,
+        "L2VPN EVPN":true
+      }
+    },
+    "messageStats":{
+      "depthInq":0,
+      "depthOutq":0,
+      "opensSent":1,
+      "opensRecv":1,
+      "notificationsSent":0,
+      "notificationsRecv":0,
+      "updatesSent":1907,
+      "updatesRecv":1396,
+      "keepalivesSent":991346,
+      "keepalivesRecv":991302,
+      "routeRefreshSent":0,
+      "routeRefreshRecv":0,
+      "capabilitySent":0,
+      "capabilityRecv":0,
+      "totalSent":993254,
+      "totalRecv":992699
+    },
+    "minBtwnAdvertisementRunsTimerMsecs":0,
+    "addressFamilyInfo":{
+      "IPv4 Unicast":{
+        "peerGroupMember":"FIREWALL",
+        "updateGroupId":6,
+        "subGroupId":6,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"fw-swp6s0-in",
+        "acceptedPrefixCounter":1
+      },
+      "IPv6 Unicast":{
+        "peerGroupMember":"FIREWALL",
+        "updateGroupId":7,
+        "subGroupId":7,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"fw-swp6s0-in",
+        "acceptedPrefixCounter":0
+      },
+      "L2VPN EVPN":{
+        "peerGroupMember":"FIREWALL",
+        "updateGroupId":1102,
+        "subGroupId":1800,
+        "packetQueueLength":0,
+        "unchangedNextHopPropogatedToNbr":true,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "advertiseAllVnis":true,
+        "outboundPathPolicyConfig":true,
+        "routeMapForOutgoingAdvertisements":"fw-swp6s0-vni",
+        "acceptedPrefixCounter":91
+      }
+    },
+    "connectionsEstablished":1,
+    "connectionsDropped":0,
+    "lastReset":"never",
+    "hostLocal":"fe80::ba6a:97ff:fe74:4f",
+    "portLocal":35927,
+    "hostForeign":"fe80::b696:91ff:fea5:8be6",
+    "portForeign":179,
+    "nexthop":"10.0.7.1",
+    "nexthopGlobal":"fe80::ba6a:97ff:fe74:4f",
+    "nexthopLocal":"fe80::ba6a:97ff:fe74:4f",
+    "bgpConnection":"sharedNetwork",
+    "connectRetryTimer":10,
+    "readThread":"on",
+    "writeThread":"on"
+  },
+  "swp6s2":{
+    "bgpNeighborAddr":"fe80::527c:6fff:fe16:c598",
+    "remoteAs":4210000113,
+    "localAs":4200017001,
+    "nbrExternalLink":true,
+    "hostname":"shoot--pqswjf--inttest10-firewall-fad5e",
+    "peerGroup":"FIREWALL",
+    "bgpVersion":4,
+    "remoteRouterId":"10.0.0.10",
+    "bgpState":"Established",
+    "bgpTimerUp":160263000,
+    "bgpTimerUpMsec":160263000,
+    "bgpTimerUpString":"1d20h31m",
+    "bgpTimerUpEstablishedEpoch":1777901338,
+    "bgpTimerLastRead":1000,
+    "bgpTimerLastWrite":1000,
+    "bgpInUpdateElapsedTimeMsecs":83806000,
+    "bgpTimerHoldTimeMsecs":8000,
+    "bgpTimerKeepAliveIntervalMsecs":2000,
+    "bgpTimerConfiguredHoldTimeMsecs":8000,
+    "bgpTimerConfiguredKeepAliveIntervalMsecs":2000,
+    "neighborCapabilities":{
+      "4byteAs":"advertisedAndReceived",
+      "addPath":{
+        "IPv4 Unicast":{
+          "rxAdvertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "rxAdvertisedAndReceived":true
+        },
+        "L2VPN EVPN":{
+          "rxAdvertisedAndReceived":true
+        }
+      },
+      "dynamic":"received",
+      "extendedNexthop":"advertisedAndReceived",
+      "extendedNexthopFamililesByPeer":{
+        "IPv4 Unicast":"recieved"
+      },
+      "routeRefresh":"advertisedAndReceivedNew",
+      "multiprotocolExtensions":{
+        "IPv4 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "L2VPN EVPN":{
+          "advertisedAndReceived":true
+        }
+      },
+      "hostName":{
+        "advHostName":"fra-equ01-r01leaf01",
+        "advDomainName":"n\/a",
+        "rcvHostName":"shoot--pqswjf--inttest10-firewall-fad5e",
+        "rcvDomainName":"n\/a"
+      },
+      "gracefulRestart":"advertisedAndReceived",
+      "gracefulRestartRemoteTimerMsecs":120000,
+      "addressFamiliesByPeer":"none"
+    },
+    "gracefulRestartInfo":{
+      "endOfRibSend":{
+        "IPv4 Unicast":true,
+        "IPv6 Unicast":true,
+        "L2VPN EVPN":true
+      },
+      "endOfRibRecv":{
+        "IPv4 Unicast":true,
+        "IPv6 Unicast":true,
+        "L2VPN EVPN":true
+      }
+    },
+    "messageStats":{
+      "depthInq":0,
+      "depthOutq":0,
+      "opensSent":2,
+      "opensRecv":1,
+      "notificationsSent":0,
+      "notificationsRecv":0,
+      "updatesSent":391,
+      "updatesRecv":248,
+      "keepalivesSent":80129,
+      "keepalivesRecv":80126,
+      "routeRefreshSent":0,
+      "routeRefreshRecv":0,
+      "capabilitySent":0,
+      "capabilityRecv":0,
+      "totalSent":80522,
+      "totalRecv":80375
+    },
+    "minBtwnAdvertisementRunsTimerMsecs":0,
+    "addressFamilyInfo":{
+      "IPv4 Unicast":{
+        "peerGroupMember":"FIREWALL",
+        "updateGroupId":6,
+        "subGroupId":6,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"fw-swp6s2-in",
+        "acceptedPrefixCounter":1
+      },
+      "IPv6 Unicast":{
+        "peerGroupMember":"FIREWALL",
+        "updateGroupId":7,
+        "subGroupId":7,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"fw-swp6s2-in",
+        "acceptedPrefixCounter":0
+      },
+      "L2VPN EVPN":{
+        "peerGroupMember":"FIREWALL",
+        "updateGroupId":1126,
+        "subGroupId":1839,
+        "packetQueueLength":0,
+        "unchangedNextHopPropogatedToNbr":true,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "advertiseAllVnis":true,
+        "outboundPathPolicyConfig":true,
+        "routeMapForOutgoingAdvertisements":"fw-swp6s2-vni",
+        "acceptedPrefixCounter":112
+      }
+    },
+    "connectionsEstablished":1,
+    "connectionsDropped":0,
+    "lastReset":"never",
+    "hostLocal":"fe80::ba6a:97ff:fe74:51",
+    "portLocal":179,
+    "hostForeign":"fe80::527c:6fff:fe16:c598",
+    "portForeign":51920,
+    "nexthop":"10.0.7.1",
+    "nexthopGlobal":"fe80::ba6a:97ff:fe74:51",
+    "nexthopLocal":"fe80::ba6a:97ff:fe74:51",
+    "bgpConnection":"sharedNetwork",
+    "connectRetryTimer":10,
+    "readThread":"on",
+    "writeThread":"on"
+  },
+  "swp6s3":{
+    "bgpNeighborAddr":"fe80::527c:6fff:fe16:c59c",
+    "remoteAs":4210000052,
+    "localAs":4200017001,
+    "nbrExternalLink":true,
+    "hostname":"storage-firewall",
+    "peerGroup":"FIREWALL",
+    "bgpVersion":4,
+    "remoteRouterId":"10.0.0.1",
+    "bgpState":"Established",
+    "bgpTimerUp":17631846000,
+    "bgpTimerUpMsec":17631846000,
+    "bgpTimerUpString":"29w1d01h",
+    "bgpTimerUpEstablishedEpoch":1760429755,
+    "bgpTimerLastRead":0,
+    "bgpTimerLastWrite":0,
+    "bgpInUpdateElapsedTimeMsecs":83806000,
+    "bgpTimerHoldTimeMsecs":8000,
+    "bgpTimerKeepAliveIntervalMsecs":2000,
+    "bgpTimerConfiguredHoldTimeMsecs":8000,
+    "bgpTimerConfiguredKeepAliveIntervalMsecs":2000,
+    "neighborCapabilities":{
+      "4byteAs":"advertisedAndReceived",
+      "addPath":{
+        "IPv4 Unicast":{
+          "rxAdvertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "rxAdvertisedAndReceived":true
+        },
+        "L2VPN EVPN":{
+          "rxAdvertisedAndReceived":true
+        }
+      },
+      "extendedNexthop":"advertisedAndReceived",
+      "extendedNexthopFamililesByPeer":{
+        "IPv4 Unicast":"recieved"
+      },
+      "routeRefresh":"advertisedAndReceivedNew",
+      "multiprotocolExtensions":{
+        "IPv4 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "L2VPN EVPN":{
+          "advertisedAndReceived":true
+        }
+      },
+      "hostName":{
+        "advHostName":"fra-equ01-r01leaf01",
+        "advDomainName":"n\/a",
+        "rcvHostName":"storage-firewall",
+        "rcvDomainName":"n\/a"
+      },
+      "gracefulRestart":"advertisedAndReceived",
+      "gracefulRestartRemoteTimerMsecs":120000,
+      "addressFamiliesByPeer":"none"
+    },
+    "gracefulRestartInfo":{
+      "endOfRibSend":{
+        "IPv4 Unicast":true,
+        "IPv6 Unicast":true,
+        "L2VPN EVPN":true
+      },
+      "endOfRibRecv":{
+        "IPv4 Unicast":true,
+        "IPv6 Unicast":true,
+        "L2VPN EVPN":true
+      }
+    },
+    "messageStats":{
+      "depthInq":0,
+      "depthOutq":0,
+      "opensSent":3,
+      "opensRecv":3,
+      "notificationsSent":0,
+      "notificationsRecv":0,
+      "updatesSent":51988,
+      "updatesRecv":25666,
+      "keepalivesSent":20264893,
+      "keepalivesRecv":20264197,
+      "routeRefreshSent":2,
+      "routeRefreshRecv":0,
+      "capabilitySent":0,
+      "capabilityRecv":0,
+      "totalSent":20316886,
+      "totalRecv":20289866
+    },
+    "minBtwnAdvertisementRunsTimerMsecs":0,
+    "addressFamilyInfo":{
+      "IPv4 Unicast":{
+        "peerGroupMember":"FIREWALL",
+        "updateGroupId":6,
+        "subGroupId":6,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"fw-swp6s3-in",
+        "acceptedPrefixCounter":1
+      },
+      "IPv6 Unicast":{
+        "peerGroupMember":"FIREWALL",
+        "updateGroupId":7,
+        "subGroupId":7,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"fw-swp6s3-in",
+        "acceptedPrefixCounter":0
+      },
+      "L2VPN EVPN":{
+        "peerGroupMember":"FIREWALL",
+        "updateGroupId":481,
+        "subGroupId":727,
+        "packetQueueLength":0,
+        "unchangedNextHopPropogatedToNbr":true,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "advertiseAllVnis":true,
+        "outboundPathPolicyConfig":true,
+        "routeMapForOutgoingAdvertisements":"fw-swp6s3-vni",
+        "acceptedPrefixCounter":63
+      }
+    },
+    "connectionsEstablished":3,
+    "connectionsDropped":2,
+    "lastResetTimerMsecs":6251000,
+    "lastResetDueTo":"Peer closed the session",
+    "hostLocal":"fe80::ba6a:97ff:fe74:52",
+    "portLocal":179,
+    "hostForeign":"fe80::527c:6fff:fe16:c59c",
+    "portForeign":53678,
+    "nexthop":"10.0.7.1",
+    "nexthopGlobal":"fe80::ba6a:97ff:fe74:52",
+    "nexthopLocal":"fe80::ba6a:97ff:fe74:52",
+    "bgpConnection":"sharedNetwork",
+    "connectRetryTimer":10,
+    "readThread":"on",
+    "writeThread":"on"
+  },
+  "swp7s0":{
+    "bgpNeighborAddr":"fe80::527c:6fff:fe16:c5d0",
+    "remoteAs":4210000063,
+    "localAs":4200017001,
+    "nbrExternalLink":true,
+    "hostname":"shoot--pbs4kr--inttest400-firewall-6d7f3",
+    "peerGroup":"FIREWALL",
+    "bgpVersion":4,
+    "remoteRouterId":"10.0.0.5",
+    "bgpState":"Established",
+    "bgpTimerUp":17631742000,
+    "bgpTimerUpMsec":17631742000,
+    "bgpTimerUpString":"29w1d01h",
+    "bgpTimerUpEstablishedEpoch":1760429859,
+    "bgpTimerLastRead":1000,
+    "bgpTimerLastWrite":0,
+    "bgpInUpdateElapsedTimeMsecs":83806000,
+    "bgpTimerHoldTimeMsecs":8000,
+    "bgpTimerKeepAliveIntervalMsecs":2000,
+    "bgpTimerConfiguredHoldTimeMsecs":8000,
+    "bgpTimerConfiguredKeepAliveIntervalMsecs":2000,
+    "neighborCapabilities":{
+      "4byteAs":"advertisedAndReceived",
+      "addPath":{
+        "IPv4 Unicast":{
+          "rxAdvertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "rxAdvertisedAndReceived":true
+        },
+        "L2VPN EVPN":{
+          "rxAdvertisedAndReceived":true
+        }
+      },
+      "extendedNexthop":"advertisedAndReceived",
+      "extendedNexthopFamililesByPeer":{
+        "IPv4 Unicast":"recieved"
+      },
+      "routeRefresh":"advertisedAndReceivedNew",
+      "multiprotocolExtensions":{
+        "IPv4 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "L2VPN EVPN":{
+          "advertisedAndReceived":true
+        }
+      },
+      "hostName":{
+        "advHostName":"fra-equ01-r01leaf01",
+        "advDomainName":"n\/a",
+        "rcvHostName":"shoot--pbs4kr--inttest400-firewall-6d7f3",
+        "rcvDomainName":"n\/a"
+      },
+      "gracefulRestart":"advertisedAndReceived",
+      "gracefulRestartRemoteTimerMsecs":120000,
+      "addressFamiliesByPeer":"none"
+    },
+    "gracefulRestartInfo":{
+      "endOfRibSend":{
+        "IPv4 Unicast":true,
+        "IPv6 Unicast":true,
+        "L2VPN EVPN":true
+      },
+      "endOfRibRecv":{
+        "IPv4 Unicast":true,
+        "IPv6 Unicast":true,
+        "L2VPN EVPN":true
+      }
+    },
+    "messageStats":{
+      "depthInq":0,
+      "depthOutq":0,
+      "opensSent":4,
+      "opensRecv":3,
+      "notificationsSent":0,
+      "notificationsRecv":0,
+      "updatesSent":88243,
+      "updatesRecv":62166,
+      "keepalivesSent":20264895,
+      "keepalivesRecv":20264216,
+      "routeRefreshSent":2,
+      "routeRefreshRecv":0,
+      "capabilitySent":0,
+      "capabilityRecv":0,
+      "totalSent":20353144,
+      "totalRecv":20326385
+    },
+    "minBtwnAdvertisementRunsTimerMsecs":0,
+    "addressFamilyInfo":{
+      "IPv4 Unicast":{
+        "peerGroupMember":"FIREWALL",
+        "updateGroupId":6,
+        "subGroupId":6,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"fw-swp7s0-in",
+        "acceptedPrefixCounter":1
+      },
+      "IPv6 Unicast":{
+        "peerGroupMember":"FIREWALL",
+        "updateGroupId":7,
+        "subGroupId":7,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"fw-swp7s0-in",
+        "acceptedPrefixCounter":0
+      },
+      "L2VPN EVPN":{
+        "peerGroupMember":"FIREWALL",
+        "updateGroupId":484,
+        "subGroupId":733,
+        "packetQueueLength":0,
+        "unchangedNextHopPropogatedToNbr":true,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "advertiseAllVnis":true,
+        "outboundPathPolicyConfig":true,
+        "routeMapForOutgoingAdvertisements":"fw-swp7s0-vni",
+        "acceptedPrefixCounter":113
+      }
+    },
+    "connectionsEstablished":3,
+    "connectionsDropped":2,
+    "lastResetTimerMsecs":6146000,
+    "lastResetDueTo":"Peer closed the session",
+    "hostLocal":"fe80::ba6a:97ff:fe74:53",
+    "portLocal":179,
+    "hostForeign":"fe80::527c:6fff:fe16:c5d0",
+    "portForeign":46474,
+    "nexthop":"10.0.7.1",
+    "nexthopGlobal":"fe80::ba6a:97ff:fe74:53",
+    "nexthopLocal":"fe80::ba6a:97ff:fe74:53",
+    "bgpConnection":"sharedNetwork",
+    "connectRetryTimer":10,
+    "readThread":"on",
+    "writeThread":"on"
+  },
+  "swp7s1":{
+    "bgpNeighborAddr":"fe80::527c:6fff:fe16:c7f2",
+    "remoteAs":4210000155,
+    "localAs":4200017001,
+    "nbrExternalLink":true,
+    "hostname":"shoot--test--fra-equ01-firewall-d7564",
+    "peerGroup":"FIREWALL",
+    "bgpVersion":4,
+    "remoteRouterId":"10.0.0.8",
+    "bgpState":"Established",
+    "bgpTimerUp":2518161000,
+    "bgpTimerUpMsec":2518161000,
+    "bgpTimerUpString":"04w1d03h",
+    "bgpTimerUpEstablishedEpoch":1775543440,
+    "bgpTimerLastRead":1000,
+    "bgpTimerLastWrite":0,
+    "bgpInUpdateElapsedTimeMsecs":443000,
+    "bgpTimerHoldTimeMsecs":8000,
+    "bgpTimerKeepAliveIntervalMsecs":2000,
+    "bgpTimerConfiguredHoldTimeMsecs":8000,
+    "bgpTimerConfiguredKeepAliveIntervalMsecs":2000,
+    "neighborCapabilities":{
+      "4byteAs":"advertisedAndReceived",
+      "addPath":{
+        "IPv4 Unicast":{
+          "rxAdvertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "rxAdvertisedAndReceived":true
+        },
+        "L2VPN EVPN":{
+          "rxAdvertisedAndReceived":true
+        }
+      },
+      "extendedNexthop":"advertisedAndReceived",
+      "extendedNexthopFamililesByPeer":{
+        "IPv4 Unicast":"recieved"
+      },
+      "routeRefresh":"advertisedAndReceivedNew",
+      "multiprotocolExtensions":{
+        "IPv4 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "L2VPN EVPN":{
+          "advertisedAndReceived":true
+        }
+      },
+      "hostName":{
+        "advHostName":"fra-equ01-r01leaf01",
+        "advDomainName":"n\/a",
+        "rcvHostName":"shoot--test--fra-equ01-firewall-d7564",
+        "rcvDomainName":"n\/a"
+      },
+      "gracefulRestart":"advertisedAndReceived",
+      "gracefulRestartRemoteTimerMsecs":120000,
+      "addressFamiliesByPeer":"none"
+    },
+    "gracefulRestartInfo":{
+      "endOfRibSend":{
+        "IPv4 Unicast":true,
+        "IPv6 Unicast":true,
+        "L2VPN EVPN":true
+      },
+      "endOfRibRecv":{
+        "IPv4 Unicast":true,
+        "IPv6 Unicast":true,
+        "L2VPN EVPN":true
+      }
+    },
+    "messageStats":{
+      "depthInq":0,
+      "depthOutq":0,
+      "opensSent":8,
+      "opensRecv":6,
+      "notificationsSent":0,
+      "notificationsRecv":0,
+      "updatesSent":195642,
+      "updatesRecv":160766,
+      "keepalivesSent":11271767,
+      "keepalivesRecv":11271530,
+      "routeRefreshSent":0,
+      "routeRefreshRecv":0,
+      "capabilitySent":0,
+      "capabilityRecv":0,
+      "totalSent":11467417,
+      "totalRecv":11432302
+    },
+    "minBtwnAdvertisementRunsTimerMsecs":0,
+    "addressFamilyInfo":{
+      "IPv4 Unicast":{
+        "peerGroupMember":"FIREWALL",
+        "updateGroupId":6,
+        "subGroupId":6,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"fw-swp7s1-in",
+        "acceptedPrefixCounter":1
+      },
+      "IPv6 Unicast":{
+        "peerGroupMember":"FIREWALL",
+        "updateGroupId":7,
+        "subGroupId":7,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"fw-swp7s1-in",
+        "acceptedPrefixCounter":0
+      },
+      "L2VPN EVPN":{
+        "peerGroupMember":"FIREWALL",
+        "updateGroupId":1097,
+        "subGroupId":1794,
+        "packetQueueLength":0,
+        "unchangedNextHopPropogatedToNbr":true,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "advertiseAllVnis":true,
+        "outboundPathPolicyConfig":true,
+        "routeMapForOutgoingAdvertisements":"fw-swp7s1-vni",
+        "acceptedPrefixCounter":245
+      }
+    },
+    "connectionsEstablished":6,
+    "connectionsDropped":5,
+    "lastResetTimerMsecs":12566000,
+    "lastResetDueTo":"Peer closed the session",
+    "hostLocal":"fe80::ba6a:97ff:fe74:54",
+    "portLocal":179,
+    "hostForeign":"fe80::527c:6fff:fe16:c7f2",
+    "portForeign":52604,
+    "nexthop":"10.0.7.1",
+    "nexthopGlobal":"fe80::ba6a:97ff:fe74:54",
+    "nexthopLocal":"fe80::ba6a:97ff:fe74:54",
+    "bgpConnection":"sharedNetwork",
+    "connectRetryTimer":10,
+    "readThread":"on",
+    "writeThread":"on"
+  },
+  "swp7s2":{
+    "bgpNeighborAddr":"fe80::527c:6fff:fe16:c7f4",
+    "remoteAs":4210000030,
+    "localAs":4200017001,
+    "nbrExternalLink":true,
+    "hostname":"shoot--test--fraequ01b-firewall-8dc7d",
+    "peerGroup":"FIREWALL",
+    "bgpVersion":4,
+    "remoteRouterId":"10.0.0.7",
+    "bgpState":"Established",
+    "bgpTimerUp":17631896000,
+    "bgpTimerUpMsec":17631896000,
+    "bgpTimerUpString":"29w1d01h",
+    "bgpTimerUpEstablishedEpoch":1760429705,
+    "bgpTimerLastRead":1000,
+    "bgpTimerLastWrite":0,
+    "bgpInUpdateElapsedTimeMsecs":8698000,
+    "bgpTimerHoldTimeMsecs":8000,
+    "bgpTimerKeepAliveIntervalMsecs":2000,
+    "bgpTimerConfiguredHoldTimeMsecs":8000,
+    "bgpTimerConfiguredKeepAliveIntervalMsecs":2000,
+    "neighborCapabilities":{
+      "4byteAs":"advertisedAndReceived",
+      "addPath":{
+        "IPv4 Unicast":{
+          "rxAdvertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "rxAdvertisedAndReceived":true
+        },
+        "L2VPN EVPN":{
+          "rxAdvertisedAndReceived":true
+        }
+      },
+      "extendedNexthop":"advertisedAndReceived",
+      "extendedNexthopFamililesByPeer":{
+        "IPv4 Unicast":"recieved"
+      },
+      "routeRefresh":"advertisedAndReceivedNew",
+      "multiprotocolExtensions":{
+        "IPv4 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "L2VPN EVPN":{
+          "advertisedAndReceived":true
+        }
+      },
+      "hostName":{
+        "advHostName":"fra-equ01-r01leaf01",
+        "advDomainName":"n\/a",
+        "rcvHostName":"shoot--test--fraequ01b-firewall-8dc7d",
+        "rcvDomainName":"n\/a"
+      },
+      "gracefulRestart":"advertisedAndReceived",
+      "gracefulRestartRemoteTimerMsecs":120000,
+      "addressFamiliesByPeer":"none"
+    },
+    "gracefulRestartInfo":{
+      "endOfRibSend":{
+        "IPv4 Unicast":true,
+        "IPv6 Unicast":true,
+        "L2VPN EVPN":true
+      },
+      "endOfRibRecv":{
+        "IPv4 Unicast":true,
+        "IPv6 Unicast":true,
+        "L2VPN EVPN":true
+      }
+    },
+    "messageStats":{
+      "depthInq":0,
+      "depthOutq":0,
+      "opensSent":5,
+      "opensRecv":3,
+      "notificationsSent":0,
+      "notificationsRecv":0,
+      "updatesSent":308042,
+      "updatesRecv":286630,
+      "keepalivesSent":13646495,
+      "keepalivesRecv":13646233,
+      "routeRefreshSent":2,
+      "routeRefreshRecv":0,
+      "capabilitySent":0,
+      "capabilityRecv":0,
+      "totalSent":13954544,
+      "totalRecv":13932866
+    },
+    "minBtwnAdvertisementRunsTimerMsecs":0,
+    "addressFamilyInfo":{
+      "IPv4 Unicast":{
+        "peerGroupMember":"FIREWALL",
+        "updateGroupId":6,
+        "subGroupId":6,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"fw-swp7s2-in",
+        "acceptedPrefixCounter":1
+      },
+      "IPv6 Unicast":{
+        "peerGroupMember":"FIREWALL",
+        "updateGroupId":7,
+        "subGroupId":7,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"fw-swp7s2-in",
+        "acceptedPrefixCounter":0
+      },
+      "L2VPN EVPN":{
+        "peerGroupMember":"FIREWALL",
+        "updateGroupId":480,
+        "subGroupId":725,
+        "packetQueueLength":0,
+        "unchangedNextHopPropogatedToNbr":true,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "advertiseAllVnis":true,
+        "outboundPathPolicyConfig":true,
+        "routeMapForOutgoingAdvertisements":"fw-swp7s2-vni",
+        "acceptedPrefixCounter":216
+      }
+    },
+    "connectionsEstablished":3,
+    "connectionsDropped":2,
+    "lastResetTimerMsecs":6300000,
+    "lastResetDueTo":"Peer closed the session",
+    "hostLocal":"fe80::ba6a:97ff:fe74:55",
+    "portLocal":179,
+    "hostForeign":"fe80::527c:6fff:fe16:c7f4",
+    "portForeign":59180,
+    "nexthop":"10.0.7.1",
+    "nexthopGlobal":"fe80::ba6a:97ff:fe74:55",
+    "nexthopLocal":"fe80::ba6a:97ff:fe74:55",
+    "bgpConnection":"sharedNetwork",
+    "connectRetryTimer":10,
+    "readThread":"on",
+    "writeThread":"on"
+  },
+  "swp7s3":{
+    "bgpNeighborAddr":"fe80::527c:6fff:fe16:c5a8",
+    "remoteAs":4210000102,
+    "localAs":4200017001,
+    "nbrExternalLink":true,
+    "hostname":"ontap-fw",
+    "peerGroup":"FIREWALL",
+    "bgpVersion":4,
+    "remoteRouterId":"10.0.0.9",
+    "bgpState":"Established",
+    "bgpTimerUp":1298997000,
+    "bgpTimerUpMsec":1298997000,
+    "bgpTimerUpString":"02w1d00h",
+    "bgpTimerUpEstablishedEpoch":1776762604,
+    "bgpTimerLastRead":0,
+    "bgpTimerLastWrite":0,
+    "bgpInUpdateElapsedTimeMsecs":83806000,
+    "bgpTimerHoldTimeMsecs":8000,
+    "bgpTimerKeepAliveIntervalMsecs":2000,
+    "bgpTimerConfiguredHoldTimeMsecs":8000,
+    "bgpTimerConfiguredKeepAliveIntervalMsecs":2000,
+    "neighborCapabilities":{
+      "4byteAs":"advertisedAndReceived",
+      "addPath":{
+        "IPv4 Unicast":{
+          "rxAdvertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "rxAdvertisedAndReceived":true
+        },
+        "L2VPN EVPN":{
+          "rxAdvertisedAndReceived":true
+        }
+      },
+      "dynamic":"received",
+      "extendedNexthop":"advertisedAndReceived",
+      "extendedNexthopFamililesByPeer":{
+        "IPv4 Unicast":"recieved"
+      },
+      "routeRefresh":"advertisedAndReceivedNew",
+      "multiprotocolExtensions":{
+        "IPv4 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "L2VPN EVPN":{
+          "advertisedAndReceived":true
+        }
+      },
+      "hostName":{
+        "advHostName":"fra-equ01-r01leaf01",
+        "advDomainName":"n\/a",
+        "rcvHostName":"ontap-fw",
+        "rcvDomainName":"n\/a"
+      },
+      "gracefulRestart":"advertisedAndReceived",
+      "gracefulRestartRemoteTimerMsecs":120000,
+      "addressFamiliesByPeer":"none"
+    },
+    "gracefulRestartInfo":{
+      "endOfRibSend":{
+        "IPv4 Unicast":true,
+        "IPv6 Unicast":true,
+        "L2VPN EVPN":true
+      },
+      "endOfRibRecv":{
+        "IPv4 Unicast":true,
+        "IPv6 Unicast":true,
+        "L2VPN EVPN":true
+      }
+    },
+    "messageStats":{
+      "depthInq":0,
+      "depthOutq":0,
+      "opensSent":2,
+      "opensRecv":1,
+      "notificationsSent":0,
+      "notificationsRecv":0,
+      "updatesSent":673,
+      "updatesRecv":546,
+      "keepalivesSent":649476,
+      "keepalivesRecv":649447,
+      "routeRefreshSent":0,
+      "routeRefreshRecv":0,
+      "capabilitySent":0,
+      "capabilityRecv":0,
+      "totalSent":650151,
+      "totalRecv":649994
+    },
+    "minBtwnAdvertisementRunsTimerMsecs":0,
+    "addressFamilyInfo":{
+      "IPv4 Unicast":{
+        "peerGroupMember":"FIREWALL",
+        "updateGroupId":6,
+        "subGroupId":6,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"fw-swp7s3-in",
+        "acceptedPrefixCounter":1
+      },
+      "IPv6 Unicast":{
+        "peerGroupMember":"FIREWALL",
+        "updateGroupId":7,
+        "subGroupId":7,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"fw-swp7s3-in",
+        "acceptedPrefixCounter":0
+      },
+      "L2VPN EVPN":{
+        "peerGroupMember":"FIREWALL",
+        "updateGroupId":1111,
+        "subGroupId":1814,
+        "packetQueueLength":0,
+        "unchangedNextHopPropogatedToNbr":true,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "advertiseAllVnis":true,
+        "outboundPathPolicyConfig":true,
+        "routeMapForOutgoingAdvertisements":"fw-swp7s3-vni",
+        "acceptedPrefixCounter":44
+      }
+    },
+    "connectionsEstablished":1,
+    "connectionsDropped":0,
+    "lastReset":"never",
+    "hostLocal":"fe80::ba6a:97ff:fe74:56",
+    "portLocal":179,
+    "hostForeign":"fe80::527c:6fff:fe16:c5a8",
+    "portForeign":41836,
+    "nexthop":"10.0.7.1",
+    "nexthopGlobal":"fe80::ba6a:97ff:fe74:56",
+    "nexthopLocal":"fe80::ba6a:97ff:fe74:56",
+    "bgpConnection":"sharedNetwork",
+    "connectRetryTimer":10,
+    "readThread":"on",
+    "writeThread":"on"
+  }
+}
+,
+"vrf81":{
+  "vrfId":5728,
+  "vrfName":"vrf81",
+  "swp2s2":{
+    "bgpNeighborAddr":"fe80::ae1f:6bff:fed3:9026",
+    "remoteAs":4210000081,
+    "localAs":4200017001,
+    "nbrExternalLink":true,
+    "hostname":"shoot--test--fraequ01b-group-cri-0-6f4d7-2qntv",
+    "peerGroup":"MACHINE",
+    "bgpVersion":4,
+    "remoteRouterId":"10.128.112.3",
+    "bgpState":"Established",
+    "bgpTimerUp":14347261000,
+    "bgpTimerUpMsec":14347261000,
+    "bgpTimerUpString":"23w5d01h",
+    "bgpTimerUpEstablishedEpoch":1763714340,
+    "bgpTimerLastRead":1000,
+    "bgpTimerLastWrite":0,
+    "bgpInUpdateElapsedTimeMsecs":8698000,
+    "bgpTimerHoldTimeMsecs":8000,
+    "bgpTimerKeepAliveIntervalMsecs":2000,
+    "bgpTimerConfiguredHoldTimeMsecs":8000,
+    "bgpTimerConfiguredKeepAliveIntervalMsecs":2000,
+    "neighborCapabilities":{
+      "4byteAs":"advertisedAndReceived",
+      "addPath":{
+        "IPv4 Unicast":{
+          "rxAdvertisedAndReceived":true
+        }
+      },
+      "dynamic":"received",
+      "extendedNexthop":"advertisedAndReceived",
+      "extendedNexthopFamililesByPeer":{
+        "IPv4 Unicast":"recieved"
+      },
+      "routeRefresh":"advertisedAndReceivedNew",
+      "multiprotocolExtensions":{
+        "IPv4 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "received":true
+        }
+      },
+      "hostName":{
+        "advHostName":"fra-equ01-r01leaf01",
+        "advDomainName":"n\/a",
+        "rcvHostName":"shoot--test--fraequ01b-group-cri-0-6f4d7-2qntv",
+        "rcvDomainName":"n\/a"
+      },
+      "gracefulRestart":"advertisedAndReceived",
+      "gracefulRestartRemoteTimerMsecs":120000,
+      "addressFamiliesByPeer":"none"
+    },
+    "gracefulRestartInfo":{
+      "endOfRibSend":{
+        "IPv4 Unicast":true
+      },
+      "endOfRibRecv":{
+        "IPv4 Unicast":true
+      }
+    },
+    "messageStats":{
+      "depthInq":0,
+      "depthOutq":0,
+      "opensSent":36,
+      "opensRecv":31,
+      "notificationsSent":10,
+      "notificationsRecv":44,
+      "updatesSent":226640,
+      "updatesRecv":116953,
+      "keepalivesSent":13055073,
+      "keepalivesRecv":13055087,
+      "routeRefreshSent":183,
+      "routeRefreshRecv":0,
+      "capabilitySent":0,
+      "capabilityRecv":0,
+      "totalSent":13281942,
+      "totalRecv":13172115
+    },
+    "minBtwnAdvertisementRunsTimerMsecs":0,
+    "addressFamilyInfo":{
+      "IPv4 Unicast":{
+        "peerGroupMember":"MACHINE",
+        "updateGroupId":714,
+        "subGroupId":1242,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"vrf81-in",
+        "acceptedPrefixCounter":177,
+        "prefixAllowedMax":24000,
+        "prefixAllowedWarningThresh":75
+      }
+    },
+    "connectionsEstablished":30,
+    "connectionsDropped":29,
+    "lastResetTimerMsecs":5034000,
+    "lastResetDueTo":"Interface down",
+    "hostLocal":"fe80::ba6a:97ff:fe74:41",
+    "portLocal":179,
+    "hostForeign":"fe80::ae1f:6bff:fed3:9026",
+    "portForeign":63896,
+    "nexthop":"10.0.7.1",
+    "nexthopGlobal":"fe80::ba6a:97ff:fe74:41",
+    "nexthopLocal":"fe80::ba6a:97ff:fe74:41",
+    "bgpConnection":"sharedNetwork",
+    "connectRetryTimer":10,
+    "readThread":"on",
+    "writeThread":"on"
+  }
+}
+,
+"vrf20":{
+  "vrfId":127,
+  "vrfName":"vrf20",
+  "swp3s0":{
+    "bgpNeighborAddr":"fe80::225:90ff:fe5f:207a",
+    "remoteAs":4210000050,
+    "localAs":4200017001,
+    "nbrExternalLink":true,
+    "hostname":"storage-2",
+    "peerGroup":"MACHINE",
+    "bgpVersion":4,
+    "remoteRouterId":"10.131.44.3",
+    "bgpState":"Established",
+    "bgpTimerUp":29811563000,
+    "bgpTimerUpMsec":29811563000,
+    "bgpTimerUpString":"49w2d00h",
+    "bgpTimerUpEstablishedEpoch":1748250038,
+    "bgpTimerLastRead":1000,
+    "bgpTimerLastWrite":0,
+    "bgpInUpdateElapsedTimeMsecs":3562000,
+    "bgpTimerHoldTimeMsecs":8000,
+    "bgpTimerKeepAliveIntervalMsecs":2000,
+    "bgpTimerConfiguredHoldTimeMsecs":8000,
+    "bgpTimerConfiguredKeepAliveIntervalMsecs":2000,
+    "neighborCapabilities":{
+      "4byteAs":"advertisedAndReceived",
+      "addPath":{
+        "IPv4 Unicast":{
+          "rxAdvertisedAndReceived":true
+        }
+      },
+      "extendedNexthop":"advertisedAndReceived",
+      "extendedNexthopFamililesByPeer":{
+        "IPv4 Unicast":"recieved"
+      },
+      "routeRefresh":"advertisedAndReceivedOldNew",
+      "multiprotocolExtensions":{
+        "IPv4 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "received":true
+        }
+      },
+      "hostName":{
+        "advHostName":"fra-equ01-r01leaf01",
+        "advDomainName":"n\/a",
+        "rcvHostName":"storage-2",
+        "rcvDomainName":"n\/a"
+      },
+      "gracefulRestart":"advertisedAndReceived",
+      "gracefulRestartRemoteTimerMsecs":120000,
+      "addressFamiliesByPeer":"none"
+    },
+    "gracefulRestartInfo":{
+      "endOfRibSend":{
+        "IPv4 Unicast":true
+      },
+      "endOfRibRecv":{
+        "IPv4 Unicast":true
+      }
+    },
+    "messageStats":{
+      "depthInq":0,
+      "depthOutq":0,
+      "opensSent":28,
+      "opensRecv":16,
+      "notificationsSent":0,
+      "notificationsRecv":0,
+      "updatesSent":19982,
+      "updatesRecv":33,
+      "keepalivesSent":20262365,
+      "keepalivesRecv":20262261,
+      "routeRefreshSent":1,
+      "routeRefreshRecv":0,
+      "capabilitySent":0,
+      "capabilityRecv":0,
+      "totalSent":20282376,
+      "totalRecv":20262310
+    },
+    "minBtwnAdvertisementRunsTimerMsecs":0,
+    "addressFamilyInfo":{
+      "IPv4 Unicast":{
+        "peerGroupMember":"MACHINE",
+        "updateGroupId":17,
+        "subGroupId":129,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"vrf20-in",
+        "acceptedPrefixCounter":2,
+        "prefixAllowedMax":24000,
+        "prefixAllowedWarningThresh":75
+      }
+    },
+    "connectionsEstablished":16,
+    "connectionsDropped":15,
+    "lastResetTimerMsecs":3750000,
+    "lastResetDueTo":"Interface down",
+    "hostLocal":"fe80::ba6a:97ff:fe74:43",
+    "portLocal":179,
+    "hostForeign":"fe80::225:90ff:fe5f:207a",
+    "portForeign":40356,
+    "nexthop":"10.0.7.1",
+    "nexthopGlobal":"fe80::ba6a:97ff:fe74:43",
+    "nexthopLocal":"fe80::ba6a:97ff:fe74:43",
+    "bgpConnection":"sharedNetwork",
+    "connectRetryTimer":10,
+    "readThread":"on",
+    "writeThread":"on"
+  },
+  "swp3s1":{
+    "bgpNeighborAddr":"fe80::225:90ff:fe5f:2032",
+    "remoteAs":4210000046,
+    "localAs":4200017001,
+    "nbrExternalLink":true,
+    "hostname":"storage-1",
+    "peerGroup":"MACHINE",
+    "bgpVersion":4,
+    "remoteRouterId":"10.131.44.2",
+    "bgpState":"Established",
+    "bgpTimerUp":31000180000,
+    "bgpTimerUpMsec":31000180000,
+    "bgpTimerUpString":"51w1d19h",
+    "bgpTimerUpEstablishedEpoch":1747061421,
+    "bgpTimerLastRead":1000,
+    "bgpTimerLastWrite":0,
+    "bgpInUpdateElapsedTimeMsecs":68979000,
+    "bgpTimerHoldTimeMsecs":8000,
+    "bgpTimerKeepAliveIntervalMsecs":2000,
+    "bgpTimerConfiguredHoldTimeMsecs":8000,
+    "bgpTimerConfiguredKeepAliveIntervalMsecs":2000,
+    "neighborCapabilities":{
+      "4byteAs":"advertisedAndReceived",
+      "addPath":{
+        "IPv4 Unicast":{
+          "rxAdvertisedAndReceived":true
+        }
+      },
+      "extendedNexthop":"advertisedAndReceived",
+      "extendedNexthopFamililesByPeer":{
+        "IPv4 Unicast":"recieved"
+      },
+      "routeRefresh":"advertisedAndReceivedOldNew",
+      "multiprotocolExtensions":{
+        "IPv4 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "received":true
+        }
+      },
+      "hostName":{
+        "advHostName":"fra-equ01-r01leaf01",
+        "advDomainName":"n\/a",
+        "rcvHostName":"storage-1",
+        "rcvDomainName":"n\/a"
+      },
+      "gracefulRestart":"advertisedAndReceived",
+      "gracefulRestartRemoteTimerMsecs":120000,
+      "addressFamiliesByPeer":"none"
+    },
+    "gracefulRestartInfo":{
+      "endOfRibSend":{
+        "IPv4 Unicast":true
+      },
+      "endOfRibRecv":{
+        "IPv4 Unicast":true
+      }
+    },
+    "messageStats":{
+      "depthInq":0,
+      "depthOutq":0,
+      "opensSent":2082,
+      "opensRecv":18,
+      "notificationsSent":4098,
+      "notificationsRecv":0,
+      "updatesSent":19620,
+      "updatesRecv":36,
+      "keepalivesSent":19945975,
+      "keepalivesRecv":19945772,
+      "routeRefreshSent":1,
+      "routeRefreshRecv":0,
+      "capabilitySent":0,
+      "capabilityRecv":0,
+      "totalSent":19971776,
+      "totalRecv":19945826
+    },
+    "minBtwnAdvertisementRunsTimerMsecs":0,
+    "addressFamilyInfo":{
+      "IPv4 Unicast":{
+        "peerGroupMember":"MACHINE",
+        "updateGroupId":17,
+        "subGroupId":129,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"vrf20-in",
+        "acceptedPrefixCounter":2,
+        "prefixAllowedMax":24000,
+        "prefixAllowedWarningThresh":75
+      }
+    },
+    "connectionsEstablished":18,
+    "connectionsDropped":17,
+    "lastResetTimerMsecs":68984000,
+    "lastResetDueTo":"Peer closed the session",
+    "hostLocal":"fe80::ba6a:97ff:fe74:44",
+    "portLocal":179,
+    "hostForeign":"fe80::225:90ff:fe5f:2032",
+    "portForeign":58720,
+    "nexthop":"10.0.7.1",
+    "nexthopGlobal":"fe80::ba6a:97ff:fe74:44",
+    "nexthopLocal":"fe80::ba6a:97ff:fe74:44",
+    "bgpConnection":"sharedNetwork",
+    "connectRetryTimer":10,
+    "readThread":"on",
+    "writeThread":"on"
+  },
+  "swp3s3":{
+    "bgpNeighborAddr":"fe80::ae1f:6bff:fe7a:ed72",
+    "remoteAs":4210000042,
+    "localAs":4200017001,
+    "nbrExternalLink":true,
+    "hostname":"storage-0",
+    "peerGroup":"MACHINE",
+    "bgpVersion":4,
+    "remoteRouterId":"10.131.44.1",
+    "bgpState":"Established",
+    "bgpTimerUp":31000230000,
+    "bgpTimerUpMsec":31000230000,
+    "bgpTimerUpString":"51w1d19h",
+    "bgpTimerUpEstablishedEpoch":1747061371,
+    "bgpTimerLastRead":1000,
+    "bgpTimerLastWrite":0,
+    "bgpInUpdateElapsedTimeMsecs":69029000,
+    "bgpTimerHoldTimeMsecs":8000,
+    "bgpTimerKeepAliveIntervalMsecs":2000,
+    "bgpTimerConfiguredHoldTimeMsecs":8000,
+    "bgpTimerConfiguredKeepAliveIntervalMsecs":2000,
+    "neighborCapabilities":{
+      "4byteAs":"advertisedAndReceived",
+      "addPath":{
+        "IPv4 Unicast":{
+          "rxAdvertisedAndReceived":true
+        }
+      },
+      "extendedNexthop":"advertisedAndReceived",
+      "extendedNexthopFamililesByPeer":{
+        "IPv4 Unicast":"recieved"
+      },
+      "routeRefresh":"advertisedAndReceivedOldNew",
+      "multiprotocolExtensions":{
+        "IPv4 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "received":true
+        }
+      },
+      "hostName":{
+        "advHostName":"fra-equ01-r01leaf01",
+        "advDomainName":"n\/a",
+        "rcvHostName":"storage-0",
+        "rcvDomainName":"n\/a"
+      },
+      "gracefulRestart":"advertisedAndReceived",
+      "gracefulRestartRemoteTimerMsecs":120000,
+      "addressFamiliesByPeer":"none"
+    },
+    "gracefulRestartInfo":{
+      "endOfRibSend":{
+        "IPv4 Unicast":true
+      },
+      "endOfRibRecv":{
+        "IPv4 Unicast":true
+      }
+    },
+    "messageStats":{
+      "depthInq":0,
+      "depthOutq":0,
+      "opensSent":5,
+      "opensRecv":4,
+      "notificationsSent":0,
+      "notificationsRecv":2,
+      "updatesSent":19604,
+      "updatesRecv":8,
+      "keepalivesSent":20264872,
+      "keepalivesRecv":20264970,
+      "routeRefreshSent":1,
+      "routeRefreshRecv":0,
+      "capabilitySent":0,
+      "capabilityRecv":0,
+      "totalSent":20284482,
+      "totalRecv":20264984
+    },
+    "minBtwnAdvertisementRunsTimerMsecs":0,
+    "addressFamilyInfo":{
+      "IPv4 Unicast":{
+        "peerGroupMember":"MACHINE",
+        "updateGroupId":17,
+        "subGroupId":129,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"vrf20-in",
+        "acceptedPrefixCounter":2,
+        "prefixAllowedMax":24000,
+        "prefixAllowedWarningThresh":75
+      }
+    },
+    "connectionsEstablished":4,
+    "connectionsDropped":3,
+    "lastResetTimerMsecs":69035000,
+    "lastResetDueTo":"Peer closed the session",
+    "hostLocal":"fe80::ba6a:97ff:fe74:46",
+    "portLocal":179,
+    "hostForeign":"fe80::ae1f:6bff:fe7a:ed72",
+    "portForeign":51614,
+    "nexthop":"10.0.7.1",
+    "nexthopGlobal":"fe80::ba6a:97ff:fe74:46",
+    "nexthopLocal":"fe80::ba6a:97ff:fe74:46",
+    "bgpConnection":"sharedNetwork",
+    "connectRetryTimer":10,
+    "readThread":"on",
+    "writeThread":"on"
+  }
+}
+,
+"vrf50":{
+  "vrfId":6286,
+  "vrfName":"vrf50",
+  "swp4s3":{
+    "bgpNeighborAddr":"fe80::ae1f:6bff:fe7b:ed26",
+    "remoteAs":4210000054,
+    "localAs":4200017001,
+    "nbrExternalLink":true,
+    "hostname":"shoot--pbs4kr--inttest400-group-0-d9f87-jv484",
+    "peerGroup":"MACHINE",
+    "bgpVersion":4,
+    "remoteRouterId":"10.130.116.3",
+    "bgpState":"Established",
+    "bgpTimerUp":10186938000,
+    "bgpTimerUpMsec":10186938000,
+    "bgpTimerUpString":"16w5d21h",
+    "bgpTimerUpEstablishedEpoch":1767874663,
+    "bgpTimerLastRead":1000,
+    "bgpTimerLastWrite":0,
+    "bgpInUpdateElapsedTimeMsecs":71505000,
+    "bgpTimerHoldTimeMsecs":8000,
+    "bgpTimerKeepAliveIntervalMsecs":2000,
+    "bgpTimerConfiguredHoldTimeMsecs":8000,
+    "bgpTimerConfiguredKeepAliveIntervalMsecs":2000,
+    "neighborCapabilities":{
+      "4byteAs":"advertisedAndReceived",
+      "addPath":{
+        "IPv4 Unicast":{
+          "rxAdvertisedAndReceived":true
+        }
+      },
+      "dynamic":"received",
+      "extendedNexthop":"advertisedAndReceived",
+      "extendedNexthopFamililesByPeer":{
+        "IPv4 Unicast":"recieved"
+      },
+      "routeRefresh":"advertisedAndReceivedNew",
+      "multiprotocolExtensions":{
+        "IPv4 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "received":true
+        }
+      },
+      "hostName":{
+        "advHostName":"fra-equ01-r01leaf01",
+        "advDomainName":"n\/a",
+        "rcvHostName":"shoot--pbs4kr--inttest400-group-0-d9f87-jv484",
+        "rcvDomainName":"n\/a"
+      },
+      "gracefulRestart":"advertisedAndReceived",
+      "gracefulRestartRemoteTimerMsecs":120000,
+      "addressFamiliesByPeer":"none"
+    },
+    "gracefulRestartInfo":{
+      "endOfRibSend":{
+        "IPv4 Unicast":true
+      },
+      "endOfRibRecv":{
+        "IPv4 Unicast":true
+      }
+    },
+    "messageStats":{
+      "depthInq":0,
+      "depthOutq":0,
+      "opensSent":2,
+      "opensRecv":1,
+      "notificationsSent":0,
+      "notificationsRecv":0,
+      "updatesSent":4307,
+      "updatesRecv":2473,
+      "keepalivesSent":5093271,
+      "keepalivesRecv":5093145,
+      "routeRefreshSent":52,
+      "routeRefreshRecv":0,
+      "capabilitySent":0,
+      "capabilityRecv":0,
+      "totalSent":5097632,
+      "totalRecv":5095619
+    },
+    "minBtwnAdvertisementRunsTimerMsecs":0,
+    "addressFamilyInfo":{
+      "IPv4 Unicast":{
+        "peerGroupMember":"MACHINE",
+        "updateGroupId":4,
+        "subGroupId":4,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"vrf50-in",
+        "acceptedPrefixCounter":20,
+        "prefixAllowedMax":24000,
+        "prefixAllowedWarningThresh":75
+      }
+    },
+    "connectionsEstablished":1,
+    "connectionsDropped":0,
+    "lastReset":"never",
+    "hostLocal":"fe80::ba6a:97ff:fe74:4a",
+    "portLocal":179,
+    "hostForeign":"fe80::ae1f:6bff:fe7b:ed26",
+    "portForeign":43924,
+    "nexthop":"10.0.7.1",
+    "nexthopGlobal":"fe80::ba6a:97ff:fe74:4a",
+    "nexthopLocal":"fe80::ba6a:97ff:fe74:4a",
+    "bgpConnection":"sharedNetwork",
+    "connectRetryTimer":10,
+    "readThread":"on",
+    "writeThread":"on"
+  }
+}
+,
+"vrf102":{
+  "vrfId":664,
+  "vrfName":"vrf102",
+  "swp1s0":{
+    "bgpNeighborAddr":"fe80::ae1f:6bff:fe7b:77c8",
+    "remoteAs":4210000047,
+    "localAs":4200017001,
+    "nbrExternalLink":true,
+    "hostname":"shoot--ppwks8--inttest30-group-0-ddbd8-x6q5c",
+    "peerGroup":"MACHINE",
+    "bgpVersion":4,
+    "remoteRouterId":"10.129.228.1",
+    "bgpState":"Established",
+    "bgpTimerUp":4836651000,
+    "bgpTimerUpMsec":4836651000,
+    "bgpTimerUpString":"07w6d23h",
+    "bgpTimerUpEstablishedEpoch":1773224950,
+    "bgpTimerLastRead":2000,
+    "bgpTimerLastWrite":0,
+    "bgpInUpdateElapsedTimeMsecs":19983000,
+    "bgpTimerHoldTimeMsecs":8000,
+    "bgpTimerKeepAliveIntervalMsecs":2000,
+    "bgpTimerConfiguredHoldTimeMsecs":8000,
+    "bgpTimerConfiguredKeepAliveIntervalMsecs":2000,
+    "neighborCapabilities":{
+      "4byteAs":"advertisedAndReceived",
+      "addPath":{
+        "IPv4 Unicast":{
+          "rxAdvertisedAndReceived":true
+        }
+      },
+      "dynamic":"received",
+      "extendedNexthop":"advertisedAndReceived",
+      "extendedNexthopFamililesByPeer":{
+        "IPv4 Unicast":"recieved"
+      },
+      "routeRefresh":"advertisedAndReceivedNew",
+      "multiprotocolExtensions":{
+        "IPv4 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "received":true
+        }
+      },
+      "hostName":{
+        "advHostName":"fra-equ01-r01leaf01",
+        "advDomainName":"n\/a",
+        "rcvHostName":"shoot--ppwks8--inttest30-group-0-ddbd8-x6q5c",
+        "rcvDomainName":"n\/a"
+      },
+      "gracefulRestart":"advertisedAndReceived",
+      "gracefulRestartRemoteTimerMsecs":120000,
+      "addressFamiliesByPeer":"none"
+    },
+    "gracefulRestartInfo":{
+      "endOfRibSend":{
+        "IPv4 Unicast":true
+      },
+      "endOfRibRecv":{
+        "IPv4 Unicast":true
+      }
+    },
+    "messageStats":{
+      "depthInq":0,
+      "depthOutq":0,
+      "opensSent":6,
+      "opensRecv":3,
+      "notificationsSent":0,
+      "notificationsRecv":0,
+      "updatesSent":2748,
+      "updatesRecv":767,
+      "keepalivesSent":3891377,
+      "keepalivesRecv":3891290,
+      "routeRefreshSent":0,
+      "routeRefreshRecv":0,
+      "capabilitySent":0,
+      "capabilityRecv":0,
+      "totalSent":3894131,
+      "totalRecv":3892060
+    },
+    "minBtwnAdvertisementRunsTimerMsecs":0,
+    "addressFamilyInfo":{
+      "IPv4 Unicast":{
+        "peerGroupMember":"MACHINE",
+        "updateGroupId":1050,
+        "subGroupId":1731,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"vrf102-in",
+        "acceptedPrefixCounter":39,
+        "prefixAllowedMax":24000,
+        "prefixAllowedWarningThresh":75
+      }
+    },
+    "connectionsEstablished":3,
+    "connectionsDropped":2,
+    "lastResetTimerMsecs":84818000,
+    "lastResetDueTo":"Interface down",
+    "hostLocal":"fe80::ba6a:97ff:fe74:3b",
+    "portLocal":179,
+    "hostForeign":"fe80::ae1f:6bff:fe7b:77c8",
+    "portForeign":35438,
+    "nexthop":"10.0.7.1",
+    "nexthopGlobal":"fe80::ba6a:97ff:fe74:3b",
+    "nexthopLocal":"fe80::ba6a:97ff:fe74:3b",
+    "bgpConnection":"sharedNetwork",
+    "connectRetryTimer":10,
+    "readThread":"on",
+    "writeThread":"on"
+  }
+}
+,
+"vrf42":{
+  "vrfId":6127,
+  "vrfName":"vrf42",
+  "swp1s3":{
+    "bgpNeighborAddr":"fe80::ae1f:6bff:fe7a:eb90",
+    "remoteAs":4210000020,
+    "localAs":4200017001,
+    "nbrExternalLink":true,
+    "hostname":"shoot--test--fra-equ01-group-cri-0-6d5c9-rxnmr",
+    "peerGroup":"MACHINE",
+    "bgpVersion":4,
+    "remoteRouterId":"10.131.212.2",
+    "bgpState":"Established",
+    "bgpTimerUp":2518127000,
+    "bgpTimerUpMsec":2518127000,
+    "bgpTimerUpString":"04w1d03h",
+    "bgpTimerUpEstablishedEpoch":1775543474,
+    "bgpTimerLastRead":1000,
+    "bgpTimerLastWrite":0,
+    "bgpInUpdateElapsedTimeMsecs":443000,
+    "bgpTimerHoldTimeMsecs":8000,
+    "bgpTimerKeepAliveIntervalMsecs":2000,
+    "bgpTimerConfiguredHoldTimeMsecs":8000,
+    "bgpTimerConfiguredKeepAliveIntervalMsecs":2000,
+    "neighborCapabilities":{
+      "4byteAs":"advertisedAndReceived",
+      "addPath":{
+        "IPv4 Unicast":{
+          "rxAdvertisedAndReceived":true
+        }
+      },
+      "dynamic":"received",
+      "extendedNexthop":"advertisedAndReceived",
+      "extendedNexthopFamililesByPeer":{
+        "IPv4 Unicast":"recieved"
+      },
+      "routeRefresh":"advertisedAndReceivedNew",
+      "multiprotocolExtensions":{
+        "IPv4 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "received":true
+        }
+      },
+      "hostName":{
+        "advHostName":"fra-equ01-r01leaf01",
+        "advDomainName":"n\/a",
+        "rcvHostName":"shoot--test--fra-equ01-group-cri-0-6d5c9-rxnmr",
+        "rcvDomainName":"n\/a"
+      },
+      "gracefulRestart":"advertisedAndReceived",
+      "gracefulRestartRemoteTimerMsecs":120000,
+      "addressFamiliesByPeer":"none"
+    },
+    "gracefulRestartInfo":{
+      "endOfRibSend":{
+        "IPv4 Unicast":true
+      },
+      "endOfRibRecv":{
+        "IPv4 Unicast":true
+      }
+    },
+    "messageStats":{
+      "depthInq":0,
+      "depthOutq":0,
+      "opensSent":4,
+      "opensRecv":2,
+      "notificationsSent":0,
+      "notificationsRecv":0,
+      "updatesSent":43627,
+      "updatesRecv":18551,
+      "keepalivesSent":4745568,
+      "keepalivesRecv":4745558,
+      "routeRefreshSent":12,
+      "routeRefreshRecv":0,
+      "capabilitySent":0,
+      "capabilityRecv":0,
+      "totalSent":4789211,
+      "totalRecv":4764111
+    },
+    "minBtwnAdvertisementRunsTimerMsecs":0,
+    "addressFamilyInfo":{
+      "IPv4 Unicast":{
+        "peerGroupMember":"MACHINE",
+        "updateGroupId":1098,
+        "subGroupId":1795,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"vrf42-in",
+        "acceptedPrefixCounter":141,
+        "prefixAllowedMax":24000,
+        "prefixAllowedWarningThresh":75
+      }
+    },
+    "connectionsEstablished":2,
+    "connectionsDropped":1,
+    "lastResetTimerMsecs":12532000,
+    "lastResetDueTo":"Peer closed the session",
+    "hostLocal":"fe80::ba6a:97ff:fe74:3e",
+    "portLocal":179,
+    "hostForeign":"fe80::ae1f:6bff:fe7a:eb90",
+    "portForeign":64446,
+    "nexthop":"10.0.7.1",
+    "nexthopGlobal":"fe80::ba6a:97ff:fe74:3e",
+    "nexthopLocal":"fe80::ba6a:97ff:fe74:3e",
+    "bgpConnection":"sharedNetwork",
+    "connectRetryTimer":10,
+    "readThread":"on",
+    "writeThread":"on"
+  }
+}
+,
+"vrf44":{
+  "vrfId":8365,
+  "vrfName":"vrf44",
+  "swp4s1":{
+    "bgpNeighborAddr":"fe80::ae1f:6bff:fe7b:efb2",
+    "remoteAs":4210000070,
+    "localAs":4200017001,
+    "nbrExternalLink":true,
+    "hostname":"shoot--pcfgbt--inttest20-group-0-5bb49-pf7hl",
+    "peerGroup":"MACHINE",
+    "bgpVersion":4,
+    "remoteRouterId":"10.129.24.2",
+    "bgpState":"Established",
+    "bgpTimerUp":1982779000,
+    "bgpTimerUpMsec":1982779000,
+    "bgpTimerUpString":"03w1d22h",
+    "bgpTimerUpEstablishedEpoch":1776078822,
+    "bgpTimerLastRead":0,
+    "bgpTimerLastWrite":0,
+    "bgpInUpdateElapsedTimeMsecs":56233000,
+    "bgpTimerHoldTimeMsecs":8000,
+    "bgpTimerKeepAliveIntervalMsecs":2000,
+    "bgpTimerConfiguredHoldTimeMsecs":8000,
+    "bgpTimerConfiguredKeepAliveIntervalMsecs":2000,
+    "neighborCapabilities":{
+      "4byteAs":"advertisedAndReceived",
+      "addPath":{
+        "IPv4 Unicast":{
+          "rxAdvertisedAndReceived":true
+        }
+      },
+      "dynamic":"received",
+      "extendedNexthop":"advertisedAndReceived",
+      "extendedNexthopFamililesByPeer":{
+        "IPv4 Unicast":"recieved"
+      },
+      "routeRefresh":"advertisedAndReceivedNew",
+      "multiprotocolExtensions":{
+        "IPv4 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "received":true
+        }
+      },
+      "hostName":{
+        "advHostName":"fra-equ01-r01leaf01",
+        "advDomainName":"n\/a",
+        "rcvHostName":"shoot--pcfgbt--inttest20-group-0-5bb49-pf7hl",
+        "rcvDomainName":"n\/a"
+      },
+      "gracefulRestart":"advertisedAndReceived",
+      "gracefulRestartRemoteTimerMsecs":120000,
+      "addressFamiliesByPeer":"none"
+    },
+    "gracefulRestartInfo":{
+      "endOfRibSend":{
+        "IPv4 Unicast":true
+      },
+      "endOfRibRecv":{
+        "IPv4 Unicast":true
+      }
+    },
+    "messageStats":{
+      "depthInq":0,
+      "depthOutq":0,
+      "opensSent":2,
+      "opensRecv":1,
+      "notificationsSent":0,
+      "notificationsRecv":0,
+      "updatesSent":370,
+      "updatesRecv":16,
+      "keepalivesSent":991353,
+      "keepalivesRecv":991330,
+      "routeRefreshSent":3,
+      "routeRefreshRecv":0,
+      "capabilitySent":0,
+      "capabilityRecv":0,
+      "totalSent":991728,
+      "totalRecv":991347
+    },
+    "minBtwnAdvertisementRunsTimerMsecs":0,
+    "addressFamilyInfo":{
+      "IPv4 Unicast":{
+        "peerGroupMember":"MACHINE",
+        "updateGroupId":1101,
+        "subGroupId":1798,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"vrf44-in",
+        "acceptedPrefixCounter":4,
+        "prefixAllowedMax":24000,
+        "prefixAllowedWarningThresh":75
+      }
+    },
+    "connectionsEstablished":1,
+    "connectionsDropped":0,
+    "lastReset":"never",
+    "hostLocal":"fe80::ba6a:97ff:fe74:48",
+    "portLocal":179,
+    "hostForeign":"fe80::ae1f:6bff:fe7b:efb2",
+    "portForeign":34606,
+    "nexthop":"10.0.7.1",
+    "nexthopGlobal":"fe80::ba6a:97ff:fe74:48",
+    "nexthopLocal":"fe80::ba6a:97ff:fe74:48",
+    "bgpConnection":"sharedNetwork",
+    "connectRetryTimer":10,
+    "readThread":"on",
+    "writeThread":"on"
+  }
+}
+,
+"vrf110":{
+  "vrfId":8368,
+  "vrfName":"vrf110",
+  "swp1s2":{
+    "bgpNeighborAddr":"fe80::ae1f:6bff:fe7a:eb76",
+    "remoteAs":4210000091,
+    "localAs":4200017001,
+    "nbrExternalLink":true,
+    "hostname":"shoot--pqswjf--inttest10-group-0-77c7d-ttt69",
+    "peerGroup":"MACHINE",
+    "bgpVersion":4,
+    "remoteRouterId":"10.128.96.2",
+    "bgpState":"Established",
+    "bgpTimerUp":1911975000,
+    "bgpTimerUpMsec":1911975000,
+    "bgpTimerUpString":"03w1d03h",
+    "bgpTimerUpEstablishedEpoch":1776149626,
+    "bgpTimerLastRead":1000,
+    "bgpTimerLastWrite":0,
+    "bgpInUpdateElapsedTimeMsecs":73829000,
+    "bgpTimerHoldTimeMsecs":8000,
+    "bgpTimerKeepAliveIntervalMsecs":2000,
+    "bgpTimerConfiguredHoldTimeMsecs":8000,
+    "bgpTimerConfiguredKeepAliveIntervalMsecs":2000,
+    "neighborCapabilities":{
+      "4byteAs":"advertisedAndReceived",
+      "addPath":{
+        "IPv4 Unicast":{
+          "rxAdvertisedAndReceived":true
+        }
+      },
+      "dynamic":"received",
+      "extendedNexthop":"advertisedAndReceived",
+      "extendedNexthopFamililesByPeer":{
+        "IPv4 Unicast":"recieved"
+      },
+      "routeRefresh":"advertisedAndReceivedNew",
+      "multiprotocolExtensions":{
+        "IPv4 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "received":true
+        }
+      },
+      "hostName":{
+        "advHostName":"fra-equ01-r01leaf01",
+        "advDomainName":"n\/a",
+        "rcvHostName":"shoot--pqswjf--inttest10-group-0-77c7d-ttt69",
+        "rcvDomainName":"n\/a"
+      },
+      "gracefulRestart":"advertisedAndReceived",
+      "gracefulRestartRemoteTimerMsecs":120000,
+      "addressFamiliesByPeer":"none"
+    },
+    "gracefulRestartInfo":{
+      "endOfRibSend":{
+        "IPv4 Unicast":true
+      },
+      "endOfRibRecv":{
+        "IPv4 Unicast":true
+      }
+    },
+    "messageStats":{
+      "depthInq":0,
+      "depthOutq":0,
+      "opensSent":2,
+      "opensRecv":1,
+      "notificationsSent":0,
+      "notificationsRecv":0,
+      "updatesSent":2276,
+      "updatesRecv":1877,
+      "keepalivesSent":955953,
+      "keepalivesRecv":955926,
+      "routeRefreshSent":52,
+      "routeRefreshRecv":0,
+      "capabilitySent":0,
+      "capabilityRecv":0,
+      "totalSent":958283,
+      "totalRecv":957804
+    },
+    "minBtwnAdvertisementRunsTimerMsecs":0,
+    "addressFamilyInfo":{
+      "IPv4 Unicast":{
+        "peerGroupMember":"MACHINE",
+        "updateGroupId":1103,
+        "subGroupId":1801,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"vrf110-in",
+        "acceptedPrefixCounter":19,
+        "prefixAllowedMax":24000,
+        "prefixAllowedWarningThresh":75
+      }
+    },
+    "connectionsEstablished":1,
+    "connectionsDropped":0,
+    "lastReset":"never",
+    "hostLocal":"fe80::ba6a:97ff:fe74:3d",
+    "portLocal":179,
+    "hostForeign":"fe80::ae1f:6bff:fe7a:eb76",
+    "portForeign":60506,
+    "nexthop":"10.0.7.1",
+    "nexthopGlobal":"fe80::ba6a:97ff:fe74:3d",
+    "nexthopLocal":"fe80::ba6a:97ff:fe74:3d",
+    "bgpConnection":"sharedNetwork",
+    "connectRetryTimer":10,
+    "readThread":"on",
+    "writeThread":"on"
+  }
+}
+,
+"vrf113":{
+  "vrfId":8385,
+  "vrfName":"vrf113",
+  "swp2s0":{
+    "bgpNeighborAddr":"fe80::ae1f:6bff:fed3:90a6",
+    "remoteAs":4210000101,
+    "localAs":4200017001,
+    "nbrExternalLink":true,
+    "hostname":"ontap",
+    "peerGroup":"MACHINE",
+    "bgpVersion":4,
+    "remoteRouterId":"10.130.184.1",
+    "bgpState":"Established",
+    "bgpTimerUp":1213214000,
+    "bgpTimerUpMsec":1213214000,
+    "bgpTimerUpString":"02w0d01h",
+    "bgpTimerUpEstablishedEpoch":1776848387,
+    "bgpTimerLastRead":1000,
+    "bgpTimerLastWrite":0,
+    "bgpInUpdateElapsedTimeMsecs":3613000,
+    "bgpTimerHoldTimeMsecs":8000,
+    "bgpTimerKeepAliveIntervalMsecs":2000,
+    "bgpTimerConfiguredHoldTimeMsecs":8000,
+    "bgpTimerConfiguredKeepAliveIntervalMsecs":2000,
+    "neighborCapabilities":{
+      "4byteAs":"advertisedAndReceived",
+      "addPath":{
+        "IPv4 Unicast":{
+          "rxAdvertisedAndReceived":true
+        }
+      },
+      "dynamic":"received",
+      "extendedNexthop":"advertisedAndReceived",
+      "extendedNexthopFamililesByPeer":{
+        "IPv4 Unicast":"recieved"
+      },
+      "routeRefresh":"advertisedAndReceivedNew",
+      "multiprotocolExtensions":{
+        "IPv4 Unicast":{
+          "advertisedAndReceived":true
+        },
+        "IPv6 Unicast":{
+          "received":true
+        }
+      },
+      "hostName":{
+        "advHostName":"fra-equ01-r01leaf01",
+        "advDomainName":"n\/a",
+        "rcvHostName":"ontap",
+        "rcvDomainName":"n\/a"
+      },
+      "gracefulRestart":"advertisedAndReceived",
+      "gracefulRestartRemoteTimerMsecs":120000,
+      "addressFamiliesByPeer":"none"
+    },
+    "gracefulRestartInfo":{
+      "endOfRibSend":{
+        "IPv4 Unicast":true
+      },
+      "endOfRibRecv":{
+        "IPv4 Unicast":true
+      }
+    },
+    "messageStats":{
+      "depthInq":0,
+      "depthOutq":0,
+      "opensSent":2,
+      "opensRecv":1,
+      "notificationsSent":0,
+      "notificationsRecv":0,
+      "updatesSent":211,
+      "updatesRecv":2,
+      "keepalivesSent":606585,
+      "keepalivesRecv":606565,
+      "routeRefreshSent":0,
+      "routeRefreshRecv":0,
+      "capabilitySent":0,
+      "capabilityRecv":0,
+      "totalSent":606798,
+      "totalRecv":606568
+    },
+    "minBtwnAdvertisementRunsTimerMsecs":0,
+    "addressFamilyInfo":{
+      "IPv4 Unicast":{
+        "peerGroupMember":"MACHINE",
+        "updateGroupId":1114,
+        "subGroupId":1817,
+        "packetQueueLength":0,
+        "commAttriSentToNbr":"extendedAndStandard",
+        "inboundPathPolicyConfig":true,
+        "routeMapForIncomingAdvertisements":"vrf113-in",
+        "acceptedPrefixCounter":2,
+        "prefixAllowedMax":24000,
+        "prefixAllowedWarningThresh":75
+      }
+    },
+    "connectionsEstablished":1,
+    "connectionsDropped":0,
+    "lastReset":"never",
+    "hostLocal":"fe80::ba6a:97ff:fe74:3f",
+    "portLocal":179,
+    "hostForeign":"fe80::ae1f:6bff:fed3:90a6",
+    "portForeign":59578,
+    "nexthop":"10.0.7.1",
+    "nexthopGlobal":"fe80::ba6a:97ff:fe74:3f",
+    "nexthopLocal":"fe80::ba6a:97ff:fe74:3f",
+    "bgpConnection":"sharedNetwork",
+    "connectRetryTimer":10,
+    "readThread":"on",
+    "writeThread":"on"
+  }
+}
+}
