@@ -32,12 +32,12 @@ func startUnixProxy(t *testing.T, tcpAddr string) string {
 }
 
 func proxyConn(client net.Conn, tcpAddr string) {
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 	server, err := net.Dial("tcp", tcpAddr)
 	if err != nil {
 		return
 	}
-	defer server.Close()
+	defer func() { _ = server.Close() }()
 
 	go func() { _, _ = io.Copy(server, client) }()
 	_, _ = io.Copy(client, server)
