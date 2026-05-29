@@ -102,6 +102,7 @@ func Run() {
 		AdditionalBridgePorts: cfg.AdditionalBridgePorts,
 		AdditionalBridgeVIDs:  cfg.AdditionalBridgeVIDs,
 		SpineUplinks:          cfg.SpineUplinks,
+		SetSrcLoopback:        cfg.SetSrcLoopback,
 		NOS:                   nos,
 		Driver:                driver,
 		EventServiceClient:    grpcClient.NewEventClient(),
