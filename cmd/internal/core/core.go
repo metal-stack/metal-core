@@ -18,6 +18,7 @@ type Core struct {
 	asn                     string
 	partitionID             string
 	rackID                  string
+	roomID                  string
 	enableReconfigureSwitch bool
 	managementGateway       string
 	additionalBridgePorts   []string
@@ -46,6 +47,7 @@ type Config struct {
 	ASN                   string
 	PartitionID           string
 	RackID                string
+	RoomID                string
 	ReconfigureSwitch     bool
 	ManagementGateway     string
 	AdditionalBridgePorts []string
@@ -74,6 +76,7 @@ func New(c Config) *Core {
 		asn:                     c.ASN,
 		partitionID:             c.PartitionID,
 		rackID:                  c.RackID,
+		roomID:                  c.RoomID,
 		enableReconfigureSwitch: c.ReconfigureSwitch,
 		managementGateway:       c.ManagementGateway,
 		additionalBridgePorts:   c.AdditionalBridgePorts,

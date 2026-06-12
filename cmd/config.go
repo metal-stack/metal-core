@@ -7,6 +7,7 @@ type Config struct {
 	CIDR                      string        `required:"true" desc:"set the metal core CIDR"`
 	PartitionID               string        `required:"true" desc:"set the partition ID" envconfig:"partition_id"`
 	RackID                    string        `required:"true" desc:"set the rack ID" envconfig:"rack_id"`
+	RoomID                    string        `required:"true" desc:"set the room ID" envconfig:"room_id"`
 	BindAddress               string        `required:"false" default:"0.0.0.0" desc:"set server bind address" split_words:"true"`
 	MetricsServerPort         int           `required:"false" default:"2112" desc:"the port of the metrics server" split_words:"true"`
 	MetricsServerBindAddress  string        `required:"false" default:"0.0.0.0" desc:"the bind addr of the metrics server" split_words:"true"`

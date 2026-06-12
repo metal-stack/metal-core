@@ -15,6 +15,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		cidr:                 "10.255.255.2/24",
 		partitionID:          "fra-equ01",
 		rackID:               "rack01",
+		roomID:               "room01",
 		asn:                  "420000001",
 		loopbackIP:           "10.0.0.1",
 		spineUplinks:         []string{"swp31", "swp32"},

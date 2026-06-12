@@ -97,6 +97,7 @@ func Run() {
 		ASN:                   cfg.ASN,
 		PartitionID:           cfg.PartitionID,
 		RackID:                cfg.RackID,
+		RoomID:                cfg.RoomID,
 		ReconfigureSwitch:     cfg.ReconfigureSwitch,
 		ManagementGateway:     cfg.ManagementGateway,
 		AdditionalBridgePorts: cfg.AdditionalBridgePorts,
