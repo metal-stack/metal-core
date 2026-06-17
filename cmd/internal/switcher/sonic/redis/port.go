@@ -10,6 +10,9 @@ func (a *Applier) ensurePortConfiguration(ctx context.Context, portName, mtu str
 	if err != nil {
 		return fmt.Errorf("could not retrieve port info for %s from redis: %w", portName, err)
 	}
+	if p == nil {
+		return fmt.Errorf("port %s does not exist in CONFIG_DB", portName)
+	}
 
 	if p.Mtu != mtu {
 		a.log.Debug("set port mtu to", "port", portName, "mtu", mtu)
