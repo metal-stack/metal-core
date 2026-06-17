@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/redis/go-redis/v9"
+	"github.com/valkey-io/valkey-go"
 )
 
 const (
@@ -44,7 +44,7 @@ type VxlanMap struct {
 	Vlan string
 }
 
-func newConfigDB(rdb *redis.Client, sep string) *ConfigDB {
+func newConfigDB(rdb valkey.Client, sep string) *ConfigDB {
 	return &ConfigDB{
 		c: NewClient(rdb, sep),
 	}
@@ -296,7 +296,13 @@ func (d *ConfigDB) GetPort(ctx context.Context, interfaceName string) (*Port, er
 		return nil, err
 	}
 
+	if len(result) == 0 {
+		return nil, nil
+	}
+
 	return &Port{
+		Name:        interfaceName,
+		Alias:       result[alias],
 		AdminStatus: result[adminStatus] == adminStatusUp,
 		Mtu:         result[mtu],
 	}, nil
