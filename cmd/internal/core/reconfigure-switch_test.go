@@ -8,7 +8,6 @@ import (
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/cumulus"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
-	"github.com/metal-stack/metal-lib/pkg/pointer"
 )
 
 func TestBuildSwitcherConfig(t *testing.T) {
@@ -34,7 +33,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 	swp2 := &apiv2.SwitchNic{
 		Name: n2,
 		Mac:  m2,
-		Vrf:  pointer.Pointer("vrf104001"),
+		Vrf:  new("vrf104001"),
 		BgpFilter: &apiv2.BGPFilter{
 			Cidrs: []string{
 				"10.240.0.0/12", // pod ipv4 cidrs
@@ -46,7 +45,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 	swp3 := &apiv2.SwitchNic{
 		Name: n3,
 		Mac:  m3,
-		Vrf:  pointer.Pointer("default"),
+		Vrf:  new("default"),
 	}
 	s := &apiv2.Switch{
 		Nics: []*apiv2.SwitchNic{
