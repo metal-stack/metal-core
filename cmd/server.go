@@ -77,6 +77,7 @@ func Run() {
 		AdditionalBridgePorts: cfg.AdditionalBridgePorts,
 		AdditionalBridgeVIDs:  cfg.AdditionalBridgeVIDs,
 		SpineUplinks:          cfg.SpineUplinks,
+		SetSrcLoopback:        cfg.SetSrcLoopback,
 		NOS:                   nos,
 		Client:                client,
 		Metrics:               metrics,

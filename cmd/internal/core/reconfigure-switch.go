@@ -151,6 +151,7 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		MetalCoreCIDR:        c.cidr,
 		AdditionalBridgeVIDs: c.additionalBridgeVIDs,
 		PXEVlanID:            c.pxeVlanID,
+		SetSrcLoopback:       c.setSrcLoopback,
 	}
 
 	p := types.Ports{

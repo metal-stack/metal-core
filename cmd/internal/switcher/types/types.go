@@ -15,6 +15,7 @@ type Conf struct {
 	MetalCoreCIDR        string
 	AdditionalBridgeVIDs []string
 	PXEVlanID            uint16
+	SetSrcLoopback       bool
 }
 
 type Ports struct {

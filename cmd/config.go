@@ -14,6 +14,7 @@ type Config struct {
 	ApiURL                    string        `required:"true" default:"" desc:"set metal-apiserver api url" envconfig:"metal_apiserver_api_url"`
 	ApiToken                  string        `required:"true" default:"" desc:"set metal-apiserver authentication token" envconfig:"metal_apiserver_token"`
 	LoopbackIP                string        `required:"false" default:"10.0.0.11" desc:"set the loopback ip address that is used with BGP unnumbered" split_words:"true"`
+	SetSrcLoopback            bool          `required:"false" default:"false" desc:"if true the loopback address will be used as default source address in frr.conf" envconfig:"set_src_loopback"`
 	ASN                       string        `required:"false" default:"420000011" desc:"set the ASN that is used with BGP"`
 	SpineUplinks              []string      `required:"false" default:"swp31,swp32" desc:"set the ports that are connected to spines" envconfig:"spine_uplinks"`
 	ManagementGateway         string        `required:"false" default:"" desc:"the default gateway for the management network" split_words:"true"`

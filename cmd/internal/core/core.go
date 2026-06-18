@@ -24,6 +24,7 @@ type Core struct {
 	spineUplinks            []string
 	pxeVlanID               uint16
 	bgpNeighborStateFile    string
+	setSrcLoopback          bool
 
 	nos     switcher.NOS
 	client  clientv2.Client
@@ -46,6 +47,7 @@ type Config struct {
 	AdditionalBridgePorts []string
 	AdditionalBridgeVIDs  []string
 	SpineUplinks          []string
+	SetSrcLoopback        bool
 
 	NOS     switcher.NOS
 	Client  clientv2.Client
@@ -66,6 +68,7 @@ func New(c Config) *Core {
 		additionalBridgePorts:   c.AdditionalBridgePorts,
 		additionalBridgeVIDs:    c.AdditionalBridgeVIDs,
 		spineUplinks:            c.SpineUplinks,
+		setSrcLoopback:          c.SetSrcLoopback,
 		nos:                     c.NOS,
 		client:                  c.Client,
 		metrics:                 c.Metrics,
