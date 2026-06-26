@@ -172,7 +172,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 			continue
 		}
 
-		if isPortStatusEqual(models.V1SwitchNicActualDOWN, nic.Actual) {
+		if isPortStatusEqual(models.V1SwitchNicActualDOWN, nic.AdminStatus) {
 			if has := p.DownPorts[port]; !has {
 				p.DownPorts[port] = true
 			}

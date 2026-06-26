@@ -1881,3 +1881,62 @@ func TestConfigDB_SetAdminStatusUp(t *testing.T) {
 		})
 	}
 }
+
+func TestConfigDB_GetAdminStatusUp(t *testing.T) {
+	tests := []struct {
+		name          string
+		data          test.StringMap
+		interfaceName string
+		want          bool
+	}{
+		{
+			name: "interface is up",
+			data: test.StringMap{
+				"PORT": test.StringMap{
+					"Ethernet0": test.StringMap{
+						"admin_status": "up",
+						"alias":        "Eth1/1",
+						"mtu":          "9216",
+					},
+					"Ethernet1": test.StringMap{
+						"alias": "Eth1/2",
+						"mtu":   "9000",
+					},
+					"Ethernet2": test.StringMap{
+						"admin_status": "down",
+						"alias":        "Eth1/3",
+						"mtu":          "9000",
+					},
+				},
+			},
+			interfaceName: "Ethernet0",
+			want:          false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				ctx = t.Context()
+				sep = "|"
+				vc  = test.StartValkey(t)
+			)
+			defer vc.Close()
+
+			err := test.LoadData(ctx, vc, tt.data, sep)
+			require.NoError(t, err)
+
+			c := &Client{
+				rdb: vc,
+				sep: sep,
+			}
+			d := &ConfigDB{
+				c: c,
+			}
+			got, err := d.GetAdminStatusUp(ctx, tt.interfaceName)
+			require.NoError(t, err)
+			if got != tt.want {
+				t.Errorf("ConfigDB.GetAdminStatusUp() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

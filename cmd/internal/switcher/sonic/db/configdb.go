@@ -347,6 +347,10 @@ func (d *ConfigDB) SetPortMtu(ctx context.Context, interfaceName string, val str
 	return d.c.HSet(ctx, key, Val{mtu: val})
 }
 
+func (d *ConfigDB) GetAdminStatusUp(ctx context.Context, interfaceName string) (bool, error) {
+	return false, nil
+}
+
 func (d *ConfigDB) SetAdminStatusUp(ctx context.Context, interfaceName string, up bool) error {
 	key := Key{portTable, interfaceName}
 
