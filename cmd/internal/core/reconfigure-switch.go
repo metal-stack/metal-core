@@ -275,14 +275,12 @@ func fillEth0Info(c *types.Conf, gw string) error {
 	return nil
 }
 
-// isLinkUp checks if the interface with the given name is up.
-// It returns a boolean indicating if the interface is up, and an error if there was a problem checking the interface.
 func isLinkUp(nicname string) (bool, error) {
 	nic, err := net.InterfaceByName(nicname)
 	if err != nil {
 		return false, fmt.Errorf("cannot query interface %q : %w", nicname, err)
 	}
-	return nic.Flags&net.FlagUp != 0, nil
+	return nic.Flags&net.FlagRunning != 0, nil
 }
 
 func isPortStatusEqual(stat string, other *string) bool {
