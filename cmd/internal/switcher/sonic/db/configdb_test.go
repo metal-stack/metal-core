@@ -891,6 +891,7 @@ func TestConfigDB_GetVrfs(t *testing.T) {
 				c: c,
 			}
 			got, err := d.GetVrfs(ctx)
+			slices.Sort(got)
 			require.NoError(t, err)
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("ConfigDB.GetVrfs() diff = %s", diff)
