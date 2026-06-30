@@ -281,6 +281,8 @@ func isLinkUp(nicname string) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("cannot query interface %q : %w", nicname, err)
 	}
+	// FIXME: remove log
+	fmt.Printf("%s: %v\n", nicname, nic.Flags)
 	return nic.Flags&net.FlagRunning != 0, nil
 }
 
