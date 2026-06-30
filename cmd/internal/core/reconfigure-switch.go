@@ -91,6 +91,7 @@ func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval, timeou
 			}
 
 			params.Body = nr
+			c.log.Debug("notify switch", "request", nr)
 			_, err = c.driver.SwitchOperations().NotifySwitch(params, nil)
 			if err != nil {
 				c.log.Error("notification about switch reconfiguration failed", "error", err)
