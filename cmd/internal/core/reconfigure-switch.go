@@ -167,9 +167,6 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 
 	for _, nic := range s.Nics {
 		port := *nic.Name
-
-		fmt.Printf("%s: %v\n", port, nic.AdminStatus)
-
 		if slices.Contains(p.Underlay, port) {
 			continue
 		}
