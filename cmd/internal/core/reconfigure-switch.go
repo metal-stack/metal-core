@@ -17,6 +17,7 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 	sw "github.com/metal-stack/metal-go/api/client/switch_operations"
 	"github.com/metal-stack/metal-go/api/models"
+	"github.com/metal-stack/metal-lib/pkg/pointer"
 )
 
 // ConstantlyReconfigureSwitch reconfigures the switch.
@@ -162,20 +163,22 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 		Unprovisioned: []string{},
 		Vrfs:          map[string]*types.Vrf{},
 		Firewalls:     map[string]*types.Firewall{},
-		DownPorts:     map[string]bool{},
+		AdminStatus:   map[string]types.PortStatus{},
 	}
 
 	for _, nic := range s.Nics {
-		port := *nic.Name
+		if nic == nil {
+			continue
+		}
+
+		port := pointer.SafeDeref(nic.Name)
 		if slices.Contains(p.Underlay, port) {
 			continue
 		}
 
-		if isPortStatusEqual(models.V1SwitchNicActualDOWN, nic.AdminStatus) {
-			c.log.Debug("port was administratively shutdown", "port", port)
-			if has := p.DownPorts[port]; !has {
-				p.DownPorts[port] = true
-			}
+		adminStatus := types.PortStatus(strings.ToLower(pointer.SafeDeref(nic.AdminStatus)))
+		if adminStatus == types.PortStatusDown || adminStatus == types.PortStatusUp {
+			p.AdminStatus[port] = types.PortStatus(adminStatus)
 		}
 
 		if slices.Contains(c.additionalBridgePorts, port) {
@@ -281,11 +284,4 @@ func isLinkUp(nicname string) (bool, error) {
 		return false, fmt.Errorf("cannot query interface %q : %w", nicname, err)
 	}
 	return nic.Flags&net.FlagRunning != 0, nil
-}
-
-func isPortStatusEqual(stat string, other *string) bool {
-	if other == nil {
-		return false
-	}
-	return strings.EqualFold(stat, *other)
 }

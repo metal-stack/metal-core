@@ -5,72 +5,76 @@ import (
 	"net/netip"
 )
 
-// Conf holds the switch configuration
-type Conf struct {
-	Name                 string
-	LogLevel             string
-	Loopback             string
-	ASN                  uint32
-	Ports                Ports
-	MetalCoreCIDR        string
-	AdditionalBridgeVIDs []string
-	PXEVlanID            uint16
-	SetSrcLoopback       bool
-}
+type (
+	Conf struct {
+		Name                 string
+		LogLevel             string
+		Loopback             string
+		ASN                  uint32
+		Ports                Ports
+		MetalCoreCIDR        string
+		AdditionalBridgeVIDs []string
+		PXEVlanID            uint16
+		SetSrcLoopback       bool
+	}
 
-type Ports struct {
-	Eth0          Nic
-	Underlay      []string
-	Unprovisioned []string
-	BladePorts    []string
-	DownPorts     map[string]bool
-	Vrfs          map[string]*Vrf
-	Firewalls     map[string]*Firewall
-}
+	Ports struct {
+		Eth0          Nic
+		Underlay      []string
+		Unprovisioned []string
+		BladePorts    []string
+		Vrfs          map[string]*Vrf
+		Firewalls     map[string]*Firewall
+		AdminStatus   map[string]PortStatus
+	}
 
-// Tenant holds the switch configuration for a specific tenant
-type Vrf struct {
-	Filter
-	VNI       uint32
-	VLANID    uint16
-	Neighbors []string
-	Cidrs     []string
-	Has4      bool
-	Has6      bool
-}
+	Vrf struct {
+		Filter
+		VNI       uint32
+		VLANID    uint16
+		Neighbors []string
+		Cidrs     []string
+		Has4      bool
+		Has6      bool
+	}
 
-type Firewall struct {
-	Filter
-	Port  string
-	Cidrs []string
-	Vnis  []string
-}
+	Firewall struct {
+		Filter
+		Port  string
+		Cidrs []string
+		Vnis  []string
+	}
 
-type Filter struct {
-	IPPrefixLists []IPPrefixList
-	RouteMaps     []RouteMap
-}
+	Filter struct {
+		IPPrefixLists []IPPrefixList
+		RouteMaps     []RouteMap
+	}
 
-// Nic holds the configuration for a network interface
-type Nic struct {
-	AddressCIDR string
-	Gateway     string
-}
+	Nic struct {
+		AddressCIDR string
+		Gateway     string
+	}
 
-// RouteMap represents a route-map to permit or deny routes.
-type RouteMap struct {
-	Name    string
-	Entries []string
-	Policy  string
-	Order   int
-}
+	RouteMap struct {
+		Name    string
+		Entries []string
+		Policy  string
+		Order   int
+	}
 
-// IPPrefixList represents 'ip prefix-list' filtering mechanism to be used in combination with route-maps.
-type IPPrefixList struct {
-	AddressFamily string
-	Name          string
-	Spec          string
-}
+	IPPrefixList struct {
+		AddressFamily string
+		Name          string
+		Spec          string
+	}
+
+	PortStatus string
+)
+
+const (
+	PortStatusUp   = PortStatus("up")
+	PortStatusDown = PortStatus("down")
+)
 
 func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
 	cidrsByAf := cidrsByAddressfamily(cidrs)

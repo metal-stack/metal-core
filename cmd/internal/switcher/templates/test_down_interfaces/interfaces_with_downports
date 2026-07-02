@@ -24,13 +24,13 @@ auto swp31
 iface swp31
     mtu 9216
 
-auto swp32
-iface swp32
+auto swp5
+iface swp5
     mtu 9216
 
 auto bridge
 iface bridge
-    bridge-ports vni100966 swp1 swp2 vni1
+    bridge-ports vni100966 swp2 vni1
     bridge-vids 966 2
     bridge-vlan-aware yes
 
@@ -39,6 +39,12 @@ iface bridge
 auto vrf1
 iface vrf1
     vrf-table auto
+
+auto swp4
+iface swp4
+    mtu 9000
+    post-up sysctl -w net.ipv6.conf.swp4.disable_ipv6=0
+    vrf vrf1
 
 auto vlan2
 iface vlan2
@@ -75,11 +81,6 @@ iface vni100966
     mstpctl-portbpdufilter yes
     vxlan-id 100966
     vxlan-local-tunnelip 10.0.0.10
-
-auto swp1
-iface swp1
-    mtu 9000
-    bridge-access 966
 
 auto swp2
 iface swp2

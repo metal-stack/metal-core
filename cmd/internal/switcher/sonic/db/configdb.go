@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/valkey-io/valkey-go"
 )
 
 const (
-	adminStatus         = "admin_status"
-	adminStatusUp       = "up"
-	adminStatusDown     = "down"
+	adminStatusField    = "admin_status"
 	alias               = "alias"
 	enable              = "enable"
 	interfaceTable      = "INTERFACE"
@@ -35,7 +34,7 @@ type ConfigDB struct {
 type Port struct {
 	Name        string
 	Alias       string
-	AdminStatus bool
+	AdminStatus string
 	Mtu         string
 }
 
@@ -303,7 +302,7 @@ func (d *ConfigDB) GetPort(ctx context.Context, interfaceName string) (*Port, er
 	return &Port{
 		Name:        interfaceName,
 		Alias:       result[alias],
-		AdminStatus: result[adminStatus] == adminStatusUp,
+		AdminStatus: result[adminStatusField],
 		Mtu:         result[mtu],
 	}, nil
 }
@@ -333,7 +332,7 @@ func (d *ConfigDB) GetPorts(ctx context.Context) ([]*Port, error) {
 		ports = append(ports, &Port{
 			Name:        p,
 			Alias:       result[alias],
-			AdminStatus: result[adminStatus] == adminStatusUp,
+			AdminStatus: result[adminStatusField],
 			Mtu:         result[mtu],
 		})
 	}
@@ -347,16 +346,21 @@ func (d *ConfigDB) SetPortMtu(ctx context.Context, interfaceName string, val str
 	return d.c.HSet(ctx, key, Val{mtu: val})
 }
 
-func (d *ConfigDB) GetAdminStatusUp(ctx context.Context, interfaceName string) (bool, error) {
-	return false, nil
-}
-
-func (d *ConfigDB) SetAdminStatusUp(ctx context.Context, interfaceName string, up bool) error {
+func (d *ConfigDB) GetAdminStatus(ctx context.Context, interfaceName string) (types.PortStatus, error) {
 	key := Key{portTable, interfaceName}
 
-	status := adminStatusUp
-	if !up {
-		status = adminStatusDown
+	status, err := d.c.HGet(ctx, key, adminStatusField)
+	if err != nil {
+		return "", nil
 	}
-	return d.c.HSet(ctx, key, Val{adminStatus: status})
+
+	return types.PortStatus(status), nil
+}
+
+func (d *ConfigDB) SetAdminStatus(ctx context.Context, interfaceName string, adminStatus types.PortStatus) error {
+	if adminStatus != types.PortStatusDown && adminStatus != types.PortStatusUp {
+		return nil
+	}
+	key := Key{portTable, interfaceName}
+	return d.c.HSet(ctx, key, Val{adminStatusField: string(adminStatus)})
 }

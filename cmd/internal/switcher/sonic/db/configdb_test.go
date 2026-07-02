@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db/test"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -1652,7 +1653,7 @@ func TestConfigDB_GetPort(t *testing.T) {
 			want: &Port{
 				Name:        "Ethernet1",
 				Alias:       "Eth1/2",
-				AdminStatus: true,
+				AdminStatus: string(types.PortStatusUp),
 				Mtu:         "9000",
 			},
 		},
@@ -1698,13 +1699,13 @@ func TestConfigDB_GetPorts(t *testing.T) {
 				{
 					Name:        "Ethernet0",
 					Alias:       "Eth1/1",
-					AdminStatus: true,
+					AdminStatus: string(types.PortStatusUp),
 					Mtu:         "9216",
 				},
 				{
 					Name:        "Ethernet1",
 					Alias:       "Eth1/2",
-					AdminStatus: true,
+					AdminStatus: string(types.PortStatusUp),
 					Mtu:         "9000",
 				},
 			},
@@ -1817,14 +1818,14 @@ func TestConfigDB_SetAdminStatusUp(t *testing.T) {
 		name          string
 		data          test.StringMap
 		interfaceName string
-		up            bool
+		status        types.PortStatus
 		mods          func(test.HashMap)
 	}{
 		{
 			name:          "set on non-existing",
 			data:          configDBTestData,
 			interfaceName: "Ethernet2",
-			up:            false,
+			status:        types.PortStatusDown,
 			mods: func(data test.HashMap) {
 				data["PORT|Ethernet2"] = map[string]string{
 					"admin_status": "down",
@@ -1835,14 +1836,14 @@ func TestConfigDB_SetAdminStatusUp(t *testing.T) {
 			name:          "set same as existing",
 			data:          configDBTestData,
 			interfaceName: "Ethernet1",
-			up:            true,
+			status:        types.PortStatusUp,
 			mods:          func(data test.HashMap) {},
 		},
 		{
 			name:          "change existing",
 			data:          configDBTestData,
 			interfaceName: "Ethernet1",
-			up:            false,
+			status:        types.PortStatusDown,
 			mods: func(data test.HashMap) {
 				data["PORT|Ethernet1"]["admin_status"] = "down"
 			},
@@ -1872,7 +1873,7 @@ func TestConfigDB_SetAdminStatusUp(t *testing.T) {
 			d := &ConfigDB{
 				c: c,
 			}
-			err = d.SetAdminStatusUp(ctx, tt.interfaceName, tt.up)
+			err = d.SetAdminStatus(ctx, tt.interfaceName, tt.status)
 			require.NoError(t, err)
 			data, err := test.GetData(ctx, vc, sep)
 			require.NoError(t, err)
@@ -1883,35 +1884,49 @@ func TestConfigDB_SetAdminStatusUp(t *testing.T) {
 	}
 }
 
-func TestConfigDB_GetAdminStatusUp(t *testing.T) {
+func TestConfigDB_GetAdminStatus(t *testing.T) {
+	data := test.StringMap{
+		"PORT": test.StringMap{
+			"Ethernet0": test.StringMap{
+				"admin_status": "up",
+				"alias":        "Eth1/1",
+				"mtu":          "9216",
+			},
+			"Ethernet1": test.StringMap{
+				"alias": "Eth1/2",
+				"mtu":   "9000",
+			},
+			"Ethernet2": test.StringMap{
+				"admin_status": "down",
+				"alias":        "Eth1/3",
+				"mtu":          "9000",
+			},
+		},
+	}
+
 	tests := []struct {
 		name          string
 		data          test.StringMap
 		interfaceName string
-		want          bool
+		want          types.PortStatus
 	}{
 		{
-			name: "interface is up",
-			data: test.StringMap{
-				"PORT": test.StringMap{
-					"Ethernet0": test.StringMap{
-						"admin_status": "up",
-						"alias":        "Eth1/1",
-						"mtu":          "9216",
-					},
-					"Ethernet1": test.StringMap{
-						"alias": "Eth1/2",
-						"mtu":   "9000",
-					},
-					"Ethernet2": test.StringMap{
-						"admin_status": "down",
-						"alias":        "Eth1/3",
-						"mtu":          "9000",
-					},
-				},
-			},
+			name:          "interface is up",
+			data:          data,
 			interfaceName: "Ethernet0",
-			want:          false,
+			want:          types.PortStatusUp,
+		},
+		{
+			name:          "interface is down",
+			data:          data,
+			interfaceName: "Ethernet2",
+			want:          types.PortStatusDown,
+		},
+		{
+			name:          "no admin_status defined",
+			data:          data,
+			interfaceName: "Ethernet1",
+			want:          "",
 		},
 	}
 	for _, tt := range tests {
@@ -1933,10 +1948,10 @@ func TestConfigDB_GetAdminStatusUp(t *testing.T) {
 			d := &ConfigDB{
 				c: c,
 			}
-			got, err := d.GetAdminStatusUp(ctx, tt.interfaceName)
+			got, err := d.GetAdminStatus(ctx, tt.interfaceName)
 			require.NoError(t, err)
 			if got != tt.want {
-				t.Errorf("ConfigDB.GetAdminStatusUp() = %v, want %v", got, tt.want)
+				t.Errorf("ConfigDB.GetAdminStatus() = %v, want %v", got, tt.want)
 			}
 		})
 	}
