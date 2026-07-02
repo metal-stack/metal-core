@@ -39,7 +39,7 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 
 	if a.previousCfg != nil {
 		diff := cmp.Diff(a.previousCfg, cfg)
-		if diff == "" {
+		if diff != "" {
 			changed = true
 			a.log.Debug("interface changes", "changes", diff)
 		}
