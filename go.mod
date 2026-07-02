@@ -11,6 +11,7 @@ require (
 	github.com/metal-stack/go-lldpd v0.4.12
 	github.com/metal-stack/metal-api v0.44.2-0.20260626113536-3df3908ace8b
 	github.com/metal-stack/metal-go v0.44.2-0.20260626114417-9780469ed2b6
+	github.com/metal-stack/metal-lib v0.25.1
 	github.com/metal-stack/v v1.0.3
 	github.com/prometheus/client_golang v1.23.2
 	github.com/stretchr/testify v1.11.1
@@ -68,7 +69,6 @@ require (
 	github.com/lestrrat-go/option/v2 v2.0.0 // indirect
 	github.com/mdlayher/ethernet v0.0.0-20220221185849-529eae5b6118 // indirect
 	github.com/mdlayher/lldp v0.0.0-20150915211757-afd9f83164c5 // indirect
-	github.com/metal-stack/metal-lib v0.25.1 // indirect
 	github.com/metal-stack/security v0.9.6 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oklog/ulid/v2 v2.1.1 // indirect

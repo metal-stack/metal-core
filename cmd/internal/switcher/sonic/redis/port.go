@@ -24,7 +24,7 @@ func (a *Applier) ensurePortConfiguration(ctx context.Context, portName, mtu str
 		}
 	}
 
-	if p.AdminStatus != string(adminStatus) {
+	if p.AdminStatus != string(adminStatus) && adminStatus != "" {
 		a.log.Debug("set admin status to", "port", portName, "admin_status", adminStatus)
 		return a.db.Config.SetAdminStatus(ctx, portName, adminStatus)
 	}

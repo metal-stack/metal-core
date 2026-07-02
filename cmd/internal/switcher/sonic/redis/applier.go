@@ -32,16 +32,34 @@ func NewApplier(log *slog.Logger, db *db.DB) *Applier {
 }
 
 func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
-	var errs []error
+	var (
+		errs    []error
+		changed bool
+	)
 
-	// TODO: get down ports from DB and compare with expected
 	if a.previousCfg != nil {
 		diff := cmp.Diff(a.previousCfg, cfg)
 		if diff == "" {
-			a.log.Info("no changes on interfaces detected, nothing to do")
-			return nil
+			changed = true
+			a.log.Debug("interface changes", "changes", diff)
 		}
-		a.log.Debug("interface changes", "changes", diff)
+	}
+
+	currentPorts, err := a.db.Config.GetPorts(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to apply config: %w", err)
+	}
+
+	for _, port := range currentPorts {
+		if types.PortStatus(port.AdminStatus) != cfg.Ports.AdminStatus[port.Name] {
+			changed = true
+			break
+		}
+	}
+
+	if !changed {
+		a.log.Info("no changes on interfaces detected, nothing to do")
+		return nil
 	}
 
 	if err := a.refreshOidMaps(ctx); err != nil {
@@ -82,7 +100,7 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 		}
 	}
 
-	err := a.cleanupVrfs(ctx, cfg)
+	err = a.cleanupVrfs(ctx, cfg)
 	if err != nil {
 		errs = append(errs, err)
 	}
