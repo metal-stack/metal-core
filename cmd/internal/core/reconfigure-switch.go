@@ -176,7 +176,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 			continue
 		}
 
-		adminStatus := types.PortStatus(strings.ToLower(pointer.SafeDeref(nic.AdminStatus)))
+		adminStatus := types.PortStatus(strings.ToLower(nic.AdminStatus))
 		if adminStatus == types.PortStatusDown || adminStatus == types.PortStatusUp {
 			p.AdminStatus[port] = types.PortStatus(adminStatus)
 		}

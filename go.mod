@@ -9,8 +9,8 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/go-lldpd v0.4.12
-	github.com/metal-stack/metal-api v0.44.2-0.20260626113536-3df3908ace8b
-	github.com/metal-stack/metal-go v0.44.2-0.20260626114417-9780469ed2b6
+	github.com/metal-stack/metal-api v0.45.0
+	github.com/metal-stack/metal-go v0.45.0
 	github.com/metal-stack/metal-lib v0.25.1
 	github.com/metal-stack/v v1.0.3
 	github.com/prometheus/client_golang v1.23.2
