@@ -351,7 +351,7 @@ func (d *ConfigDB) GetAdminStatus(ctx context.Context, interfaceName string) (ty
 
 	status, err := d.c.HGet(ctx, key, adminStatusField)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	return types.PortStatus(status), nil
