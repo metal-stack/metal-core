@@ -1820,6 +1820,7 @@ func TestConfigDB_SetAdminStatusUp(t *testing.T) {
 		interfaceName string
 		status        types.PortStatus
 		mods          func(test.HashMap)
+		wantErr       bool
 	}{
 		{
 			name:          "set on non-existing",
@@ -1848,6 +1849,13 @@ func TestConfigDB_SetAdminStatusUp(t *testing.T) {
 				data["PORT|Ethernet1"]["admin_status"] = "down"
 			},
 		},
+		{
+			name:          "invalid input",
+			data:          configDBTestData,
+			interfaceName: "Ethernet1",
+			status:        "unknown",
+			wantErr:       true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1874,7 +1882,9 @@ func TestConfigDB_SetAdminStatusUp(t *testing.T) {
 				c: c,
 			}
 			err = d.SetAdminStatus(ctx, tt.interfaceName, tt.status)
-			require.NoError(t, err)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ConfigDB.SetAdminStatusUp() err = %v, want err %v", err, tt.wantErr)
+			}
 			data, err := test.GetData(ctx, vc, sep)
 			require.NoError(t, err)
 			if diff := cmp.Diff(initData, data); diff != "" {

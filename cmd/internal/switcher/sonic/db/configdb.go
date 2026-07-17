@@ -359,7 +359,7 @@ func (d *ConfigDB) GetAdminStatus(ctx context.Context, interfaceName string) (ty
 
 func (d *ConfigDB) SetAdminStatus(ctx context.Context, interfaceName string, adminStatus types.PortStatus) error {
 	if adminStatus != types.PortStatusDown && adminStatus != types.PortStatusUp {
-		return nil
+		return fmt.Errorf("unknown admin status %s", adminStatus)
 	}
 	key := Key{portTable, interfaceName}
 	return d.c.HSet(ctx, key, Val{adminStatusField: string(adminStatus)})
