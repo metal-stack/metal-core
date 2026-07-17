@@ -32,16 +32,34 @@ func NewApplier(log *slog.Logger, db *db.DB) *Applier {
 }
 
 func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
-	var errs []error
+	var (
+		errs    []error
+		changed bool
+	)
 
-	// only process if changes are detected
 	if a.previousCfg != nil {
 		diff := cmp.Diff(a.previousCfg, cfg)
-		if diff == "" {
-			a.log.Info("no changes on interfaces detected, nothing to do")
-			return nil
+		if diff != "" {
+			changed = true
+			a.log.Debug("interface changes", "changes", diff)
 		}
-		a.log.Debug("interface changes", "changes", diff)
+	}
+
+	currentPorts, err := a.db.Config.GetPorts(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to apply config: %w", err)
+	}
+
+	for _, port := range currentPorts {
+		if types.PortStatus(port.AdminStatus) != cfg.Ports.AdminStatus[port.Name] {
+			changed = true
+			break
+		}
+	}
+
+	if !changed {
+		a.log.Info("no changes on interfaces detected, nothing to do")
+		return nil
 	}
 
 	if err := a.refreshOidMaps(ctx); err != nil {
@@ -50,7 +68,7 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 
 	a.log.Debug("configure underlay ports", "ports", cfg.Ports.Underlay)
 	for _, interfaceName := range cfg.Ports.Underlay {
-		if err := a.configureUnderlayPort(ctx, interfaceName, !cfg.Ports.DownPorts[interfaceName]); err != nil {
+		if err := a.configureUnderlayPort(ctx, interfaceName, cfg.Ports.AdminStatus[interfaceName]); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -58,14 +76,14 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 	a.log.Debug("configure unprovisioned ports", "ports", cfg.Ports.Unprovisioned)
 	for _, interfaceName := range cfg.Ports.Unprovisioned {
 		pxeVlan := fmt.Sprintf("Vlan%d", cfg.PXEVlanID)
-		if err := a.configureUnprovisionedPort(ctx, interfaceName, !cfg.Ports.DownPorts[interfaceName], pxeVlan); err != nil {
+		if err := a.configureUnprovisionedPort(ctx, interfaceName, cfg.Ports.AdminStatus[interfaceName], pxeVlan); err != nil {
 			errs = append(errs, err)
 		}
 	}
 
 	a.log.Debug("configure firewall ports", "ports", cfg.Ports.Firewalls)
 	for interfaceName := range cfg.Ports.Firewalls {
-		if err := a.configureFirewallPort(ctx, interfaceName, !cfg.Ports.DownPorts[interfaceName]); err != nil {
+		if err := a.configureFirewallPort(ctx, interfaceName, cfg.Ports.AdminStatus[interfaceName]); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -76,13 +94,13 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 			errs = append(errs, err)
 		}
 		for _, interfaceName := range vrf.Neighbors {
-			if err := a.configureVrfNeighbor(ctx, interfaceName, vrfName, !cfg.Ports.DownPorts[interfaceName]); err != nil {
+			if err := a.configureVrfNeighbor(ctx, interfaceName, vrfName, cfg.Ports.AdminStatus[interfaceName]); err != nil {
 				errs = append(errs, err)
 			}
 		}
 	}
 
-	err := a.cleanupVrfs(ctx, cfg)
+	err = a.cleanupVrfs(ctx, cfg)
 	if err != nil {
 		errs = append(errs, err)
 	}
@@ -131,42 +149,41 @@ func (a *Applier) refreshOidMaps(ctx context.Context) error {
 	return nil
 }
 
-func (a *Applier) configureUnprovisionedPort(ctx context.Context, interfaceName string, isUp bool, pxeVlan string) error {
+func (a *Applier) configureUnprovisionedPort(ctx context.Context, interfaceName string, adminStatus types.PortStatus, pxeVlan string) error {
 	err := a.ensureNotRouted(ctx, interfaceName)
 	if err != nil {
 		return err
 	}
 
-	// unprovisioned ports should be up
-	if err := a.ensurePortConfiguration(ctx, interfaceName, "9000", isUp); err != nil {
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "9000", adminStatus); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 
 	return a.ensureInterfaceIsVlanMember(ctx, interfaceName, pxeVlan)
 }
 
-func (a *Applier) configureFirewallPort(ctx context.Context, interfaceName string, isUp bool) error {
+func (a *Applier) configureFirewallPort(ctx context.Context, interfaceName string, adminStatus types.PortStatus) error {
 	err := a.ensureNotBridged(ctx, interfaceName)
 	if err != nil {
 		return err
 	}
 
 	// a firewall port should always be up
-	if err := a.ensurePortConfiguration(ctx, interfaceName, "9216", isUp); err != nil {
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "9216", adminStatus); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 
 	return a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
 }
 
-func (a *Applier) configureUnderlayPort(ctx context.Context, interfaceName string, isUp bool) error {
-	if err := a.ensurePortConfiguration(ctx, interfaceName, "9216", isUp); err != nil {
+func (a *Applier) configureUnderlayPort(ctx context.Context, interfaceName string, adminStatus types.PortStatus) error {
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "9216", adminStatus); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 	return a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
 }
 
-func (a *Applier) configureVrfNeighbor(ctx context.Context, interfaceName, vrfName string, isUp bool) error {
+func (a *Applier) configureVrfNeighbor(ctx context.Context, interfaceName, vrfName string, adminStatus types.PortStatus) error {
 	err := a.ensureNotBridged(ctx, interfaceName)
 	if err != nil {
 		return err
@@ -177,7 +194,7 @@ func (a *Applier) configureVrfNeighbor(ctx context.Context, interfaceName, vrfNa
 		return err
 	}
 
-	if err := a.ensurePortConfiguration(ctx, interfaceName, "9000", isUp); err != nil {
+	if err := a.ensurePortConfiguration(ctx, interfaceName, "9000", adminStatus); err != nil {
 		return fmt.Errorf("failed to update Port info for interface %s: %w", interfaceName, err)
 	}
 

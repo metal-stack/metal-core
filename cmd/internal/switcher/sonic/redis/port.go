@@ -3,9 +3,11 @@ package redis
 import (
 	"context"
 	"fmt"
+
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
-func (a *Applier) ensurePortConfiguration(ctx context.Context, portName, mtu string, isUp bool) error {
+func (a *Applier) ensurePortConfiguration(ctx context.Context, portName, mtu string, adminStatus types.PortStatus) error {
 	p, err := a.db.Config.GetPort(ctx, portName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve port info for %s from redis: %w", portName, err)
@@ -22,9 +24,9 @@ func (a *Applier) ensurePortConfiguration(ctx context.Context, portName, mtu str
 		}
 	}
 
-	if p.AdminStatus != isUp {
-		a.log.Debug("set admin status to", "port", portName, "admin_status_up", isUp)
-		return a.db.Config.SetAdminStatusUp(ctx, portName, isUp)
+	if p.AdminStatus != string(adminStatus) && adminStatus != "" {
+		a.log.Debug("set admin status to", "port", portName, "admin_status", adminStatus)
+		return a.db.Config.SetAdminStatus(ctx, portName, adminStatus)
 	}
 
 	return nil
