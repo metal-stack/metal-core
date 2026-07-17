@@ -64,7 +64,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		MetalCoreCIDR: "10.255.255.2/24",
 		ASN:           420000001,
 		Ports: types.Ports{
-			DownPorts:     map[string]bool{},
+			AdminStatus:   map[string]types.PortStatus{},
 			Underlay:      []string{"swp31", "swp32"},
 			Unprovisioned: []string{"swp1"},
 			Firewalls: map[string]*types.Firewall{

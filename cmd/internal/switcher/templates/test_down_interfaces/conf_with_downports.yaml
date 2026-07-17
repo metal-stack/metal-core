@@ -11,8 +11,14 @@ ports:
       vlanid: 2
       neighbors:
         - swp3
+        - swp4
       cidrs:
         - 10.255.255.1/28
+  firewalls:
+    fw1:
+      port: swp5
+    fw2:
+      port: swp6
   eth0:
     addresscidr: 192.168.0.11
     gateway: 192.168.0.254
@@ -22,6 +28,9 @@ ports:
   unprovisioned:
     - swp1
     - swp2
-  downports:
-    swp3: True
+  adminstatus:
+    swp1: down
+    swp3: down
+    swp6: down
+    swp32: down
 pxevlanid: 966
