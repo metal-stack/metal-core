@@ -160,20 +160,22 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		Unprovisioned: []string{},
 		Vrfs:          map[string]*types.Vrf{},
 		Firewalls:     map[string]*types.Firewall{},
-		DownPorts:     map[string]bool{},
+		AdminStatus:   map[string]types.PortStatus{},
 	}
 
 	for _, nic := range s.Nics {
-		port := nic.Name
+		if nic == nil {
+			continue
+		}
 
+		port := nic.Name
 		if slices.Contains(p.Underlay, port) {
 			continue
 		}
 
-		if nic.State != nil && nic.State.Actual == apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN {
-			if has := p.DownPorts[port]; !has {
-				p.DownPorts[port] = true
-			}
+		adminStatus := pointer.SafeDeref(pointer.SafeDeref(nic.State).Desired)
+		if adminStatus == apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN || adminStatus == apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_UP {
+			p.AdminStatus[port] = types.PortStatus(adminStatus)
 		}
 
 		if slices.Contains(c.additionalBridgePorts, port) {
@@ -284,5 +286,5 @@ func isLinkUp(nicname string) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("cannot query interface %q : %w", nicname, err)
 	}
-	return nic.Flags&net.FlagUp != 0, nil
+	return nic.Flags&net.FlagRunning != 0, nil
 }

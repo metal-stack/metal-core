@@ -88,55 +88,74 @@ func (c *Conf) CapitalizeVrfName() {
 }
 
 func (c *Conf) NewWithoutDownPorts() *Conf {
-	if len(c.Ports.DownPorts) < 1 {
-		return c
-	}
-	newConf := *c
-	newConf.Ports.Vrfs = make(map[string]*Vrf)
+	var (
+		underlay      []string
+		unprovisioned []string
+		bladePorts    []string
+		vrfs          = map[string]*Vrf{}
+		firewalls     = map[string]*Firewall{}
+	)
 
-	// create a copy of the VRFs and filter out the interfaces which should be down
-	for vrf, vrfConf := range c.Ports.Vrfs {
-		newVrfConf := *vrfConf
-		newVrfConf.Neighbors = []string{}
-		for _, port := range vrfConf.Neighbors {
-			if _, isdown := c.Ports.DownPorts[port]; !isdown {
-				newVrfConf.Neighbors = append(newVrfConf.Neighbors, port)
+	ports := c.Ports
+	for _, port := range ports.Underlay {
+		if ports.AdminStatus[port] != PortStatusDown {
+			underlay = append(underlay, port)
+		}
+	}
+
+	for _, port := range ports.Unprovisioned {
+		if ports.AdminStatus[port] != PortStatusDown {
+			unprovisioned = append(unprovisioned, port)
+		}
+	}
+
+	for _, port := range ports.BladePorts {
+		if ports.AdminStatus[port] != PortStatusDown {
+			bladePorts = append(bladePorts, port)
+		}
+	}
+
+	for name, vrf := range ports.Vrfs {
+		newVrf := Vrf{
+			Filter: vrf.Filter,
+			VNI:    vrf.VNI,
+			VLANID: vrf.VLANID,
+			Cidrs:  vrf.Cidrs,
+			Has4:   vrf.Has4,
+			Has6:   vrf.Has6,
+		}
+
+		var neighbors []string
+		for _, neigh := range vrf.Neighbors {
+			if ports.AdminStatus[neigh] != PortStatusDown {
+				neighbors = append(neighbors, neigh)
 			}
 		}
-		newConf.Ports.Vrfs[vrf] = &newVrfConf
+		newVrf.Neighbors = neighbors
+		vrfs[name] = &newVrf
 	}
-	newConf.Ports.Underlay = []string{}
-	newConf.Ports.Unprovisioned = []string{}
-	newConf.Ports.BladePorts = []string{}
-	newConf.Ports.Firewalls = make(map[string]*Firewall)
 
-	// create a copy of the firewalls and filter out the interfaces which should be down
-	for port, fwConf := range c.Ports.Firewalls {
-		if _, isdown := c.Ports.DownPorts[port]; !isdown {
-			newConf.Ports.Firewalls[port] = fwConf
+	for name, fw := range ports.Firewalls {
+		if ports.AdminStatus[fw.Port] == PortStatusDown {
+			continue
+		}
+		firewalls[name] = &Firewall{
+			Filter: fw.Filter,
+			Port:   fw.Port,
+			Cidrs:  fw.Cidrs,
+			Vnis:   fw.Vnis,
 		}
 	}
 
-	// create a copy of the underlay ports without the downports
-	for _, port := range c.Ports.Underlay {
-		if _, isdown := c.Ports.DownPorts[port]; !isdown {
-			newConf.Ports.Underlay = append(newConf.Ports.Underlay, port)
-		}
+	newConf := *c
+	newConf.Ports = Ports{
+		Eth0:          c.Ports.Eth0,
+		Underlay:      underlay,
+		Unprovisioned: unprovisioned,
+		BladePorts:    bladePorts,
+		Vrfs:          vrfs,
+		Firewalls:     firewalls,
+		AdminStatus:   c.Ports.AdminStatus,
 	}
-
-	// create a copy of the unprovisioned ports without the downports
-	for _, port := range c.Ports.Unprovisioned {
-		if _, isdown := c.Ports.DownPorts[port]; !isdown {
-			newConf.Ports.Unprovisioned = append(newConf.Ports.Unprovisioned, port)
-		}
-	}
-
-	// create a copy of the blade ports without the downports
-	for _, port := range c.Ports.BladePorts {
-		if _, isdown := c.Ports.DownPorts[port]; !isdown {
-			newConf.Ports.BladePorts = append(newConf.Ports.BladePorts, port)
-		}
-	}
-
 	return &newConf
 }
