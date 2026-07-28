@@ -67,13 +67,15 @@ func loadRedisConfig(path string) (*db.Config, error) {
 	return cfg, nil
 }
 
+// Apply writes the FRR configuration before the port and interface configuration.
+// The order matters, because this a workaround for an FRR defect.
 func (s *Sonic) Apply(ctx context.Context, cfg *types.Conf) error {
-	err := s.redisApplier.Apply(ctx, cfg)
+	err := s.frrApplier.Apply(ctx, cfg)
 	if err != nil {
 		return err
 	}
 
-	return s.frrApplier.Apply(ctx, cfg)
+	return s.redisApplier.Apply(ctx, cfg)
 }
 
 func (s *Sonic) IsInitialized(ctx context.Context) (initialized bool, err error) {
