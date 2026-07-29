@@ -1,11 +1,13 @@
 package db
 
 import (
+	"maps"
 	"slices"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db/test"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/stretchr/testify/require"
@@ -1521,6 +1523,66 @@ func TestConfigDB_DeleteInterfaceConfiguration(t *testing.T) {
 			require.NoError(t, err)
 			if diff := cmp.Diff(initData, data); diff != "" {
 				t.Errorf("ConfigDB.DeleteInterfaceConfiguration() data differs = %s", diff)
+			}
+		})
+	}
+}
+
+func TestConfigDB_GetInterfaces(t *testing.T) {
+	tests := []struct {
+		name string
+		data test.StringMap
+		want []string
+	}{
+		{
+			name: "get all interfaces with a routing configuration",
+			data: configDBTestData,
+			want: []string{"Ethernet0", "Ethernet1", "Ethernet3"},
+		},
+		{
+			name: "ip addresses do not collide with interface names",
+			data: test.StringMap{
+				"INTERFACE": test.StringMap{
+					"Ethernet0": test.StringMap{
+						"ipv6_use_link_local_only": "enable",
+					},
+					"Ethernet0|10.0.0.1/24": test.StringMap{},
+				},
+			},
+			want: []string{"Ethernet0", "Ethernet0|10.0.0.1/24"},
+		},
+		{
+			name: "no interface is routed",
+			data: test.StringMap{
+				"PORT": test.StringMap{
+					"Ethernet0": test.StringMap{
+						"admin_status": "up",
+					},
+				},
+			},
+			want: []string{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				ctx = t.Context()
+				sep = "|"
+				vc  = test.StartValkey(t)
+			)
+			defer vc.Close()
+
+			err := test.LoadData(ctx, vc, tt.data, sep)
+			require.NoError(t, err)
+
+			d := NewConfigDB(vc, sep)
+			view, err := d.GetInterfaces(ctx)
+			require.NoError(t, err)
+
+			got := slices.Collect(maps.Keys(view))
+			slices.Sort(got)
+			if diff := cmp.Diff(tt.want, got, cmpopts.EquateEmpty()); diff != "" {
+				t.Errorf("ConfigDB.GetInterfaces() diff = %s", diff)
 			}
 		})
 	}

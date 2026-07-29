@@ -3,6 +3,7 @@ package sonic
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -67,15 +68,41 @@ func loadRedisConfig(path string) (*db.Config, error) {
 	return cfg, nil
 }
 
-// Apply writes the FRR configuration before the port and interface configuration.
-// The order matters, because this a workaround for an FRR defect.
+// Apply writes the port and interface configuration and the FRR configuration,
+// in the order the pending changes require.
+//
+// This is a workaround for an FRR defect. Only default-VRF peers - the
+// firewalls - are affected.
 func (s *Sonic) Apply(ctx context.Context, cfg *types.Conf) error {
-	err := s.frrApplier.Apply(ctx, cfg)
+	frrFirst, err := s.redisApplier.NeedsFrrFirst(ctx, cfg)
 	if err != nil {
-		return err
+		// a superfluous frr-reload is cheaper than a crashing bgpd
+		s.log.Error("could not determine in which order the configuration has to be applied", "error", err)
+		frrFirst = true
 	}
 
-	return s.redisApplier.Apply(ctx, cfg)
+	if !frrFirst {
+		if err := s.redisApplier.Apply(ctx, cfg); err != nil {
+			return err
+		}
+
+		return s.frrApplier.Apply(ctx, cfg)
+	}
+
+	frrErr := s.frrApplier.Apply(ctx, cfg)
+	if frrErr != nil {
+		s.log.Info("could not apply the frr configuration before the port configuration, retrying afterwards", "error", frrErr)
+	}
+
+	if err := s.redisApplier.Apply(ctx, cfg); err != nil {
+		return errors.Join(frrErr, err)
+	}
+
+	if frrErr == nil {
+		return nil
+	}
+
+	return s.frrApplier.Apply(ctx, cfg)
 }
 
 func (s *Sonic) IsInitialized(ctx context.Context) (initialized bool, err error) {

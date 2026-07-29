@@ -112,6 +112,38 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 	return errors.Join(errs...)
 }
 
+// NeedsFrrFirst reports whether the FRR configuration has to be applied before cfg is
+// written to the CONFIG_DB. That is the case when a port that is currently routed in
+// the default vrf - a firewall port - is about to be deprovisioned, because
+// configureUnprovisionedPort() tears its router interface down and FRR has to have
+// withdrawn the neighbor by then. See Sonic.Apply for the full story.
+func (a *Applier) NeedsFrrFirst(ctx context.Context, cfg *types.Conf) (bool, error) {
+	if len(cfg.Ports.Unprovisioned) == 0 {
+		return false, nil
+	}
+
+	interfaces, err := a.db.Config.GetInterfaces(ctx)
+	if err != nil {
+		return false, fmt.Errorf("could not retrieve the routed interfaces: %w", err)
+	}
+
+	for _, interfaceName := range cfg.Ports.Unprovisioned {
+		if !interfaces.Has(interfaceName) {
+			continue
+		}
+
+		vrf, err := a.db.Config.GetVrfMembership(ctx, interfaceName)
+		if err != nil {
+			return false, fmt.Errorf("could not retrieve vrf membership for %s: %w", interfaceName, err)
+		}
+		if vrf == "" {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
 func (a *Applier) GetPorts(ctx context.Context) ([]*db.Port, error) {
 	return a.db.Config.GetPorts(ctx)
 }
