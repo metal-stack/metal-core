@@ -20,6 +20,7 @@ type Core struct {
 	rackID                  string
 	enableReconfigureSwitch bool
 	managementGateway       string
+	additionalMgmtRoutes    []string
 	additionalBridgePorts   []string
 	additionalBridgeVIDs    []string
 	spineUplinks            []string
@@ -48,6 +49,7 @@ type Config struct {
 	RackID                string
 	ReconfigureSwitch     bool
 	ManagementGateway     string
+	AdditionalMgmtRoutes  []string
 	AdditionalBridgePorts []string
 	AdditionalBridgeVIDs  []string
 	SpineUplinks          []string
@@ -76,6 +78,7 @@ func New(c Config) *Core {
 		rackID:                  c.RackID,
 		enableReconfigureSwitch: c.ReconfigureSwitch,
 		managementGateway:       c.ManagementGateway,
+		additionalMgmtRoutes:    c.AdditionalMgmtRoutes,
 		additionalBridgePorts:   c.AdditionalBridgePorts,
 		additionalBridgeVIDs:    c.AdditionalBridgeVIDs,
 		spineUplinks:            c.SpineUplinks,

@@ -14,6 +14,7 @@ type (
 		Ports                Ports
 		MetalCoreCIDR        string
 		AdditionalBridgeVIDs []string
+		AdditionalMgmtRoutes []string
 		PXEVlanID            uint16
 		SetSrcLoopback       bool
 	}

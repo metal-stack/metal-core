@@ -5,6 +5,9 @@ loopback: 10.0.0.10
 setsrcloopback: true
 asn: 4200000010
 metalcorecidr: 10.255.255.2/24
+additionalmgmtroutes:
+  - 10.100.0.0/16
+  - 10.200.0.0/16
 ports:
   eth0:
     addresscidr: 192.168.101.12/24
