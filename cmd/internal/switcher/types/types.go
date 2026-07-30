@@ -23,31 +23,33 @@ type (
 		Underlay      []string
 		Unprovisioned []string
 		BladePorts    []string
-		Vrfs          map[string]*Vrf
+		Vrfs          Vrfs
 		Firewalls     map[string]*Firewall
 		AdminStatus   map[string]PortStatus
 	}
 
+	Vrfs map[string]*Vrf
+
 	Vrf struct {
-		Filter
-		VNI       uint32
-		VLANID    uint16
-		Neighbors []string
-		Cidrs     []string
-		Has4      bool
-		Has6      bool
+		Filter    `yaml:"filter"`
+		VNI       uint32   `yaml:"vni"`
+		VLANID    uint16   `yaml:"vlanid"`
+		Neighbors []string `yaml:"neighbors"`
+		Cidrs     []string `yaml:"cidrs"`
+		Has4      bool     `yaml:"has4"`
+		Has6      bool     `yaml:"has6"`
 	}
 
 	Firewall struct {
-		Filter
-		Port  string
-		Cidrs []string
-		Vnis  []string
+		Filter `yaml:"filter"`
+		Port   string   `yaml:"port"`
+		Cidrs  []string `yaml:"cidrs"`
+		Vnis   []string `yaml:"vnis"`
 	}
 
 	Filter struct {
-		IPPrefixLists []IPPrefixList
-		RouteMaps     []RouteMap
+		IPPrefixLists []IPPrefixList `yaml:"ip-prefix-lists"`
+		RouteMaps     []RouteMap     `yaml:"route-maps"`
 	}
 
 	Nic struct {
@@ -56,16 +58,16 @@ type (
 	}
 
 	RouteMap struct {
-		Name    string
-		Entries []string
-		Policy  string
-		Order   int
+		Name    string   `yaml:"name"`
+		Entries []string `yaml:"entries"`
+		Policy  string   `yaml:"policy"`
+		Order   int      `yaml:"order"`
 	}
 
 	IPPrefixList struct {
-		AddressFamily string
-		Name          string
-		Spec          string
+		AddressFamily string `yaml:"address-family"`
+		Name          string `yaml:"name"`
+		Spec          string `yaml:"spec"`
 	}
 
 	PortStatus string

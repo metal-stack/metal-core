@@ -20,6 +20,16 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		spineUplinks:         []string{"swp31", "swp32"},
 		additionalBridgeVIDs: []string{"201-256", "301-356"},
 		nos:                  &cumulus.Cumulus{},
+		staticVRFs: types.Vrfs{
+			"vrfCP": {
+				VNI:       13000,
+				VLANID:    1234,
+				Neighbors: []string{"swp3"},
+				Cidrs:     []string{"10.1.2.0/24"},
+				Has4:      true,
+				Has6:      true,
+			},
+		},
 	}
 
 	n1 := "swp1"
@@ -71,30 +81,40 @@ func TestBuildSwitcherConfig(t *testing.T) {
 					Port: "swp3",
 				},
 			},
-			Vrfs: map[string]*types.Vrf{"vrf104001": {
-				VNI:       104001,
-				VLANID:    1001,
-				Neighbors: []string{"swp2"},
-				Filter: types.Filter{
-					IPPrefixLists: []types.IPPrefixList{
-						{
-							AddressFamily: "ip",
-							Name:          "vrf104001-in-prefixes",
-							Spec:          "permit 10.240.0.0/12 le 32",
+			Vrfs: map[string]*types.Vrf{
+				"vrf104001": {
+					VNI:       104001,
+					VLANID:    1001,
+					Neighbors: []string{"swp2"},
+					Filter: types.Filter{
+						IPPrefixLists: []types.IPPrefixList{
+							{
+								AddressFamily: "ip",
+								Name:          "vrf104001-in-prefixes",
+								Spec:          "permit 10.240.0.0/12 le 32",
+							},
+						},
+						RouteMaps: []types.RouteMap{
+							{
+								Name:    "vrf104001-in",
+								Entries: []string{"match ip address prefix-list vrf104001-in-prefixes"},
+								Policy:  "permit",
+								Order:   10,
+							},
 						},
 					},
-					RouteMaps: []types.RouteMap{
-						{
-							Name:    "vrf104001-in",
-							Entries: []string{"match ip address prefix-list vrf104001-in-prefixes"},
-							Policy:  "permit",
-							Order:   10,
-						},
-					},
+					Cidrs: []string{"10.240.0.0/12"},
+					Has4:  true,
 				},
-				Cidrs: []string{"10.240.0.0/12"},
-				Has4:  true,
-			}},
+				"vrfCP": {
+					VNI:       13000,
+					VLANID:    1234,
+					Neighbors: []string{"swp3"},
+					Cidrs:     []string{"10.1.2.0/24"},
+					Has4:      true,
+					Has6:      true,
+				},
+			},
 		},
 		AdditionalBridgeVIDs: []string{"201-256", "301-356"},
 	}

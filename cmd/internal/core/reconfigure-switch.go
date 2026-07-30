@@ -161,7 +161,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 		Underlay:      c.spineUplinks,
 		BladePorts:    c.additionalBridgePorts,
 		Unprovisioned: []string{},
-		Vrfs:          map[string]*types.Vrf{},
+		Vrfs:          c.staticVRFs,
 		Firewalls:     map[string]*types.Firewall{},
 		AdminStatus:   map[string]types.PortStatus{},
 	}

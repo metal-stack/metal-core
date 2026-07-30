@@ -6,6 +6,7 @@ import (
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	metalgo "github.com/metal-stack/metal-go"
 )
 
@@ -22,6 +23,7 @@ type Core struct {
 	managementGateway       string
 	additionalBridgePorts   []string
 	additionalBridgeVIDs    []string
+	staticVRFs              types.Vrfs
 	spineUplinks            []string
 	setSrcLoopback          bool
 
@@ -50,6 +52,7 @@ type Config struct {
 	ManagementGateway     string
 	AdditionalBridgePorts []string
 	AdditionalBridgeVIDs  []string
+	StaticVRFs            types.Vrfs
 	SpineUplinks          []string
 	SetSrcLoopback        bool
 
@@ -86,5 +89,6 @@ func New(c Config) *Core {
 		metrics:                 c.Metrics,
 		pxeVlanID:               c.PXEVlanID,
 		bgpNeighborStateFile:    c.BGPNeighborStateFile,
+		staticVRFs:              c.StaticVRFs,
 	}
 }

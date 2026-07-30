@@ -18,10 +18,12 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"gopkg.in/yaml.v3"
 
 	"github.com/metal-stack/metal-core/cmd/internal/core"
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/v"
 )
@@ -89,6 +91,20 @@ func Run() {
 
 	metrics := metrics.New()
 
+	vrfs := types.Vrfs{}
+	if cfg.StaticVRFsFile != "" {
+		bytes, err := os.ReadFile(cfg.StaticVRFsFile)
+		if err != nil {
+			log.Error("failed to read static VRFs file", "error", err)
+			os.Exit(1)
+		}
+		err = yaml.Unmarshal(bytes, vrfs)
+		if err != nil {
+			log.Error("failed to unmarshal static VRFs file", "error", err)
+			os.Exit(1)
+		}
+	}
+
 	c := core.New(core.Config{
 		Log:                   log,
 		LogLevel:              cfg.LogLevel,
@@ -109,6 +125,7 @@ func Run() {
 		Metrics:               metrics,
 		PXEVlanID:             cfg.PXEVlanID,
 		BGPNeighborStateFile:  cfg.BGPNeighborStateFile,
+		StaticVRFs:            vrfs,
 	})
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

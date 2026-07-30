@@ -34,4 +34,5 @@ type Config struct {
 	GrpcClientKeyFile         string        `required:"false" desc:"the gRPC client key file" envconfig:"grpc_client_key_file"`
 	PXEVlanID                 uint16        `required:"false" default:"4000" desc:"the id of the pxe vlan" envconfig:"pxe_vlan_id"`
 	BGPNeighborStateFile      string        `required:"false" default:"/var/run/bgp-neighbors/bgp-neighbors.json" desc:"the file to read the BGP neighbor state from" envconfig:"bgp_neighbor_state_file"`
+	StaticVRFsFile            string        `required:"false" desc:"yaml file containing static vrfs and ports that are not managed by the api" envconfig:"static_vrfs_file"`
 }
