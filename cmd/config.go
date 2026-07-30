@@ -20,6 +20,7 @@ type Config struct {
 	ASN                       string        `required:"false" default:"420000011" desc:"set the ASN that is used with BGP"`
 	SpineUplinks              []string      `required:"false" default:"swp31,swp32" desc:"set the ports that are connected to spines" envconfig:"spine_uplinks"`
 	ManagementGateway         string        `required:"false" default:"" desc:"the default gateway for the management network" split_words:"true"`
+	AdditionalMgmtRoutes      []string      `required:"false" desc:"additional destination cidrs that are routed to the management network gateway, next to the default route" envconfig:"additional_mgmt_routes"`
 	ReconfigureSwitch         bool          `required:"false" default:"false" desc:"let metal-core reconfigure the switch" split_words:"true"`
 	ReconfigureSwitchInterval time.Duration `required:"false" default:"10s" desc:"pull interval to fetch and apply switch configuration" split_words:"true"`
 	Timeout                   time.Duration `required:"false" default:"15s" desc:"timeout for long lasting operations during switch registration and reconfiguration"`

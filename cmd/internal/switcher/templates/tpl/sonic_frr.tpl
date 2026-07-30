@@ -109,6 +109,9 @@ route-map {{ .Name }} {{ .Policy }} {{ .Order }}
 {{- end }}
 {{- if .Ports.Eth0.Gateway }}
 ip route 0.0.0.0/0 {{ .Ports.Eth0.Gateway }} nexthop-vrf mgmt
+{{- range .AdditionalMgmtRoutes }}
+ip route {{ . }} {{ $.Ports.Eth0.Gateway }} nexthop-vrf mgmt
+{{- end }}
 {{- end }}
 !
 {{- range $vrf, $t := .Ports.Vrfs }}

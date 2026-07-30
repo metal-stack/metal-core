@@ -153,6 +153,7 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 		Loopback:             c.loopbackIP,
 		MetalCoreCIDR:        c.cidr,
 		AdditionalBridgeVIDs: c.additionalBridgeVIDs,
+		AdditionalMgmtRoutes: c.additionalMgmtRoutes,
 		PXEVlanID:            c.pxeVlanID,
 		SetSrcLoopback:       c.setSrcLoopback,
 	}
