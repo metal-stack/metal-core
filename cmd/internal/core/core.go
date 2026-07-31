@@ -19,8 +19,10 @@ type Core struct {
 	asn                     string
 	partitionID             string
 	rackID                  string
+	roomID                  string
 	enableReconfigureSwitch bool
 	managementGateway       string
+	additionalMgmtRoutes    []string
 	additionalBridgePorts   []string
 	additionalBridgeVIDs    []string
 	staticVRFs              types.Vrfs
@@ -48,8 +50,10 @@ type Config struct {
 	ASN                   string
 	PartitionID           string
 	RackID                string
+	RoomID                string
 	ReconfigureSwitch     bool
 	ManagementGateway     string
+	AdditionalMgmtRoutes  []string
 	AdditionalBridgePorts []string
 	AdditionalBridgeVIDs  []string
 	StaticVRFs            types.Vrfs
@@ -77,8 +81,10 @@ func New(c Config) *Core {
 		asn:                     c.ASN,
 		partitionID:             c.PartitionID,
 		rackID:                  c.RackID,
+		roomID:                  c.RoomID,
 		enableReconfigureSwitch: c.ReconfigureSwitch,
 		managementGateway:       c.ManagementGateway,
+		additionalMgmtRoutes:    c.AdditionalMgmtRoutes,
 		additionalBridgePorts:   c.AdditionalBridgePorts,
 		additionalBridgeVIDs:    c.AdditionalBridgeVIDs,
 		spineUplinks:            c.SpineUplinks,

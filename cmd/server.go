@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	httppprof "net/http/pprof"
+	"net/netip"
 	"os"
 	"os/signal"
 	"strings"
@@ -51,6 +52,13 @@ func Run() {
 
 	log.Info("metal-core version", "version", v.V)
 	log.Info("configuration", "cfg", cfg)
+
+	for _, route := range cfg.AdditionalMgmtRoutes {
+		if _, err := netip.ParsePrefix(route); err != nil {
+			log.Error("invalid cidr in additional mgmt routes", "cidr", route, "error", err)
+			os.Exit(1)
+		}
+	}
 
 	driver, err := metalgo.NewDriver(
 		fmt.Sprintf("%s://%s:%d%s", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort, cfg.ApiBasePath),
@@ -113,8 +121,10 @@ func Run() {
 		ASN:                   cfg.ASN,
 		PartitionID:           cfg.PartitionID,
 		RackID:                cfg.RackID,
+		RoomID:                cfg.RoomID,
 		ReconfigureSwitch:     cfg.ReconfigureSwitch,
 		ManagementGateway:     cfg.ManagementGateway,
+		AdditionalMgmtRoutes:  cfg.AdditionalMgmtRoutes,
 		AdditionalBridgePorts: cfg.AdditionalBridgePorts,
 		AdditionalBridgeVIDs:  cfg.AdditionalBridgeVIDs,
 		SpineUplinks:          cfg.SpineUplinks,
