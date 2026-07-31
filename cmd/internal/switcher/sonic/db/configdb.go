@@ -43,7 +43,9 @@ type VxlanMap struct {
 	Vlan string
 }
 
-func newConfigDB(rdb valkey.Client, sep string) *ConfigDB {
+// NewConfigDB returns a ConfigDB that talks to the given client. Use New to obtain the
+// databases of a switch, this constructor is for callers that bring their own client.
+func NewConfigDB(rdb valkey.Client, sep string) *ConfigDB {
 	return &ConfigDB{
 		c: NewClient(rdb, sep),
 	}
@@ -263,6 +265,15 @@ func (d *ConfigDB) getVTEPName(ctx context.Context) (string, error) {
 	}
 	key := []string(keys[0])
 	return key[len(key)-1], nil
+}
+
+// GetInterfaces returns a view of the interfaces that carry a routing configuration.
+// The view also holds the keys of the ip addresses of an interface, they are of the
+// form <interface><separator><prefix> and never collide with a plain interface name.
+func (d *ConfigDB) GetInterfaces(ctx context.Context) (View, error) {
+	t := d.c.GetTable(Key{interfaceTable})
+
+	return t.GetView(ctx)
 }
 
 func (d *ConfigDB) DeleteInterfaceConfiguration(ctx context.Context, interfaceName string) error {

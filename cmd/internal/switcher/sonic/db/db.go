@@ -61,7 +61,7 @@ func New(cfg *Config) (*DB, error) {
 	db := &DB{
 		Appl:     newApplDB(applClient, applDB.Separator),
 		Asic:     newAsicDB(asicClient, asicDB.Separator),
-		Config:   newConfigDB(configClient, configDB.Separator),
+		Config:   NewConfigDB(configClient, configDB.Separator),
 		Counters: newCountersDB(countersClient, countersDB.Separator),
 	}
 	return db, nil
