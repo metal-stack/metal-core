@@ -69,6 +69,7 @@ func (c *Core) RegisterSwitch(ctx context.Context, timeout time.Duration) error 
 		Name:           hostname,
 		PartitionID:    &c.partitionID,
 		RackID:         &c.rackID,
+		RoomID:         c.roomID,
 		Nics:           nics,
 		Os:             switchOS,
 		ManagementIP:   managementIP,
