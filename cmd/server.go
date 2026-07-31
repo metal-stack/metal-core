@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -19,7 +20,6 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"gopkg.in/yaml.v3"
 
 	"github.com/metal-stack/metal-core/cmd/internal/core"
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
@@ -27,6 +27,7 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/v"
+	"go.yaml.in/yaml/v4"
 )
 
 const phonedHomeInterval = time.Minute // lldpd sends messages every two seconds
@@ -98,19 +99,10 @@ func Run() {
 	}
 
 	metrics := metrics.New()
-
-	vrfs := types.Vrfs{}
-	if cfg.StaticVRFsFile != "" {
-		bytes, err := os.ReadFile(cfg.StaticVRFsFile)
-		if err != nil {
-			log.Error("failed to read static VRFs file", "error", err)
-			os.Exit(1)
-		}
-		err = yaml.Unmarshal(bytes, vrfs)
-		if err != nil {
-			log.Error("failed to unmarshal static VRFs file", "error", err)
-			os.Exit(1)
-		}
+	vrfs, err := getStaticVRFs(cfg.StaticVRFsFile)
+	if err != nil {
+		log.Error("failed to assemble static vrfs", "error", err)
+		os.Exit(1)
 	}
 
 	c := core.New(core.Config{
@@ -193,4 +185,21 @@ func Run() {
 	})
 
 	wg.Wait()
+}
+
+func getStaticVRFs(filePath string) (types.Vrfs, error) {
+	vrfs := types.Vrfs{}
+	if filePath != "" {
+		fileBytes, err := os.ReadFile(filePath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read static VRFs file: %w", err)
+		}
+		dec := yaml.NewDecoder(bytes.NewReader(fileBytes))
+		dec.KnownFields(true)
+		err = dec.Decode(vrfs)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal static VRFs file: %w", err)
+		}
+	}
+	return vrfs, nil
 }

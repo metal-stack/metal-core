@@ -42,10 +42,10 @@ type (
 	}
 
 	Firewall struct {
-		Filter `yaml:"filter"`
-		Port   string   `yaml:"port"`
-		Cidrs  []string `yaml:"cidrs"`
-		Vnis   []string `yaml:"vnis"`
+		Filter
+		Port  string
+		Cidrs []string
+		Vnis  []string
 	}
 
 	Filter struct {

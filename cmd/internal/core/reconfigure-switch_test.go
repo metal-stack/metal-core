@@ -3,6 +3,8 @@ package core
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/require"
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/cumulus"
@@ -24,11 +26,8 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		staticVRFs: types.Vrfs{
 			"vrfCP": {
 				VNI:       13000,
-				VLANID:    1234,
 				Neighbors: []string{"swp3"},
 				Cidrs:     []string{"10.1.2.0/24"},
-				Has4:      true,
-				Has6:      true,
 			},
 		},
 	}
@@ -83,9 +82,31 @@ func TestBuildSwitcherConfig(t *testing.T) {
 				},
 			},
 			Vrfs: map[string]*types.Vrf{
+				"vrfCP": {
+					VNI:       13000,
+					Neighbors: []string{"swp3"},
+					Cidrs:     []string{"10.1.2.0/24"},
+					Filter: types.Filter{
+						IPPrefixLists: []types.IPPrefixList{
+							{
+								AddressFamily: "ip",
+								Name:          "vrfCP-in-prefixes",
+								Spec:          "permit 10.1.2.0/24 le 32",
+							},
+						},
+						RouteMaps: []types.RouteMap{
+							{
+								Name:    "vrfCP-in",
+								Entries: []string{"match ip address prefix-list vrfCP-in-prefixes"},
+								Policy:  "permit",
+								Order:   10,
+							},
+						},
+					},
+					Has4: true,
+				},
 				"vrf104001": {
 					VNI:       104001,
-					VLANID:    1001,
 					Neighbors: []string{"swp2"},
 					Filter: types.Filter{
 						IPPrefixLists: []types.IPPrefixList{
@@ -107,17 +128,12 @@ func TestBuildSwitcherConfig(t *testing.T) {
 					Cidrs: []string{"10.240.0.0/12"},
 					Has4:  true,
 				},
-				"vrfCP": {
-					VNI:       13000,
-					VLANID:    1234,
-					Neighbors: []string{"swp3"},
-					Cidrs:     []string{"10.1.2.0/24"},
-					Has4:      true,
-					Has6:      true,
-				},
 			},
 		},
 		AdditionalBridgeVIDs: []string{"201-256", "301-356"},
 	}
-	require.EqualValues(t, expected, actual)
+	// VLANID is ignored because it is reserved dynamically and the order in which the map is iterated matters so the test becomes flaky.
+	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(types.Vrf{}, "VLANID")); diff != "" {
+		t.Errorf("TestBuildSwitcherConfig() diff = %s", diff)
+	}
 }
