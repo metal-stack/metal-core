@@ -18,6 +18,7 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	clientv2 "github.com/metal-stack/api/go/client"
+	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/metal-stack/metal-core/cmd/internal/core"
@@ -50,11 +51,15 @@ func Run() {
 	log.Info("metal-core version", "version", v.V)
 	log.Info("configuration", "cfg", cfg)
 
-	client, err := newApiClient(cfg.ApiURL, cfg.ApiToken)
+	client, err := newApiClient(cfg.ApiURL, cfg.ApiTokenFile)
 	if err != nil {
 		log.Error("failed to create metal-apiserver client", "error", err)
 		os.Exit(1)
 	}
+
+	client.Ping(context.Background(), &clientv2.PingConfig{
+		ComponentType: apiv2.ComponentType_COMPONENT_TYPE_METAL_CORE,
+	})
 
 	nos, err := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile)
 	if err != nil {
@@ -142,12 +147,24 @@ func Run() {
 	wg.Wait()
 }
 
-func newApiClient(apiURL, token string) (clientv2.Client, error) {
+func newApiClient(apiURL, tokenfilePath string) (clientv2.Client, error) {
+	token, err := os.ReadFile(tokenfilePath)
+	if err != nil {
+		return nil, err
+	}
+	tokenPersister, err := clientv2.NewFilesystemTokenPersister(tokenfilePath)
+	if err != nil {
+		return nil, err
+	}
+
 	dialConfig := &clientv2.DialConfig{
 		BaseURL:   apiURL,
-		Token:     token,
+		Token:     string(token),
 		UserAgent: "metal-core",
 		Log:       slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})),
+		TokenRenewal: &clientv2.TokenRenewal{
+			PersistTokenFn: tokenPersister,
+		},
 	}
 
 	return clientv2.New(dialConfig)

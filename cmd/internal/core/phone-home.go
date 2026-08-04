@@ -11,6 +11,7 @@ import (
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	infrav2 "github.com/metal-stack/api/go/metalstack/infra/v2"
 	"github.com/metal-stack/go-lldpd/pkg/lldp"
 )
@@ -109,11 +110,11 @@ func (c *Core) send(ctx context.Context, event *infrav2.EventServiceSendRequest)
 func (c *Core) phoneHome(ctx context.Context, msgs []phoneHomeMessage) {
 	c.log.Info("phonehome", "machines", len(msgs))
 
-	events := make(map[string]*infrav2.MachineProvisioningEvent)
+	events := make(map[string]*apiv2.MachineProvisioningEvent)
 	for i := range msgs {
 		msg := msgs[i]
-		event := &infrav2.MachineProvisioningEvent{
-			Event:   infrav2.ProvisioningEventType_PROVISIONING_EVENT_TYPE_PHONED_HOME,
+		event := &apiv2.MachineProvisioningEvent{
+			Event:   apiv2.MachineProvisioningEventType_MACHINE_PROVISIONING_EVENT_TYPE_PHONED_HOME,
 			Message: msg.payload,
 			Time:    timestamppb.New(msg.time),
 		}
