@@ -51,7 +51,7 @@ func Run() {
 	log.Info("metal-core version", "version", v.V)
 	log.Info("configuration", "cfg", cfg)
 
-	client, err := newApiClient(cfg.ApiURL, cfg.ApiTokenFile)
+	client, err := newApiClient(cfg.ApiURL, cfg.ApiserverTokenFile)
 	if err != nil {
 		log.Error("failed to create metal-apiserver client", "error", err)
 		os.Exit(1)
@@ -150,11 +150,11 @@ func Run() {
 func newApiClient(apiURL, tokenfilePath string) (clientv2.Client, error) {
 	token, err := os.ReadFile(tokenfilePath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read token file %s: %w", tokenfilePath, err)
 	}
 	tokenPersister, err := clientv2.NewFilesystemTokenPersister(tokenfilePath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create filesystem token persister: %w", err)
 	}
 
 	dialConfig := &clientv2.DialConfig{
