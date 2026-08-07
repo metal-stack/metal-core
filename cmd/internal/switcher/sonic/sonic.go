@@ -153,11 +153,14 @@ func (s *Sonic) getPortsConfig(ctx context.Context) (map[string]PortInfo, error)
 		return nil, err
 	}
 
+	// keep the real interface names as keys; the naming schema is only applied
+	// when reporting nics to the metal-api. The keys are used to match the
+	// interface blacklist and to open the LLDP pcap handles, both of which
+	// need the actual netdev names.
 	portConfig := map[string]PortInfo{}
 	for _, p := range ports {
-		port := getPortByNamingSchema(p.Name, p.Alias, s.interfaceNamingSchema)
-		portConfig[port.Name] = PortInfo{
-			Alias: port.Alias,
+		portConfig[p.Name] = PortInfo{
+			Alias: p.Alias,
 		}
 	}
 
