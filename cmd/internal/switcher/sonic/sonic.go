@@ -20,21 +20,23 @@ import (
 	"github.com/metal-stack/metal-go/api/models"
 )
 
+type (
+	Sonic struct {
+		db           *db.DB
+		frrApplier   *templates.Applier
+		log          *slog.Logger
+		redisApplier *redis.Applier
+	}
+
+	PortInfo struct {
+		Alias string `json:"alias"`
+	}
+)
+
 const (
 	SonicVersionFile = "/etc/sonic/sonic_version.yml"
 	redisConfigFile  = "/var/run/redis/sonic-db/database_config.json"
 )
-
-type Sonic struct {
-	db           *db.DB
-	frrApplier   *templates.Applier
-	log          *slog.Logger
-	redisApplier *redis.Applier
-}
-
-type PortInfo struct {
-	Alias string `json:"alias"`
-}
 
 func New(log *slog.Logger, frrTplFile string) (*Sonic, error) {
 	cfg, err := loadRedisConfig(redisConfigFile)

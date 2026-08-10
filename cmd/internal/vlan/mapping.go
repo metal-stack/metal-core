@@ -6,10 +6,8 @@ import (
 	"github.com/vishvananda/netlink"
 )
 
-// Mapping holds the current mapping of VLAN IDs to VNIs of the switch
 type Mapping map[uint16]uint32
 
-// ReadMapping reads the current VLAN to VNI mapping with the help of netlink
 func ReadMapping() (Mapping, error) {
 	m := Mapping{}
 	links, _ := netlink.LinkList()

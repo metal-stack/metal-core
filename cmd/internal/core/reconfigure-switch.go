@@ -20,7 +20,6 @@ import (
 	"github.com/metal-stack/metal-lib/pkg/pointer"
 )
 
-// ConstantlyReconfigureSwitch reconfigures the switch.
 func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval, timeout time.Duration) {
 	host, _ := os.Hostname()
 
@@ -55,15 +54,12 @@ func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval, timeou
 				c.log.Info("reconfiguration succeeded")
 			}
 
-			// fill the port states of the switch
 			var nics []*models.V1SwitchNic
 			if s != nil {
 				nics = s.Nics
 			}
 			for _, n := range nics {
 				if n == nil || n.Name == nil {
-					// lets log the whole nic because the name could be empty; lets hope there is some useful information
-					// in the nic
 					c.log.Error("could not check if link is up", "nic", n)
 					c.metrics.CountError("switch-reconfiguration")
 					continue
@@ -193,7 +189,6 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 			continue
 		}
 
-		// Firewall-Port
 		if nic.Vrf == "default" {
 			fw := &types.Firewall{
 				Port: port,
@@ -206,7 +201,6 @@ func (c *Core) buildSwitcherConfig(s *models.V1SwitchResponse) (*types.Conf, err
 			continue
 		}
 
-		// Machine-Port
 		vrf := &types.Vrf{}
 		if v, has := p.Vrfs[nic.Vrf]; has {
 			vrf = v

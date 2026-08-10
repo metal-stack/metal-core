@@ -9,28 +9,30 @@ import (
 	"github.com/valkey-io/valkey-go"
 )
 
-type Config struct {
-	Databases map[string]database `json:"DATABASES"`
-	Instances map[string]instance `json:"INSTANCES"`
-}
+type (
+	Config struct {
+		Databases map[string]database `json:"DATABASES"`
+		Instances map[string]instance `json:"INSTANCES"`
+	}
 
-type database struct {
-	Id        int    `json:"id"`
-	Instance  string `json:"instance"`
-	Separator string `json:"separator"`
-}
+	database struct {
+		Id        int    `json:"id"`
+		Instance  string `json:"instance"`
+		Separator string `json:"separator"`
+	}
 
-type instance struct {
-	Addr         string `json:"unix_socket_path"`
-	PasswordPath string `json:"password_path"`
-}
+	instance struct {
+		Addr         string `json:"unix_socket_path"`
+		PasswordPath string `json:"password_path"`
+	}
 
-type DB struct {
-	Appl     *ApplDB
-	Asic     *AsicDB
-	Config   *ConfigDB
-	Counters *CountersDB
-}
+	DB struct {
+		Appl     *ApplDB
+		Asic     *AsicDB
+		Config   *ConfigDB
+		Counters *CountersDB
+	}
+)
 
 func New(cfg *Config) (*DB, error) {
 	applDB := cfg.Databases["APPL_DB"]
