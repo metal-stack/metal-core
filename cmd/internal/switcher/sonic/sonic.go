@@ -155,9 +155,9 @@ func (s *Sonic) getPortsConfig(ctx context.Context) (map[string]PortInfo, error)
 	// interface blacklist and to open the LLDP pcap handles, both of which
 	// need the actual netdev names.
 	portConfig := map[string]PortInfo{}
-	for _, p := range ports {
-		portConfig[p.Name] = PortInfo{
-			Alias: p.Alias,
+	for _, port := range ports {
+		portConfig[port.Name] = PortInfo{
+			Alias: port.Alias,
 		}
 	}
 
