@@ -20,11 +20,6 @@ import (
 	"github.com/metal-stack/metal-go/api/models"
 )
 
-const (
-	SonicVersionFile = "/etc/sonic/sonic_version.yml"
-	redisConfigFile  = "/var/run/redis/sonic-db/database_config.json"
-)
-
 type (
 	Sonic struct {
 		db                    *db.DB
@@ -50,6 +45,11 @@ const (
 	InterfaceNamingSchemaSwap    = InterfaceNamingSchema("swap")
 	InterfaceNamingSchemaName    = InterfaceNamingSchema("name")
 	InterfaceNamingSchemaAlias   = InterfaceNamingSchema("alias")
+)
+
+const (
+	SonicVersionFile = "/etc/sonic/sonic_version.yml"
+	redisConfigFile  = "/var/run/redis/sonic-db/database_config.json"
 )
 
 func New(log *slog.Logger, frrTplFile string, interfaceNamingSchema InterfaceNamingSchema) (*Sonic, error) {

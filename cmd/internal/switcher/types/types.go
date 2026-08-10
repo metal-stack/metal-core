@@ -69,6 +69,11 @@ type (
 		Spec          string
 	}
 
+	cidrsByAf struct {
+		ipv4Cidrs []string
+		ipv6Cidrs []string
+	}
+
 	PortStatus string
 )
 
@@ -131,11 +136,6 @@ func (s *Filter) addPrefixList(prefixListName string, cidrs []string, af string)
 		}
 		s.IPPrefixLists = append(s.IPPrefixLists, prefixList)
 	}
-}
-
-type cidrsByAf struct {
-	ipv4Cidrs []string
-	ipv6Cidrs []string
 }
 
 func cidrsByAddressfamily(cidrs []string) cidrsByAf {

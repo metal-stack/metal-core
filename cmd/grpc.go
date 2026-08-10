@@ -18,8 +18,6 @@ type GrpcClient struct {
 	c   *grpc.ClientConn
 }
 
-// NewGrpcClient fetches the address and certificates from metal-core needed to communicate with metal-api via grpc,
-// and returns a new grpc client that can be used to invoke all provided grpc endpoints.
 func NewGrpcClient(log *slog.Logger, address string, cert, key, caCert []byte) (*GrpcClient, error) {
 	clientCert, err := tls.X509KeyPair(cert, key)
 	if err != nil {
