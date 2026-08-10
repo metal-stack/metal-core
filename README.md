@@ -21,14 +21,14 @@ For example, the first port could be named `Ethernet0`, or it could be `Eth1/1` 
 Additionally, a port can have an alias, which may be the same as its name or it may follow a different naming schema.
 If the port is named `Ethernet0` the alias could be `Eth1/1(Port1)`.
 But it could also be the other way round.
-The defaults for the naming schema differs across distributions.
+The defaults for the naming schemas differ across distributions.
 
 These differences wouldn't cause any problems if it weren't for LLDP.
 An LLDP message carries two fields to identify the port, `portidsubtype` and `portdescription`.
-Depending on the distribution `portidsubtype` will be either the port's name or its alias and `portdescription` will be the other of the two.
-So the metal-core registers its ports at the metal-api which stores the names and aliases as `Nic.Name` and `Nic.Identifier`.
+Depending on the distribution `portidsubtype` will be either the port's name or its alias and `portdescription`, usually, will be the other of the two.
+So the metal-core registers its ports at the metal-api which stores the names as `V1SwitchNic.Name` and aliases as `V1SwitchNic.Identifier`.
 At the same time, when a machine registers at the metal-api it reports its LLDP neighbors and identifies the neighbors' ports by `portidsubtype` and `portdescription`.
-When the metal-api attempts to match the machine's neighbors with the switches' ports it compares the neighbor's `portidsubtype` with all of the switch's Nics' `.Identifier` field.
+When the metal-api attempts to match the machine's neighbors with the neighboring switches' ports it compares each neighboring switch's `portidsubtype` with all of its Nics' `.Identifier` fields.
 But this only works if the port's alias is identical to its `portidsubtype` which, as stated above, is not always the case.
 
 While it is possible to configure `portidsubtype` and `portdescription` via `lldpcli`, this configuration is not persisted.
