@@ -88,14 +88,14 @@ func (s *Sonic) GetNics(ctx context.Context, log *slog.Logger, blacklist []strin
 		return nil, fmt.Errorf("failed to get ports config")
 	}
 
-	for name, portConfig := range ports {
+	for name := range ports {
 		if slices.Contains(blacklist, name) {
 			log.Debug("skip interface, because it is contained in the blacklist", "interface", name, "blacklist", blacklist)
 			continue
 		}
 
 		nic := &models.V1SwitchNic{
-			Identifier: &portConfig.Alias,
+			Identifier: &name,
 			Name:       &name,
 		}
 		nics = append(nics, nic)
