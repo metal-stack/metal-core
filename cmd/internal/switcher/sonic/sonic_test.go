@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
+	"github.com/metal-stack/metal-go/api/models"
 )
 
 func Test_portsToInterfaces(t *testing.T) {
@@ -65,22 +65,22 @@ func Test_portsToInterfaces(t *testing.T) {
 	}
 }
 
-func Test_getNicByNamingSchema(t *testing.T) {
+func Test_getSwitchNicByNamingSchema(t *testing.T) {
 	tests := []struct {
 		name   string
 		ifname string
 		alias  string
 		naming InterfaceNamingSchema
-		want   db.Port
+		want   *models.V1SwitchNic
 	}{
 		{
 			name:   "naming schema empty",
 			ifname: "Ethernet0",
 			alias:  "Eth1/1",
 			naming: "",
-			want: db.Port{
-				Name:  "Ethernet0",
-				Alias: "Eth1/1",
+			want: &models.V1SwitchNic{
+				Name:       new("Ethernet0"),
+				Identifier: new("Eth1/1"),
 			},
 		},
 		{
@@ -88,9 +88,9 @@ func Test_getNicByNamingSchema(t *testing.T) {
 			ifname: "Ethernet0",
 			alias:  "Eth1/1",
 			naming: InterfaceNamingSchemaDefault,
-			want: db.Port{
-				Name:  "Ethernet0",
-				Alias: "Eth1/1",
+			want: &models.V1SwitchNic{
+				Name:       new("Ethernet0"),
+				Identifier: new("Eth1/1"),
 			},
 		},
 		{
@@ -98,9 +98,9 @@ func Test_getNicByNamingSchema(t *testing.T) {
 			ifname: "Ethernet0",
 			alias:  "Eth1/1",
 			naming: InterfaceNamingSchemaSwap,
-			want: db.Port{
-				Name:  "Eth1/1",
-				Alias: "Ethernet0",
+			want: &models.V1SwitchNic{
+				Name:       new("Eth1/1"),
+				Identifier: new("Ethernet0"),
 			},
 		},
 		{
@@ -108,9 +108,9 @@ func Test_getNicByNamingSchema(t *testing.T) {
 			ifname: "Ethernet0",
 			alias:  "Eth1/1",
 			naming: InterfaceNamingSchemaName,
-			want: db.Port{
-				Name:  "Ethernet0",
-				Alias: "Ethernet0",
+			want: &models.V1SwitchNic{
+				Name:       new("Ethernet0"),
+				Identifier: new("Ethernet0"),
 			},
 		},
 		{
@@ -118,15 +118,15 @@ func Test_getNicByNamingSchema(t *testing.T) {
 			ifname: "Ethernet0",
 			alias:  "Eth1/1",
 			naming: InterfaceNamingSchemaAlias,
-			want: db.Port{
-				Name:  "Eth1/1",
-				Alias: "Eth1/1",
+			want: &models.V1SwitchNic{
+				Name:       new("Eth1/1"),
+				Identifier: new("Eth1/1"),
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := getPortByNamingSchema(tt.ifname, tt.alias, tt.naming)
+			got := getSwitchNicByNamingSchema(tt.ifname, tt.alias, tt.naming)
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("getNicByNamingSchema() diff = %s", diff)
 			}
