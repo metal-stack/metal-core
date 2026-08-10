@@ -109,11 +109,8 @@ func (s *Sonic) GetNics(ctx context.Context, log *slog.Logger, blacklist []strin
 			continue
 		}
 
-		port := getPortByNamingSchema(name, portConfig.Alias, s.interfaceNamingSchema)
-		nics = append(nics, &models.V1SwitchNic{
-			Name:       &port.Name,
-			Identifier: &port.Alias,
-		})
+		nic := getSwitchNicByNamingSchema(name, portConfig.Alias, s.interfaceNamingSchema)
+		nics = append(nics, nic)
 	}
 
 	return nics, nil
@@ -192,24 +189,24 @@ func (s *Sonic) GetManagement() (ip, user string, err error) {
 	return ip, "admin", nil
 }
 
-func getPortByNamingSchema(name, alias string, naming InterfaceNamingSchema) db.Port {
-	var port db.Port
+func getSwitchNicByNamingSchema(name, alias string, naming InterfaceNamingSchema) *models.V1SwitchNic {
+	var nic = &models.V1SwitchNic{}
 	switch naming {
 	case InterfaceNamingSchemaDefault:
-		port.Name = name
-		port.Alias = alias
+		nic.Name = new(name)
+		nic.Identifier = new(alias)
 	case InterfaceNamingSchemaSwap:
-		port.Name = alias
-		port.Alias = name
+		nic.Name = new(alias)
+		nic.Identifier = new(name)
 	case InterfaceNamingSchemaAlias:
-		port.Name = alias
-		port.Alias = alias
+		nic.Name = new(alias)
+		nic.Identifier = new(alias)
 	case InterfaceNamingSchemaName:
-		port.Name = name
-		port.Alias = name
+		nic.Name = new(name)
+		nic.Identifier = new(name)
 	default:
-		port.Name = name
-		port.Alias = alias
+		nic.Name = new(name)
+		nic.Identifier = new(alias)
 	}
-	return port
+	return nic
 }
