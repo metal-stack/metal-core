@@ -15,14 +15,16 @@ import (
 	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
 )
 
+type phoneHomeMessage struct {
+	machineID string
+	payload   string
+	time      time.Time
+}
+
 const (
 	provisioningEventPhonedHome = "Phoned Home"
 )
 
-// ConstantlyPhoneHome sends every minute a single phone-home
-// provisioning event to metal-api for each machine that sent at least one
-// phone-home LLDP package to any interface of the host machine
-// during this interval.
 func (c *Core) ConstantlyPhoneHome(ctx context.Context, interval time.Duration) {
 	// FIXME this list of interfaces is only read on startup
 	// if additional interfaces are configured, no new lldpd client is started and therefore no
@@ -45,7 +47,6 @@ func (c *Core) ConstantlyPhoneHome(ctx context.Context, interval time.Duration) 
 		c.log.Info("start lldp client", "interface", iface.Name)
 
 		ifaceName := iface.Name
-		// constantly observe LLDP traffic on current machine and current interface
 		discoveryResultChanWG.Go(func() {
 			err = lldpcli.Start(c.log, discoveryResultChan)
 			if err != nil {
@@ -54,13 +55,11 @@ func (c *Core) ConstantlyPhoneHome(ctx context.Context, interval time.Duration) 
 		})
 	}
 
-	// wait all lldp routines to finish to close result channel
 	go func() {
 		discoveryResultChanWG.Wait()
 		close(discoveryResultChan)
 	}()
 
-	// extract phone home messages from fetched LLDP packages
 	go func() {
 		for phoneHome := range discoveryResultChan {
 			msg := toPhoneHomeMessage(phoneHome)
@@ -72,7 +71,6 @@ func (c *Core) ConstantlyPhoneHome(ctx context.Context, interval time.Duration) 
 		}
 	}()
 
-	// send arrived messages on a ticker basis
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
@@ -90,7 +88,6 @@ func (c *Core) ConstantlyPhoneHome(ctx context.Context, interval time.Duration) 
 			})
 			c.phoneHome(ctx, msgs)
 		case <-ctx.Done():
-			// wait until all lldp routines to finish
 			discoveryResultChanWG.Wait()
 			return
 		}
@@ -135,15 +132,6 @@ func (c *Core) phoneHome(ctx context.Context, msgs []phoneHomeMessage) {
 	}
 }
 
-// phoneHomeMessage contains a phone-home message.
-type phoneHomeMessage struct {
-	machineID string
-	payload   string
-	time      time.Time
-}
-
-// toPhoneHomeMessage extracts the machineID and payload of the given lldp frame fragment.
-// An error will be returned if the frame fragment does not contain a phone-home message.
 func toPhoneHomeMessage(discoveryResult lldp.DiscoveryResult) *phoneHomeMessage {
 	if strings.Contains(discoveryResult.SysDescription, "provisioned") {
 		return &phoneHomeMessage{

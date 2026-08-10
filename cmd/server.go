@@ -27,7 +27,7 @@ import (
 	"github.com/metal-stack/v"
 )
 
-const phonedHomeInterval = time.Minute // lldpd sends messages every two seconds
+const phonedHomeInterval = time.Minute
 
 func Run() {
 	cfg := &Config{}
@@ -138,7 +138,6 @@ func Run() {
 		c.ConstantlyPhoneHome(ctx, phonedHomeInterval)
 	})
 
-	// Start metrics
 	metricsAddr := fmt.Sprintf("%v:%d", cfg.MetricsServerBindAddress, cfg.MetricsServerPort)
 
 	log.Info("starting metrics endpoint", "addr", metricsAddr)
