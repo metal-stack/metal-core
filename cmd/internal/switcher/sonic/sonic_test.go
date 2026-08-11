@@ -5,7 +5,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/metal-stack/metal-go/api/models"
+	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
 func Test_portsToInterfaces(t *testing.T) {
@@ -71,16 +72,16 @@ func Test_getSwitchNicByNamingSchema(t *testing.T) {
 		ifname string
 		alias  string
 		naming InterfaceNamingSchema
-		want   *models.V1SwitchNic
+		want   *apiv2.SwitchNic
 	}{
 		{
 			name:   "naming schema empty",
 			ifname: "Ethernet0",
 			alias:  "Eth1/1",
 			naming: "",
-			want: &models.V1SwitchNic{
-				Name:       new("Ethernet0"),
-				Identifier: new("Eth1/1"),
+			want: &apiv2.SwitchNic{
+				Name:       "Ethernet0",
+				Identifier: "Eth1/1",
 			},
 		},
 		{
@@ -88,9 +89,9 @@ func Test_getSwitchNicByNamingSchema(t *testing.T) {
 			ifname: "Ethernet0",
 			alias:  "Eth1/1",
 			naming: InterfaceNamingSchemaDefault,
-			want: &models.V1SwitchNic{
-				Name:       new("Ethernet0"),
-				Identifier: new("Eth1/1"),
+			want: &apiv2.SwitchNic{
+				Name:       "Ethernet0",
+				Identifier: "Eth1/1",
 			},
 		},
 		{
@@ -98,9 +99,9 @@ func Test_getSwitchNicByNamingSchema(t *testing.T) {
 			ifname: "Ethernet0",
 			alias:  "Eth1/1",
 			naming: InterfaceNamingSchemaSwap,
-			want: &models.V1SwitchNic{
-				Name:       new("Eth1/1"),
-				Identifier: new("Ethernet0"),
+			want: &apiv2.SwitchNic{
+				Name:       "Eth1/1",
+				Identifier: "Ethernet0",
 			},
 		},
 		{
@@ -108,9 +109,9 @@ func Test_getSwitchNicByNamingSchema(t *testing.T) {
 			ifname: "Ethernet0",
 			alias:  "Eth1/1",
 			naming: InterfaceNamingSchemaName,
-			want: &models.V1SwitchNic{
-				Name:       new("Ethernet0"),
-				Identifier: new("Ethernet0"),
+			want: &apiv2.SwitchNic{
+				Name:       "Ethernet0",
+				Identifier: "Ethernet0",
 			},
 		},
 		{
@@ -118,16 +119,16 @@ func Test_getSwitchNicByNamingSchema(t *testing.T) {
 			ifname: "Ethernet0",
 			alias:  "Eth1/1",
 			naming: InterfaceNamingSchemaAlias,
-			want: &models.V1SwitchNic{
-				Name:       new("Eth1/1"),
-				Identifier: new("Eth1/1"),
+			want: &apiv2.SwitchNic{
+				Name:       "Eth1/1",
+				Identifier: "Eth1/1",
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := getSwitchNicByNamingSchema(tt.ifname, tt.alias, tt.naming)
-			if diff := cmp.Diff(tt.want, got); diff != "" {
+			if diff := cmp.Diff(tt.want, got, protocmp.Transform()); diff != "" {
 				t.Errorf("getNicByNamingSchema() diff = %s", diff)
 			}
 		})
