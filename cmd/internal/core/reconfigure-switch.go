@@ -22,7 +22,6 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 )
 
-// ConstantlyReconfigureSwitch reconfigures the switch.
 func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval, timeout time.Duration) {
 	host, _ := os.Hostname()
 
@@ -150,6 +149,7 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		Loopback:             c.loopbackIP,
 		MetalCoreCIDR:        c.cidr,
 		AdditionalBridgeVIDs: c.additionalBridgeVIDs,
+		AdditionalMgmtRoutes: c.additionalMgmtRoutes,
 		PXEVlanID:            c.pxeVlanID,
 		SetSrcLoopback:       c.setSrcLoopback,
 	}
@@ -189,7 +189,6 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 			continue
 		}
 
-		// Firewall-Port
 		if pointer.SafeDeref(nic.Vrf) == "default" {
 			fw := &types.Firewall{
 				Port: port,
@@ -202,7 +201,6 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 			continue
 		}
 
-		// Machine-Port
 		vrf := &types.Vrf{}
 		if v, has := p.Vrfs[pointer.SafeDeref(nic.Vrf)]; has {
 			vrf = v

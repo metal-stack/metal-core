@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	httppprof "net/http/pprof"
+	"net/netip"
 	"os"
 	"os/signal"
 	"strings"
@@ -24,10 +25,11 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/core"
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic"
 	"github.com/metal-stack/v"
 )
 
-const phonedHomeInterval = time.Minute // lldpd sends messages every two seconds
+const phonedHomeInterval = time.Minute
 
 func Run() {
 	cfg := &Config{}
@@ -51,6 +53,13 @@ func Run() {
 	log.Info("metal-core version", "version", v.V)
 	log.Info("configuration", "cfg", cfg)
 
+	for _, route := range cfg.AdditionalMgmtRoutes {
+		if _, err := netip.ParsePrefix(route); err != nil {
+			log.Error("invalid cidr in additional mgmt routes", "cidr", route, "error", err)
+			os.Exit(1)
+		}
+	}
+
 	client, err := newApiClient(cfg.ApiURL, cfg.ApiserverTokenFile)
 	if err != nil {
 		log.Error("failed to create metal-apiserver client", "error", err)
@@ -61,7 +70,7 @@ func Run() {
 		ComponentType: apiv2.ComponentType_COMPONENT_TYPE_METAL_CORE,
 	})
 
-	nos, err := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile)
+	nos, err := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile, sonic.InterfaceNamingSchema(cfg.InterfaceNamingSchema))
 	if err != nil {
 		log.Error("failed to create NOS instance", "error", err)
 		os.Exit(1)
@@ -77,8 +86,10 @@ func Run() {
 		ASN:                   cfg.ASN,
 		PartitionID:           cfg.PartitionID,
 		RackID:                cfg.RackID,
+		RoomID:                cfg.RoomID,
 		ReconfigureSwitch:     cfg.ReconfigureSwitch,
 		ManagementGateway:     cfg.ManagementGateway,
+		AdditionalMgmtRoutes:  cfg.AdditionalMgmtRoutes,
 		AdditionalBridgePorts: cfg.AdditionalBridgePorts,
 		AdditionalBridgeVIDs:  cfg.AdditionalBridgeVIDs,
 		SpineUplinks:          cfg.SpineUplinks,
@@ -107,7 +118,6 @@ func Run() {
 		c.ConstantlyPhoneHome(ctx, phonedHomeInterval)
 	})
 
-	// Start metrics
 	metricsAddr := fmt.Sprintf("%v:%d", cfg.MetricsServerBindAddress, cfg.MetricsServerPort)
 
 	log.Info("starting metrics endpoint", "addr", metricsAddr)

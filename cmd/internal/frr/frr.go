@@ -12,40 +12,42 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type Vrf struct {
-	VrfID   int
-	VrfName string
-	Ports   Ports
-}
+type (
+	Vrf struct {
+		VrfID   int
+		VrfName string
+		Ports   Ports
+	}
 
-type Port struct {
-	Hostname              string `json:"hostname"`
-	PeerGroup             string `json:"peerGroup"`
-	BgpState              string `json:"bgpState"`
-	BgpTimerUpEstablished int64  `json:"bgpTimerUpEstablishedEpoch"`
+	Port struct {
+		Hostname              string `json:"hostname"`
+		PeerGroup             string `json:"peerGroup"`
+		BgpState              string `json:"bgpState"`
+		BgpTimerUpEstablished int64  `json:"bgpTimerUpEstablishedEpoch"`
 
-	AddressFamilyInfo struct {
-		IPv4UnicastCumulus struct {
-			SentPrefixCounter     int64 `json:"sentPrefixCounter"`
-			AcceptedPrefixCounter int64 `json:"acceptedPrefixCounter"`
-		} `json:"IPv4 Unicast"`
-		IPv6UnicastCumulus struct {
-			SentPrefixCounter     int64 `json:"sentPrefixCounter"`
-			AcceptedPrefixCounter int64 `json:"acceptedPrefixCounter"`
-		} `json:"IPv6 Unicast"`
-		IPv4UnicastSonic struct {
-			SentPrefixCounter     int64 `json:"sentPrefixCounter"`
-			AcceptedPrefixCounter int64 `json:"acceptedPrefixCounter"`
-		} `json:"ipv4Unicast"`
-		IPv6UnicastSonic struct {
-			SentPrefixCounter     int64 `json:"sentPrefixCounter"`
-			AcceptedPrefixCounter int64 `json:"acceptedPrefixCounter"`
-		} `json:"ipv6Unicast"`
-	} `json:"addressFamilyInfo"`
-}
+		AddressFamilyInfo struct {
+			IPv4UnicastCumulus struct {
+				SentPrefixCounter     int64 `json:"sentPrefixCounter"`
+				AcceptedPrefixCounter int64 `json:"acceptedPrefixCounter"`
+			} `json:"IPv4 Unicast"`
+			IPv6UnicastCumulus struct {
+				SentPrefixCounter     int64 `json:"sentPrefixCounter"`
+				AcceptedPrefixCounter int64 `json:"acceptedPrefixCounter"`
+			} `json:"IPv6 Unicast"`
+			IPv4UnicastSonic struct {
+				SentPrefixCounter     int64 `json:"sentPrefixCounter"`
+				AcceptedPrefixCounter int64 `json:"acceptedPrefixCounter"`
+			} `json:"ipv4Unicast"`
+			IPv6UnicastSonic struct {
+				SentPrefixCounter     int64 `json:"sentPrefixCounter"`
+				AcceptedPrefixCounter int64 `json:"acceptedPrefixCounter"`
+			} `json:"ipv6Unicast"`
+		} `json:"addressFamilyInfo"`
+	}
 
-type Vrfs map[string]Vrf
-type Ports map[string]Port
+	Vrfs  map[string]Vrf
+	Ports map[string]Port
+)
 
 func GetBGPStates(filepath string) (map[string]*apiv2.SwitchBGPPortState, error) {
 	fileInfo, err := os.Stat(filepath)

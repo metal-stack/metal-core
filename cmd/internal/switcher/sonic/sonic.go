@@ -20,23 +20,39 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
+type (
+	Sonic struct {
+		db                    *db.DB
+		frrApplier            *templates.Applier
+		log                   *slog.Logger
+		redisApplier          *redis.Applier
+		interfaceNamingSchema InterfaceNamingSchema
+	}
+
+	PortInfo struct {
+		Alias string `json:"alias"`
+	}
+
+	sonic_version struct {
+		BuildVersion string `yaml:"build_version"`
+	}
+
+	InterfaceNamingSchema string
+)
+
+const (
+	InterfaceNamingSchemaDefault = InterfaceNamingSchema("default")
+	InterfaceNamingSchemaSwap    = InterfaceNamingSchema("swap")
+	InterfaceNamingSchemaName    = InterfaceNamingSchema("name")
+	InterfaceNamingSchemaAlias   = InterfaceNamingSchema("alias")
+)
+
 const (
 	SonicVersionFile = "/etc/sonic/sonic_version.yml"
 	redisConfigFile  = "/var/run/redis/sonic-db/database_config.json"
 )
 
-type Sonic struct {
-	db           *db.DB
-	frrApplier   *templates.Applier
-	log          *slog.Logger
-	redisApplier *redis.Applier
-}
-
-type PortInfo struct {
-	Alias string `json:"alias"`
-}
-
-func New(log *slog.Logger, frrTplFile string) (*Sonic, error) {
+func New(log *slog.Logger, frrTplFile string, interfaceNamingSchema InterfaceNamingSchema) (*Sonic, error) {
 	cfg, err := loadRedisConfig(redisConfigFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load database config for SONiC: %w", err)
@@ -47,10 +63,11 @@ func New(log *slog.Logger, frrTplFile string) (*Sonic, error) {
 	}
 
 	return &Sonic{
-		db:           sonicDb,
-		frrApplier:   NewFrrApplier(log, frrTplFile),
-		log:          log,
-		redisApplier: redis.NewApplier(log, sonicDb),
+		db:                    sonicDb,
+		frrApplier:            NewFrrApplier(log, frrTplFile),
+		log:                   log,
+		redisApplier:          redis.NewApplier(log, sonicDb),
+		interfaceNamingSchema: interfaceNamingSchema,
 	}, nil
 }
 
@@ -79,10 +96,7 @@ func (s *Sonic) GetNics(ctx context.Context, log *slog.Logger, blacklist []strin
 			continue
 		}
 
-		nic := &apiv2.SwitchNic{
-			Identifier: portConfig.Alias,
-			Name:       name,
-		}
+		nic := getSwitchNicByNamingSchema(name, portConfig.Alias, s.interfaceNamingSchema)
 		nics = append(nics, nic)
 	}
 
@@ -120,6 +134,7 @@ func (s *Sonic) GetOS() (*apiv2.SwitchOS, error) {
 		Version: sonicVersion.BuildVersion,
 	}, nil
 }
+
 func (s *Sonic) GetManagement() (ip, user string, err error) {
 	ip, err = internal.GetManagementIP("eth0")
 	if err != nil {
@@ -162,6 +177,10 @@ func (s *Sonic) getPortsConfig(ctx context.Context) (map[string]PortInfo, error)
 		return nil, err
 	}
 
+	// keep the real interface names as keys; the naming schema is only applied
+	// when reporting nics to the metal-api. The keys are used to match the
+	// interface blacklist and to open the LLDP pcap handles, both of which
+	// need the actual netdev names.
 	portConfig := map[string]PortInfo{}
 	for _, port := range ports {
 		portConfig[port.Name] = PortInfo{
@@ -170,4 +189,26 @@ func (s *Sonic) getPortsConfig(ctx context.Context) (map[string]PortInfo, error)
 	}
 
 	return portConfig, err
+}
+
+func getSwitchNicByNamingSchema(name, alias string, naming InterfaceNamingSchema) *apiv2.SwitchNic {
+	var nic = &apiv2.SwitchNic{}
+	switch naming {
+	case InterfaceNamingSchemaDefault:
+		nic.Name = name
+		nic.Identifier = alias
+	case InterfaceNamingSchemaSwap:
+		nic.Name = alias
+		nic.Identifier = name
+	case InterfaceNamingSchemaAlias:
+		nic.Name = alias
+		nic.Identifier = alias
+	case InterfaceNamingSchemaName:
+		nic.Name = name
+		nic.Identifier = name
+	default:
+		nic.Name = name
+		nic.Identifier = alias
+	}
+	return nic
 }

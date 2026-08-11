@@ -64,6 +64,7 @@ func (c *Core) RegisterSwitch(ctx context.Context, timeout time.Duration) error 
 			Id:             hostname,
 			Rack:           &c.rackID,
 			Partition:      c.partitionID,
+			Room:           new(c.roomID),
 			ReplaceMode:    apiv2.SwitchReplaceMode_SWITCH_REPLACE_MODE_OPERATIONAL,
 			ManagementIp:   managementIP,
 			ManagementUser: new(managementUser),
