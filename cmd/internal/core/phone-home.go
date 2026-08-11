@@ -22,10 +22,6 @@ type phoneHomeMessage struct {
 	time      time.Time
 }
 
-const (
-	provisioningEventPhonedHome = "Phoned Home"
-)
-
 func (c *Core) ConstantlyPhoneHome(ctx context.Context, interval time.Duration) {
 	// FIXME this list of interfaces is only read on startup
 	// if additional interfaces are configured, no new lldpd client is started and therefore no

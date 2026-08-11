@@ -33,10 +33,6 @@ type (
 		Alias string `json:"alias"`
 	}
 
-	sonic_version struct {
-		BuildVersion string `yaml:"build_version"`
-	}
-
 	InterfaceNamingSchema string
 )
 
