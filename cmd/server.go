@@ -23,6 +23,7 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/core"
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/v"
 )
@@ -89,7 +90,7 @@ func Run() {
 		os.Exit(1)
 	}
 
-	nos, err := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile)
+	nos, err := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile, sonic.InterfaceNamingSchema(cfg.InterfaceNamingSchema))
 	if err != nil {
 		log.Error("failed to create NOS instance", "error", err)
 		os.Exit(1)
