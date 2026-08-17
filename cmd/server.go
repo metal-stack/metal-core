@@ -68,6 +68,12 @@ func Run() {
 
 	client.Ping(context.Background(), &clientv2.PingConfig{
 		ComponentType: apiv2.ComponentType_COMPONENT_TYPE_METAL_CORE,
+		Version: apiv2.Version{
+			Version:   v.Version,
+			Revision:  v.Revision,
+			GitSha1:   v.GitSHA1,
+			BuildDate: v.BuildDate,
+		},
 	})
 
 	nos, err := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile, sonic.InterfaceNamingSchema(cfg.InterfaceNamingSchema))
