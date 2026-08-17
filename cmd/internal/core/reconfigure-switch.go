@@ -174,8 +174,13 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		}
 
 		adminStatus := pointer.SafeDeref(pointer.SafeDeref(nic.State).Desired)
-		if adminStatus == apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN || adminStatus == apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_UP {
-			p.AdminStatus[port] = types.PortStatus(strings.ToLower(adminStatus.String()))
+		switch adminStatus {
+		case apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN:
+			p.AdminStatus[port] = types.PortStatusDown
+		case apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_UP:
+			p.AdminStatus[port] = types.PortStatusUp
+		default:
+			// noop
 		}
 
 		if slices.Contains(c.additionalBridgePorts, port) {
