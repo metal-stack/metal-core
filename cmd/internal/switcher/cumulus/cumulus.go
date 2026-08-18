@@ -64,7 +64,7 @@ func (c *Cumulus) GetNics(ctx context.Context, log *slog.Logger, blacklist []str
 		}
 
 		nic := &apiv2.SwitchNic{
-			Mac:  mac,
+			Mac:  &mac,
 			Name: name,
 		}
 		nics = append(nics, nic)
