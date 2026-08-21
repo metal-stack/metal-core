@@ -10,6 +10,7 @@ import (
 
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	infrav2 "github.com/metal-stack/api/go/metalstack/infra/v2"
+	"github.com/metal-stack/metal-lib/pkg/pointer"
 	"github.com/metal-stack/v"
 )
 
@@ -64,7 +65,7 @@ func (c *Core) RegisterSwitch(ctx context.Context, timeout time.Duration) error 
 			Id:             hostname,
 			Rack:           &c.rackID,
 			Partition:      c.partitionID,
-			Room:           new(c.roomID),
+			Room:           pointer.PointerOrNil(c.roomID),
 			ReplaceMode:    apiv2.SwitchReplaceMode_SWITCH_REPLACE_MODE_OPERATIONAL,
 			ManagementIp:   managementIP,
 			ManagementUser: new(managementUser),
