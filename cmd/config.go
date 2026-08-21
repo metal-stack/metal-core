@@ -12,7 +12,7 @@ type Config struct {
 	MetricsServerPort         int           `required:"false" default:"2112" desc:"the port of the metrics server" split_words:"true"`
 	MetricsServerBindAddress  string        `required:"false" default:"0.0.0.0" desc:"the bind addr of the metrics server" split_words:"true"`
 	LogLevel                  string        `required:"false" default:"info" desc:"set log level" split_words:"true"`
-	ApiURL                    string        `required:"true" default:"" desc:"set metal-apiserver api url" envconfig:"metal_apiserver_api_url"`
+	ApiURL                    string        `required:"true" default:"" desc:"set metal-apiserver api url" envconfig:"metal_apiserver_url"`
 	ApiserverTokenFile        string        `required:"true" default:"/var/run/metal-core/metal-apiserver-token" desc:"set metal-apiserver authentication token file" envconfig:"metal_apiserver_token_file"`
 	LoopbackIP                string        `required:"false" default:"10.0.0.11" desc:"set the loopback ip address that is used with BGP unnumbered" split_words:"true"`
 	SetSrcLoopback            bool          `required:"false" default:"false" desc:"if true the loopback address will be used as default source address in frr.conf" envconfig:"set_src_loopback"`
