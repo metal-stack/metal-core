@@ -11,6 +11,7 @@ import (
 
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	"github.com/metal-stack/metal-core/cmd/internal"
+	corenet "github.com/metal-stack/metal-core/cmd/internal/net"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
@@ -63,9 +64,17 @@ func (c *Cumulus) GetNics(ctx context.Context, blacklist []string) (nics []*apiv
 			continue
 		}
 
+		linkStatus, err := corenet.GetLinkStatus(name)
+		if err != nil {
+			c.log.Error("failed to get link status", "port", name, "status", linkStatus, "error", err)
+		}
+
 		nic := &apiv2.SwitchNic{
 			Mac:  &mac,
 			Name: name,
+			State: &apiv2.NicState{
+				Actual: linkStatus,
+			},
 		}
 		nics = append(nics, nic)
 	}

@@ -59,8 +59,12 @@ func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval, timeou
 				nics = s.Nics
 			}
 			for _, nic := range nics {
-				if nic == nil || nic.Name == "" {
-					c.log.Error("could not check if link is up", "nic", nic)
+				if nic == nil {
+					continue
+				}
+
+				if nic.Name == "" {
+					c.log.Error("skipping nic because name is empty", "nic", nic)
 					c.metrics.CountError("switch-reconfiguration")
 					continue
 				}
@@ -83,7 +87,7 @@ func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval, timeou
 
 			_, err = c.client.Infrav2().Switch().Heartbeat(ctx, req)
 			if err != nil {
-				c.log.Error("notification about switch reconfiguration failed", "error", err)
+				c.log.Error("switch heartbeat failed", "error", err)
 				c.metrics.CountError("reconfiguration-notification")
 			}
 		case <-ctx.Done():

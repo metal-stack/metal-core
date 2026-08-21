@@ -8,6 +8,7 @@ import (
 	"os"
 
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
+
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/cumulus"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic"
 
