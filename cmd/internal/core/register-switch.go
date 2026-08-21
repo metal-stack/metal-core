@@ -73,18 +73,10 @@ func (c *Core) RegisterSwitch(ctx context.Context, timeout time.Duration) error 
 		},
 	}
 
-	_ = retry.Do(
-		func() error {
-			if _, err := c.client.Infrav2().Switch().Register(context.TODO(), req); err == nil {
-				return nil
-			}
-			c.log.Error("failed to register switch, retrying", "error", err)
-			return err
-		},
-		retry.Attempts(0),
-		retry.Delay(30*time.Second),
-		retry.DelayType(retry.FixedDelay),
-	)
+	if _, err := c.client.Infrav2().Switch().Register(ctx, req); err != nil {
+		c.log.Error("failed to register switch, retrying", "error", err)
+		return err
+	}
 
 	c.log.Info("register switch completed")
 	return nil
