@@ -39,7 +39,7 @@ func (c *Core) RegisterSwitch(ctx context.Context, timeout time.Duration) error 
 		return fmt.Errorf("unable to register switch because it is not initialized: %w", err)
 	}
 
-	nics, err := c.nos.GetNics(withTimeout, c.log, c.additionalBridgePorts)
+	nics, err := c.nos.GetNics(withTimeout, c.additionalBridgePorts)
 	if err != nil {
 		return fmt.Errorf("unable to get nics: %w", err)
 	}

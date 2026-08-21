@@ -14,6 +14,7 @@ import (
 
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	"github.com/metal-stack/metal-core/cmd/internal"
+	corenet "github.com/metal-stack/metal-core/cmd/internal/net"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
@@ -80,7 +81,7 @@ func (s *Sonic) IsInitialized(ctx context.Context) (initialized bool, err error)
 	return s.db.Appl.ExistPortInitDone(ctx)
 }
 
-func (s *Sonic) GetNics(ctx context.Context, log *slog.Logger, blacklist []string) (nics []*apiv2.SwitchNic, err error) {
+func (s *Sonic) GetNics(ctx context.Context, blacklist []string) (nics []*apiv2.SwitchNic, err error) {
 	ports, err := s.getPortsConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get ports config")
@@ -88,11 +89,16 @@ func (s *Sonic) GetNics(ctx context.Context, log *slog.Logger, blacklist []strin
 
 	for name, portConfig := range ports {
 		if slices.Contains(blacklist, name) {
-			log.Debug("skip interface, because it is contained in the blacklist", "interface", name, "blacklist", blacklist)
+			s.log.Debug("skip interface, because it is contained in the blacklist", "interface", name, "blacklist", blacklist)
 			continue
 		}
 
-		nic := getSwitchNicByNamingSchema(name, portConfig.Alias, s.interfaceNamingSchema)
+		linkStatus, err := corenet.GetLinkStatus(name)
+		if err != nil {
+			s.log.Error("failed to get link status", "port", name, "status", linkStatus, "error", err)
+		}
+
+		nic := getSwitchNicByNamingSchema(name, portConfig.Alias, s.interfaceNamingSchema, linkStatus)
 		nics = append(nics, nic)
 	}
 
@@ -187,8 +193,13 @@ func (s *Sonic) getPortsConfig(ctx context.Context) (map[string]PortInfo, error)
 	return portConfig, err
 }
 
-func getSwitchNicByNamingSchema(name, alias string, naming InterfaceNamingSchema) *apiv2.SwitchNic {
-	var nic = &apiv2.SwitchNic{}
+func getSwitchNicByNamingSchema(name, alias string, naming InterfaceNamingSchema, linkStatus apiv2.SwitchPortStatus) *apiv2.SwitchNic {
+	var nic = &apiv2.SwitchNic{
+		State: &apiv2.NicState{
+			Actual: linkStatus,
+		},
+	}
+
 	switch naming {
 	case InterfaceNamingSchemaDefault:
 		nic.Name = name

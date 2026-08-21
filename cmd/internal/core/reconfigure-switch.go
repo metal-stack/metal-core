@@ -3,7 +3,6 @@ package core
 import (
 	"context"
 	"fmt"
-	"net"
 	"os"
 	"slices"
 	"strconv"
@@ -16,6 +15,7 @@ import (
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	infrav2 "github.com/metal-stack/api/go/metalstack/infra/v2"
 	"github.com/metal-stack/metal-core/cmd/internal/frr"
+	"github.com/metal-stack/metal-core/cmd/internal/net"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/metal-lib/pkg/pointer"
 
@@ -64,17 +64,11 @@ func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval, timeou
 					c.metrics.CountError("switch-reconfiguration")
 					continue
 				}
-				isup, err := isLinkUp(nic.Name)
+				status, err := net.GetLinkStatus(nic.Name)
+				req.PortStates[nic.Name] = status
 				if err != nil {
 					c.log.Error("could not check if link is up", "error", err, "nicname", nic.Name)
-					req.PortStates[nic.Name] = apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_UNKNOWN
 					c.metrics.CountError("switch-reconfiguration")
-					continue
-				}
-				if isup {
-					req.PortStates[nic.Name] = apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_UP
-				} else {
-					req.PortStates[nic.Name] = apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN
 				}
 			}
 
@@ -282,12 +276,4 @@ func fillEth0Info(c *types.Conf, gw string) error {
 	c.Ports.Eth0.AddressCIDR = fmt.Sprintf("%s/%d", ip.String(), s)
 	c.Ports.Eth0.Gateway = gw
 	return nil
-}
-
-func isLinkUp(nicname string) (bool, error) {
-	nic, err := net.InterfaceByName(nicname)
-	if err != nil {
-		return false, fmt.Errorf("cannot query interface %q : %w", nicname, err)
-	}
-	return nic.Flags&net.FlagRunning != 0, nil
 }
