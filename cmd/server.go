@@ -60,7 +60,7 @@ func Run() {
 		}
 	}
 
-	client, err := newApiClient(cfg.ApiURL, cfg.ApiserverTokenFile)
+	client, err := newApiClient(log, cfg.ApiURL, cfg.ApiserverTokenFile)
 	if err != nil {
 		log.Error("failed to create metal-apiserver client", "error", err)
 		os.Exit(1)
@@ -163,7 +163,7 @@ func Run() {
 	wg.Wait()
 }
 
-func newApiClient(apiURL, tokenfilePath string) (clientv2.Client, error) {
+func newApiClient(logger *slog.Logger, apiURL, tokenfilePath string) (clientv2.Client, error) {
 	token, err := os.ReadFile(tokenfilePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read token file %s: %w", tokenfilePath, err)
@@ -177,7 +177,7 @@ func newApiClient(apiURL, tokenfilePath string) (clientv2.Client, error) {
 		BaseURL:   apiURL,
 		Token:     string(token),
 		UserAgent: "metal-core",
-		Log:       slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})),
+		Log:       logger.WithGroup("client"),
 		TokenRenewal: &clientv2.TokenRenewal{
 			PersistTokenFn: tokenPersister,
 		},
