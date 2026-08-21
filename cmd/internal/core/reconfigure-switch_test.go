@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/cumulus"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
-	"github.com/metal-stack/metal-go/api/models"
 )
 
 func TestBuildSwitcherConfig(t *testing.T) {
@@ -25,17 +25,17 @@ func TestBuildSwitcherConfig(t *testing.T) {
 
 	n1 := "swp1"
 	m1 := "00:00:00:00:00:01"
-	swp1 := models.V1SwitchNic{
-		Name: &n1,
+	swp1 := &apiv2.SwitchNic{
+		Name: n1,
 		Mac:  &m1,
 	}
 	n2 := "swp2"
 	m2 := "00:00:00:00:00:02"
-	swp2 := models.V1SwitchNic{
-		Name: &n2,
+	swp2 := &apiv2.SwitchNic{
+		Name: n2,
 		Mac:  &m2,
-		Vrf:  "vrf104001",
-		Filter: &models.V1BGPFilter{
+		Vrf:  new("vrf104001"),
+		BgpFilter: &apiv2.BGPFilter{
 			Cidrs: []string{
 				"10.240.0.0/12", // pod ipv4 cidrs
 			},
@@ -43,16 +43,16 @@ func TestBuildSwitcherConfig(t *testing.T) {
 	}
 	n3 := "swp3"
 	m3 := "00:00:00:00:00:03"
-	swp3 := models.V1SwitchNic{
-		Name: &n3,
+	swp3 := &apiv2.SwitchNic{
+		Name: n3,
 		Mac:  &m3,
-		Vrf:  "default",
+		Vrf:  new("default"),
 	}
-	s := &models.V1SwitchResponse{
-		Nics: []*models.V1SwitchNic{
-			&swp1,
-			&swp2,
-			&swp3,
+	s := &apiv2.Switch{
+		Nics: []*apiv2.SwitchNic{
+			swp1,
+			swp2,
+			swp3,
 		},
 	}
 	actual, err := c.buildSwitcherConfig(s)

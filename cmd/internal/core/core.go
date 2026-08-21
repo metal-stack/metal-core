@@ -3,10 +3,9 @@ package core
 import (
 	"log/slog"
 
-	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
+	clientv2 "github.com/metal-stack/api/go/client"
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
-	metalgo "github.com/metal-stack/metal-go"
 )
 
 type (
@@ -26,18 +25,13 @@ type (
 		additionalBridgePorts   []string
 		additionalBridgeVIDs    []string
 		spineUplinks            []string
+		pxeVlanID               uint16
+		bgpNeighborStateFile    string
 		setSrcLoopback          bool
 
-		nos switcher.NOS
-
-		driver             metalgo.Client
-		eventServiceClient v1.EventServiceClient
-
+		nos     switcher.NOS
+		client  clientv2.Client
 		metrics *metrics.Metrics
-
-		pxeVlanID uint16
-
-		bgpNeighborStateFile string
 	}
 
 	Config struct {
@@ -52,22 +46,17 @@ type (
 		RoomID                string
 		ReconfigureSwitch     bool
 		ManagementGateway     string
+		PXEVlanID             uint16
+		BGPNeighborStateFile  string
 		AdditionalMgmtRoutes  []string
 		AdditionalBridgePorts []string
 		AdditionalBridgeVIDs  []string
 		SpineUplinks          []string
 		SetSrcLoopback        bool
 
-		NOS switcher.NOS
-
-		Driver             metalgo.Client
-		EventServiceClient v1.EventServiceClient
-
+		NOS     switcher.NOS
+		Client  clientv2.Client
 		Metrics *metrics.Metrics
-
-		PXEVlanID uint16
-
-		BGPNeighborStateFile string
 	}
 )
 
@@ -89,8 +78,7 @@ func New(c Config) *Core {
 		spineUplinks:            c.SpineUplinks,
 		setSrcLoopback:          c.SetSrcLoopback,
 		nos:                     c.NOS,
-		driver:                  c.Driver,
-		eventServiceClient:      c.EventServiceClient,
+		client:                  c.Client,
 		metrics:                 c.Metrics,
 		pxeVlanID:               c.PXEVlanID,
 		bgpNeighborStateFile:    c.BGPNeighborStateFile,
