@@ -348,17 +348,6 @@ func (d *ConfigDB) SetPortMtu(ctx context.Context, interfaceName string, val str
 	return d.c.HSet(ctx, key, Val{mtu: val})
 }
 
-func (d *ConfigDB) GetAdminStatus(ctx context.Context, interfaceName string) (types.PortStatus, error) {
-	key := Key{portTable, interfaceName}
-
-	status, err := d.c.HGet(ctx, key, adminStatusField)
-	if err != nil {
-		return "", err
-	}
-
-	return types.PortStatus(status), nil
-}
-
 func (d *ConfigDB) SetAdminStatus(ctx context.Context, interfaceName string, adminStatus types.PortStatus) error {
 	if adminStatus != types.PortStatusDown && adminStatus != types.PortStatusUp {
 		return fmt.Errorf("unknown admin status %s", adminStatus)
