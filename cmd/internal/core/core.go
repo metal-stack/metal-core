@@ -70,8 +70,6 @@ type (
 	BootConfig struct {
 		// Mode is pxe (ports in the pxe vlan) or l3 (ports in the ipv6 boot vrf).
 		Mode BootMode
-		// RDNSS are the dns server addresses advertised to booting machines.
-		RDNSS []string
 	}
 )
 
@@ -84,33 +82,33 @@ const (
 
 // NewBootConfig validates the given boot settings.
 //
-// In boot mode l3 the boot vni and the per port boot prefixes are assigned by the metal-apiserver
-// and delivered with the switch (Switch.boot_vni, SwitchNic.boot_prefix).
-func NewBootConfig(mode string, rdnss []string) (BootConfig, error) {
+// In boot mode l3 the boot vni, the per port boot prefixes and the rdnss are configured in the metal-apiserver
+// and delivered with the switch (Switch.boot_vni, SwitchNic.boot_prefix, Switch.boot_rdnss).
+func NewBootConfig(mode string) (BootConfig, error) {
 	c := BootConfig{
-		Mode:  BootMode(mode),
-		RDNSS: rdnss,
+		Mode: BootMode(mode),
 	}
 
 	switch c.Mode {
-	case BootModePXE:
+	case BootModePXE, BootModeL3:
 		return c, nil
-	case BootModeL3:
 	default:
 		return BootConfig{}, fmt.Errorf("unknown boot mode %q, must be one of %q or %q", mode, BootModePXE, BootModeL3)
 	}
+}
 
+// validateRDNSS checks that the given rdnss addresses are ipv6 addresses, the only ones FRR accepts in router advertisements.
+func validateRDNSS(rdnss []string) error {
 	for _, server := range rdnss {
 		addr, err := netip.ParseAddr(server)
 		if err != nil {
-			return BootConfig{}, fmt.Errorf("invalid boot rdnss address %q: %w", server, err)
+			return fmt.Errorf("invalid boot rdnss address %q: %w", server, err)
 		}
 		if !addr.Is6() || addr.Is4In6() {
-			return BootConfig{}, fmt.Errorf("boot rdnss address %q must be an ipv6 address", server)
+			return fmt.Errorf("boot rdnss address %q must be an ipv6 address", server)
 		}
 	}
-
-	return c, nil
+	return nil
 }
 
 func New(c Config) *Core {

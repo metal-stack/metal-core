@@ -113,7 +113,7 @@ func (f *fakeNOS) SanitizeConfig(cfg *types.Conf) {
 }
 
 func TestBuildSwitcherConfigL3(t *testing.T) {
-	boot, err := NewBootConfig("l3", []string{"fd00:20:ffff::53"})
+	boot, err := NewBootConfig("l3")
 	require.NoError(t, err)
 
 	c := &Core{
@@ -128,6 +128,7 @@ func TestBuildSwitcherConfigL3(t *testing.T) {
 	s := &apiv2.Switch{
 		Partition: "partition-1",
 		BootVni:   new(uint32(104000)),
+		BootRdnss: []string{"fd00:20:ffff::53"},
 		Nics: []*apiv2.SwitchNic{
 			{Name: "Ethernet0", BootPrefix: new("fd00:20::/64")},
 			{Name: "Ethernet4", Vrf: new("vrf104001"), BootPrefix: new("fd00:20:0:1::/64")},
@@ -157,6 +158,15 @@ func TestBuildSwitcherConfigL3(t *testing.T) {
 	_, err = c.buildSwitcherConfig(s)
 	require.ErrorContains(t, err, "boot vni 104001 collides with the vni of vrf Vrf104001")
 
+	// rdnss that are no ipv6 addresses are rejected
+	s.BootRdnss = []string{"10.0.0.53"}
+	_, err = c.buildSwitcherConfig(s)
+	require.ErrorContains(t, err, `boot rdnss address "10.0.0.53" must be an ipv6 address`)
+	s.BootRdnss = []string{"dns"}
+	_, err = c.buildSwitcherConfig(s)
+	require.ErrorContains(t, err, `invalid boot rdnss address "dns"`)
+	s.BootRdnss = nil
+
 	// without a boot network in the partition the switch can not be configured in l3 mode
 	s.BootVni = nil
 	_, err = c.buildSwitcherConfig(s)
@@ -173,26 +183,21 @@ func TestNewBootConfig(t *testing.T) {
 	tests := []struct {
 		name    string
 		mode    string
-		rdnss   []string
 		wantErr string
 	}{
-		{name: "pxe needs nothing", mode: "pxe"},
-		{name: "l3 valid", mode: "l3", rdnss: []string{"fd00:20:ffff::53"}},
-		{name: "l3 without rdnss", mode: "l3"},
+		{name: "pxe", mode: "pxe"},
+		{name: "l3", mode: "l3"},
 		{name: "unknown mode", mode: "dhcp", wantErr: "unknown boot mode"},
-		{name: "l3 invalid rdnss", mode: "l3", rdnss: []string{"10.0.0.53"}, wantErr: "must be an ipv6 address"},
-		{name: "l3 garbage rdnss", mode: "l3", rdnss: []string{"dns"}, wantErr: "invalid boot rdnss address"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewBootConfig(tt.mode, tt.rdnss)
+			got, err := NewBootConfig(tt.mode)
 			if tt.wantErr != "" {
 				require.ErrorContains(t, err, tt.wantErr)
 				return
 			}
 			require.NoError(t, err)
 			require.Equal(t, BootMode(tt.mode), got.Mode)
-			require.Equal(t, tt.rdnss, got.RDNSS)
 		})
 	}
 }
