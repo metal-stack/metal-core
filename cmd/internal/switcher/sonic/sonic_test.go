@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
 	"google.golang.org/protobuf/testing/protocmp"
 )
 
@@ -152,67 +151,6 @@ func Test_getSwitchNicByNamingSchema(t *testing.T) {
 			got := getSwitchNicByNamingSchema(tt.ifname, tt.alias, tt.naming, tt.status)
 			if diff := cmp.Diff(tt.want, got, protocmp.Transform()); diff != "" {
 				t.Errorf("getNicByNamingSchema() diff = %s", diff)
-			}
-		})
-	}
-}
-
-func Test_portOrdinals(t *testing.T) {
-	tests := []struct {
-		name    string
-		ports   []*db.Port
-		want    map[string]int
-		wantErr bool
-	}{
-		{
-			name:  "no ports",
-			ports: nil,
-			want:  map[string]int{},
-		},
-		{
-			name: "broadcom naming is ordered by index, not by name",
-			ports: []*db.Port{
-				{Name: "Ethernet120", Index: "31", Lanes: "121,122,123,124"},
-				{Name: "Ethernet4", Index: "2", Lanes: "5,6,7,8"},
-				{Name: "Ethernet0", Index: "1", Lanes: "1,2,3,4"},
-				{Name: "Ethernet16", Index: "5", Lanes: "17,18,19,20"},
-			},
-			want: map[string]int{"Ethernet0": 0, "Ethernet4": 1, "Ethernet16": 2, "Ethernet120": 3},
-		},
-		{
-			name: "breakout ports share the index and are ordered by lane",
-			ports: []*db.Port{
-				{Name: "Ethernet3", Index: "1", Lanes: "4"},
-				{Name: "Ethernet1", Index: "1", Lanes: "2"},
-				{Name: "Ethernet4", Index: "2", Lanes: "5,6,7,8"},
-				{Name: "Ethernet0", Index: "1", Lanes: "1"},
-				{Name: "Ethernet2", Index: "1", Lanes: "3"},
-			},
-			want: map[string]int{"Ethernet0": 0, "Ethernet1": 1, "Ethernet2": 2, "Ethernet3": 3, "Ethernet4": 4},
-		},
-		{
-			name: "missing index is an error",
-			ports: []*db.Port{
-				{Name: "Ethernet0", Lanes: "1"},
-			},
-			wantErr: true,
-		},
-		{
-			name: "missing lanes is an error",
-			ports: []*db.Port{
-				{Name: "Ethernet0", Index: "1"},
-			},
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := portOrdinals(tt.ports)
-			if (err != nil) != tt.wantErr {
-				t.Fatalf("portOrdinals() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("portOrdinals() diff = %s", diff)
 			}
 		})
 	}

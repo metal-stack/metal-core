@@ -1,7 +1,6 @@
 package types
 
 import (
-	"net/netip"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -28,93 +27,30 @@ func TestFillVLANIDs(t *testing.T) {
 	require.Equal(t, uint16(1003), c.Ports.Vrfs["101003"].VLANID)
 }
 
-func TestDeriveBootPorts(t *testing.T) {
+func TestBootPortFromPrefix(t *testing.T) {
 	tests := []struct {
-		name     string
-		block    string
-		ordinals map[string]int
-		ports    []string
-		want     map[string]BootPort
-		wantErr  bool
+		name    string
+		prefix  string
+		want    BootPort
+		wantErr bool
 	}{
-		{
-			name:     "no ports",
-			block:    "fd00:20:0:100::/56",
-			ordinals: map[string]int{},
-			ports:    nil,
-			want:     map[string]BootPort{},
-		},
-		{
-			name:     "ports get the n-th /64 of the block",
-			block:    "fd00:20:0:100::/56",
-			ordinals: map[string]int{"Ethernet0": 0, "Ethernet4": 1, "Ethernet8": 2, "Ethernet124": 255},
-			ports:    []string{"Ethernet0", "Ethernet8", "Ethernet124"},
-			want: map[string]BootPort{
-				"Ethernet0":   {Prefix: "fd00:20:0:100::/64", Address: "fd00:20:0:100::1/64"},
-				"Ethernet8":   {Prefix: "fd00:20:0:102::/64", Address: "fd00:20:0:102::1/64"},
-				"Ethernet124": {Prefix: "fd00:20:0:1ff::/64", Address: "fd00:20:0:1ff::1/64"},
-			},
-		},
-		{
-			name:     "unmasked block is masked",
-			block:    "fd00:20:0:1ff::/56",
-			ordinals: map[string]int{"swp1": 1},
-			ports:    []string{"swp1"},
-			want: map[string]BootPort{
-				"swp1": {Prefix: "fd00:20:0:101::/64", Address: "fd00:20:0:101::1/64"},
-			},
-		},
-		{
-			name:     "a /64 block only allows ordinal 0",
-			block:    "fd00:20::/64",
-			ordinals: map[string]int{"swp1": 0, "swp2": 1},
-			ports:    []string{"swp1", "swp2"},
-			wantErr:  true,
-		},
-		{
-			name:     "ordinal exceeds block",
-			block:    "fd00:20:0:100::/56",
-			ordinals: map[string]int{"swp1": 256},
-			ports:    []string{"swp1"},
-			wantErr:  true,
-		},
-		{
-			name:     "unknown port",
-			block:    "fd00:20:0:100::/56",
-			ordinals: map[string]int{},
-			ports:    []string{"swp1"},
-			wantErr:  true,
-		},
-		{
-			name:     "ipv4 block is rejected",
-			block:    "10.0.0.0/8",
-			ordinals: map[string]int{"swp1": 0},
-			ports:    []string{"swp1"},
-			wantErr:  true,
-		},
-		{
-			name:     "/0 block is rejected",
-			block:    "::/0",
-			ordinals: map[string]int{"swp1": 0},
-			ports:    []string{"swp1"},
-			wantErr:  true,
-		},
-		{
-			name:     "block longer than /64 is rejected",
-			block:    "fd00:20::/72",
-			ordinals: map[string]int{"swp1": 0},
-			ports:    []string{"swp1"},
-			wantErr:  true,
-		},
+		{name: "valid /64", prefix: "fd00:20:0:100::/64", want: BootPort{Prefix: "fd00:20:0:100::/64", Address: "fd00:20:0:100::1/64"}},
+		{name: "unmasked prefix is masked", prefix: "fd00:20:0:100::ff/64", want: BootPort{Prefix: "fd00:20:0:100::/64", Address: "fd00:20:0:100::1/64"}},
+		{name: "/56 is rejected", prefix: "fd00:20:0:100::/56", wantErr: true},
+		{name: "/72 is rejected", prefix: "fd00:20:0:100::/72", wantErr: true},
+		{name: "ipv4 is rejected", prefix: "10.0.0.0/24", wantErr: true},
+		{name: "ipv4 in ipv6 is rejected", prefix: "::ffff:10.0.0.0/64", wantErr: true},
+		{name: "garbage is rejected", prefix: "not-a-prefix", wantErr: true},
+		{name: "empty is rejected", prefix: "", wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DeriveBootPorts(netip.MustParsePrefix(tt.block), tt.ordinals, tt.ports)
+			got, err := BootPortFromPrefix(tt.prefix)
 			if (err != nil) != tt.wantErr {
-				t.Fatalf("DeriveBootPorts() error = %v, wantErr %v", err, tt.wantErr)
+				t.Fatalf("BootPortFromPrefix() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("DeriveBootPorts() diff = %s", diff)
+				t.Errorf("BootPortFromPrefix() diff = %s", diff)
 			}
 		})
 	}

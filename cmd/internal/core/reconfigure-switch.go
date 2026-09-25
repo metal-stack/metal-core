@@ -107,7 +107,7 @@ func (c *Core) reconfigureSwitch(ctx context.Context, hostname string) (*apiv2.S
 	}
 
 	s := res.Switch
-	switchConfig, err := c.buildSwitcherConfig(ctx, s)
+	switchConfig, err := c.buildSwitcherConfig(s)
 	if err != nil {
 		return nil, fmt.Errorf("could not build switcher config: %w", err)
 	}
@@ -131,7 +131,7 @@ func (c *Core) reconfigureSwitch(ctx context.Context, hostname string) (*apiv2.S
 	return s, nil
 }
 
-func (c *Core) buildSwitcherConfig(ctx context.Context, s *apiv2.Switch) (*types.Conf, error) {
+func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 	asn64, err := strconv.ParseUint(c.asn, 10, 32)
 	if err != nil {
 		return nil, err
@@ -161,6 +161,9 @@ func (c *Core) buildSwitcherConfig(ctx context.Context, s *apiv2.Switch) (*types
 		AdminStatus:   map[string]types.PortStatus{},
 	}
 
+	// boot prefixes assigned by the metal-apiserver to unprovisioned ports (MEP-20)
+	bootPrefixes := map[string]string{}
+
 	for _, nic := range s.Nics {
 		if nic == nil {
 			continue
@@ -188,6 +191,9 @@ func (c *Core) buildSwitcherConfig(ctx context.Context, s *apiv2.Switch) (*types
 		if pointer.SafeDeref(nic.Vrf) == "" {
 			if !slices.Contains(p.Unprovisioned, port) {
 				p.Unprovisioned = append(p.Unprovisioned, port)
+			}
+			if nic.BootPrefix != nil {
+				bootPrefixes[port] = *nic.BootPrefix
 			}
 			continue
 		}
@@ -226,7 +232,7 @@ func (c *Core) buildSwitcherConfig(ctx context.Context, s *apiv2.Switch) (*types
 	switcherConfig.Ports = p
 
 	if c.boot.Mode == BootModeL3 {
-		boot, err := c.buildBootConfig(ctx, p.Unprovisioned)
+		boot, err := c.buildBootConfig(s, p.Unprovisioned, bootPrefixes)
 		if err != nil {
 			return nil, err
 		}
@@ -253,35 +259,33 @@ func (c *Core) buildSwitcherConfig(ctx context.Context, s *apiv2.Switch) (*types
 	return switcherConfig, nil
 }
 
-// buildBootConfig derives the boot vrf configuration for the unprovisioned ports (MEP-20).
+// buildBootConfig builds the boot vrf configuration for the unprovisioned ports (MEP-20).
 //
-// The per port prefixes are currently derived from the boot prefix of the switch and the physical port order.
-// Once the metal-apiserver assigns a boot prefix per switch nic, the prefixes must be taken from there instead.
-func (c *Core) buildBootConfig(ctx context.Context, unprovisioned []string) (*types.BootConf, error) {
-	ordinals, err := c.nos.GetPortOrdinals(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("could not determine port ordinals for the boot prefixes: %w", err)
+// The boot vni and the per port boot prefixes are assigned by the metal-apiserver from the boot network of the partition.
+// Ports without a valid boot prefix are left out, so that only they fail to be configured instead of the whole switch.
+func (c *Core) buildBootConfig(s *apiv2.Switch, unprovisioned []string, bootPrefixes map[string]string) (*types.BootConf, error) {
+	if s.BootVni == nil {
+		return nil, fmt.Errorf("boot mode l3 requires a boot network in partition %s, the switch has no boot vni", s.Partition)
 	}
 
-	// nics without an ordinal are not present in CONFIG_DB (e.g. stale nics after a breakout change),
-	// they are left out so that only this port fails to be configured instead of the whole switch
-	known := make([]string, 0, len(unprovisioned))
+	ports := map[string]types.BootPort{}
 	for _, port := range unprovisioned {
-		if _, ok := ordinals[port]; !ok {
-			c.log.Warn("unprovisioned port is unknown to the switch, no boot prefix derived", "port", port)
+		prefix, ok := bootPrefixes[port]
+		if !ok {
+			c.log.Warn("unprovisioned port has no boot prefix assigned by the metal-apiserver, port is left out", "port", port)
 			continue
 		}
-		known = append(known, port)
-	}
-
-	ports, err := types.DeriveBootPorts(c.boot.Prefix, ordinals, known)
-	if err != nil {
-		return nil, fmt.Errorf("could not derive boot prefixes: %w", err)
+		bootPort, err := types.BootPortFromPrefix(prefix)
+		if err != nil {
+			c.log.Warn("unprovisioned port has an invalid boot prefix, port is left out", "port", port, "error", err)
+			continue
+		}
+		ports[port] = bootPort
 	}
 
 	return &types.BootConf{
 		Vrf:   types.BootVrfName,
-		VNI:   c.boot.VNI,
+		VNI:   *s.BootVni,
 		RDNSS: c.boot.RDNSS,
 		Ports: ports,
 	}, nil
