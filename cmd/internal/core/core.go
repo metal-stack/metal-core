@@ -8,7 +8,6 @@ import (
 	clientv2 "github.com/metal-stack/api/go/client"
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
 type (
@@ -71,11 +70,6 @@ type (
 	BootConfig struct {
 		// Mode is pxe (ports in the pxe vlan) or l3 (ports in the ipv6 boot vrf).
 		Mode BootMode
-		// VNI is the layer 3 vni of the boot vrf.
-		VNI uint32
-		// Prefix is the ipv6 prefix of this switch from which every unprovisioned port gets its own /64.
-		// This is a temporary source until the metal-apiserver assigns the boot prefix per switch port.
-		Prefix netip.Prefix
 		// RDNSS are the dns server addresses advertised to booting machines.
 		RDNSS []string
 	}
@@ -89,10 +83,12 @@ const (
 )
 
 // NewBootConfig validates the given boot settings.
-func NewBootConfig(mode string, vni uint32, prefix string, rdnss []string) (BootConfig, error) {
+//
+// In boot mode l3 the boot vni and the per port boot prefixes are assigned by the metal-apiserver
+// and delivered with the switch (Switch.boot_vni, SwitchNic.boot_prefix).
+func NewBootConfig(mode string, rdnss []string) (BootConfig, error) {
 	c := BootConfig{
 		Mode:  BootMode(mode),
-		VNI:   vni,
 		RDNSS: rdnss,
 	}
 
@@ -103,22 +99,6 @@ func NewBootConfig(mode string, vni uint32, prefix string, rdnss []string) (Boot
 	default:
 		return BootConfig{}, fmt.Errorf("unknown boot mode %q, must be one of %q or %q", mode, BootModePXE, BootModeL3)
 	}
-
-	if c.VNI == 0 || c.VNI > types.MaxVNI {
-		return BootConfig{}, fmt.Errorf("boot mode %s requires a boot vni between 1 and %d", BootModeL3, types.MaxVNI)
-	}
-
-	p, err := netip.ParsePrefix(prefix)
-	if err != nil {
-		return BootConfig{}, fmt.Errorf("boot mode %s requires a valid ipv6 boot prefix: %w", BootModeL3, err)
-	}
-	if !p.Addr().Is6() || p.Addr().Is4In6() {
-		return BootConfig{}, fmt.Errorf("boot prefix %s must be an ipv6 prefix", prefix)
-	}
-	if p.Bits() == 0 || p.Bits() > types.BootPrefixLength {
-		return BootConfig{}, fmt.Errorf("boot prefix %s must be between /1 and /%d", prefix, types.BootPrefixLength)
-	}
-	c.Prefix = p.Masked()
 
 	for _, server := range rdnss {
 		addr, err := netip.ParseAddr(server)

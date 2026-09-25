@@ -70,7 +70,7 @@ func (c *Cumulus) GetNics(ctx context.Context, blacklist []string) (nics []*apiv
 		}
 
 		nic := &apiv2.SwitchNic{
-			Mac:        &mac,
+			Mac:        &mac, // nolint:staticcheck
 			Identifier: mac,
 			Name:       name,
 			State: &apiv2.NicState{
@@ -103,10 +103,6 @@ func (c *Cumulus) GetSwitchPorts(_ context.Context) ([]*net.Interface, error) {
 
 func (c *Cumulus) SanitizeConfig(cfg *types.Conf) {
 	// nothing required here
-}
-
-func (c *Cumulus) GetPortOrdinals(context.Context) (map[string]int, error) {
-	return nil, fmt.Errorf("port ordinals are not supported on cumulus, the l3 boot mode requires SONiC")
 }
 
 func (c *Cumulus) GetOS() (*apiv2.SwitchOS, error) {

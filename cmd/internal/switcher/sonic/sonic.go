@@ -8,7 +8,6 @@ import (
 	"net"
 	"os"
 	"slices"
-	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -108,55 +107,6 @@ func (s *Sonic) GetNics(ctx context.Context, blacklist []string) (nics []*apiv2.
 
 func (s *Sonic) SanitizeConfig(cfg *types.Conf) {
 	cfg.CapitalizeVrfName()
-}
-
-func (s *Sonic) GetPortOrdinals(ctx context.Context) (map[string]int, error) {
-	ports, err := s.redisApplier.GetPorts(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("unable to get ports: %w", err)
-	}
-	return portOrdinals(ports)
-}
-
-// portOrdinals orders the ports by their physical layout (port index, then first asic lane) and returns the position of every port.
-// The Ethernet<n> naming must not be used because it is platform dependent (broadcom counts lanes: Ethernet0, Ethernet4, ...)
-// and the index alone is not unique when ports are broken out.
-func portOrdinals(ports []*db.Port) (map[string]int, error) {
-	type sortablePort struct {
-		name  string
-		index int
-		lane  int
-	}
-
-	sortable := make([]sortablePort, 0, len(ports))
-	for _, port := range ports {
-		index, err := strconv.Atoi(port.Index)
-		if err != nil {
-			return nil, fmt.Errorf("port %s has no numeric index %q in CONFIG_DB: %w", port.Name, port.Index, err)
-		}
-		firstLane, _, _ := strings.Cut(port.Lanes, ",")
-		lane, err := strconv.Atoi(strings.TrimSpace(firstLane))
-		if err != nil {
-			return nil, fmt.Errorf("port %s has no numeric lanes %q in CONFIG_DB: %w", port.Name, port.Lanes, err)
-		}
-		sortable = append(sortable, sortablePort{name: port.Name, index: index, lane: lane})
-	}
-
-	slices.SortFunc(sortable, func(a, b sortablePort) int {
-		if a.index != b.index {
-			return a.index - b.index
-		}
-		if a.lane != b.lane {
-			return a.lane - b.lane
-		}
-		return strings.Compare(a.name, b.name)
-	})
-
-	ordinals := make(map[string]int, len(sortable))
-	for i, port := range sortable {
-		ordinals[port.name] = i
-	}
-	return ordinals, nil
 }
 
 func (s *Sonic) GetSwitchPorts(ctx context.Context) ([]*net.Interface, error) {
