@@ -21,6 +21,12 @@ vrf Vrf{{ $t.VNI }}
  vni {{ $t.VNI }}
  exit-vrf
 {{- end }}
+{{- if .Boot }}
+!
+vrf {{ .Boot.Vrf }}
+ vni {{ .Boot.VNI }}
+ exit-vrf
+{{- end }}
 {{- range .Ports.Underlay }}
 !
 interface {{ . }}
@@ -39,6 +45,18 @@ interface {{ .Port }}
 interface {{ . }} vrf {{ $vrf }}
  ipv6 nd ra-interval 6
  no ipv6 nd suppress-ra
+{{- end }}
+{{- end }}
+{{- if .Boot }}
+{{- range $port, $bp := .Boot.Ports }}
+!
+interface {{ $port }} vrf {{ $.Boot.Vrf }}
+ ipv6 nd prefix {{ $bp.Prefix }}
+ ipv6 nd ra-interval 6
+ no ipv6 nd suppress-ra
+{{- range $.Boot.RDNSS }}
+ ipv6 nd rdnss {{ . }}
+{{- end }}
 {{- end }}
 {{- end }}
 !
@@ -169,6 +187,20 @@ route-map {{ .Name }} {{ .Policy }} {{ .Order }}
                 {{- end }}
         {{- end }}
 !{{- end }}{{- end }}
+{{- if .Boot }}
+router bgp {{ $ASN }} vrf {{ .Boot.Vrf }}
+ bgp router-id {{ $RouterId }}
+ bgp bestpath as-path multipath-relax
+ !
+ address-family ipv6 unicast
+  redistribute connected
+ exit-address-family
+ !
+ address-family l2vpn evpn
+  advertise ipv6 unicast
+ exit-address-family
+!
+{{- end }}
 {{- if .SetSrcLoopback }}
 route-map RM_SET_SRC permit 10
  set src {{ .Loopback }}

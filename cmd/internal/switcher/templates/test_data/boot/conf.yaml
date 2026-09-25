@@ -1,0 +1,62 @@
+---
+name: leaf01
+loglevel: warnings
+loopback: 10.0.0.10
+setsrcloopback: true
+asn: 4200000010
+metalcorecidr: 10.255.255.2/24
+additionalmgmtroutes:
+  - 10.100.0.0/16
+  - 10.200.0.0/16
+ports:
+  eth0:
+    addresscidr: 192.168.101.12/24
+    gateway: 192.168.101.1
+  bladeports:
+    - swp7
+    - swp8
+  underlay:
+    - swp31
+    - swp32
+  unprovisioned:
+    - swp4
+    - swp5
+  firewalls:
+    swp3:
+      port: swp3
+      vnis:
+        - 104001
+        - 104009
+        - 104010
+      cidrs:
+        - "10.0.2.1/32"
+  vrfs:
+    vrf104001:
+      vlanid: 4001
+      vni: 104001
+      neighbors:
+        - swp1
+        - swp2
+      cidrs:
+        - "100.127.131.0/24"
+        - "212.17.234.17/32"
+        - "2001:db8:3::1/128"
+        - "10.240.0.0/12" # pod and service ipv4 cidrs
+        - "fd00:10::/64" # pod and service ipv6 cidrs
+additionalbridgevids:
+  - 201-256
+  - 301-356
+pxevlanid: 966
+boot:
+  vrf: VrfBoot
+  vni: 104000
+  vlanid: 1002
+  rdnss:
+    - fd00:20:ffff::53
+  ports:
+    swp4:
+      prefix: fd00:20:0:100::/64
+      address: fd00:20:0:100::1/64
+    swp5:
+      prefix: fd00:20:0:101::/64
+      address: fd00:20:0:101::1/64

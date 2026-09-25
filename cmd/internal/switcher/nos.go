@@ -23,6 +23,9 @@ type NOS interface {
 	GetOS() (*apiv2.SwitchOS, error)
 	GetSwitchPorts(ctx context.Context) ([]*net.Interface, error)
 	GetManagement() (ip, user string, err error)
+	// GetPortOrdinals returns a stable, zero based ordinal for every switch port, ordered by the physical port layout.
+	// It is used to derive the per port boot prefix (MEP-20).
+	GetPortOrdinals(ctx context.Context) (map[string]int, error)
 }
 
 func NewNOS(log *slog.Logger, frrTplFile, interfacesTplFile string, interfaceNamingSchema sonic.InterfaceNamingSchema) (NOS, error) {

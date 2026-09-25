@@ -73,11 +73,47 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 		}
 	}
 
-	a.log.Debug("configure unprovisioned ports", "ports", cfg.Ports.Unprovisioned)
-	for _, interfaceName := range cfg.Ports.Unprovisioned {
-		pxeVlan := fmt.Sprintf("Vlan%d", cfg.PXEVlanID)
-		if err := a.configureUnprovisionedPort(ctx, interfaceName, cfg.Ports.AdminStatus[interfaceName], pxeVlan); err != nil {
+	// ports whose transition failed keep their boot acl binding, they might still be routed in the boot vrf
+	failed := map[string]bool{}
+
+	// the boot acls are bound to the current and the desired ports before any port is moved, so that no port
+	// is ever routed in the boot vrf without the filter. Ports that leave the boot vrf are unbound at the end,
+	// after their transition succeeded. If the acl tables are missing in l3 mode, nothing is touched at all.
+	bound, err := a.bootACLBoundPorts(ctx)
+	if err != nil {
+		return err
+	}
+	if cfg.Boot != nil {
+		if err := a.ensureBootACLBinding(ctx, union(bound, cfg.Ports.Unprovisioned), true); err != nil {
+			return err
+		}
+
+		a.log.Debug("configure boot vrf", "vrf", cfg.Boot.Vrf, "vni", cfg.Boot.VNI)
+		if err := a.configureVrf(ctx, cfg.Boot.Vrf, &types.Vrf{VNI: cfg.Boot.VNI, VLANID: cfg.Boot.VLANID}); err != nil {
 			errs = append(errs, err)
+		}
+
+		a.log.Debug("configure unprovisioned ports in boot vrf", "ports", cfg.Ports.Unprovisioned)
+		for _, interfaceName := range cfg.Ports.Unprovisioned {
+			bootPort, ok := cfg.Boot.Ports[interfaceName]
+			if !ok {
+				errs = append(errs, fmt.Errorf("no boot prefix for unprovisioned port %s", interfaceName))
+				failed[interfaceName] = true
+				continue
+			}
+			if err := a.configureBootPort(ctx, interfaceName, cfg.Ports.AdminStatus[interfaceName], cfg.Boot.Vrf, bootPort); err != nil {
+				errs = append(errs, err)
+				failed[interfaceName] = true
+			}
+		}
+	} else {
+		a.log.Debug("configure unprovisioned ports", "ports", cfg.Ports.Unprovisioned)
+		for _, interfaceName := range cfg.Ports.Unprovisioned {
+			pxeVlan := fmt.Sprintf("Vlan%d", cfg.PXEVlanID)
+			if err := a.configureUnprovisionedPort(ctx, interfaceName, cfg.Ports.AdminStatus[interfaceName], pxeVlan); err != nil {
+				errs = append(errs, err)
+				failed[interfaceName] = true
+			}
 		}
 	}
 
@@ -85,6 +121,7 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 	for interfaceName := range cfg.Ports.Firewalls {
 		if err := a.configureFirewallPort(ctx, interfaceName, cfg.Ports.AdminStatus[interfaceName]); err != nil {
 			errs = append(errs, err)
+			failed[interfaceName] = true
 		}
 	}
 
@@ -96,12 +133,27 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 		for _, interfaceName := range vrf.Neighbors {
 			if err := a.configureVrfNeighbor(ctx, interfaceName, vrfName, cfg.Ports.AdminStatus[interfaceName]); err != nil {
 				errs = append(errs, err)
+				failed[interfaceName] = true
 			}
 		}
 	}
 
 	err = a.cleanupVrfs(ctx, cfg)
 	if err != nil {
+		errs = append(errs, err)
+	}
+
+	// finally unbind the ports that successfully left the boot vrf (or all of them when falling back to pxe boot)
+	var keep []string
+	if cfg.Boot != nil {
+		keep = union(nil, cfg.Ports.Unprovisioned)
+	}
+	for _, port := range bound {
+		if failed[port] {
+			keep = union(keep, []string{port})
+		}
+	}
+	if err := a.ensureBootACLBinding(ctx, keep, cfg.Boot != nil); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -114,6 +166,16 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 
 func (a *Applier) GetPorts(ctx context.Context) ([]*db.Port, error) {
 	return a.db.Config.GetPorts(ctx)
+}
+
+func (a *Applier) refreshRifOidMap(ctx context.Context) error {
+	oidMap, err := a.db.Counters.GetRifNameMap(ctx)
+	if err != nil {
+		return fmt.Errorf("could not update rif to oid map: %w", err)
+	}
+	a.log.Debug("set rif oid map", "map", oidMap)
+	a.rifOidMap = oidMap
+	return nil
 }
 
 func (a *Applier) refreshOidMaps(ctx context.Context) error {
@@ -164,6 +226,12 @@ func (a *Applier) configureUnprovisionedPort(ctx context.Context, interfaceName 
 
 func (a *Applier) configureFirewallPort(ctx context.Context, interfaceName string, adminStatus types.PortStatus) error {
 	err := a.ensureNotBridged(ctx, interfaceName)
+	if err != nil {
+		return err
+	}
+
+	// a firewall port lives in the default vrf, remove it from the boot vrf if it was unprovisioned before
+	err = a.ensureNotVrfMember(ctx, interfaceName)
 	if err != nil {
 		return err
 	}
@@ -270,17 +338,21 @@ func (a *Applier) cleanupVrfs(ctx context.Context, cfg *types.Conf) error {
 			continue
 		}
 
-		vni, err := strconv.ParseUint(strings.TrimPrefix(vrfName, "Vrf"), 10, 32)
+		if cfg.Boot != nil && vrfName == cfg.Boot.Vrf {
+			continue
+		}
+
+		vni, err := a.db.Config.GetVrfVni(ctx, vrfName)
 		if err != nil {
-			return fmt.Errorf("could not parse vni for vrf %s: %w", vrfName, err)
+			return err
 		}
 
 		vrf := &types.Vrf{
-			VNI: uint32(vni),
+			VNI: vni,
 		}
 
 		a.log.Debug("find vxlan tunnel map for vrf", "vrf", vrf)
-		tunnelMap, err := a.db.Config.FindVxlanTunnelMapByVni(ctx, uint32(vni))
+		tunnelMap, err := a.db.Config.FindVxlanTunnelMapByVni(ctx, vni)
 		if err != nil {
 			return fmt.Errorf("could not look up vxlan tunnel map for vni %d: %w", vni, err)
 		}

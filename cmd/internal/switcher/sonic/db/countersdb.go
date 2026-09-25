@@ -16,6 +16,11 @@ func newCountersDB(rdb valkey.Client, sep string) *CountersDB {
 	}
 }
 
+// Client returns the underlying redis client, intended for tests.
+func (d *CountersDB) Client() *Client {
+	return d.c
+}
+
 func (d *CountersDB) GetPortNameMap(ctx context.Context) (map[string]OID, error) {
 	val, err := d.c.HGetAll(ctx, Key{"COUNTERS_PORT_NAME_MAP"})
 	return toOIDMap(val), err

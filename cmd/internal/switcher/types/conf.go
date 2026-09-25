@@ -1,8 +1,10 @@
 package types
 
 import (
+	"encoding/binary"
 	"fmt"
 	"net/netip"
+	"slices"
 
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 	"go4.org/netipx"
@@ -14,23 +16,87 @@ import (
 // if they are present in the given VLAN-Mapping
 // otherwise: new available VLAN IDs will be used
 func (c *Conf) FillVLANIDs(m vlan.Mapping) error {
-outer_loop:
 	for _, t := range c.Ports.Vrfs {
-		for vl, vni := range m {
-			if vni == t.VNI {
-				t.VLANID = vl
-				continue outer_loop
-			}
-		}
-		vlanids, err := m.ReserveVlanIDs(1)
+		vl, err := vlanIDForVNI(m, t.VNI)
 		if err != nil {
 			return err
 		}
-		vl := vlanids[0]
 		t.VLANID = vl
-		m[vl] = t.VNI
+	}
+	if c.Boot != nil {
+		for name, t := range c.Ports.Vrfs {
+			if t.VNI == c.Boot.VNI {
+				return fmt.Errorf("boot vni %d collides with the vni of vrf %s", c.Boot.VNI, name)
+			}
+		}
+		vl, err := vlanIDForVNI(m, c.Boot.VNI)
+		if err != nil {
+			return err
+		}
+		c.Boot.VLANID = vl
 	}
 	return nil
+}
+
+func vlanIDForVNI(m vlan.Mapping, vni uint32) (uint16, error) {
+	for vl, mappedVni := range m {
+		if mappedVni == vni {
+			return vl, nil
+		}
+	}
+	vlanids, err := m.ReserveVlanIDs(1)
+	if err != nil {
+		return 0, err
+	}
+	vl := vlanids[0]
+	m[vl] = vni
+	return vl, nil
+}
+
+// DeriveBootPorts derives the per port boot prefix for every given port from the boot prefix block of the switch.
+//
+// The block is split into /64 prefixes, the port with ordinal n gets the n-th /64.
+// The switch itself takes the first address of every prefix.
+// This is a temporary derivation until the metal-apiserver assigns the boot prefix per switch port (MEP-20).
+func DeriveBootPorts(block netip.Prefix, ordinals map[string]int, ports []string) (map[string]BootPort, error) {
+	if !block.IsValid() || !block.Addr().Is6() || block.Addr().Is4In6() {
+		return nil, fmt.Errorf("boot prefix %q must be an ipv6 prefix", block)
+	}
+	if block.Bits() == 0 || block.Bits() > BootPrefixLength {
+		return nil, fmt.Errorf("boot prefix %q must be between /1 and /%d", block, BootPrefixLength)
+	}
+	block = block.Masked()
+
+	var (
+		available = uint64(1) << (BootPrefixLength - block.Bits())
+		base      = block.Addr().As16()
+		hi        = binary.BigEndian.Uint64(base[:8])
+		result    = map[string]BootPort{}
+	)
+
+	for _, port := range ports {
+		ordinal, ok := ordinals[port]
+		if !ok {
+			return nil, fmt.Errorf("no port ordinal known for port %q", port)
+		}
+		if ordinal < 0 || uint64(ordinal) >= available {
+			return nil, fmt.Errorf("port ordinal %d of port %q exceeds the %d prefixes available in boot prefix %s", ordinal, port, available, block)
+		}
+
+		var addr [16]byte
+		binary.BigEndian.PutUint64(addr[:8], hi|uint64(ordinal)) // nolint:gosec
+		prefix := netip.PrefixFrom(netip.AddrFrom16(addr), BootPrefixLength)
+
+		addr[15] = 1
+		address := netip.PrefixFrom(netip.AddrFrom16(addr), BootPrefixLength)
+
+		result[port] = BootPort{
+			Prefix:  prefix.String(),
+			Address: address.String(),
+		}
+	}
+
+	return result, nil
 }
 
 func (c *Conf) FillRouteMapsAndIPPrefixLists() error {
@@ -148,6 +214,16 @@ func (c *Conf) NewWithoutDownPorts() *Conf {
 	}
 
 	newConf := *c
+	if c.Boot != nil {
+		boot := *c.Boot
+		boot.Ports = map[string]BootPort{}
+		for port, bp := range c.Boot.Ports {
+			if slices.Contains(unprovisioned, port) {
+				boot.Ports[port] = bp
+			}
+		}
+		newConf.Boot = &boot
+	}
 	newConf.Ports = Ports{
 		Eth0:          c.Ports.Eth0,
 		Underlay:      underlay,
