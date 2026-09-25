@@ -27,7 +27,11 @@ type Config struct {
 	AdditionalBridgePorts     []string      `required:"false" desc:"additional switch ports that should be configured at the vlan-aware bridge" envconfig:"additional_bridge_ports"`
 	InterfacesTplFile         string        `required:"false" default:"" desc:"the golang template file used to render /etc/network/interfaces, a default template is included" envconfig:"interfaces_tpl_file"`
 	FrrTplFile                string        `required:"false" default:"" desc:"the golang template file used to render /etc/frr/frr.conf, a default template is included" envconfig:"frr_tpl_file"`
-	PXEVlanID                 uint16        `required:"false" default:"4000" desc:"the id of the pxe vlan" envconfig:"pxe_vlan_id"`
+	PXEVlanID                 uint16        `required:"false" default:"4000" desc:"the id of the pxe vlan, only used in boot mode pxe" envconfig:"pxe_vlan_id"`
+	BootMode                  string        `required:"false" default:"pxe" desc:"how unprovisioned machines boot: pxe puts their ports into the pxe vlan, l3 puts them into the ipv6 boot vrf (MEP-20, SONiC only)" envconfig:"boot_mode"`
+	BootVNI                   uint32        `required:"false" default:"0" desc:"the layer 3 vni of the boot vrf, required in boot mode l3" envconfig:"boot_vni"`
+	BootPrefix                string        `required:"false" default:"" desc:"the ipv6 prefix of this switch from which every unprovisioned port gets its own /64, required in boot mode l3" envconfig:"boot_prefix"`
+	BootRDNSS                 []string      `required:"false" desc:"ipv6 addresses of the dns servers that are advertised to booting machines in boot mode l3" envconfig:"boot_rdnss"`
 	BGPNeighborStateFile      string        `required:"false" default:"/var/run/bgp-neighbors/bgp-neighbors.json" desc:"the file to read the BGP neighbor state from" envconfig:"bgp_neighbor_state_file"`
 	InterfaceNamingSchema     string        `required:"false" default:"default" desc:"schema for interface and alias naming of switch nics" envconfig:"interface_naming_schema"`
 }

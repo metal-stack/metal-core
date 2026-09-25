@@ -3,6 +3,9 @@ package db
 import (
 	"context"
 	"fmt"
+	"slices"
+	"strconv"
+	"strings"
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/valkey-io/valkey-go"
@@ -18,6 +21,10 @@ type (
 		Alias       string
 		AdminStatus string
 		Mtu         string
+		// Index is the physical port number as defined in the platform port config.
+		Index string
+		// Lanes are the comma separated asic lanes of the port as defined in the platform port config.
+		Lanes string
 	}
 
 	VxlanMap struct {
@@ -27,10 +34,15 @@ type (
 )
 
 const (
+	aclTable            = "ACL_TABLE"
+	aclTablePorts       = "ports@"
 	adminStatusField    = "admin_status"
 	alias               = "alias"
 	enable              = "enable"
+	index               = "index"
 	interfaceTable      = "INTERFACE"
+	lanes               = "lanes"
+	null                = "NULL"
 	linkLocalOnly       = "ipv6_use_link_local_only" // nolint:gosec
 	mtu                 = "mtu"
 	portTable           = "PORT"
@@ -41,6 +53,7 @@ const (
 	vlanInterfaceTable  = "VLAN_INTERFACE"
 	vlanMemberTable     = "VLAN_MEMBER"
 	vrfTable            = "VRF"
+	vni                 = "vni"
 	vrfName             = "vrf_name"
 	vxlanTunnelMapTable = "VXLAN_TUNNEL_MAP"
 )
@@ -49,6 +62,11 @@ func newConfigDB(rdb valkey.Client, sep string) *ConfigDB {
 	return &ConfigDB{
 		c: NewClient(rdb, sep),
 	}
+}
+
+// Client returns the underlying redis client, intended for tests.
+func (d *ConfigDB) Client() *Client {
+	return d.c
 }
 
 func (d *ConfigDB) ExistVlan(ctx context.Context, vid uint16) (bool, error) {
@@ -169,6 +187,25 @@ func (d *ConfigDB) CreateVrf(ctx context.Context, vrf string, vni uint32) error 
 	return d.c.HSet(ctx, key, Val{"fallback": "false", "vni": fmt.Sprintf("%d", vni)})
 }
 
+// GetVrfVni returns the vni of the given vrf. If the vrf has no vni field, the vni is derived from the vrf name (Vrf<vni>).
+func (d *ConfigDB) GetVrfVni(ctx context.Context, vrf string) (uint32, error) {
+	key := Key{vrfTable, vrf}
+
+	value, err := d.c.HGet(ctx, key, vni)
+	if err != nil {
+		return 0, err
+	}
+	if value == "" {
+		value = strings.TrimPrefix(vrf, "Vrf")
+	}
+
+	parsed, err := strconv.ParseUint(value, 10, 32)
+	if err != nil {
+		return 0, fmt.Errorf("could not determine vni of vrf %s: %w", vrf, err)
+	}
+	return uint32(parsed), nil // nolint:gosec
+}
+
 func (d *ConfigDB) DeleteVrf(ctx context.Context, vrf string) error {
 	key := Key{vrfTable, vrf}
 
@@ -267,10 +304,110 @@ func (d *ConfigDB) getVTEPName(ctx context.Context) (string, error) {
 	return key[len(key)-1], nil
 }
 
+// ExistInterfaceConfiguration returns true if the interface has an entry in the INTERFACE table, i.e. is a routed interface.
+func (d *ConfigDB) ExistInterfaceConfiguration(ctx context.Context, interfaceName string) (bool, error) {
+	key := Key{interfaceTable, interfaceName}
+
+	return d.c.Exists(ctx, key)
+}
+
+// DeleteInterfaceConfiguration removes the interface from the INTERFACE table including all of its addresses.
 func (d *ConfigDB) DeleteInterfaceConfiguration(ctx context.Context, interfaceName string) error {
+	addresses, err := d.GetInterfaceAddresses(ctx, interfaceName)
+	if err != nil {
+		return err
+	}
+	for _, address := range addresses {
+		if err := d.DeleteInterfaceAddress(ctx, interfaceName, address); err != nil {
+			return err
+		}
+	}
+
 	key := Key{interfaceTable, interfaceName}
 
 	return d.c.Del(ctx, key)
+}
+
+// GetInterfaceAddresses returns the addresses (in cidr notation) configured on the interface.
+func (d *ConfigDB) GetInterfaceAddresses(ctx context.Context, interfaceName string) ([]string, error) {
+	pattern := Key{interfaceTable, interfaceName, "*"}
+
+	keys, err := d.c.Keys(ctx, pattern)
+	if err != nil {
+		return nil, err
+	}
+
+	addresses := make([]string, 0, len(keys))
+	for _, key := range keys {
+		if len(key) != 3 {
+			return nil, fmt.Errorf("could not parse key %v", key)
+		}
+		addresses = append(addresses, key[2])
+	}
+	slices.Sort(addresses)
+	return addresses, nil
+}
+
+// SetInterfaceAddress adds the address (in cidr notation) to the interface. The interface must already exist in the INTERFACE table.
+func (d *ConfigDB) SetInterfaceAddress(ctx context.Context, interfaceName, address string) error {
+	key := Key{interfaceTable, interfaceName, address}
+
+	// an entry without fields can not be stored in redis, sonic uses a NULL field for this purpose
+	return d.c.HSet(ctx, key, Val{null: null})
+}
+
+func (d *ConfigDB) DeleteInterfaceAddress(ctx context.Context, interfaceName, address string) error {
+	key := Key{interfaceTable, interfaceName, address}
+
+	return d.c.Del(ctx, key)
+}
+
+// GetACLTables returns the names of all acl tables.
+func (d *ConfigDB) GetACLTables(ctx context.Context) ([]string, error) {
+	t := d.c.GetTable(Key{aclTable})
+
+	res, err := t.GetView(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	tables := make([]string, 0, len(res))
+	for name := range res {
+		tables = append(tables, name)
+	}
+	slices.Sort(tables)
+	return tables, nil
+}
+
+// GetACLTablePorts returns the ports the acl table is bound to.
+func (d *ConfigDB) GetACLTablePorts(ctx context.Context, table string) ([]string, error) {
+	key := Key{aclTable, table}
+
+	value, err := d.c.HGet(ctx, key, aclTablePorts)
+	if err != nil {
+		return nil, err
+	}
+
+	ports := make([]string, 0)
+	for _, port := range strings.Split(value, ",") {
+		port = strings.TrimSpace(port)
+		if port == "" {
+			continue
+		}
+		ports = append(ports, port)
+	}
+	slices.Sort(ports)
+	return ports, nil
+}
+
+// SetACLTablePorts binds the acl table to exactly the given ports, an empty list unbinds the table from all ports.
+func (d *ConfigDB) SetACLTablePorts(ctx context.Context, table string, ports []string) error {
+	key := Key{aclTable, table}
+
+	ports = slices.Clone(ports)
+	slices.Sort(ports)
+	ports = slices.Compact(ports)
+	return d.c.HSet(ctx, key, Val{aclTablePorts: strings.Join(ports, ",")})
 }
 
 func (d *ConfigDB) IsLinkLocalOnly(ctx context.Context, interfaceName string) (bool, error) {
@@ -306,6 +443,8 @@ func (d *ConfigDB) GetPort(ctx context.Context, interfaceName string) (*Port, er
 		Alias:       result[alias],
 		AdminStatus: result[adminStatusField],
 		Mtu:         result[mtu],
+		Index:       result[index],
+		Lanes:       result[lanes],
 	}, nil
 }
 
@@ -336,6 +475,8 @@ func (d *ConfigDB) GetPorts(ctx context.Context) ([]*Port, error) {
 			Alias:       result[alias],
 			AdminStatus: result[adminStatusField],
 			Mtu:         result[mtu],
+			Index:       result[index],
+			Lanes:       result[lanes],
 		})
 	}
 

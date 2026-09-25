@@ -17,6 +17,32 @@ type (
 		AdditionalMgmtRoutes []string
 		PXEVlanID            uint16
 		SetSrcLoopback       bool
+		// Boot holds the configuration of the boot vrf (MEP-20). If nil, unprovisioned ports are put into the PXE vlan.
+		Boot *BootConf
+	}
+
+	// BootConf describes the layer 3 boot vrf for unprovisioned ports (MEP-20).
+	// Every unprovisioned port becomes a routed interface in this vrf with its own /64 prefix
+	// from which booting machines derive their address via SLAAC.
+	BootConf struct {
+		// Vrf is the name of the boot vrf.
+		Vrf string
+		// VNI is the layer 3 vni of the boot vrf.
+		VNI uint32
+		// VLANID is the switch-local vlan that maps the vni, filled by FillVLANIDs.
+		VLANID uint16
+		// RDNSS are the recursive dns server addresses that are advertised to booting machines.
+		RDNSS []string
+		// Ports maps every unprovisioned port to its boot prefix.
+		Ports map[string]BootPort
+	}
+
+	// BootPort holds the per port boot prefix.
+	BootPort struct {
+		// Prefix is the /64 that is advertised on the port, e.g. fd00:20:0:100::/64
+		Prefix string
+		// Address is the address of the switch inside the prefix, e.g. fd00:20:0:100::1/64
+		Address string
 	}
 
 	Ports struct {
@@ -80,6 +106,13 @@ type (
 const (
 	PortStatusUp   = PortStatus("up")
 	PortStatusDown = PortStatus("down")
+
+	// BootVrfName is the fixed name of the boot vrf on a switch.
+	BootVrfName = "VrfBoot"
+	// BootPrefixLength is the prefix length of every per port boot prefix.
+	BootPrefixLength = 64
+	// MaxVNI is the largest possible vxlan network identifier (24 bit).
+	MaxVNI = 1<<24 - 1
 )
 
 func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {

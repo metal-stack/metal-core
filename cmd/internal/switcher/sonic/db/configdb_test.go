@@ -13,11 +13,31 @@ import (
 
 var (
 	configDBTestData = test.StringMap{
+		"ACL_TABLE": test.StringMap{
+			"ALLOW_SSH": test.StringMap{
+				"policy_desc": "Allow SSH access",
+				"stage":       "ingress",
+				"type":        "CTRLPLANE",
+			},
+			"BOOT_V6": test.StringMap{
+				"policy_desc": "MEP-20 boot vrf ingress filter",
+				"ports@":      "Ethernet1,Ethernet3",
+				"stage":       "ingress",
+				"type":        "L3V6",
+			},
+			"BOOT_V4": test.StringMap{
+				"policy_desc": "MEP-20 boot vrf ingress filter",
+				"stage":       "ingress",
+				"type":        "L3",
+			},
+		},
 		"INTERFACE": test.StringMap{
 			"Ethernet0": test.StringMap{
 				"ipv6_use_link_local_only": "enable",
 				"vrf_name":                 "Vrf102",
 			},
+			"Ethernet0|fd00:20:0:100::1/64": test.StringMap{},
+			"Ethernet0|10.1.1.1/24":         test.StringMap{},
 			"Ethernet1": test.StringMap{
 				"ipv6_use_link_local_only": "enable",
 			},
@@ -1891,5 +1911,147 @@ func TestConfigDB_SetAdminStatusUp(t *testing.T) {
 				t.Errorf("ConfigDB.SetAdminStatusUp() data differs = %s", diff)
 			}
 		})
+	}
+}
+
+func newTestConfigDB(t *testing.T, data test.StringMap) *ConfigDB {
+	t.Helper()
+	var (
+		ctx = t.Context()
+		sep = "|"
+		vc  = test.StartValkey(t)
+	)
+	t.Cleanup(vc.Close)
+
+	err := test.LoadData(ctx, vc, data, sep)
+	require.NoError(t, err)
+
+	return &ConfigDB{
+		c: &Client{
+			rdb: vc,
+			sep: sep,
+		},
+	}
+}
+
+func TestConfigDB_GetVrfVni(t *testing.T) {
+	tests := []struct {
+		name    string
+		vrf     string
+		want    uint32
+		wantErr bool
+	}{
+		{name: "vni from field", vrf: "Vrf102", want: 102},
+		{name: "vni derived from name if field is missing", vrf: "Vrf4711", want: 4711},
+		{name: "no vni derivable", vrf: "VrfBoot", wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := newTestConfigDB(t, configDBTestData)
+			got, err := d.GetVrfVni(t.Context(), tt.vrf)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("ConfigDB.GetVrfVni() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestConfigDB_InterfaceAddresses(t *testing.T) {
+	ctx := t.Context()
+	d := newTestConfigDB(t, configDBTestData)
+
+	got, err := d.GetInterfaceAddresses(ctx, "Ethernet0")
+	require.NoError(t, err)
+	require.Equal(t, []string{"10.1.1.1/24", "fd00:20:0:100::1/64"}, got)
+
+	got, err = d.GetInterfaceAddresses(ctx, "Ethernet1")
+	require.NoError(t, err)
+	require.Empty(t, got)
+
+	exists, err := d.ExistInterfaceConfiguration(ctx, "Ethernet1")
+	require.NoError(t, err)
+	require.True(t, exists)
+	exists, err = d.ExistInterfaceConfiguration(ctx, "Ethernet2")
+	require.NoError(t, err)
+	require.False(t, exists)
+
+	require.NoError(t, d.SetInterfaceAddress(ctx, "Ethernet1", "fd00:20:0:101::1/64"))
+	got, err = d.GetInterfaceAddresses(ctx, "Ethernet1")
+	require.NoError(t, err)
+	require.Equal(t, []string{"fd00:20:0:101::1/64"}, got)
+
+	all, err := test.GetData(ctx, d.c.rdb, "|")
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"NULL": "NULL"}, all["INTERFACE|Ethernet1|fd00:20:0:101::1/64"])
+
+	require.NoError(t, d.DeleteInterfaceAddress(ctx, "Ethernet1", "fd00:20:0:101::1/64"))
+	got, err = d.GetInterfaceAddresses(ctx, "Ethernet1")
+	require.NoError(t, err)
+	require.Empty(t, got)
+
+	// deleting the interface configuration removes the addresses as well
+	require.NoError(t, d.DeleteInterfaceConfiguration(ctx, "Ethernet0"))
+	all, err = test.GetData(ctx, d.c.rdb, "|")
+	require.NoError(t, err)
+	for key := range all {
+		require.False(t, strings.HasPrefix(key, "INTERFACE|Ethernet0"), "unexpected key %s", key)
+	}
+}
+
+func TestConfigDB_ACLTables(t *testing.T) {
+	ctx := t.Context()
+	d := newTestConfigDB(t, configDBTestData)
+
+	tables, err := d.GetACLTables(ctx)
+	require.NoError(t, err)
+	require.Equal(t, []string{"ALLOW_SSH", "BOOT_V4", "BOOT_V6"}, tables)
+
+	ports, err := d.GetACLTablePorts(ctx, "BOOT_V6")
+	require.NoError(t, err)
+	require.Equal(t, []string{"Ethernet1", "Ethernet3"}, ports)
+
+	ports, err = d.GetACLTablePorts(ctx, "BOOT_V4")
+	require.NoError(t, err)
+	require.Empty(t, ports)
+
+	require.NoError(t, d.SetACLTablePorts(ctx, "BOOT_V4", []string{"Ethernet3", "Ethernet1"}))
+	ports, err = d.GetACLTablePorts(ctx, "BOOT_V4")
+	require.NoError(t, err)
+	require.Equal(t, []string{"Ethernet1", "Ethernet3"}, ports)
+
+	all, err := test.GetData(ctx, d.c.rdb, "|")
+	require.NoError(t, err)
+	require.Equal(t, "Ethernet1,Ethernet3", all["ACL_TABLE|BOOT_V4"]["ports@"])
+
+	require.NoError(t, d.SetACLTablePorts(ctx, "BOOT_V6", nil))
+	ports, err = d.GetACLTablePorts(ctx, "BOOT_V6")
+	require.NoError(t, err)
+	require.Empty(t, ports)
+	all, err = test.GetData(ctx, d.c.rdb, "|")
+	require.NoError(t, err)
+	require.Equal(t, "", all["ACL_TABLE|BOOT_V6"]["ports@"])
+}
+
+func TestConfigDB_GetPortsIndexAndLanes(t *testing.T) {
+	ctx := t.Context()
+	data := test.StringMap{
+		"PORT": test.StringMap{
+			"Ethernet0": test.StringMap{"admin_status": "up", "alias": "Eth1/1", "index": "1", "lanes": "1,2,3,4", "mtu": "9000"},
+			"Ethernet4": test.StringMap{"admin_status": "up", "alias": "Eth2/1", "index": "2", "lanes": "5,6,7,8", "mtu": "9000"},
+		},
+	}
+	d := newTestConfigDB(t, data)
+
+	p, err := d.GetPort(ctx, "Ethernet4")
+	require.NoError(t, err)
+	require.Equal(t, &Port{Name: "Ethernet4", Alias: "Eth2/1", AdminStatus: "up", Mtu: "9000", Index: "2", Lanes: "5,6,7,8"}, p)
+
+	ports, err := d.GetPorts(ctx)
+	require.NoError(t, err)
+	require.Len(t, ports, 2)
+	for _, port := range ports {
+		require.NotEmpty(t, port.Index)
+		require.NotEmpty(t, port.Lanes)
 	}
 }

@@ -20,6 +20,11 @@ func newAsicDB(rdb valkey.Client, sep string) *AsicDB {
 	}
 }
 
+// Client returns the underlying redis client, intended for tests.
+func (d *AsicDB) Client() *Client {
+	return d.c
+}
+
 func (d *AsicDB) GetPortIdBridgePortMap(ctx context.Context) (map[OID]OID, error) {
 	t := d.c.GetTable(Key{"ASIC_STATE", "SAI_OBJECT_TYPE_BRIDGE_PORT"})
 

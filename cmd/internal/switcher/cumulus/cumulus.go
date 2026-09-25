@@ -105,6 +105,10 @@ func (c *Cumulus) SanitizeConfig(cfg *types.Conf) {
 	// nothing required here
 }
 
+func (c *Cumulus) GetPortOrdinals(context.Context) (map[string]int, error) {
+	return nil, fmt.Errorf("port ordinals are not supported on cumulus, the l3 boot mode requires SONiC")
+}
+
 func (c *Cumulus) GetOS() (*apiv2.SwitchOS, error) {
 	version := "unknown"
 	lsbReleaseBytes, err := os.ReadFile("/etc/lsb-release")

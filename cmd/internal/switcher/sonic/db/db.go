@@ -69,6 +69,17 @@ func New(cfg *Config) (*DB, error) {
 	return db, nil
 }
 
+// NewWithClients creates a DB from already existing valkey clients, all using the same key separator.
+// It is intended for tests against an in-memory redis.
+func NewWithClients(appl, asic, config, counters valkey.Client, sep string) *DB {
+	return &DB{
+		Appl:     newApplDB(appl, sep),
+		Asic:     newAsicDB(asic, sep),
+		Config:   newConfigDB(config, sep),
+		Counters: newCountersDB(counters, sep),
+	}
+}
+
 func newRedisClient(redisInstance instance, redisDatabase int) (valkey.Client, error) {
 	opt, err := valkey.ParseURL("unix://" + redisInstance.Addr + "?db=" + strconv.Itoa(redisDatabase))
 	if err != nil {

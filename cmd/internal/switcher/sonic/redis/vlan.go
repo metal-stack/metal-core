@@ -7,22 +7,24 @@ import (
 	"github.com/avast/retry-go/v4"
 )
 
+// ensureNotBridged removes the interface from all vlans and waits until the bridge port is gone from the asic.
 func (a *Applier) ensureNotBridged(ctx context.Context, interfaceName string) error {
-	oid, ok := a.bridgePortOidMap[interfaceName]
-	if !ok {
-		return nil
-	}
-	bridged, err := a.db.Asic.ExistBridgePort(ctx, oid)
-	if err != nil {
-		return fmt.Errorf("could not retrieve state data for interface %s: %w", interfaceName, err)
-	}
-	if !bridged {
-		return nil
-	}
-
 	vlans, err := a.db.Config.GetVlanMembership(ctx, interfaceName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve vlan membership for %s from Redis: %w", interfaceName, err)
+	}
+
+	var bridged bool
+	oid, known := a.bridgePortOidMap[interfaceName]
+	if known {
+		bridged, err = a.db.Asic.ExistBridgePort(ctx, oid)
+		if err != nil {
+			return fmt.Errorf("could not retrieve state data for interface %s: %w", interfaceName, err)
+		}
+	}
+
+	if len(vlans) == 0 && !bridged {
+		return nil
 	}
 
 	for _, vlan := range vlans {
@@ -31,6 +33,10 @@ func (a *Applier) ensureNotBridged(ctx context.Context, interfaceName string) er
 		if err != nil {
 			return fmt.Errorf("could not remove interface %s from vlan %s", interfaceName, vlan)
 		}
+	}
+
+	if !known {
+		return nil
 	}
 
 	return retry.Do(

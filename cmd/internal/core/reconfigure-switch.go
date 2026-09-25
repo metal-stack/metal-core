@@ -107,7 +107,7 @@ func (c *Core) reconfigureSwitch(ctx context.Context, hostname string) (*apiv2.S
 	}
 
 	s := res.Switch
-	switchConfig, err := c.buildSwitcherConfig(s)
+	switchConfig, err := c.buildSwitcherConfig(ctx, s)
 	if err != nil {
 		return nil, fmt.Errorf("could not build switcher config: %w", err)
 	}
@@ -131,7 +131,7 @@ func (c *Core) reconfigureSwitch(ctx context.Context, hostname string) (*apiv2.S
 	return s, nil
 }
 
-func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
+func (c *Core) buildSwitcherConfig(ctx context.Context, s *apiv2.Switch) (*types.Conf, error) {
 	asn64, err := strconv.ParseUint(c.asn, 10, 32)
 	if err != nil {
 		return nil, err
@@ -224,6 +224,15 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 	}
 
 	switcherConfig.Ports = p
+
+	if c.boot.Mode == BootModeL3 {
+		boot, err := c.buildBootConfig(ctx, p.Unprovisioned)
+		if err != nil {
+			return nil, err
+		}
+		switcherConfig.Boot = boot
+	}
+
 	c.nos.SanitizeConfig(switcherConfig)
 
 	err = switcherConfig.FillRouteMapsAndIPPrefixLists()
@@ -242,6 +251,40 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 	}
 
 	return switcherConfig, nil
+}
+
+// buildBootConfig derives the boot vrf configuration for the unprovisioned ports (MEP-20).
+//
+// The per port prefixes are currently derived from the boot prefix of the switch and the physical port order.
+// Once the metal-apiserver assigns a boot prefix per switch nic, the prefixes must be taken from there instead.
+func (c *Core) buildBootConfig(ctx context.Context, unprovisioned []string) (*types.BootConf, error) {
+	ordinals, err := c.nos.GetPortOrdinals(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not determine port ordinals for the boot prefixes: %w", err)
+	}
+
+	// nics without an ordinal are not present in CONFIG_DB (e.g. stale nics after a breakout change),
+	// they are left out so that only this port fails to be configured instead of the whole switch
+	known := make([]string, 0, len(unprovisioned))
+	for _, port := range unprovisioned {
+		if _, ok := ordinals[port]; !ok {
+			c.log.Warn("unprovisioned port is unknown to the switch, no boot prefix derived", "port", port)
+			continue
+		}
+		known = append(known, port)
+	}
+
+	ports, err := types.DeriveBootPorts(c.boot.Prefix, ordinals, known)
+	if err != nil {
+		return nil, fmt.Errorf("could not derive boot prefixes: %w", err)
+	}
+
+	return &types.BootConf{
+		Vrf:   types.BootVrfName,
+		VNI:   c.boot.VNI,
+		RDNSS: c.boot.RDNSS,
+		Ports: ports,
+	}, nil
 }
 
 // mapLogLevel maps the metal-core log level to an appropriate FRR log level
