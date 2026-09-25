@@ -29,7 +29,6 @@ type Config struct {
 	FrrTplFile                string        `required:"false" default:"" desc:"the golang template file used to render /etc/frr/frr.conf, a default template is included" envconfig:"frr_tpl_file"`
 	PXEVlanID                 uint16        `required:"false" default:"4000" desc:"the id of the pxe vlan, only used in boot mode pxe" envconfig:"pxe_vlan_id"`
 	BootMode                  string        `required:"false" default:"pxe" desc:"how unprovisioned machines boot: pxe puts their ports into the pxe vlan, l3 puts them into the ipv6 boot vrf (MEP-20, SONiC only)" envconfig:"boot_mode"`
-	BootRDNSS                 []string      `required:"false" desc:"ipv6 addresses of the dns servers that are advertised to booting machines in boot mode l3" envconfig:"boot_rdnss"`
 	BGPNeighborStateFile      string        `required:"false" default:"/var/run/bgp-neighbors/bgp-neighbors.json" desc:"the file to read the BGP neighbor state from" envconfig:"bgp_neighbor_state_file"`
 	InterfaceNamingSchema     string        `required:"false" default:"default" desc:"schema for interface and alias naming of switch nics" envconfig:"interface_naming_schema"`
 }

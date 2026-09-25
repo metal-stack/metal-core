@@ -82,7 +82,7 @@ func Run() {
 		os.Exit(1)
 	}
 
-	boot, err := core.NewBootConfig(cfg.BootMode, cfg.BootRDNSS)
+	boot, err := core.NewBootConfig(cfg.BootMode)
 	if err != nil {
 		log.Error("invalid boot configuration", "error", err)
 		os.Exit(1)

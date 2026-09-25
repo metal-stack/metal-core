@@ -261,11 +261,15 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 
 // buildBootConfig builds the boot vrf configuration for the unprovisioned ports (MEP-20).
 //
-// The boot vni and the per port boot prefixes are assigned by the metal-apiserver from the boot network of the partition.
+// The boot vni and the per port boot prefixes are assigned by the metal-apiserver from the boot network of the partition,
+// the rdnss come from the boot configuration of the partition.
 // Ports without a valid boot prefix are left out, so that only they fail to be configured instead of the whole switch.
 func (c *Core) buildBootConfig(s *apiv2.Switch, unprovisioned []string, bootPrefixes map[string]string) (*types.BootConf, error) {
 	if s.BootVni == nil {
 		return nil, fmt.Errorf("boot mode l3 requires a boot network in partition %s, the switch has no boot vni", s.Partition)
+	}
+	if err := validateRDNSS(s.BootRdnss); err != nil {
+		return nil, err
 	}
 
 	ports := map[string]types.BootPort{}
@@ -286,7 +290,7 @@ func (c *Core) buildBootConfig(s *apiv2.Switch, unprovisioned []string, bootPref
 	return &types.BootConf{
 		Vrf:   types.BootVrfName,
 		VNI:   *s.BootVni,
-		RDNSS: c.boot.RDNSS,
+		RDNSS: s.BootRdnss,
 		Ports: ports,
 	}, nil
 }
