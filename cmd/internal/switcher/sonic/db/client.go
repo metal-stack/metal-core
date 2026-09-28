@@ -29,11 +29,6 @@ func NewClient(rdb valkey.Client, sep string) *Client {
 	}
 }
 
-// RDB returns the underlying valkey client, intended for tests.
-func (c *Client) RDB() valkey.Client {
-	return c.rdb
-}
-
 func (c *Client) Del(ctx context.Context, key Key) error {
 	return c.rdb.Do(ctx, c.rdb.B().Del().Key(key.toString(c.sep)).Build()).Error()
 }
