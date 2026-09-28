@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"github.com/valkey-io/valkey-go"
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db/test"
@@ -61,7 +62,9 @@ var (
 
 type testApplier struct {
 	*Applier
-	config test.HashMap
+	asicClient   *db.Client
+	configClient valkey.Client
+	config       test.HashMap
 }
 
 func newTestApplier(t *testing.T, data test.StringMap) *testApplier {
@@ -85,7 +88,11 @@ func newTestApplier(t *testing.T, data test.StringMap) *testApplier {
 	// force the applier to apply the first configuration
 	a.previousCfg = &types.Conf{Name: "previous"}
 
-	return &testApplier{Applier: a}
+	return &testApplier{
+		Applier:      a,
+		asicClient:   db.NewClient(asic, sep),
+		configClient: config,
+	}
 }
 
 func (a *testApplier) apply(t *testing.T, cfg *types.Conf) {
@@ -96,7 +103,7 @@ func (a *testApplier) apply(t *testing.T, cfg *types.Conf) {
 
 func (a *testApplier) refresh(t *testing.T) {
 	t.Helper()
-	data, err := test.GetData(t.Context(), a.db.Config.Client().RDB(), sep)
+	data, err := test.GetData(t.Context(), a.configClient, sep)
 	require.NoError(t, err)
 	a.config = data
 }
@@ -316,14 +323,14 @@ func TestApplier_MoveRefreshesRifOidMap(t *testing.T) {
 	// the RIF shows up in COUNTERS_DB and ASIC_DB only after the initial OID map refresh
 	ctx := t.Context()
 	require.NoError(t, a.db.Counters.Client().HSet(ctx, db.Key{"COUNTERS_RIF_NAME_MAP"}, db.Val{"Ethernet0": "oid:0x6000000000001"}))
-	require.NoError(t, a.db.Asic.Client().HSet(ctx, db.Key{"ASIC_STATE", "SAI_OBJECT_TYPE_ROUTER_INTERFACE", "oid:0x6000000000001"}, db.Val{"SAI_ROUTER_INTERFACE_ATTR_TYPE": "SAI_ROUTER_INTERFACE_TYPE_PORT"}))
+	require.NoError(t, a.asicClient.HSet(ctx, db.Key{"ASIC_STATE", "SAI_OBJECT_TYPE_ROUTER_INTERFACE", "oid:0x6000000000001"}, db.Val{"SAI_ROUTER_INTERFACE_ATTR_TYPE": "SAI_ROUTER_INTERFACE_TYPE_PORT"}))
 	a.previousCfg = &types.Conf{Name: "force"}
 	a.rifOidMap = map[string]db.OID{}
 
 	// the move must wait for the RIF to disappear; simulate the ASIC releasing it
 	go func() {
 		time.Sleep(200 * time.Millisecond)
-		_ = a.db.Asic.Client().Del(context.Background(), db.Key{"ASIC_STATE", "SAI_OBJECT_TYPE_ROUTER_INTERFACE", "oid:0x6000000000001"})
+		_ = a.asicClient.Del(context.Background(), db.Key{"ASIC_STATE", "SAI_OBJECT_TYPE_ROUTER_INTERFACE", "oid:0x6000000000001"})
 	}()
 
 	c := l3Conf([]string{"Ethernet4"})
