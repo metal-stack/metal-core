@@ -259,42 +259,6 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 	return switcherConfig, nil
 }
 
-// buildBootConfig builds the boot VRF configuration for the unprovisioned ports.
-//
-// The boot VNI and per port boot prefixes are assigned by the metal-apiserver from the partition's boot network;
-// RDNSS addresses come from the partition's boot configuration.
-// Ports without a valid boot prefix are left out, so that only they fail to be configured instead of the whole switch.
-func (c *Core) buildBootConfig(s *apiv2.Switch, unprovisioned []string, bootPrefixes map[string]string) (*types.BootConf, error) {
-	if s.BootVni == nil {
-		return nil, fmt.Errorf("boot mode l3 requires a boot network in partition %s, the switch has no boot vni", s.Partition)
-	}
-	if err := validateRDNSS(s.BootRdnss); err != nil {
-		return nil, err
-	}
-
-	ports := map[string]types.BootPort{}
-	for _, port := range unprovisioned {
-		prefix, ok := bootPrefixes[port]
-		if !ok {
-			c.log.Warn("unprovisioned port has no boot prefix assigned by the metal-apiserver, port is left out", "port", port)
-			continue
-		}
-		bootPort, err := types.BootPortFromPrefix(prefix)
-		if err != nil {
-			c.log.Warn("unprovisioned port has an invalid boot prefix, port is left out", "port", port, "error", err)
-			continue
-		}
-		ports[port] = bootPort
-	}
-
-	return &types.BootConf{
-		Vrf:   types.BootVrfName,
-		VNI:   *s.BootVni,
-		RDNSS: s.BootRdnss,
-		Ports: ports,
-	}, nil
-}
-
 // mapLogLevel maps the metal-core log level to an appropriate FRR log level
 // http://docs.frrouting.org/en/latest/basic.html#clicmd-[no]logsyslog[LEVEL]
 func mapLogLevel(level string) string {
