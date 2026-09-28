@@ -73,12 +73,12 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 		}
 	}
 
-	// ports whose transition failed keep their boot acl binding, they might still be routed in the boot vrf
+	// ports whose transition failed keep their boot ACL binding; they might still be routed in the boot VRF
 	failed := map[string]bool{}
 
-	// the boot acls are bound to the current and the desired ports before any port is moved, so that no port
-	// is ever routed in the boot vrf without the filter. Ports that leave the boot vrf are unbound at the end,
-	// after their transition succeeded. If the acl tables are missing in l3 mode, nothing is touched at all.
+	// bind the boot ACLs to current and desired ports before moving any port, so that no port
+	// is routed in the boot VRF without the filter. Unbind ports after they leave the boot VRF.
+	// If the ACL tables are missing in L3 mode, nothing is touched.
 	bound, err := a.bootACLBoundPorts(ctx)
 	if err != nil {
 		return err
@@ -143,7 +143,7 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 		errs = append(errs, err)
 	}
 
-	// finally unbind the ports that successfully left the boot vrf (or all of them when falling back to pxe boot)
+	// unbind ports that successfully left the boot VRF
 	var keep []string
 	if cfg.Boot != nil {
 		keep = union(nil, cfg.Ports.Unprovisioned)
@@ -230,7 +230,7 @@ func (a *Applier) configureFirewallPort(ctx context.Context, interfaceName strin
 		return err
 	}
 
-	// a firewall port lives in the default vrf, remove it from the boot vrf if it was unprovisioned before
+	// a firewall port lives in the default VRF; remove it from the boot VRF if it was unprovisioned before
 	err = a.ensureNotVrfMember(ctx, interfaceName)
 	if err != nil {
 		return err

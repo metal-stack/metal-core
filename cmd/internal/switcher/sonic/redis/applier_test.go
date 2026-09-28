@@ -17,7 +17,7 @@ import (
 const sep = "|"
 
 var (
-	// baseConfigDB is a leaf with two machine ports, a pxe vlan, boot acl tables and a vtep.
+	// baseConfigDB is a leaf with two machine ports, a PXE VLAN, boot ACL tables, and a VTEP.
 	baseConfigDB = test.StringMap{
 		"ACL_TABLE": test.StringMap{
 			"BOOT_V6": test.StringMap{
@@ -135,14 +135,14 @@ func TestApplier_PxeToL3(t *testing.T) {
 	ctx := context.Background()
 	a := newTestApplier(t, baseConfigDB)
 
-	// start in pxe mode
+	// start in PXE mode
 	a.apply(t, pxeConf([]string{"Ethernet0", "Ethernet4"}))
 	require.Equal(t, map[string]string{"tagging_mode": "untagged"}, a.config["VLAN_MEMBER|Vlan4000|Ethernet0"])
 	require.Equal(t, map[string]string{"tagging_mode": "untagged"}, a.config["VLAN_MEMBER|Vlan4000|Ethernet4"])
 	require.Empty(t, a.keysWithPrefix("INTERFACE|"))
 	require.Empty(t, a.config["ACL_TABLE|BOOT_V6"]["ports@"])
 
-	// migrate to l3 boot
+	// migrate to L3 boot
 	a.apply(t, l3Conf([]string{"Ethernet0", "Ethernet4"}))
 
 	require.Empty(t, a.keysWithPrefix("VLAN_MEMBER|"), "ports must be removed from the pxe vlan")
@@ -241,12 +241,12 @@ func TestApplier_L3RequiresBootACLTables(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "no acl tables with prefix BOOT_")
 
-	// nothing must have been touched, especially no port may be routed in the boot vrf without the filter
+	// nothing must be touched, especially no port may be routed in the boot VRF without the filter
 	a.refresh(t)
 	require.Empty(t, a.keysWithPrefix("INTERFACE|"))
 	require.Empty(t, a.config["VRF|VrfBoot"])
 
-	// pxe mode does not need the acl tables
+	// PXE mode does not need the ACL tables
 	require.NoError(t, a.Apply(t.Context(), pxeConf([]string{"Ethernet0", "Ethernet4"})))
 }
 
@@ -313,14 +313,14 @@ func TestApplier_MoveRefreshesRifOidMap(t *testing.T) {
 	a := newTestApplier(t, baseConfigDB)
 	a.apply(t, l3Conf([]string{"Ethernet0", "Ethernet4"}))
 
-	// the rif shows up in COUNTERS_DB and ASIC_DB only after the initial oid map refresh
+	// the RIF shows up in COUNTERS_DB and ASIC_DB only after the initial OID map refresh
 	ctx := t.Context()
 	require.NoError(t, a.db.Counters.Client().HSet(ctx, db.Key{"COUNTERS_RIF_NAME_MAP"}, db.Val{"Ethernet0": "oid:0x6000000000001"}))
 	require.NoError(t, a.db.Asic.Client().HSet(ctx, db.Key{"ASIC_STATE", "SAI_OBJECT_TYPE_ROUTER_INTERFACE", "oid:0x6000000000001"}, db.Val{"SAI_ROUTER_INTERFACE_ATTR_TYPE": "SAI_ROUTER_INTERFACE_TYPE_PORT"}))
 	a.previousCfg = &types.Conf{Name: "force"}
 	a.rifOidMap = map[string]db.OID{}
 
-	// the move must wait for the rif to disappear; simulate the asic releasing it
+	// the move must wait for the RIF to disappear; simulate the ASIC releasing it
 	go func() {
 		time.Sleep(200 * time.Millisecond)
 		_ = a.db.Asic.Client().Del(context.Background(), db.Key{"ASIC_STATE", "SAI_OBJECT_TYPE_ROUTER_INTERFACE", "oid:0x6000000000001"})

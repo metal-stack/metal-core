@@ -5,10 +5,10 @@ import (
 	"fmt"
 )
 
-// ensureInterfaceIsVrfMember puts the interface into the given vrf.
+// ensureInterfaceIsVrfMember puts the interface into the given VRF.
 //
-// If the interface is already a routed interface in a different vrf (or in the default vrf),
-// its routing configuration is removed first and the router interface is recreated in the desired vrf.
+// If the interface is already a routed interface in a different VRF (or in the default VRF),
+// its routing configuration is removed first and the router interface is recreated in the desired VRF.
 func (a *Applier) ensureInterfaceIsVrfMember(ctx context.Context, interfaceName, vrfName string) error {
 	current, err := a.db.Config.GetVrfMembership(ctx, interfaceName)
 	if err != nil {
@@ -31,7 +31,7 @@ func (a *Applier) ensureInterfaceIsVrfMember(ctx context.Context, interfaceName,
 	return a.db.Config.SetVrfMember(ctx, interfaceName, vrfName)
 }
 
-// ensureNotVrfMember removes the interface from any non-default vrf, keeping it a routed interface in the default vrf.
+// ensureNotVrfMember removes the interface from any non-default VRF, keeping it a routed interface in the default VRF.
 func (a *Applier) ensureNotVrfMember(ctx context.Context, interfaceName string) error {
 	current, err := a.db.Config.GetVrfMembership(ctx, interfaceName)
 	if err != nil {

@@ -161,7 +161,7 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		AdminStatus:   map[string]types.PortStatus{},
 	}
 
-	// boot prefixes assigned by the metal-apiserver to unprovisioned ports (MEP-20)
+	// boot prefixes assigned by the metal-apiserver to unprovisioned ports
 	bootPrefixes := map[string]string{}
 
 	for _, nic := range s.Nics {
@@ -259,10 +259,10 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 	return switcherConfig, nil
 }
 
-// buildBootConfig builds the boot vrf configuration for the unprovisioned ports (MEP-20).
+// buildBootConfig builds the boot VRF configuration for the unprovisioned ports.
 //
-// The boot vni and the per port boot prefixes are assigned by the metal-apiserver from the boot network of the partition,
-// the rdnss come from the boot configuration of the partition.
+// The boot VNI and per port boot prefixes are assigned by the metal-apiserver from the partition's boot network;
+// RDNSS addresses come from the partition's boot configuration.
 // Ports without a valid boot prefix are left out, so that only they fail to be configured instead of the whole switch.
 func (c *Core) buildBootConfig(s *apiv2.Switch, unprovisioned []string, bootPrefixes map[string]string) (*types.BootConf, error) {
 	if s.BootVni == nil {

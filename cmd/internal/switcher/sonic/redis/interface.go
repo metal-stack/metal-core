@@ -7,8 +7,8 @@ import (
 	"github.com/avast/retry-go/v4"
 )
 
-// ensureNotRouted removes the layer 3 configuration of the interface (vrf membership and addresses)
-// and waits until the router interface is gone from the asic.
+// ensureNotRouted removes the layer 3 configuration of the interface (VRF membership and addresses)
+// and waits until the router interface is gone from the ASIC.
 func (a *Applier) ensureNotRouted(ctx context.Context, interfaceName string) error {
 	configured, err := a.db.Config.ExistInterfaceConfiguration(ctx, interfaceName)
 	if err != nil {
@@ -29,8 +29,8 @@ func (a *Applier) ensureNotRouted(ctx context.Context, interfaceName string) err
 	}
 
 	if configured && !known {
-		// the router interface may have been created after the oid maps were refreshed at the start of this apply,
-		// without its oid we can not wait for the asic to release it before the interface is recreated in another vrf
+		// the router interface may have been created after the OID maps were refreshed at the start of this apply;
+		// without its OID, we cannot wait for the ASIC to release it before recreating the interface in another VRF
 		if err := a.refreshRifOidMap(ctx); err != nil {
 			return err
 		}

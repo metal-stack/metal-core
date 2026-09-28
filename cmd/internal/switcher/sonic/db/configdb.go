@@ -23,7 +23,7 @@ type (
 		Mtu         string
 		// Index is the physical port number as defined in the platform port config.
 		Index string
-		// Lanes are the comma separated asic lanes of the port as defined in the platform port config.
+		// Lanes are the comma separated ASIC lanes of the port as defined in the platform port config.
 		Lanes string
 	}
 
@@ -187,7 +187,7 @@ func (d *ConfigDB) CreateVrf(ctx context.Context, vrf string, vni uint32) error 
 	return d.c.HSet(ctx, key, Val{"fallback": "false", "vni": fmt.Sprintf("%d", vni)})
 }
 
-// GetVrfVni returns the vni of the given vrf. If the vrf has no vni field, the vni is derived from the vrf name (Vrf<vni>).
+// GetVrfVni returns the VNI of the given VRF. If the VRF has no VNI field, the VNI is derived from its name (Vrf<vni>).
 func (d *ConfigDB) GetVrfVni(ctx context.Context, vrf string) (uint32, error) {
 	key := Key{vrfTable, vrf}
 
@@ -328,7 +328,7 @@ func (d *ConfigDB) DeleteInterfaceConfiguration(ctx context.Context, interfaceNa
 	return d.c.Del(ctx, key)
 }
 
-// GetInterfaceAddresses returns the addresses (in cidr notation) configured on the interface.
+// GetInterfaceAddresses returns the addresses (in CIDR notation) configured on the interface.
 func (d *ConfigDB) GetInterfaceAddresses(ctx context.Context, interfaceName string) ([]string, error) {
 	pattern := Key{interfaceTable, interfaceName, "*"}
 
@@ -348,11 +348,11 @@ func (d *ConfigDB) GetInterfaceAddresses(ctx context.Context, interfaceName stri
 	return addresses, nil
 }
 
-// SetInterfaceAddress adds the address (in cidr notation) to the interface. The interface must already exist in the INTERFACE table.
+// SetInterfaceAddress adds the address (in CIDR notation) to the interface. The interface must already exist in the INTERFACE table.
 func (d *ConfigDB) SetInterfaceAddress(ctx context.Context, interfaceName, address string) error {
 	key := Key{interfaceTable, interfaceName, address}
 
-	// an entry without fields can not be stored in redis, sonic uses a NULL field for this purpose
+	// an entry without fields cannot be stored in Redis; SONiC uses a NULL field for this purpose
 	return d.c.HSet(ctx, key, Val{null: null})
 }
 
@@ -362,7 +362,7 @@ func (d *ConfigDB) DeleteInterfaceAddress(ctx context.Context, interfaceName, ad
 	return d.c.Del(ctx, key)
 }
 
-// GetACLTables returns the names of all acl tables.
+// GetACLTables returns the names of all ACL tables.
 func (d *ConfigDB) GetACLTables(ctx context.Context) ([]string, error) {
 	t := d.c.GetTable(Key{aclTable})
 
@@ -379,7 +379,7 @@ func (d *ConfigDB) GetACLTables(ctx context.Context) ([]string, error) {
 	return tables, nil
 }
 
-// GetACLTablePorts returns the ports the acl table is bound to.
+// GetACLTablePorts returns the ports the ACL table is bound to.
 func (d *ConfigDB) GetACLTablePorts(ctx context.Context, table string) ([]string, error) {
 	key := Key{aclTable, table}
 
@@ -400,7 +400,7 @@ func (d *ConfigDB) GetACLTablePorts(ctx context.Context, table string) ([]string
 	return ports, nil
 }
 
-// SetACLTablePorts binds the acl table to exactly the given ports, an empty list unbinds the table from all ports.
+// SetACLTablePorts binds the ACL table to exactly the given ports; an empty list unbinds it from all ports.
 func (d *ConfigDB) SetACLTablePorts(ctx context.Context, table string, ports []string) error {
 	key := Key{aclTable, table}
 

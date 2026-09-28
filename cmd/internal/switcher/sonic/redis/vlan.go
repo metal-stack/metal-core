@@ -7,7 +7,7 @@ import (
 	"github.com/avast/retry-go/v4"
 )
 
-// ensureNotBridged removes the interface from all vlans and waits until the bridge port is gone from the asic.
+// ensureNotBridged removes the interface from all VLANs and waits until the bridge port is gone from the ASIC.
 func (a *Applier) ensureNotBridged(ctx context.Context, interfaceName string) error {
 	vlans, err := a.db.Config.GetVlanMembership(ctx, interfaceName)
 	if err != nil {

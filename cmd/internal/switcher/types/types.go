@@ -17,23 +17,20 @@ type (
 		AdditionalMgmtRoutes []string
 		PXEVlanID            uint16
 		SetSrcLoopback       bool
-		// Boot holds the configuration of the boot vrf (MEP-20). If nil, unprovisioned ports are put into the PXE vlan.
+		// Boot holds the boot VRF configuration. If nil, unprovisioned ports are put into the PXE VLAN.
 		Boot *BootConf
 	}
 
-	// BootConf describes the layer 3 boot vrf for unprovisioned ports (MEP-20).
-	// Every unprovisioned port becomes a routed interface in this vrf with its own /64 prefix
+	// BootConf describes the layer 3 boot VRF for unprovisioned ports.
+	// Every unprovisioned port becomes a routed interface in this VRF with its own /64 prefix
 	// from which booting machines derive their address via SLAAC.
 	BootConf struct {
-		// Vrf is the name of the boot vrf.
 		Vrf string
-		// VNI is the layer 3 vni of the boot vrf.
 		VNI uint32
-		// VLANID is the switch-local vlan that maps the vni, filled by FillVLANIDs.
+		// VLANID is the switch-local VLAN that maps the VNI, filled by FillVLANIDs.
 		VLANID uint16
-		// RDNSS are the recursive dns server addresses that are advertised to booting machines.
+		// RDNSS are the recursive DNS server addresses advertised to booting machines.
 		RDNSS []string
-		// Ports maps every unprovisioned port to its boot prefix.
 		Ports map[string]BootPort
 	}
 

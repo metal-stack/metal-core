@@ -52,8 +52,8 @@ func vlanIDForVNI(m vlan.Mapping, vni uint32) (uint16, error) {
 	return vl, nil
 }
 
-// BootPortFromPrefix builds the boot port configuration for a boot prefix assigned by the metal-apiserver (MEP-20).
-// The prefix must be an ipv6 /64, the switch takes its first address.
+// BootPortFromPrefix builds the boot port configuration for a prefix assigned by the metal-apiserver.
+// The prefix must be an IPv6 /64; the switch takes its first address.
 func BootPortFromPrefix(prefix string) (BootPort, error) {
 	p, err := netip.ParsePrefix(prefix)
 	if err != nil {
