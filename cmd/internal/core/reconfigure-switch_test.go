@@ -153,12 +153,12 @@ func TestBuildSwitcherConfigL3(t *testing.T) {
 		"Ethernet8": {Prefix: "fd00:20:0:2::/64", Address: "fd00:20:0:2::1/64"},
 	}, actual.Boot.Ports, "ports without or with an invalid boot prefix are left out")
 
-	// a boot vni that collides with a tenant vni is rejected
+	// a boot VNI that collides with a tenant VNI is rejected
 	s.BootVni = new(uint32(104001))
 	_, err = c.buildSwitcherConfig(s)
 	require.ErrorContains(t, err, "boot vni 104001 collides with the vni of vrf Vrf104001")
 
-	// rdnss that are no ipv6 addresses are rejected
+	// RDNSS addresses must be IPv6 addresses
 	s.BootRdnss = []string{"10.0.0.53"}
 	_, err = c.buildSwitcherConfig(s)
 	require.ErrorContains(t, err, `boot rdnss address "10.0.0.53" must be an ipv6 address`)
@@ -167,12 +167,12 @@ func TestBuildSwitcherConfigL3(t *testing.T) {
 	require.ErrorContains(t, err, `invalid boot rdnss address "dns"`)
 	s.BootRdnss = nil
 
-	// without a boot network in the partition the switch can not be configured in l3 mode
+	// without a boot network in the partition, the switch cannot be configured in L3 mode
 	s.BootVni = nil
 	_, err = c.buildSwitcherConfig(s)
 	require.ErrorContains(t, err, "requires a boot network in partition partition-1")
 
-	// pxe mode does not build a boot config
+	// PXE mode does not build a boot config
 	c.boot = BootConfig{Mode: BootModePXE}
 	actual, err = c.buildSwitcherConfig(s)
 	require.NoError(t, err)

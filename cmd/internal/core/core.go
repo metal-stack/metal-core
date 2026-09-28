@@ -66,23 +66,23 @@ type (
 	// BootMode defines how unprovisioned machines boot.
 	BootMode string
 
-	// BootConfig configures the boot of unprovisioned machines (MEP-20).
+	// BootConfig configures the boot of unprovisioned machines.
 	BootConfig struct {
-		// Mode is pxe (ports in the pxe vlan) or l3 (ports in the ipv6 boot vrf).
+		// Mode is "pxe" (ports in the PXE VLAN) or "l3" (ports in the IPv6 boot VRF).
 		Mode BootMode
 	}
 )
 
 const (
-	// BootModePXE puts unprovisioned ports into the pxe vlan, machines boot via dhcp/pxe.
+	// BootModePXE puts unprovisioned ports into the PXE VLAN; machines boot via DHCP/PXE.
 	BootModePXE = BootMode("pxe")
-	// BootModeL3 puts unprovisioned ports into the ipv6 boot vrf, machines boot via slaac and a bmc mounted iso (MEP-20).
+	// BootModeL3 puts unprovisioned ports into the IPv6 boot VRF; machines boot via SLAAC and an ISO mounted through the BMC.
 	BootModeL3 = BootMode("l3")
 )
 
 // NewBootConfig validates the given boot settings.
 //
-// In boot mode l3 the boot vni, the per port boot prefixes and the rdnss are configured in the metal-apiserver
+// In L3 boot mode, the boot VNI, per port boot prefixes, and RDNSS addresses are configured in the metal-apiserver
 // and delivered with the switch (Switch.boot_vni, SwitchNic.boot_prefix, Switch.boot_rdnss).
 func NewBootConfig(mode string) (BootConfig, error) {
 	c := BootConfig{
@@ -97,7 +97,7 @@ func NewBootConfig(mode string) (BootConfig, error) {
 	}
 }
 
-// validateRDNSS checks that the given rdnss addresses are ipv6 addresses, the only ones FRR accepts in router advertisements.
+// validateRDNSS checks that the given RDNSS addresses are IPv6 addresses, the only ones FRR accepts in router advertisements.
 func validateRDNSS(rdnss []string) error {
 	for _, server := range rdnss {
 		addr, err := netip.ParseAddr(server)
