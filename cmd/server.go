@@ -82,12 +82,12 @@ func Run() {
 		os.Exit(1)
 	}
 
-	boot, err := core.NewBootConfig(cfg.BootMode)
+	bootMode, err := core.ParseBootMode(cfg.BootMode)
 	if err != nil {
-		log.Error("invalid boot configuration", "error", err)
+		log.Error("invalid boot mode", "error", err)
 		os.Exit(1)
 	}
-	if _, isSonic := nos.(*sonic.Sonic); boot.Mode == core.BootModeL3 && !isSonic {
+	if _, isSonic := nos.(*sonic.Sonic); bootMode == core.BootModeL3 && !isSonic {
 		log.Error("boot mode l3 is only supported on SONiC")
 		os.Exit(1)
 	}
@@ -115,7 +115,7 @@ func Run() {
 		Metrics:               metrics,
 		PXEVlanID:             cfg.PXEVlanID,
 		BGPNeighborStateFile:  cfg.BGPNeighborStateFile,
-		Boot:                  boot,
+		BootMode:              bootMode,
 	})
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

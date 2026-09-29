@@ -37,7 +37,7 @@ iface {{ .Port }}
 
 auto bridge
 iface bridge
-    bridge-ports vni{{ $PXEVni }}{{ range .Ports.Unprovisioned }} {{ . }}{{ end }}{{ range .Ports.BladePorts }} {{ . }}{{ end }}{{ range $vrf, $t := .Ports.Vrfs }} vni{{ $t.VNI }}{{ end }}
+    bridge-ports vni{{ $PXEVni }}{{ range .Ports.Unprovisioned }} {{ .Port }}{{ end }}{{ range .Ports.BladePorts }} {{ . }}{{ end }}{{ range $vrf, $t := .Ports.Vrfs }} vni{{ $t.VNI }}{{ end }}
     bridge-vids {{ $PXEVlanID }}{{ range $vrf, $t := .Ports.Vrfs }} {{ $t.VLANID }}{{ end }}{{ range $vids := .AdditionalBridgeVIDs }} {{ $vids }}{{ end }}
     bridge-vlan-aware yes
 
@@ -96,8 +96,8 @@ iface vni{{ $PXEVni }}
 
 {{- range .Ports.Unprovisioned }}
 
-auto {{ . }}
-iface {{ . }}
+auto {{ .Port }}
+iface {{ .Port }}
     mtu 9000
     bridge-access {{ $PXEVlanID }}
 {{- end }}

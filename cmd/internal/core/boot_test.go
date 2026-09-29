@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNewBootConfig(t *testing.T) {
+func TestParseBootMode(t *testing.T) {
 	tests := []struct {
 		name    string
 		mode    string
@@ -18,13 +18,13 @@ func TestNewBootConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewBootConfig(tt.mode)
+			got, err := ParseBootMode(tt.mode)
 			if tt.wantErr != "" {
 				require.ErrorContains(t, err, tt.wantErr)
 				return
 			}
 			require.NoError(t, err)
-			require.Equal(t, BootMode(tt.mode), got.Mode)
+			require.Equal(t, BootMode(tt.mode), got)
 		})
 	}
 }

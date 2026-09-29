@@ -8,16 +8,8 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
-type (
-	// BootMode defines how unprovisioned machines boot.
-	BootMode string
-
-	// BootConfig configures the boot of unprovisioned machines.
-	BootConfig struct {
-		// Mode is "pxe" (ports in the PXE VLAN) or "l3" (ports in the IPv6 boot VRF).
-		Mode BootMode
-	}
-)
+// BootMode defines how unprovisioned machines boot.
+type BootMode string
 
 const (
 	// BootModePXE puts unprovisioned ports into the PXE VLAN; machines boot via DHCP/PXE.
@@ -26,20 +18,13 @@ const (
 	BootModeL3 = BootMode("l3")
 )
 
-// NewBootConfig validates the given boot settings.
-//
-// In L3 boot mode, the boot VNI, per port boot prefixes, and RDNSS addresses are configured in the metal-apiserver
-// and delivered with the switch (Switch.boot_vni, SwitchNic.boot_prefix, Switch.boot_rdnss).
-func NewBootConfig(mode string) (BootConfig, error) {
-	c := BootConfig{
-		Mode: BootMode(mode),
-	}
-
-	switch c.Mode {
+// ParseBootMode validates the configured boot mode.
+func ParseBootMode(mode string) (BootMode, error) {
+	switch BootMode(mode) {
 	case BootModePXE, BootModeL3:
-		return c, nil
+		return BootMode(mode), nil
 	default:
-		return BootConfig{}, fmt.Errorf("unknown boot mode %q, must be one of %q or %q", mode, BootModePXE, BootModeL3)
+		return "", fmt.Errorf("unknown boot mode %q, must be one of %q or %q", mode, BootModePXE, BootModeL3)
 	}
 }
 
@@ -57,38 +42,34 @@ func validateRDNSS(rdnss []string) error {
 	return nil
 }
 
-// buildBootConfig builds the boot VRF configuration for the unprovisioned ports.
+// configureBoot adds the boot VRF and DNS servers to the switch configuration.
 //
 // The boot VNI and per port boot prefixes are assigned by the metal-apiserver from the partition's boot network;
 // RDNSS addresses come from the partition's boot configuration.
-// Ports without a valid boot prefix are left out, so that only they fail to be configured instead of the whole switch.
-func (c *Core) buildBootConfig(s *apiv2.Switch, unprovisioned []string, bootPrefixes map[string]string) (*types.BootConf, error) {
+func (c *Core) configureBoot(s *apiv2.Switch, cfg *types.Conf) error {
 	if s.BootVni == nil {
-		return nil, fmt.Errorf("boot mode l3 requires a boot network in partition %s, the switch has no boot vni", s.Partition)
+		return fmt.Errorf("boot mode l3 requires a boot network in partition %s, the switch has no boot vni", s.Partition)
 	}
 	if err := validateRDNSS(s.BootRdnss); err != nil {
-		return nil, err
+		return err
 	}
 
-	ports := map[string]types.BootPort{}
-	for _, port := range unprovisioned {
-		prefix, ok := bootPrefixes[port]
-		if !ok {
-			c.log.Warn("unprovisioned port has no boot prefix assigned by the metal-apiserver, port is left out", "port", port)
-			continue
-		}
-		bootPort, err := types.BootPortFromPrefix(prefix)
-		if err != nil {
-			c.log.Warn("unprovisioned port has an invalid boot prefix, port is left out", "port", port, "error", err)
-			continue
-		}
-		ports[port] = bootPort
-	}
+	cfg.Ports.Vrfs[types.BootVrfName] = &types.Vrf{VNI: *s.BootVni}
+	cfg.BootRDNSS = s.BootRdnss
+	return nil
+}
 
-	return &types.BootConf{
-		Vrf:   types.BootVrfName,
-		VNI:   *s.BootVni,
-		RDNSS: s.BootRdnss,
-		Ports: ports,
-	}, nil
+// bootPrefix validates the API-assigned prefix. An invalid or missing prefix only
+// prevents this port from being configured, rather than the whole switch.
+func (c *Core) bootPrefix(nic *apiv2.SwitchNic) netip.Prefix {
+	if nic.BootPrefix == nil {
+		c.log.Warn("unprovisioned port has no boot prefix assigned by the metal-apiserver, port is left out", "port", nic.Name)
+		return netip.Prefix{}
+	}
+	prefix, err := types.ParseBootPrefix(*nic.BootPrefix)
+	if err != nil {
+		c.log.Warn("unprovisioned port has an invalid boot prefix, port is left out", "port", nic.Name, "error", err)
+		return netip.Prefix{}
+	}
+	return prefix
 }

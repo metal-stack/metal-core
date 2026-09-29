@@ -19,8 +19,12 @@ ports:
     - swp31
     - swp32
   unprovisioned:
-    - swp4
-    - swp5
+    swp4:
+      port: swp4
+      bootprefix: fd00:20:0:100::/64
+    swp5:
+      port: swp5
+      bootprefix: fd00:20:0:101::/64
   firewalls:
     swp3:
       port: swp3
@@ -31,6 +35,9 @@ ports:
       cidrs:
         - "10.0.2.1/32"
   vrfs:
+    VrfBoot:
+      vni: 104000
+      vlanid: 1002
     vrf104001:
       vlanid: 4001
       vni: 104001
@@ -47,16 +54,5 @@ additionalbridgevids:
   - 201-256
   - 301-356
 pxevlanid: 966
-boot:
-  vrf: VrfBoot
-  vni: 104000
-  vlanid: 1002
-  rdnss:
-    - fd00:20:ffff::53
-  ports:
-    swp4:
-      prefix: fd00:20:0:100::/64
-      address: fd00:20:0:100::1/64
-    swp5:
-      prefix: fd00:20:0:101::/64
-      address: fd00:20:0:101::1/64
+bootrdnss:
+  - fd00:20:ffff::53

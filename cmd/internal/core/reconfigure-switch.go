@@ -155,14 +155,11 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 	p := types.Ports{
 		Underlay:      c.spineUplinks,
 		BladePorts:    c.additionalBridgePorts,
-		Unprovisioned: []string{},
+		Unprovisioned: map[string]*types.UnprovisionedPort{},
 		Vrfs:          map[string]*types.Vrf{},
 		Firewalls:     map[string]*types.Firewall{},
 		AdminStatus:   map[string]types.PortStatus{},
 	}
-
-	// boot prefixes assigned by the metal-apiserver to unprovisioned ports
-	bootPrefixes := map[string]string{}
 
 	for _, nic := range s.Nics {
 		if nic == nil {
@@ -189,12 +186,11 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		}
 
 		if pointer.SafeDeref(nic.Vrf) == "" {
-			if !slices.Contains(p.Unprovisioned, port) {
-				p.Unprovisioned = append(p.Unprovisioned, port)
+			unprovisioned := &types.UnprovisionedPort{Port: port}
+			if c.bootMode == BootModeL3 {
+				unprovisioned.BootPrefix = c.bootPrefix(nic)
 			}
-			if nic.BootPrefix != nil {
-				bootPrefixes[port] = *nic.BootPrefix
-			}
+			p.Unprovisioned[port] = unprovisioned
 			continue
 		}
 
@@ -231,12 +227,10 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 
 	switcherConfig.Ports = p
 
-	if c.boot.Mode == BootModeL3 {
-		boot, err := c.buildBootConfig(s, p.Unprovisioned, bootPrefixes)
-		if err != nil {
+	if c.bootMode == BootModeL3 {
+		if err := c.configureBoot(s, switcherConfig); err != nil {
 			return nil, err
 		}
-		switcherConfig.Boot = boot
 	}
 
 	c.nos.SanitizeConfig(switcherConfig)

@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"fmt"
+	"net/netip"
 	"slices"
 	"strings"
 
@@ -16,7 +17,7 @@ const (
 )
 
 // configureBootPort makes the port a routed interface in the boot VRF with its own boot prefix.
-func (a *Applier) configureBootPort(ctx context.Context, interfaceName string, adminStatus types.PortStatus, vrfName string, bootPort types.BootPort) error {
+func (a *Applier) configureBootPort(ctx context.Context, interfaceName string, adminStatus types.PortStatus, vrfName string, prefix netip.Prefix) error {
 	// remove VLAN membership before making the port a routed interface
 	err := a.ensureNotBridged(ctx, interfaceName)
 	if err != nil {
@@ -36,7 +37,9 @@ func (a *Applier) configureBootPort(ctx context.Context, interfaceName string, a
 		return err
 	}
 
-	return a.ensureInterfaceAddresses(ctx, interfaceName, []string{bootPort.Address})
+	// The switch always uses ::1 within the boot prefix.
+	address := netip.PrefixFrom(prefix.Masked().Addr().Next(), prefix.Bits()).String()
+	return a.ensureInterfaceAddresses(ctx, interfaceName, []string{address})
 }
 
 // ensureInterfaceAddresses configures exactly the given addresses on the interface.

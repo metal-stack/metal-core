@@ -21,8 +21,10 @@ ports:
       cidrs:
         - "10.0.2.1/32"
   unprovisioned:
-    - swp4
-    - swp5
+    swp4:
+      port: swp4
+    swp5:
+      port: swp5
   vrfs:
     vrf104001:
       vlanid: 4001
