@@ -1,4 +1,4 @@
-//go:build boundary
+//go:build client && boundary
 
 package core
 
@@ -64,7 +64,7 @@ func TestAPIBoundary(t *testing.T) {
 		Id:                       new("boundary-boot"),
 		Partition:                new(partitionID),
 		Type:                     apiv2.NetworkType_NETWORK_TYPE_BOOT,
-		Prefixes:                 []string{"fd00:20::/48"},
+		Prefixes:                 []string{"fd00:20::/62"},
 		Vrf:                      new(uint32(42)),
 		DefaultChildPrefixLength: &apiv2.ChildPrefixLength{Ipv6: new(uint32(64))},
 	})
@@ -100,18 +100,26 @@ func TestAPIBoundary(t *testing.T) {
 		}
 		return resp.Switch, nil
 	}
-	prefixes := map[string]netip.Prefix{
-		"Ethernet0": netip.MustParsePrefix("fd00:20::/64"),
-		"Ethernet4": netip.MustParsePrefix("fd00:20:0:1::/64"),
-	}
-	assertPrefixes := func(ct *assert.CollectT, sw *apiv2.Switch) {
+	pool := netip.MustParsePrefix("fd00:20::/48")
+	assertPrefixes := func(ct *assert.CollectT, sw *apiv2.Switch) map[string]netip.Prefix {
 		got := map[string]netip.Prefix{}
+		seen := map[netip.Prefix]string{}
 		for _, nic := range sw.Nics {
 			prefix, err := netip.ParsePrefix(nic.GetBootPrefix())
-			assert.NoError(ct, err)
+			if !assert.NoError(ct, err) {
+				continue
+			}
+			assert.Equal(ct, 64, prefix.Bits())
+			assert.Equal(ct, prefix.Masked(), prefix)
+			assert.True(ct, pool.Contains(prefix.Addr()), "boot prefix must belong to the partition pool")
+			assert.NotContains(ct, seen, prefix, "active ports must have distinct boot prefixes")
+			seen[prefix] = nic.Name
 			got[nic.Name] = prefix
 		}
-		assert.Equal(ct, prefixes, got)
+		assert.Len(ct, got, 2)
+		assert.Contains(ct, got, "Ethernet0")
+		assert.Contains(ct, got, "Ethernet4")
+		return got
 	}
 	checkApplied := func(wantRDNSS []string, since time.Time) func(*assert.CollectT) {
 		return func(ct *assert.CollectT) {
@@ -119,7 +127,7 @@ func TestAPIBoundary(t *testing.T) {
 			if !assert.NoError(ct, err) {
 				return
 			}
-			assertPrefixes(ct, sw)
+			prefixes := assertPrefixes(ct, sw)
 			assert.Equal(ct, uint32(42), sw.GetBootVni())
 			assert.Equal(ct, wantRDNSS, sw.BootRdnss)
 			if assert.NotNil(ct, sw.LastSync) {
@@ -150,7 +158,7 @@ func TestAPIBoundary(t *testing.T) {
 	// Exercise the production polling/apply/heartbeat loop, not a test copy of it.
 	runBoundaryLoop(t, c, checkApplied(rdnss, time.Now()))
 
-	// Re-registration must preserve allocation, and partition changes must reach Apply.
+	// Re-registration must keep valid allocations, and partition changes must reach Apply.
 	require.NoError(t, c.RegisterSwitch(ctx, 5*time.Second))
 	rdnss = []string{"fd00:20:ffff::54"}
 	_, err = admin.Adminv2().Partition().Update(ctx, &adminv2.PartitionServiceUpdateRequest{
@@ -175,6 +183,11 @@ func TestAPIBoundary(t *testing.T) {
 		assertPrefixes(ct, sw)
 	})
 	nos.failWith(nil)
+	runBoundaryLoop(t, c, checkApplied(rdnss, time.Now()))
+
+	testBootPrefixReuseBoundary(t, admin, infra, artifacts.URL)
+	testProvisioningBoundary(t, c, nos, admin, infra, artifacts.URL)
+	// Both ports must return to boot configuration using their current API prefixes.
 	runBoundaryLoop(t, c, checkApplied(rdnss, time.Now()))
 }
 

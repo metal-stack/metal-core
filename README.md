@@ -90,6 +90,18 @@ infra-token permissions, per-port boot prefixes, boot VNI/RDNSS, heartbeat
 persistence, re-registration, a partition RDNSS update, and reporting/recovery
 after a backend apply failure. Both test processes run with the race detector.
 
+The provisioning scenario registers a machine against a pair of switches,
+receives its allocation through `BootService.Wait`, and reports installation
+success with a machine-scoped token. It checks the primary port's boot-to-tenant
+transition releases its boot-prefix reservation while leaving the idle
+port in boot configuration. Core's phone-home sender must persist a
+`PHONED_HOME` event with the expected payload. Deallocation must clear the tenant
+VRF and acquire an available boot prefix. A small pool proves that another
+switch can reuse the released prefixes; reclaim then uses added capacity while
+the old prefixes remain occupied. A separate scenario checks reuse after NIC
+removal and rejection when the pool is full. A controlled BMC client receives and
+acknowledges `MACHINE_CREATED` and `MACHINE_DELETED` through the real stream.
+
 The NOS and local network observations are controlled fixtures. The test does
 not configure host interfaces or validate SONiC/FRR or hardware ACL enforcement.
 Docker is required for the apiserver test dependencies. Both checkouts must use
