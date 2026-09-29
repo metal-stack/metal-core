@@ -9,13 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vishvananda/netlink"
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	infrav2 "github.com/metal-stack/api/go/metalstack/infra/v2"
 	"github.com/metal-stack/metal-core/cmd/internal/frr"
-	"github.com/metal-stack/metal-core/cmd/internal/net"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/metal-lib/pkg/pointer"
 
@@ -68,7 +66,7 @@ func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval, timeou
 					c.metrics.CountError("switch-reconfiguration")
 					continue
 				}
-				status, err := net.GetLinkStatus(nic.Name)
+				status, err := c.network.linkStatus(nic.Name)
 				req.PortStates[nic.Name] = status
 				if err != nil {
 					c.log.Error("could not check if link is up", "error", err, "nicname", nic.Name)
@@ -112,7 +110,7 @@ func (c *Core) reconfigureSwitch(ctx context.Context, hostname string) (*apiv2.S
 		return nil, fmt.Errorf("could not build switcher config: %w", err)
 	}
 
-	err = fillEth0Info(switchConfig, c.managementGateway)
+	err = c.network.fillManagementInfo(switchConfig, c.managementGateway)
 	if err != nil {
 		return nil, fmt.Errorf("could not gather information about eth0 nic: %w", err)
 	}
@@ -240,7 +238,7 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		return nil, err
 	}
 
-	m, err := vlan.ReadMapping()
+	m, err := c.network.vlanMapping()
 	if err != nil {
 		return nil, err
 	}
@@ -268,25 +266,4 @@ func mapLogLevel(level string) string {
 	default:
 		return "warnings"
 	}
-}
-
-func fillEth0Info(c *types.Conf, gw string) error {
-	c.Ports.Eth0 = types.Nic{}
-	eth0, err := netlink.LinkByName("eth0")
-	if err != nil {
-		return err
-	}
-	addrs, err := netlink.AddrList(eth0, netlink.FAMILY_V4)
-	if err != nil {
-		return err
-	}
-	if len(addrs) < 1 {
-		return fmt.Errorf("there is no ip address configured at eth0")
-	}
-
-	ip := addrs[0].IP
-	s, _ := addrs[0].Mask.Size()
-	c.Ports.Eth0.AddressCIDR = fmt.Sprintf("%s/%d", ip.String(), s)
-	c.Ports.Eth0.Gateway = gw
-	return nil
 }

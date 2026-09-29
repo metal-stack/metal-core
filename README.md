@@ -74,3 +74,25 @@ Ports of allocated machines and firewalls are moved out of `VrfBoot` (their addr
 | Environment variable | Default | Description |
 |---|---|---|
 | `METAL_CORE_BOOT_MODE` | `pxe` | `pxe` or `l3` |
+
+## API boundary test
+
+With matching `metal-apiserver` and `metal-core` checkouts, run from the
+`metal-apiserver` directory:
+
+```sh
+make test-metal-core-boundary METAL_CORE_DIR=../metal-core
+```
+
+This opt-in test starts the apiserver's end-to-end harness and runs metal-core's
+registration and polling loop in a separate Go test process over HTTP. It checks
+infra-token permissions, per-port boot prefixes, boot VNI/RDNSS, heartbeat
+persistence, re-registration, a partition RDNSS update, and reporting/recovery
+after a backend apply failure. Both test processes run with the race detector.
+
+The NOS and local network observations are controlled fixtures. The test does
+not configure host interfaces or validate SONiC/FRR or hardware ACL enforcement.
+Docker is required for the apiserver test dependencies. Both checkouts must use
+an API version containing the MEP-20 fields, either through a shared `go.work`
+or released dependencies. The `boundary` build tag excludes this test from the
+ordinary unit-test suite; invoking it without the harness fails explicitly.
