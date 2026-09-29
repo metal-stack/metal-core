@@ -5,10 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/netip"
 	"strconv"
 	"strings"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
@@ -38,7 +40,7 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 	)
 
 	if a.previousCfg != nil {
-		diff := cmp.Diff(a.previousCfg, cfg)
+		diff := cmp.Diff(a.previousCfg, cfg, cmpopts.EquateComparable(netip.Prefix{}))
 		if diff != "" {
 			changed = true
 			a.log.Debug("interface changes", "changes", diff)
@@ -83,32 +85,38 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 	if err != nil {
 		return err
 	}
-	if cfg.Boot != nil {
-		if err := a.ensureBootACLBinding(ctx, union(bound, cfg.Ports.Unprovisioned), true); err != nil {
+	var unprovisioned []string
+	for _, port := range cfg.Ports.Unprovisioned {
+		unprovisioned = append(unprovisioned, port.Port)
+	}
+	bootVrf := cfg.Ports.Vrfs[types.BootVrfName]
+	if bootVrf != nil {
+		if err := a.ensureBootACLBinding(ctx, union(bound, unprovisioned), true); err != nil {
 			return err
 		}
 
-		a.log.Debug("configure boot vrf", "vrf", cfg.Boot.Vrf, "vni", cfg.Boot.VNI)
-		if err := a.configureVrf(ctx, cfg.Boot.Vrf, &types.Vrf{VNI: cfg.Boot.VNI, VLANID: cfg.Boot.VLANID}); err != nil {
+		a.log.Debug("configure boot vrf", "vrf", types.BootVrfName, "vni", bootVrf.VNI)
+		if err := a.configureVrf(ctx, types.BootVrfName, bootVrf); err != nil {
 			errs = append(errs, err)
 		}
 
 		a.log.Debug("configure unprovisioned ports in boot vrf", "ports", cfg.Ports.Unprovisioned)
-		for _, interfaceName := range cfg.Ports.Unprovisioned {
-			bootPort, ok := cfg.Boot.Ports[interfaceName]
-			if !ok {
+		for _, port := range cfg.Ports.Unprovisioned {
+			interfaceName := port.Port
+			if !port.BootPrefix.IsValid() {
 				errs = append(errs, fmt.Errorf("no boot prefix for unprovisioned port %s", interfaceName))
 				failed[interfaceName] = true
 				continue
 			}
-			if err := a.configureBootPort(ctx, interfaceName, cfg.Ports.AdminStatus[interfaceName], cfg.Boot.Vrf, bootPort); err != nil {
+			if err := a.configureBootPort(ctx, interfaceName, cfg.Ports.AdminStatus[interfaceName], types.BootVrfName, port.BootPrefix); err != nil {
 				errs = append(errs, err)
 				failed[interfaceName] = true
 			}
 		}
 	} else {
 		a.log.Debug("configure unprovisioned ports", "ports", cfg.Ports.Unprovisioned)
-		for _, interfaceName := range cfg.Ports.Unprovisioned {
+		for _, port := range cfg.Ports.Unprovisioned {
+			interfaceName := port.Port
 			pxeVlan := fmt.Sprintf("Vlan%d", cfg.PXEVlanID)
 			if err := a.configureUnprovisionedPort(ctx, interfaceName, cfg.Ports.AdminStatus[interfaceName], pxeVlan); err != nil {
 				errs = append(errs, err)
@@ -127,6 +135,9 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 
 	a.log.Debug("configure port vrfs", "vrfs", cfg.Ports.Vrfs)
 	for vrfName, vrf := range cfg.Ports.Vrfs {
+		if vrfName == types.BootVrfName {
+			continue
+		}
 		if err := a.configureVrf(ctx, vrfName, vrf); err != nil {
 			errs = append(errs, err)
 		}
@@ -145,15 +156,15 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 
 	// unbind ports that successfully left the boot VRF
 	var keep []string
-	if cfg.Boot != nil {
-		keep = union(nil, cfg.Ports.Unprovisioned)
+	if bootVrf != nil {
+		keep = union(nil, unprovisioned)
 	}
 	for _, port := range bound {
 		if failed[port] {
 			keep = union(keep, []string{port})
 		}
 	}
-	if err := a.ensureBootACLBinding(ctx, keep, cfg.Boot != nil); err != nil {
+	if err := a.ensureBootACLBinding(ctx, keep, bootVrf != nil); err != nil {
 		errs = append(errs, err)
 	}
 
@@ -335,10 +346,6 @@ func (a *Applier) cleanupVrfs(ctx context.Context, cfg *types.Conf) error {
 		}
 
 		if _, found := cfg.Ports.Vrfs[vrfName]; found {
-			continue
-		}
-
-		if cfg.Boot != nil && vrfName == cfg.Boot.Vrf {
 			continue
 		}
 

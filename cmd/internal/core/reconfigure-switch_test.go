@@ -2,6 +2,7 @@ package core
 
 import (
 	"log/slog"
+	"net/netip"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -68,7 +69,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		Ports: types.Ports{
 			AdminStatus:   map[string]types.PortStatus{},
 			Underlay:      []string{"swp31", "swp32"},
-			Unprovisioned: []string{"swp1"},
+			Unprovisioned: map[string]*types.UnprovisionedPort{"swp1": {Port: "swp1"}},
 			Firewalls: map[string]*types.Firewall{
 				"swp3": {
 					Port: "swp3",
@@ -113,15 +114,12 @@ func (f *fakeNOS) SanitizeConfig(cfg *types.Conf) {
 }
 
 func TestBuildSwitcherConfigL3(t *testing.T) {
-	boot, err := NewBootConfig("l3")
-	require.NoError(t, err)
-
 	c := &Core{
 		log:          slog.Default(),
 		asn:          "420000001",
 		loopbackIP:   "10.0.0.1",
 		spineUplinks: []string{"Ethernet120"},
-		boot:         boot,
+		bootMode:     BootModeL3,
 		nos:          &fakeNOS{},
 	}
 
@@ -141,17 +139,17 @@ func TestBuildSwitcherConfigL3(t *testing.T) {
 
 	actual, err := c.buildSwitcherConfig(s)
 	require.NoError(t, err)
-	require.Equal(t, []string{"Ethernet0", "Ethernet8", "Ethernet12", "Ethernet16"}, actual.Ports.Unprovisioned)
-	require.NotNil(t, actual.Boot)
-	require.Equal(t, "VrfBoot", actual.Boot.Vrf)
-	require.Equal(t, uint32(104000), actual.Boot.VNI)
-	require.Equal(t, []string{"fd00:20:ffff::53"}, actual.Boot.RDNSS)
-	require.NotZero(t, actual.Boot.VLANID, "boot vrf must get a switch-local vlan")
-	require.NotEqual(t, actual.Boot.VLANID, actual.Ports.Vrfs["Vrf104001"].VLANID)
-	require.Equal(t, map[string]types.BootPort{
-		"Ethernet0": {Prefix: "fd00:20::/64", Address: "fd00:20::1/64"},
-		"Ethernet8": {Prefix: "fd00:20:0:2::/64", Address: "fd00:20:0:2::1/64"},
-	}, actual.Boot.Ports, "ports without or with an invalid boot prefix are left out")
+	require.Equal(t, map[string]*types.UnprovisionedPort{
+		"Ethernet0":  {Port: "Ethernet0", BootPrefix: netip.MustParsePrefix("fd00:20::/64")},
+		"Ethernet8":  {Port: "Ethernet8", BootPrefix: netip.MustParsePrefix("fd00:20:0:2::/64")},
+		"Ethernet12": {Port: "Ethernet12"}, // no prefix assigned yet
+		"Ethernet16": {Port: "Ethernet16"}, // invalid prefix is left out
+	}, actual.Ports.Unprovisioned)
+	require.Contains(t, actual.Ports.Vrfs, types.BootVrfName)
+	require.Equal(t, uint32(104000), actual.Ports.Vrfs[types.BootVrfName].VNI)
+	require.Equal(t, []string{"fd00:20:ffff::53"}, actual.BootRDNSS)
+	require.NotZero(t, actual.Ports.Vrfs[types.BootVrfName].VLANID, "boot vrf must get a switch-local vlan")
+	require.NotEqual(t, actual.Ports.Vrfs[types.BootVrfName].VLANID, actual.Ports.Vrfs["Vrf104001"].VLANID)
 
 	// a boot VNI that collides with a tenant VNI is rejected
 	s.BootVni = new(uint32(104001))
@@ -173,8 +171,12 @@ func TestBuildSwitcherConfigL3(t *testing.T) {
 	require.ErrorContains(t, err, "requires a boot network in partition partition-1")
 
 	// PXE mode does not build a boot config
-	c.boot = BootConfig{Mode: BootModePXE}
+	c.bootMode = BootModePXE
 	actual, err = c.buildSwitcherConfig(s)
 	require.NoError(t, err)
-	require.Nil(t, actual.Boot)
+	require.NotContains(t, actual.Ports.Vrfs, types.BootVrfName)
+	for _, port := range actual.Ports.Unprovisioned {
+		require.False(t, port.BootPrefix.IsValid())
+	}
+	require.Empty(t, actual.BootRDNSS)
 }

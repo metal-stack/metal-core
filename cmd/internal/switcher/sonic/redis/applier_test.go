@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"log/slog"
+	"net/netip"
 	"strings"
 	"testing"
 	"time"
@@ -45,17 +46,6 @@ var (
 		},
 		"VXLAN_TUNNEL": test.StringMap{
 			"vtep": test.StringMap{"src_ip": "10.0.0.1"},
-		},
-	}
-
-	bootConf = &types.BootConf{
-		Vrf:    types.BootVrfName,
-		VNI:    104000,
-		VLANID: 1001,
-		RDNSS:  []string{"fd00:20:ffff::53"},
-		Ports: map[string]types.BootPort{
-			"Ethernet0": {Prefix: "fd00:20:0:100::/64", Address: "fd00:20:0:100::1/64"},
-			"Ethernet4": {Prefix: "fd00:20:0:101::/64", Address: "fd00:20:0:101::1/64"},
 		},
 	}
 )
@@ -119,11 +109,15 @@ func (a *testApplier) keysWithPrefix(prefix string) []string {
 }
 
 func pxeConf(unprovisioned []string) *types.Conf {
+	ports := map[string]*types.UnprovisionedPort{}
+	for _, port := range unprovisioned {
+		ports[port] = &types.UnprovisionedPort{Port: port}
+	}
 	return &types.Conf{
 		Name:      "leaf01",
 		PXEVlanID: 4000,
 		Ports: types.Ports{
-			Unprovisioned: unprovisioned,
+			Unprovisioned: ports,
 			Vrfs:          map[string]*types.Vrf{},
 			Firewalls:     map[string]*types.Firewall{},
 			AdminStatus:   map[string]types.PortStatus{},
@@ -133,8 +127,16 @@ func pxeConf(unprovisioned []string) *types.Conf {
 
 func l3Conf(unprovisioned []string) *types.Conf {
 	c := pxeConf(unprovisioned)
-	boot := *bootConf
-	c.Boot = &boot
+	c.Ports.Vrfs[types.BootVrfName] = &types.Vrf{VNI: 104000, VLANID: 1001}
+	c.BootRDNSS = []string{"fd00:20:ffff::53"}
+	for _, port := range c.Ports.Unprovisioned {
+		switch port.Port {
+		case "Ethernet0":
+			port.BootPrefix = netip.MustParsePrefix("fd00:20:0:100::/64")
+		case "Ethernet4":
+			port.BootPrefix = netip.MustParsePrefix("fd00:20:0:101::/64")
+		}
+	}
 	return c
 }
 
@@ -159,9 +161,12 @@ func TestApplier_PxeToL3(t *testing.T) {
 	require.Equal(t, map[string]string{"vrf_name": "VrfBoot"}, a.config["VLAN_INTERFACE|Vlan1001"])
 	require.Equal(t, map[string]string{"vlan": "Vlan1001", "vni": "104000"}, a.config["VXLAN_TUNNEL_MAP|vtep|map_104000_Vlan1001"])
 
-	for port, bp := range bootConf.Ports {
+	for port, address := range map[string]string{
+		"Ethernet0": "fd00:20:0:100::1/64",
+		"Ethernet4": "fd00:20:0:101::1/64",
+	} {
 		require.Equal(t, map[string]string{"ipv6_use_link_local_only": "enable", "vrf_name": "VrfBoot"}, a.config["INTERFACE|"+port], port)
-		require.Equal(t, map[string]string{"NULL": "NULL"}, a.config["INTERFACE|"+port+"|"+bp.Address], port)
+		require.Equal(t, map[string]string{"NULL": "NULL"}, a.config["INTERFACE|"+port+"|"+address], port)
 		require.Equal(t, "9000", a.config["PORT|"+port]["mtu"])
 	}
 
@@ -200,6 +205,24 @@ func TestApplier_L3ToTenantAndBack(t *testing.T) {
 	require.Equal(t, "Ethernet0,Ethernet4", a.config["ACL_TABLE|BOOT_V6"]["ports@"])
 	require.Empty(t, a.config["VRF|Vrf104001"], "unused tenant vrf must be cleaned up")
 	require.Equal(t, map[string]string{"fallback": "false", "vni": "104000"}, a.config["VRF|VrfBoot"])
+}
+
+func TestApplier_L3KeepsBootVrfWithoutUnprovisionedPorts(t *testing.T) {
+	a := newTestApplier(t, baseConfigDB)
+	a.apply(t, l3Conf([]string{"Ethernet0", "Ethernet4"}))
+
+	c := l3Conf(nil)
+	c.Ports.Vrfs["Vrf104001"] = &types.Vrf{VNI: 104001, VLANID: 1002, Neighbors: []string{"Ethernet0", "Ethernet4"}}
+	a.apply(t, c)
+
+	require.Equal(t, map[string]string{"fallback": "false", "vni": "104000"}, a.config["VRF|VrfBoot"])
+	require.Empty(t, a.config["ACL_TABLE|BOOT_V6"]["ports@"])
+	require.Empty(t, a.config["ACL_TABLE|BOOT_V4"]["ports@"])
+	require.Empty(t, a.keysWithPrefix("VLAN_MEMBER|"))
+	for _, port := range []string{"Ethernet0", "Ethernet4"} {
+		require.Equal(t, map[string]string{"ipv6_use_link_local_only": "enable", "vrf_name": "Vrf104001"}, a.config["INTERFACE|"+port])
+		require.Equal(t, []string{"INTERFACE|" + port}, a.keysWithPrefix("INTERFACE|"+port))
+	}
 }
 
 func TestApplier_L3ToFirewall(t *testing.T) {
@@ -261,7 +284,7 @@ func TestApplier_L3MissingBootPrefixIsAnError(t *testing.T) {
 	a := newTestApplier(t, baseConfigDB)
 
 	c := l3Conf([]string{"Ethernet0", "Ethernet4"})
-	c.Boot.Ports = map[string]types.BootPort{"Ethernet0": bootConf.Ports["Ethernet0"]}
+	c.Ports.Unprovisioned["Ethernet4"].BootPrefix = netip.Prefix{}
 	err := a.Apply(t.Context(), c)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "no boot prefix for unprovisioned port Ethernet4")
@@ -306,14 +329,17 @@ func TestApplier_FailedBootTransitionDoesNotDuplicateBinding(t *testing.T) {
 
 	// Ethernet4 is bound already and now fails its boot transition because its prefix is missing
 	c := l3Conf([]string{"Ethernet0", "Ethernet4"})
-	c.Boot.Ports = map[string]types.BootPort{"Ethernet0": bootConf.Ports["Ethernet0"]}
+	c.Ports.Unprovisioned["Ethernet4"].BootPrefix = netip.Prefix{}
 	err := a.Apply(t.Context(), c)
 	require.ErrorContains(t, err, "no boot prefix for unprovisioned port Ethernet4")
 	a.refresh(t)
 
 	require.Equal(t, "Ethernet0,Ethernet4", a.config["ACL_TABLE|BOOT_V6"]["ports@"])
 	require.Equal(t, "Ethernet0,Ethernet4", a.config["ACL_TABLE|BOOT_V4"]["ports@"])
-	require.Equal(t, []string{"Ethernet0", "Ethernet4"}, c.Ports.Unprovisioned, "the config must not be modified")
+	require.Equal(t, map[string]*types.UnprovisionedPort{
+		"Ethernet0": {Port: "Ethernet0", BootPrefix: netip.MustParsePrefix("fd00:20:0:100::/64")},
+		"Ethernet4": {Port: "Ethernet4"},
+	}, c.Ports.Unprovisioned, "the config must not be modified")
 }
 
 func TestApplier_MoveRefreshesRifOidMap(t *testing.T) {

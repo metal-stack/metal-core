@@ -17,39 +17,25 @@ type (
 		AdditionalMgmtRoutes []string
 		PXEVlanID            uint16
 		SetSrcLoopback       bool
-		// Boot holds the boot VRF configuration. If nil, unprovisioned ports are put into the PXE VLAN.
-		Boot *BootConf
-	}
-
-	// BootConf describes the layer 3 boot VRF for unprovisioned ports.
-	// Every unprovisioned port becomes a routed interface in this VRF with its own /64 prefix
-	// from which booting machines derive their address via SLAAC.
-	BootConf struct {
-		Vrf string
-		VNI uint32
-		// VLANID is the switch-local VLAN that maps the VNI, filled by FillVLANIDs.
-		VLANID uint16
-		// RDNSS are the recursive DNS server addresses advertised to booting machines.
-		RDNSS []string
-		Ports map[string]BootPort
-	}
-
-	// BootPort holds the per port boot prefix.
-	BootPort struct {
-		// Prefix is the /64 that is advertised on the port, e.g. fd00:20:0:100::/64
-		Prefix string
-		// Address is the address of the switch inside the prefix, e.g. fd00:20:0:100::1/64
-		Address string
+		// BootRDNSS lists the IPv6 DNS servers advertised to unprovisioned machines.
+		BootRDNSS []string
 	}
 
 	Ports struct {
 		Eth0          Nic
 		Underlay      []string
-		Unprovisioned []string
+		Unprovisioned map[string]*UnprovisionedPort
 		BladePorts    []string
 		Vrfs          map[string]*Vrf
 		Firewalls     map[string]*Firewall
 		AdminStatus   map[string]PortStatus
+	}
+
+	UnprovisionedPort struct {
+		Port string
+		// BootPrefix is the IPv6 /64 advertised on this port in L3 boot mode.
+		// Its zero value means no valid boot prefix is available.
+		BootPrefix netip.Prefix
 	}
 
 	Vrf struct {

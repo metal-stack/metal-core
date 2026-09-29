@@ -20,6 +20,9 @@ func TestInterfacesTemplate(t *testing.T) {
 	for i := range tests {
 		tt := tests[i]
 		t.Run(tt, func(t *testing.T) {
+			if tt == "boot" {
+				t.Skip("L3 boot is only supported on SONiC")
+			}
 			c := readConf(t, path.Join("test_data", tt, "conf.yaml"))
 			tpl := InterfacesTemplate("")
 			verifyTemplate(t, tpl, &c, path.Join("test_data", tt, "interfaces"))
@@ -39,6 +42,9 @@ func TestCumulusFrrTemplate(t *testing.T) {
 	for i := range tests {
 		tt := tests[i]
 		t.Run(tt, func(t *testing.T) {
+			if tt == "boot" {
+				t.Skip("L3 boot is only supported on SONiC")
+			}
 			c := readConf(t, path.Join("test_data", tt, "conf.yaml"))
 			err := c.FillRouteMapsAndIPPrefixLists()
 			require.NoError(t, err)
@@ -61,6 +67,14 @@ func TestSonicFrrTpl(t *testing.T) {
 			verifyTemplate(t, tpl, &c, path.Join("test_data", tt, "sonic_frr.conf"))
 		})
 	}
+}
+
+func TestSonicFrrTplOmitsBootPortsWithoutPrefix(t *testing.T) {
+	c := readConf(t, "test_data/boot/conf.yaml")
+	c.Ports.Unprovisioned["swp6"] = &types.UnprovisionedPort{Port: "swp6"}
+	c.CapitalizeVrfName()
+	require.NoError(t, c.FillRouteMapsAndIPPrefixLists())
+	verifyTemplate(t, SonicFrrTemplate(""), &c, "test_data/boot/sonic_frr.conf")
 }
 
 func TestCustomInterfacesTemplate(t *testing.T) {

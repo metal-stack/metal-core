@@ -1,3 +1,4 @@
+{{- $bootVrf := index .Ports.Vrfs "VrfBoot" -}}
 {{- $ASN := .ASN -}}{{- $RouterId := .Loopback -}}! The frr version is not rendered since it seems to be optional.
 frr defaults datacenter
 hostname {{ .Name }}
@@ -17,14 +18,8 @@ debug zebra rib detailed
 debug zebra nht detailed
 {{- range $vrf, $t := .Ports.Vrfs }}
 !
-vrf Vrf{{ $t.VNI }}
+vrf {{ $vrf }}
  vni {{ $t.VNI }}
- exit-vrf
-{{- end }}
-{{- if .Boot }}
-!
-vrf {{ .Boot.Vrf }}
- vni {{ .Boot.VNI }}
  exit-vrf
 {{- end }}
 {{- range .Ports.Underlay }}
@@ -47,15 +42,17 @@ interface {{ . }} vrf {{ $vrf }}
  no ipv6 nd suppress-ra
 {{- end }}
 {{- end }}
-{{- if .Boot }}
-{{- range $port, $bp := .Boot.Ports }}
+{{- if $bootVrf }}
+{{- range .Ports.Unprovisioned }}
+{{- if .BootPrefix.IsValid }}
 !
-interface {{ $port }} vrf {{ $.Boot.Vrf }}
- ipv6 nd prefix {{ $bp.Prefix }}
+interface {{ .Port }} vrf VrfBoot
+ ipv6 nd prefix {{ .BootPrefix }}
  ipv6 nd ra-interval 6
  no ipv6 nd suppress-ra
-{{- range $.Boot.RDNSS }}
+{{- range $.BootRDNSS }}
  ipv6 nd rdnss {{ . }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
@@ -133,6 +130,7 @@ ip route {{ . }} {{ $.Ports.Eth0.Gateway }} nexthop-vrf mgmt
 {{- end }}
 !
 {{- range $vrf, $t := .Ports.Vrfs }}
+{{- if eq $vrf "VrfBoot" }}{{- continue }}{{- end }}
 router bgp {{ $ASN }} vrf {{ $vrf }}
  bgp router-id {{ $RouterId }}
  bgp bestpath as-path multipath-relax
@@ -187,8 +185,8 @@ route-map {{ .Name }} {{ .Policy }} {{ .Order }}
                 {{- end }}
         {{- end }}
 !{{- end }}{{- end }}
-{{- if .Boot }}
-router bgp {{ $ASN }} vrf {{ .Boot.Vrf }}
+{{- if $bootVrf }}
+router bgp {{ $ASN }} vrf VrfBoot
  bgp router-id {{ $RouterId }}
  bgp bestpath as-path multipath-relax
  !

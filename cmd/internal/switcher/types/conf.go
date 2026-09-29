@@ -3,7 +3,6 @@ package types
 import (
 	"fmt"
 	"net/netip"
-	"slices"
 
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 	"go4.org/netipx"
@@ -15,24 +14,19 @@ import (
 // if they are present in the given VLAN-Mapping
 // otherwise: new available VLAN IDs will be used
 func (c *Conf) FillVLANIDs(m vlan.Mapping) error {
-	for _, t := range c.Ports.Vrfs {
-		vl, err := vlanIDForVNI(m, t.VNI)
-		if err != nil {
-			return err
-		}
-		t.VLANID = vl
-	}
-	if c.Boot != nil {
-		for name, t := range c.Ports.Vrfs {
-			if t.VNI == c.Boot.VNI {
-				return fmt.Errorf("boot vni %d collides with the vni of vrf %s", c.Boot.VNI, name)
+	if boot := c.Ports.Vrfs[BootVrfName]; boot != nil {
+		for name, vrf := range c.Ports.Vrfs {
+			if name != BootVrfName && vrf.VNI == boot.VNI {
+				return fmt.Errorf("boot vni %d collides with the vni of vrf %s", boot.VNI, name)
 			}
 		}
-		vl, err := vlanIDForVNI(m, c.Boot.VNI)
+	}
+	for _, vrf := range c.Ports.Vrfs {
+		vl, err := vlanIDForVNI(m, vrf.VNI)
 		if err != nil {
 			return err
 		}
-		c.Boot.VLANID = vl
+		vrf.VLANID = vl
 	}
 	return nil
 }
@@ -52,28 +46,20 @@ func vlanIDForVNI(m vlan.Mapping, vni uint32) (uint16, error) {
 	return vl, nil
 }
 
-// BootPortFromPrefix builds the boot port configuration for a prefix assigned by the metal-apiserver.
-// The prefix must be an IPv6 /64; the switch takes its first address.
-func BootPortFromPrefix(prefix string) (BootPort, error) {
+// ParseBootPrefix validates and masks a boot prefix assigned by the metal-apiserver.
+// The prefix must be an IPv6 /64.
+func ParseBootPrefix(prefix string) (netip.Prefix, error) {
 	p, err := netip.ParsePrefix(prefix)
 	if err != nil {
-		return BootPort{}, fmt.Errorf("invalid boot prefix %q: %w", prefix, err)
+		return netip.Prefix{}, fmt.Errorf("invalid boot prefix %q: %w", prefix, err)
 	}
 	if !p.Addr().Is6() || p.Addr().Is4In6() {
-		return BootPort{}, fmt.Errorf("boot prefix %q must be an ipv6 prefix", prefix)
+		return netip.Prefix{}, fmt.Errorf("boot prefix %q must be an ipv6 prefix", prefix)
 	}
 	if p.Bits() != BootPrefixLength {
-		return BootPort{}, fmt.Errorf("boot prefix %q must be a /%d", prefix, BootPrefixLength)
+		return netip.Prefix{}, fmt.Errorf("boot prefix %q must be a /%d", prefix, BootPrefixLength)
 	}
-	p = p.Masked()
-
-	addr := p.Addr().As16()
-	addr[15] = 1
-
-	return BootPort{
-		Prefix:  p.String(),
-		Address: netip.PrefixFrom(netip.AddrFrom16(addr), BootPrefixLength).String(),
-	}, nil
+	return p.Masked(), nil
 }
 
 func (c *Conf) FillRouteMapsAndIPPrefixLists() error {
@@ -123,8 +109,10 @@ func (c *Conf) CapitalizeVrfName() {
 	caser := cases.Title(language.English)
 	capitalizedVRFs := make(map[string]*Vrf)
 	for name, vrf := range c.Ports.Vrfs {
-		s := caser.String(name)
-		capitalizedVRFs[s] = vrf
+		if name != BootVrfName {
+			name = caser.String(name)
+		}
+		capitalizedVRFs[name] = vrf
 	}
 
 	c.Ports.Vrfs = capitalizedVRFs
@@ -133,7 +121,7 @@ func (c *Conf) CapitalizeVrfName() {
 func (c *Conf) NewWithoutDownPorts() *Conf {
 	var (
 		underlay      []string
-		unprovisioned []string
+		unprovisioned = map[string]*UnprovisionedPort{}
 		bladePorts    []string
 		vrfs          = map[string]*Vrf{}
 		firewalls     = map[string]*Firewall{}
@@ -146,9 +134,12 @@ func (c *Conf) NewWithoutDownPorts() *Conf {
 		}
 	}
 
-	for _, port := range ports.Unprovisioned {
-		if ports.AdminStatus[port] != PortStatusDown {
-			unprovisioned = append(unprovisioned, port)
+	for name, port := range ports.Unprovisioned {
+		if ports.AdminStatus[port.Port] != PortStatusDown {
+			unprovisioned[name] = &UnprovisionedPort{
+				Port:       port.Port,
+				BootPrefix: port.BootPrefix,
+			}
 		}
 	}
 
@@ -191,16 +182,6 @@ func (c *Conf) NewWithoutDownPorts() *Conf {
 	}
 
 	newConf := *c
-	if c.Boot != nil {
-		boot := *c.Boot
-		boot.Ports = map[string]BootPort{}
-		for port, bp := range c.Boot.Ports {
-			if slices.Contains(unprovisioned, port) {
-				boot.Ports[port] = bp
-			}
-		}
-		newConf.Boot = &boot
-	}
 	newConf.Ports = Ports{
 		Eth0:          c.Ports.Eth0,
 		Underlay:      underlay,
