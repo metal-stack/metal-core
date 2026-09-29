@@ -31,6 +31,7 @@ type (
 		bootMode                BootMode
 
 		nos     switcher.NOS
+		network localNetwork
 		client  clientv2.Client
 		metrics *metrics.Metrics
 	}
@@ -80,6 +81,7 @@ func New(c Config) *Core {
 		spineUplinks:            c.SpineUplinks,
 		setSrcLoopback:          c.SetSrcLoopback,
 		nos:                     c.NOS,
+		network:                 systemNetwork{},
 		client:                  c.Client,
 		metrics:                 c.Metrics,
 		pxeVlanID:               c.PXEVlanID,
