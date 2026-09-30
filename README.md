@@ -24,9 +24,12 @@ Static VRFs are read from a file read from the `METAL_CORE_STATIC_VRFS_FILE` env
 The file may look like this:
 
 ```yaml
+# VRF name must be of the form `vrf<VNI>`, where VNI is the VNI of the network.
 vrf100:
+  # Which ports to add to the VRF.
   neighbors:
     - Ethernet0
+  # Which CIDRs to allow from the neighbors.
   cidrs:
     - 10.10.1.0/24
 ```
