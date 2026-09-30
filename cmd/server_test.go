@@ -68,10 +68,12 @@ func Test_getStaticVRFs(t *testing.T) {
 			},
 			want: types.Vrfs{
 				"vrf100": {
+					VNI:       100,
 					Neighbors: []string{"Ethernet0"},
 					Cidrs:     []string{"10.10.1.0/24"},
 				},
 				"vrf200": {
+					VNI:       200,
 					Neighbors: []string{"Ethernet1"},
 					Cidrs:     []string{"10.10.2.0/24"},
 				},

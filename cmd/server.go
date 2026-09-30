@@ -13,6 +13,7 @@ import (
 	"net/netip"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -174,18 +175,29 @@ func Run() {
 
 func getStaticVRFs(filePath string) (types.Vrfs, error) {
 	vrfs := types.Vrfs{}
-	if filePath != "" {
-		fileBytes, err := os.ReadFile(filePath)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read static VRFs file: %w", err)
-		}
-		dec := yaml.NewDecoder(bytes.NewReader(fileBytes))
-		dec.KnownFields(true)
-		err = dec.Decode(vrfs)
-		if err != nil {
-			return nil, fmt.Errorf("failed to unmarshal static VRFs file: %w", err)
-		}
+	if filePath == "" {
+		return vrfs, nil
 	}
+
+	fileBytes, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read static VRFs file: %w", err)
+	}
+	dec := yaml.NewDecoder(bytes.NewReader(fileBytes))
+	dec.KnownFields(true)
+	err = dec.Decode(vrfs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal static VRFs file: %w", err)
+	}
+
+	for name, vrf := range vrfs {
+		vni, err := strconv.Atoi(strings.TrimPrefix(name, "vrf"))
+		if err != nil {
+			return nil, fmt.Errorf("failed to apply static vrfs: %w", err)
+		}
+		vrf.VNI = uint32(vni)
+	}
+
 	return vrfs, nil
 }
 
