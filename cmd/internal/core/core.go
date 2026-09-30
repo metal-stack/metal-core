@@ -56,8 +56,6 @@ type (
 		SpineUplinks          []string
 		SetSrcLoopback        bool
 		StaticVRFs            types.Vrfs
-		pxeVlanID             uint16
-		bgpNeighborStateFile  string
 
 		NOS     switcher.NOS
 		Client  clientv2.Client
