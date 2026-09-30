@@ -39,21 +39,6 @@ func Test_getStaticVRFs(t *testing.T) {
 			wantErr: fmt.Errorf("failed to unmarshal static VRFs file: %w", errors.New("yaml: construct errors: line 1: cannot construct !!str `invalid` into types.Vrf")),
 		},
 		{
-			name:     "disallow passing fields other than neighbors and cidrs",
-			filePath: path.Join(t.TempDir(), "malformed.yaml"),
-			data: map[string]any{
-				"vrf100": map[string]any{
-					"Filter": map[string]any{},
-					"VNI":    map[string]any{},
-					"VLANID": map[string]any{},
-					"Has4":   false,
-					"Has6":   false,
-				},
-			},
-			want:    nil,
-			wantErr: fmt.Errorf("failed to unmarshal static VRFs file: %w", errors.New("yaml: construct errors: line 2: field Filter not found in type types.Vrf; line 3: field Has4 not found in type types.Vrf; line 4: field Has6 not found in type types.Vrf; line 5: field VLANID not found in type types.Vrf; line 6: field VNI not found in type types.Vrf")),
-		},
-		{
 			name:     "parse vrfs",
 			filePath: path.Join(t.TempDir(), "static-vrfs.yaml"),
 			data: map[string]any{

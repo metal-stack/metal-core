@@ -32,13 +32,13 @@ type (
 	Vrfs map[string]*Vrf
 
 	Vrf struct {
-		Filter    `yaml:"-"`
-		VNI       uint32   `yaml:"-"`
-		VLANID    uint16   `yaml:"-"`
-		Neighbors []string `yaml:"neighbors"`
-		Cidrs     []string `yaml:"cidrs"`
-		Has4      bool     `yaml:"-"`
-		Has6      bool     `yaml:"-"`
+		Filter
+		VNI       uint32
+		VLANID    uint16
+		Neighbors []string
+		Cidrs     []string
+		Has4      bool
+		Has6      bool
 	}
 
 	Firewall struct {

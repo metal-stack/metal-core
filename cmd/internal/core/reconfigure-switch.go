@@ -170,6 +170,9 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		if slices.Contains(p.Underlay, port) {
 			continue
 		}
+		if slices.Contains(c.additionalBridgePorts, port) {
+			continue
+		}
 
 		adminStatus := pointer.SafeDeref(pointer.SafeDeref(nic.State).Desired)
 		switch adminStatus {
@@ -181,7 +184,14 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 			// noop
 		}
 
-		if slices.Contains(c.additionalBridgePorts, port) {
+		var isStaticNeighbor bool
+		for _, vrf := range c.staticVRFs {
+			if slices.Contains(vrf.Neighbors, port) {
+				isStaticNeighbor = true
+			}
+		}
+
+		if isStaticNeighbor {
 			continue
 		}
 
