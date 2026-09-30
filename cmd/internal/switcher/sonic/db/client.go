@@ -8,16 +8,18 @@ import (
 	"github.com/valkey-io/valkey-go"
 )
 
-type Key []string
-type Val map[string]string
+type (
+	Key []string
+	Val map[string]string
+
+	Client struct {
+		rdb valkey.Client
+		sep string
+	}
+)
 
 func (k *Key) toString(sep string) string {
 	return strings.Join(*k, sep)
-}
-
-type Client struct {
-	rdb valkey.Client
-	sep string
 }
 
 func NewClient(rdb valkey.Client, sep string) *Client {

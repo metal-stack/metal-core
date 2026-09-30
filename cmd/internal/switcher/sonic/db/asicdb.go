@@ -6,11 +6,13 @@ import (
 	"github.com/valkey-io/valkey-go"
 )
 
-type AsicDB struct {
-	c *Client
-}
+type (
+	AsicDB struct {
+		c *Client
+	}
 
-type OID string
+	OID string
+)
 
 func newAsicDB(rdb valkey.Client, sep string) *AsicDB {
 	return &AsicDB{

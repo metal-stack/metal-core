@@ -7,46 +7,49 @@ import (
 	"os"
 	"time"
 
-	"github.com/metal-stack/metal-go/api/models"
+	"github.com/metal-stack/api/go/enum"
+	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type Vrf struct {
-	VrfID   int
-	VrfName string
-	Ports   Ports
-}
+type (
+	Vrf struct {
+		VrfID   int
+		VrfName string
+		Ports   Ports
+	}
 
-type Port struct {
-	Hostname              string `json:"hostname"`
-	PeerGroup             string `json:"peerGroup"`
-	BgpState              string `json:"bgpState"`
-	BgpTimerUpEstablished int64  `json:"bgpTimerUpEstablishedEpoch"`
+	Port struct {
+		Hostname              string `json:"hostname"`
+		PeerGroup             string `json:"peerGroup"`
+		BgpState              string `json:"bgpState"`
+		BgpTimerUpEstablished int64  `json:"bgpTimerUpEstablishedEpoch"`
 
-	AddressFamilyInfo struct {
-		IPv4UnicastCumulus struct {
-			SentPrefixCounter     int64 `json:"sentPrefixCounter"`
-			AcceptedPrefixCounter int64 `json:"acceptedPrefixCounter"`
-		} `json:"IPv4 Unicast"`
-		IPv6UnicastCumulus struct {
-			SentPrefixCounter     int64 `json:"sentPrefixCounter"`
-			AcceptedPrefixCounter int64 `json:"acceptedPrefixCounter"`
-		} `json:"IPv6 Unicast"`
-		IPv4UnicastSonic struct {
-			SentPrefixCounter     int64 `json:"sentPrefixCounter"`
-			AcceptedPrefixCounter int64 `json:"acceptedPrefixCounter"`
-		} `json:"ipv4Unicast"`
-		IPv6UnicastSonic struct {
-			SentPrefixCounter     int64 `json:"sentPrefixCounter"`
-			AcceptedPrefixCounter int64 `json:"acceptedPrefixCounter"`
-		} `json:"ipv6Unicast"`
-	} `json:"addressFamilyInfo"`
-}
+		AddressFamilyInfo struct {
+			IPv4UnicastCumulus struct {
+				SentPrefixCounter     int64 `json:"sentPrefixCounter"`
+				AcceptedPrefixCounter int64 `json:"acceptedPrefixCounter"`
+			} `json:"IPv4 Unicast"`
+			IPv6UnicastCumulus struct {
+				SentPrefixCounter     int64 `json:"sentPrefixCounter"`
+				AcceptedPrefixCounter int64 `json:"acceptedPrefixCounter"`
+			} `json:"IPv6 Unicast"`
+			IPv4UnicastSonic struct {
+				SentPrefixCounter     int64 `json:"sentPrefixCounter"`
+				AcceptedPrefixCounter int64 `json:"acceptedPrefixCounter"`
+			} `json:"ipv4Unicast"`
+			IPv6UnicastSonic struct {
+				SentPrefixCounter     int64 `json:"sentPrefixCounter"`
+				AcceptedPrefixCounter int64 `json:"acceptedPrefixCounter"`
+			} `json:"ipv6Unicast"`
+		} `json:"addressFamilyInfo"`
+	}
 
-type Vrfs map[string]Vrf
-type Ports map[string]Port
+	Vrfs  map[string]Vrf
+	Ports map[string]Port
+)
 
-func GetBGPStates(filepath string) (map[string]models.V1SwitchBGPPortState, error) {
-
+func GetBGPStates(filepath string) (map[string]*apiv2.SwitchBGPPortState, error) {
 	fileInfo, err := os.Stat(filepath)
 	if err != nil {
 		return nil, fmt.Errorf("error getting file info for %s: %w", filepath, err)
@@ -74,7 +77,7 @@ func GetBGPStates(filepath string) (map[string]models.V1SwitchBGPPortState, erro
 		return nil, fmt.Errorf("error unmarshalling bgp vrf all neigh output: %w", err)
 	}
 
-	bgpstates := make(map[string]models.V1SwitchBGPPortState)
+	bgpstates := make(map[string]*apiv2.SwitchBGPPortState)
 	for _, vrfData := range tempData {
 
 		var VrfName string
@@ -90,7 +93,6 @@ func GetBGPStates(filepath string) (map[string]models.V1SwitchBGPPortState, erro
 			if err := json.Unmarshal(value, &port); err != nil {
 				return nil, fmt.Errorf("error parsing port info for %s: %w", key, err)
 			}
-			bgptimerup := port.BgpTimerUpEstablished
 			sentPrefixCounter := port.AddressFamilyInfo.IPv4UnicastCumulus.SentPrefixCounter +
 				port.AddressFamilyInfo.IPv6UnicastCumulus.SentPrefixCounter +
 				port.AddressFamilyInfo.IPv4UnicastSonic.SentPrefixCounter +
@@ -101,14 +103,19 @@ func GetBGPStates(filepath string) (map[string]models.V1SwitchBGPPortState, erro
 				port.AddressFamilyInfo.IPv4UnicastSonic.AcceptedPrefixCounter +
 				port.AddressFamilyInfo.IPv6UnicastSonic.AcceptedPrefixCounter
 
-			bgpstates[key] = models.V1SwitchBGPPortState{
-				Neighbor:              &port.Hostname,
-				PeerGroup:             &port.PeerGroup,
-				BgpState:              &port.BgpState,
-				BgpTimerUpEstablished: &bgptimerup,
-				VrfName:               &VrfName,
-				SentPrefixCounter:     &sentPrefixCounter,
-				AcceptedPrefixCounter: &acceptedPrefixCounter,
+			bgpState, err := enum.GetEnum[apiv2.BGPState](port.BgpState)
+			if err != nil {
+				return nil, fmt.Errorf("failed to determine bgp state of port: %w", err)
+			}
+
+			bgpstates[key] = &apiv2.SwitchBGPPortState{
+				Neighbor:              port.Hostname,
+				PeerGroup:             port.PeerGroup,
+				BgpState:              bgpState,
+				BgpTimerUpEstablished: timestamppb.New(time.Unix(port.BgpTimerUpEstablished, 0)),
+				VrfName:               VrfName,
+				SentPrefixCounter:     uint64(sentPrefixCounter),
+				AcceptedPrefixCounter: uint64(acceptedPrefixCounter),
 			}
 		}
 	}

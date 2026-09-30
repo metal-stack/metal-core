@@ -3,74 +3,67 @@ package core
 import (
 	"log/slog"
 
-	v1 "github.com/metal-stack/metal-api/pkg/api/v1"
+	clientv2 "github.com/metal-stack/api/go/client"
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
-	metalgo "github.com/metal-stack/metal-go"
 )
 
-type Core struct {
-	log      *slog.Logger
-	logLevel string
+type (
+	Core struct {
+		log      *slog.Logger
+		logLevel string
 
-	cidr                    string
-	loopbackIP              string
-	asn                     string
-	partitionID             string
-	rackID                  string
-	roomID                  string
-	enableReconfigureSwitch bool
-	managementGateway       string
-	additionalMgmtRoutes    []string
-	additionalBridgePorts   []string
-	additionalBridgeVIDs    []string
-	staticVRFs              types.Vrfs
-	spineUplinks            []string
-	setSrcLoopback          bool
+		cidr                    string
+		loopbackIP              string
+		asn                     string
+		partitionID             string
+		rackID                  string
+		roomID                  string
+		enableReconfigureSwitch bool
+		managementGateway       string
+		additionalMgmtRoutes    []string
+		additionalBridgePorts   []string
+		additionalBridgeVIDs    []string
+		staticVRFs              types.Vrfs
+		spineUplinks            []string
+		pxeVlanID               uint16
+		bgpNeighborStateFile    string
+		setSrcLoopback          bool
 
-	nos switcher.NOS
+		nos     switcher.NOS
+		client  clientv2.Client
+		metrics *metrics.Metrics
+	}
 
-	driver             metalgo.Client
-	eventServiceClient v1.EventServiceClient
+	Config struct {
+		Log      *slog.Logger
+		LogLevel string
 
-	metrics *metrics.Metrics
+		CIDR                  string
+		LoopbackIP            string
+		ASN                   string
+		PartitionID           string
+		RackID                string
+		RoomID                string
+		ReconfigureSwitch     bool
+		ManagementGateway     string
+		PXEVlanID             uint16
+		BGPNeighborStateFile  string
+		AdditionalMgmtRoutes  []string
+		AdditionalBridgePorts []string
+		AdditionalBridgeVIDs  []string
+		SpineUplinks          []string
+		SetSrcLoopback        bool
+		StaticVRFs            types.Vrfs
+		pxeVlanID             uint16
+		bgpNeighborStateFile  string
 
-	pxeVlanID uint16
-
-	bgpNeighborStateFile string
-}
-
-type Config struct {
-	Log      *slog.Logger
-	LogLevel string
-
-	CIDR                  string
-	LoopbackIP            string
-	ASN                   string
-	PartitionID           string
-	RackID                string
-	RoomID                string
-	ReconfigureSwitch     bool
-	ManagementGateway     string
-	AdditionalMgmtRoutes  []string
-	AdditionalBridgePorts []string
-	AdditionalBridgeVIDs  []string
-	StaticVRFs            types.Vrfs
-	SpineUplinks          []string
-	SetSrcLoopback        bool
-
-	NOS switcher.NOS
-
-	Driver             metalgo.Client
-	EventServiceClient v1.EventServiceClient
-
-	Metrics *metrics.Metrics
-
-	PXEVlanID uint16
-
-	BGPNeighborStateFile string
-}
+		NOS     switcher.NOS
+		Client  clientv2.Client
+		Metrics *metrics.Metrics
+	}
+)
 
 func New(c Config) *Core {
 	return &Core{
@@ -90,8 +83,7 @@ func New(c Config) *Core {
 		spineUplinks:            c.SpineUplinks,
 		setSrcLoopback:          c.SetSrcLoopback,
 		nos:                     c.NOS,
-		driver:                  c.Driver,
-		eventServiceClient:      c.EventServiceClient,
+		client:                  c.Client,
 		metrics:                 c.Metrics,
 		pxeVlanID:               c.PXEVlanID,
 		bgpNeighborStateFile:    c.BGPNeighborStateFile,

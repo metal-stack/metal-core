@@ -19,18 +19,20 @@ import (
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
+	clientv2 "github.com/metal-stack/api/go/client"
+	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/metal-stack/metal-core/cmd/internal/core"
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
-	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/v"
 	"go.yaml.in/yaml/v4"
 )
 
-const phonedHomeInterval = time.Minute // lldpd sends messages every two seconds
+const phonedHomeInterval = time.Minute
 
 func Run() {
 	cfg := &Config{}
@@ -61,38 +63,23 @@ func Run() {
 		}
 	}
 
-	driver, err := metalgo.NewDriver(
-		fmt.Sprintf("%s://%s:%d%s", cfg.ApiProtocol, cfg.ApiIP, cfg.ApiPort, cfg.ApiBasePath),
-		"", cfg.HMACKey, metalgo.AuthType("Metal-Edit"),
-	)
+	client, err := newApiClient(log, cfg.ApiURL, cfg.ApiserverTokenFile)
 	if err != nil {
-		log.Error("unable to create metal-api driver", "error", err)
+		log.Error("failed to create metal-apiserver client", "error", err)
 		os.Exit(1)
 	}
 
-	cert, err := os.ReadFile(cfg.GrpcClientCertFile)
-	if err != nil {
-		log.Error("failed to read cert", "error", err)
-		os.Exit(1)
-	}
-	cacert, err := os.ReadFile(cfg.GrpcCACertFile)
-	if err != nil {
-		log.Error("failed to read ca cert", "error", err)
-		os.Exit(1)
-	}
-	key, err := os.ReadFile(cfg.GrpcClientKeyFile)
-	if err != nil {
-		log.Error("failed to read key", "error", err)
-		os.Exit(1)
-	}
+	client.Ping(context.Background(), &clientv2.PingConfig{
+		ComponentType: apiv2.ComponentType_COMPONENT_TYPE_METAL_CORE,
+		Version: apiv2.Version{
+			Version:   v.Version,
+			Revision:  v.Revision,
+			GitSha1:   v.GitSHA1,
+			BuildDate: v.BuildDate,
+		},
+	})
 
-	grpcClient, err := NewGrpcClient(log, cfg.GrpcAddress, cert, key, cacert)
-	if err != nil {
-		log.Error("failed to create grpc client", "error", err)
-		os.Exit(1)
-	}
-
-	nos, err := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile)
+	nos, err := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile, sonic.InterfaceNamingSchema(cfg.InterfaceNamingSchema))
 	if err != nil {
 		log.Error("failed to create NOS instance", "error", err)
 		os.Exit(1)
@@ -122,8 +109,7 @@ func Run() {
 		SpineUplinks:          cfg.SpineUplinks,
 		SetSrcLoopback:        cfg.SetSrcLoopback,
 		NOS:                   nos,
-		Driver:                driver,
-		EventServiceClient:    grpcClient.NewEventClient(),
+		Client:                client,
 		Metrics:               metrics,
 		PXEVlanID:             cfg.PXEVlanID,
 		BGPNeighborStateFile:  cfg.BGPNeighborStateFile,
@@ -147,7 +133,6 @@ func Run() {
 		c.ConstantlyPhoneHome(ctx, phonedHomeInterval)
 	})
 
-	// Start metrics
 	metricsAddr := fmt.Sprintf("%v:%d", cfg.MetricsServerBindAddress, cfg.MetricsServerPort)
 
 	log.Info("starting metrics endpoint", "addr", metricsAddr)
@@ -202,4 +187,27 @@ func getStaticVRFs(filePath string) (types.Vrfs, error) {
 		}
 	}
 	return vrfs, nil
+}
+
+func newApiClient(logger *slog.Logger, apiURL, tokenfilePath string) (clientv2.Client, error) {
+	token, err := os.ReadFile(tokenfilePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read token file %s: %w", tokenfilePath, err)
+	}
+	tokenPersister, err := clientv2.NewFilesystemTokenPersister(tokenfilePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create filesystem token persister: %w", err)
+	}
+
+	dialConfig := &clientv2.DialConfig{
+		BaseURL:   apiURL,
+		Token:     string(token),
+		UserAgent: "metal-core",
+		Log:       logger.WithGroup("client"),
+		TokenRenewal: &clientv2.TokenRenewal{
+			PersistTokenFn: tokenPersister,
+		},
+	}
+
+	return clientv2.New(dialConfig)
 }

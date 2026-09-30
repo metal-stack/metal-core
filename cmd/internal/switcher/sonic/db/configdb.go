@@ -8,6 +8,24 @@ import (
 	"github.com/valkey-io/valkey-go"
 )
 
+type (
+	ConfigDB struct {
+		c *Client
+	}
+
+	Port struct {
+		Name        string
+		Alias       string
+		AdminStatus string
+		Mtu         string
+	}
+
+	VxlanMap struct {
+		Vni  string
+		Vlan string
+	}
+)
+
 const (
 	adminStatusField    = "admin_status"
 	alias               = "alias"
@@ -26,22 +44,6 @@ const (
 	vrfName             = "vrf_name"
 	vxlanTunnelMapTable = "VXLAN_TUNNEL_MAP"
 )
-
-type ConfigDB struct {
-	c *Client
-}
-
-type Port struct {
-	Name        string
-	Alias       string
-	AdminStatus string
-	Mtu         string
-}
-
-type VxlanMap struct {
-	Vni  string
-	Vlan string
-}
 
 func newConfigDB(rdb valkey.Client, sep string) *ConfigDB {
 	return &ConfigDB{
@@ -344,17 +346,6 @@ func (d *ConfigDB) SetPortMtu(ctx context.Context, interfaceName string, val str
 	key := Key{portTable, interfaceName}
 
 	return d.c.HSet(ctx, key, Val{mtu: val})
-}
-
-func (d *ConfigDB) GetAdminStatus(ctx context.Context, interfaceName string) (types.PortStatus, error) {
-	key := Key{portTable, interfaceName}
-
-	status, err := d.c.HGet(ctx, key, adminStatusField)
-	if err != nil {
-		return "", err
-	}
-
-	return types.PortStatus(status), nil
 }
 
 func (d *ConfigDB) SetAdminStatus(ctx context.Context, interfaceName string, adminStatus types.PortStatus) error {
