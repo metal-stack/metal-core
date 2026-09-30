@@ -39,76 +39,41 @@ func Test_getStaticVRFs(t *testing.T) {
 			wantErr: fmt.Errorf("failed to unmarshal static VRFs file: %w", errors.New("yaml: construct errors: line 1: cannot construct !!str `invalid` into types.Vrf")),
 		},
 		{
+			name:     "disallow passing fields other than neighbors and cidrs",
+			filePath: path.Join(t.TempDir(), "malformed.yaml"),
+			data: map[string]any{
+				"vrf100": map[string]any{
+					"Filter": map[string]any{},
+					"VNI":    map[string]any{},
+					"VLANID": map[string]any{},
+					"Has4":   false,
+					"Has6":   false,
+				},
+			},
+			want:    nil,
+			wantErr: fmt.Errorf("failed to unmarshal static VRFs file: %w", errors.New("yaml: construct errors: line 2: field Filter not found in type types.Vrf; line 3: field Has4 not found in type types.Vrf; line 4: field Has6 not found in type types.Vrf; line 5: field VLANID not found in type types.Vrf; line 6: field VNI not found in type types.Vrf")),
+		},
+		{
 			name:     "parse vrfs",
 			filePath: path.Join(t.TempDir(), "static-vrfs.yaml"),
 			data: map[string]any{
 				"vrf100": map[string]any{
-					"filter": map[string]any{
-						"ip-prefix-lists": []map[string]any{
-							{
-								"address-family": "ip",
-								"name":           "vrf100-in-prefixes",
-								"spec":           "permit 10.10.0.0/24 le 32",
-							},
-						},
-						"route-maps": []map[string]any{
-							{
-								"name":    "vrf100-in",
-								"entries": []string{"match ip address prefix-list vrf100-in-prefixes"},
-								"policy":  "permit",
-								"order":   10,
-							},
-						},
-					},
-					"vni":       100,
-					"vlanid":    1000,
 					"neighbors": []string{"Ethernet0"},
 					"cidrs":     []string{"10.10.1.0/24"},
-					"has4":      true,
-					"has6":      false,
 				},
 				"vrf200": map[string]any{
-					"vni":       200,
-					"vlanid":    2000,
 					"neighbors": []string{"Ethernet1"},
 					"cidrs":     []string{"10.10.2.0/24"},
-					"has4":      true,
-					"has6":      true,
 				},
 			},
 			want: types.Vrfs{
 				"vrf100": {
-					Filter: types.Filter{
-						IPPrefixLists: []types.IPPrefixList{
-							{
-								AddressFamily: "ip",
-								Name:          "vrf100-in-prefixes",
-								Spec:          "permit 10.10.0.0/24 le 32",
-							},
-						},
-						RouteMaps: []types.RouteMap{
-							{
-								Name:    "vrf100-in",
-								Entries: []string{"match ip address prefix-list vrf100-in-prefixes"},
-								Policy:  "permit",
-								Order:   10,
-							},
-						},
-					},
-					VNI:       100,
-					VLANID:    1000,
 					Neighbors: []string{"Ethernet0"},
 					Cidrs:     []string{"10.10.1.0/24"},
-					Has4:      true,
-					Has6:      false,
 				},
 				"vrf200": {
-					VNI:       200,
-					VLANID:    2000,
 					Neighbors: []string{"Ethernet1"},
 					Cidrs:     []string{"10.10.2.0/24"},
-					Has4:      true,
-					Has6:      true,
 				},
 			},
 			wantErr: nil,
@@ -125,7 +90,7 @@ func Test_getStaticVRFs(t *testing.T) {
 			}
 			got, err := getStaticVRFs(tt.filePath)
 			if diff := cmp.Diff(tt.wantErr, err, testcommon.ErrorStringComparer()); diff != "" {
-				t.Errorf("getStaticVRFs() error diff = %s", diff)
+				t.Errorf("getStaticVRFs() error = %v, want error %v", err, tt.wantErr)
 			}
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("getStaticVRFs() diff = %s", diff)

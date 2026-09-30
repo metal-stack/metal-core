@@ -32,13 +32,13 @@ type (
 	Vrfs map[string]*Vrf
 
 	Vrf struct {
-		Filter    `yaml:"filter"`
-		VNI       uint32   `yaml:"vni"`
-		VLANID    uint16   `yaml:"vlanid"`
+		Filter    `yaml:"-"`
+		VNI       uint32   `yaml:"-"`
+		VLANID    uint16   `yaml:"-"`
 		Neighbors []string `yaml:"neighbors"`
 		Cidrs     []string `yaml:"cidrs"`
-		Has4      bool     `yaml:"has4"`
-		Has6      bool     `yaml:"has6"`
+		Has4      bool     `yaml:"-"`
+		Has6      bool     `yaml:"-"`
 	}
 
 	Firewall struct {
@@ -49,8 +49,8 @@ type (
 	}
 
 	Filter struct {
-		IPPrefixLists []IPPrefixList `yaml:"ip-prefix-lists"`
-		RouteMaps     []RouteMap     `yaml:"route-maps"`
+		IPPrefixLists []IPPrefixList
+		RouteMaps     []RouteMap
 	}
 
 	Nic struct {
@@ -59,16 +59,16 @@ type (
 	}
 
 	RouteMap struct {
-		Name    string   `yaml:"name"`
-		Entries []string `yaml:"entries"`
-		Policy  string   `yaml:"policy"`
-		Order   int      `yaml:"order"`
+		Name    string
+		Entries []string
+		Policy  string
+		Order   int
 	}
 
 	IPPrefixList struct {
-		AddressFamily string `yaml:"address-family"`
-		Name          string `yaml:"name"`
-		Spec          string `yaml:"spec"`
+		AddressFamily string
+		Name          string
+		Spec          string
 	}
 
 	cidrsByAf struct {
