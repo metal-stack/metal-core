@@ -2,12 +2,15 @@ package redis
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 	"net/netip"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/alicebob/miniredis/v2"
+	"github.com/alicebob/miniredis/v2/server"
 	"github.com/stretchr/testify/require"
 	"github.com/valkey-io/valkey-go"
 
@@ -52,36 +55,71 @@ var (
 
 type testApplier struct {
 	*Applier
-	asicClient   *db.Client
-	configClient valkey.Client
-	config       test.HashMap
+	asicClient     *db.Client
+	configClient   valkey.Client
+	countersClient *db.Client
+	config         test.HashMap
 }
 
 func newTestApplier(t *testing.T, data test.StringMap) *testApplier {
 	t.Helper()
 	ctx := t.Context()
 
-	appl := test.StartValkey(t)
-	asic := test.StartValkey(t)
-	config := test.StartValkey(t)
-	counters := test.StartValkey(t)
-	t.Cleanup(func() {
-		appl.Close()
-		asic.Close()
-		config.Close()
-		counters.Close()
+	mr := miniredis.RunT(t)
+	// SONiC uses standalone Redis; cluster discovery would advertise TCP addresses
+	// that cannot be reached through the Unix-socket connection.
+	mr.Server().SetPreHook(func(peer *server.Peer, cmd string, _ ...string) bool {
+		if cmd == "CLUSTER" {
+			peer.WriteError("ERR This instance has cluster support disabled")
+			return true
+		}
+		return false
 	})
+	sock := test.StartUnixProxy(t, mr.Addr())
 
+	var cfg db.Config
+	require.NoError(t, json.Unmarshal([]byte(`{
+		"DATABASES": {
+			"APPL_DB": {"id": 0, "instance": "redis", "separator": "|"},
+			"ASIC_DB": {"id": 1, "instance": "redis", "separator": "|"},
+			"CONFIG_DB": {"id": 4, "instance": "redis", "separator": "|"},
+			"COUNTERS_DB": {"id": 2, "instance": "redis", "separator": "|"}
+		},
+		"INSTANCES": {"redis": {}}
+	}`), &cfg))
+	instance := cfg.Instances["redis"]
+	instance.Addr = sock
+	cfg.Instances["redis"] = instance
+
+	d, err := db.New(&cfg)
+	require.NoError(t, err)
+
+	// Keep fixture clients in the tests so production databases need no test accessors.
+	newClient := func(name string) valkey.Client {
+		t.Helper()
+		client, err := valkey.NewClient(valkey.ClientOption{
+			InitAddress:  []string{mr.Addr()},
+			SelectDB:     cfg.Databases[name].Id,
+			DisableCache: true,
+		})
+		require.NoError(t, err)
+		t.Cleanup(client.Close)
+		return client
+	}
+	asic := newClient("ASIC_DB")
+	config := newClient("CONFIG_DB")
+	counters := newClient("COUNTERS_DB")
 	require.NoError(t, test.LoadData(ctx, config, data, sep))
 
-	a := NewApplier(slog.Default(), db.NewWithClients(appl, asic, config, counters, sep))
+	a := NewApplier(slog.Default(), d)
 	// force the applier to apply the first configuration
 	a.previousCfg = &types.Conf{Name: "previous"}
 
 	return &testApplier{
-		Applier:      a,
-		asicClient:   db.NewClient(asic, sep),
-		configClient: config,
+		Applier:        a,
+		asicClient:     db.NewClient(asic, sep),
+		configClient:   config,
+		countersClient: db.NewClient(counters, sep),
 	}
 }
 
@@ -295,7 +333,7 @@ func TestApplier_ACLBindingSurvivesFailedTransition(t *testing.T) {
 	a.apply(t, l3Conf([]string{"Ethernet0", "Ethernet4"}))
 
 	// Ethernet0 gets allocated, but the transition fails because the port vanished from the PORT table
-	require.NoError(t, a.db.Config.Client().Del(t.Context(), db.Key{"PORT", "Ethernet0"}))
+	require.NoError(t, db.NewClient(a.configClient, sep).Del(t.Context(), db.Key{"PORT", "Ethernet0"}))
 	c := l3Conf([]string{"Ethernet4"})
 	c.Ports.Vrfs["Vrf104001"] = &types.Vrf{VNI: 104001, VLANID: 1002, Neighbors: []string{"Ethernet0"}}
 	err := a.Apply(t.Context(), c)
@@ -306,7 +344,7 @@ func TestApplier_ACLBindingSurvivesFailedTransition(t *testing.T) {
 	require.Equal(t, "Ethernet0,Ethernet4", a.config["ACL_TABLE|BOOT_V4"]["ports@"])
 
 	// once the transition succeeds, the binding is removed
-	require.NoError(t, a.db.Config.Client().HSet(t.Context(), db.Key{"PORT", "Ethernet0"}, db.Val{"admin_status": "up", "mtu": "9000"}))
+	require.NoError(t, db.NewClient(a.configClient, sep).HSet(t.Context(), db.Key{"PORT", "Ethernet0"}, db.Val{"admin_status": "up", "mtu": "9000"}))
 	a.apply(t, c)
 	require.Equal(t, "Ethernet4", a.config["ACL_TABLE|BOOT_V6"]["ports@"])
 }
@@ -315,7 +353,7 @@ func TestApplier_PxeRollbackKeepsBindingOnFailure(t *testing.T) {
 	a := newTestApplier(t, baseConfigDB)
 	a.apply(t, l3Conf([]string{"Ethernet0", "Ethernet4"}))
 
-	require.NoError(t, a.db.Config.Client().Del(t.Context(), db.Key{"PORT", "Ethernet4"}))
+	require.NoError(t, db.NewClient(a.configClient, sep).Del(t.Context(), db.Key{"PORT", "Ethernet4"}))
 	err := a.Apply(t.Context(), pxeConf([]string{"Ethernet0", "Ethernet4"}))
 	require.ErrorContains(t, err, "port Ethernet4 does not exist in CONFIG_DB")
 	a.refresh(t)
@@ -348,7 +386,7 @@ func TestApplier_MoveRefreshesRifOidMap(t *testing.T) {
 
 	// the RIF shows up in COUNTERS_DB and ASIC_DB only after the initial OID map refresh
 	ctx := t.Context()
-	require.NoError(t, a.db.Counters.Client().HSet(ctx, db.Key{"COUNTERS_RIF_NAME_MAP"}, db.Val{"Ethernet0": "oid:0x6000000000001"}))
+	require.NoError(t, a.countersClient.HSet(ctx, db.Key{"COUNTERS_RIF_NAME_MAP"}, db.Val{"Ethernet0": "oid:0x6000000000001"}))
 	require.NoError(t, a.asicClient.HSet(ctx, db.Key{"ASIC_STATE", "SAI_OBJECT_TYPE_ROUTER_INTERFACE", "oid:0x6000000000001"}, db.Val{"SAI_ROUTER_INTERFACE_ATTR_TYPE": "SAI_ROUTER_INTERFACE_TYPE_PORT"}))
 	a.previousCfg = &types.Conf{Name: "force"}
 	a.rifOidMap = map[string]db.OID{}
