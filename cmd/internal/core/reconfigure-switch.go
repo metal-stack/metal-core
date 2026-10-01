@@ -156,7 +156,7 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		Underlay:      c.spineUplinks,
 		BladePorts:    c.additionalBridgePorts,
 		Unprovisioned: []string{},
-		Vrfs:          c.staticVRFs,
+		Vrfs:          c.copyStaticVRFs(),
 		Firewalls:     map[string]*types.Firewall{},
 		AdminStatus:   map[string]types.PortStatus{},
 	}
@@ -290,4 +290,15 @@ func fillEth0Info(c *types.Conf, gw string) error {
 	c.Ports.Eth0.AddressCIDR = fmt.Sprintf("%s/%d", ip.String(), s)
 	c.Ports.Eth0.Gateway = gw
 	return nil
+}
+
+func (c *Core) copyStaticVRFs() types.Vrfs {
+	vrfs := make(types.Vrfs, len(c.staticVRFs))
+	for name, vrf := range c.staticVRFs {
+		v := *vrf
+		v.Neighbors = slices.Clone(vrf.Neighbors)
+		v.Cidrs = slices.Clone(vrf.Cidrs)
+		vrfs[name] = &v
+	}
+	return vrfs
 }

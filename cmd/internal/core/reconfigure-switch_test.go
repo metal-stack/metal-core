@@ -135,3 +135,46 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		t.Errorf("TestBuildSwitcherConfig() diff = %s", diff)
 	}
 }
+
+func TestBuildSwitcherConfigReleasesTenantVrfOfFreedMachine(t *testing.T) {
+	c := &Core{
+		cidr:       "10.255.255.2/24",
+		asn:        "420000001",
+		loopbackIP: "10.0.0.1",
+		nos:        &sonic.Sonic{},
+		pxeVlanID:  4000,
+		staticVRFs: types.Vrfs{
+			"vrf200": {
+				VNI:       200,
+				Neighbors: []string{"Ethernet3"},
+			},
+		},
+	}
+
+	allocated := &apiv2.Switch{
+		Id: "leaf01",
+		Nics: []*apiv2.SwitchNic{
+			{Name: "Ethernet1", Vrf: new("vrf104001")},
+			{Name: "Ethernet3"},
+		},
+	}
+	freed := &apiv2.Switch{
+		Id: "leaf01",
+		Nics: []*apiv2.SwitchNic{
+			{Name: "Ethernet1"},
+			{Name: "Ethernet3"},
+		},
+	}
+
+	_, err := c.buildSwitcherConfig(allocated)
+	require.NoError(t, err)
+
+	actual, err := c.buildSwitcherConfig(freed)
+	require.NoError(t, err)
+
+	require.Equal(t, []string{"Ethernet1"}, actual.Ports.Unprovisioned)
+	require.Contains(t, actual.Ports.Vrfs, "Vrf200")
+	require.NotContains(t, actual.Ports.Vrfs, "Vrf104001")
+	require.Len(t, c.staticVRFs, 1)
+	require.Equal(t, []string{"Ethernet3"}, c.staticVRFs["vrf200"].Neighbors)
+}
