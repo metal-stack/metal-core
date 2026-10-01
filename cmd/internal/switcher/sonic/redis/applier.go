@@ -179,16 +179,6 @@ func (a *Applier) GetPorts(ctx context.Context) ([]*db.Port, error) {
 	return a.db.Config.GetPorts(ctx)
 }
 
-func (a *Applier) refreshRifOidMap(ctx context.Context) error {
-	oidMap, err := a.db.Counters.GetRifNameMap(ctx)
-	if err != nil {
-		return fmt.Errorf("could not update rif to oid map: %w", err)
-	}
-	a.log.Debug("set rif oid map", "map", oidMap)
-	a.rifOidMap = oidMap
-	return nil
-}
-
 func (a *Applier) refreshOidMaps(ctx context.Context) error {
 	a.log.Debug("refresh oid maps")
 
@@ -201,7 +191,7 @@ func (a *Applier) refreshOidMaps(ctx context.Context) error {
 
 	oidMap, err = a.db.Counters.GetRifNameMap(ctx)
 	if err != nil {
-		return fmt.Errorf("could not update rif to oid ma: %w", err)
+		return fmt.Errorf("could not update rif to oid map: %w", err)
 	}
 	a.log.Debug("set rif oid map", "map", oidMap)
 	a.rifOidMap = oidMap

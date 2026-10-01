@@ -11,11 +11,12 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/cumulus"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
+	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 )
 
 func TestBuildSwitcherConfig(t *testing.T) {
 	c := &Core{
-		network:              systemNetwork{},
+		vlanMapping:          vlan.ReadMapping,
 		cidr:                 "10.255.255.2/24",
 		partitionID:          "fra-equ01",
 		rackID:               "rack01",
@@ -116,7 +117,7 @@ func (f *fakeNOS) SanitizeConfig(cfg *types.Conf) {
 
 func TestBuildSwitcherConfigL3(t *testing.T) {
 	c := &Core{
-		network:      systemNetwork{},
+		vlanMapping:  vlan.ReadMapping,
 		log:          slog.Default(),
 		asn:          "420000001",
 		loopbackIP:   "10.0.0.1",

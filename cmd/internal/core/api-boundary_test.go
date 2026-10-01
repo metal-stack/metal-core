@@ -89,7 +89,14 @@ func TestAPIBoundary(t *testing.T) {
 		PartitionID: partitionID, RackID: "boundary-rack", ManagementGateway: "192.0.2.1",
 		BootMode: BootModeL3, ReconfigureSwitch: true, Client: infra, NOS: nos, Metrics: metrics.New(),
 	})
-	c.network = boundaryNetwork{}
+	c.fillManagementInfo = func(cfg *types.Conf, gateway string) error {
+		cfg.Ports.Eth0 = types.Nic{AddressCIDR: "192.0.2.2/24", Gateway: gateway}
+		return nil
+	}
+	c.linkStatus = func(string) (apiv2.SwitchPortStatus, error) {
+		return apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_UP, nil
+	}
+	c.vlanMapping = func() (vlan.Mapping, error) { return vlan.Mapping{}, nil }
 	require.NoError(t, c.RegisterSwitch(ctx, 5*time.Second))
 	hostname, err := os.Hostname()
 	require.NoError(t, err)
@@ -244,14 +251,3 @@ func (*boundaryNOS) GetOS() (*apiv2.SwitchOS, error) {
 	return &apiv2.SwitchOS{Vendor: apiv2.SwitchOSVendor_SWITCH_OS_VENDOR_SONIC, Version: "202411"}, nil
 }
 func (*boundaryNOS) GetManagement() (string, string, error) { return "192.0.2.2", "admin", nil }
-
-type boundaryNetwork struct{}
-
-func (boundaryNetwork) fillManagementInfo(cfg *types.Conf, gateway string) error {
-	cfg.Ports.Eth0 = types.Nic{AddressCIDR: "192.0.2.2/24", Gateway: gateway}
-	return nil
-}
-func (boundaryNetwork) linkStatus(string) (apiv2.SwitchPortStatus, error) {
-	return apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_UP, nil
-}
-func (boundaryNetwork) vlanMapping() (vlan.Mapping, error) { return vlan.Mapping{}, nil }

@@ -4,8 +4,12 @@ import (
 	"log/slog"
 
 	clientv2 "github.com/metal-stack/api/go/client"
+	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
+	"github.com/metal-stack/metal-core/cmd/internal/net"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
+	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 )
 
 type (
@@ -31,9 +35,12 @@ type (
 		bootMode                BootMode
 
 		nos     switcher.NOS
-		network localNetwork
 		client  clientv2.Client
 		metrics *metrics.Metrics
+
+		fillManagementInfo func(*types.Conf, string) error
+		linkStatus         func(string) (apiv2.SwitchPortStatus, error)
+		vlanMapping        func() (vlan.Mapping, error)
 	}
 
 	Config struct {
@@ -81,7 +88,9 @@ func New(c Config) *Core {
 		spineUplinks:            c.SpineUplinks,
 		setSrcLoopback:          c.SetSrcLoopback,
 		nos:                     c.NOS,
-		network:                 systemNetwork{},
+		fillManagementInfo:      fillManagementInfo,
+		linkStatus:              net.GetLinkStatus,
+		vlanMapping:             vlan.ReadMapping,
 		client:                  c.Client,
 		metrics:                 c.Metrics,
 		pxeVlanID:               c.PXEVlanID,
