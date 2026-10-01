@@ -94,8 +94,6 @@ const (
 	BootVrfName = "VrfBoot"
 	// BootPrefixLength is the prefix length of every per port boot prefix.
 	BootPrefixLength = 64
-	// MaxVNI is the largest possible vxlan network identifier (24 bit).
-	MaxVNI = 1<<24 - 1
 )
 
 func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
