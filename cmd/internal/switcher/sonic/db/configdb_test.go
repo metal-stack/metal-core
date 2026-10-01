@@ -1942,8 +1942,8 @@ func TestConfigDB_GetVrfVni(t *testing.T) {
 		wantErr bool
 	}{
 		{name: "vni from field", vrf: "Vrf102", want: 102},
-		{name: "vni derived from name if field is missing", vrf: "Vrf4711", want: 4711},
-		{name: "no vni derivable", vrf: "VrfBoot", wantErr: true},
+		{name: "missing vni is not derived from name", vrf: "Vrf4711", wantErr: true},
+		{name: "missing boot vni", vrf: "VrfBoot", wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

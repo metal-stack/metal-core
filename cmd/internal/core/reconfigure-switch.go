@@ -15,7 +15,6 @@ import (
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	infrav2 "github.com/metal-stack/api/go/metalstack/infra/v2"
 	"github.com/metal-stack/metal-core/cmd/internal/frr"
-	"github.com/metal-stack/metal-core/cmd/internal/net"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/metal-lib/pkg/pointer"
 
@@ -68,7 +67,7 @@ func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval, timeou
 					c.metrics.CountError("switch-reconfiguration")
 					continue
 				}
-				status, err := c.network.linkStatus(nic.Name)
+				status, err := c.linkStatus(nic.Name)
 				req.PortStates[nic.Name] = status
 				if err != nil {
 					c.log.Error("could not check if link is up", "error", err, "nicname", nic.Name)
@@ -112,7 +111,7 @@ func (c *Core) reconfigureSwitch(ctx context.Context, hostname string) (*apiv2.S
 		return nil, fmt.Errorf("could not build switcher config: %w", err)
 	}
 
-	err = c.network.fillManagementInfo(switchConfig, c.managementGateway)
+	err = c.fillManagementInfo(switchConfig, c.managementGateway)
 	if err != nil {
 		return nil, fmt.Errorf("could not gather information about eth0 nic: %w", err)
 	}
@@ -240,7 +239,7 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		return nil, err
 	}
 
-	m, err := c.network.vlanMapping()
+	m, err := c.vlanMapping()
 	if err != nil {
 		return nil, err
 	}
@@ -270,17 +269,7 @@ func mapLogLevel(level string) string {
 	}
 }
 
-// localNetwork supplies the host observations used alongside the API's desired state.
-// Keeping these reads separate lets integration tests run without switch interfaces.
-type localNetwork interface {
-	fillManagementInfo(*types.Conf, string) error
-	linkStatus(string) (apiv2.SwitchPortStatus, error)
-	vlanMapping() (vlan.Mapping, error)
-}
-
-type systemNetwork struct{}
-
-func (systemNetwork) fillManagementInfo(c *types.Conf, gw string) error {
+func fillManagementInfo(c *types.Conf, gw string) error {
 	c.Ports.Eth0 = types.Nic{}
 	eth0, err := netlink.LinkByName("eth0")
 	if err != nil {
@@ -299,12 +288,4 @@ func (systemNetwork) fillManagementInfo(c *types.Conf, gw string) error {
 	c.Ports.Eth0.AddressCIDR = fmt.Sprintf("%s/%d", ip.String(), s)
 	c.Ports.Eth0.Gateway = gw
 	return nil
-}
-
-func (systemNetwork) linkStatus(name string) (apiv2.SwitchPortStatus, error) {
-	return net.GetLinkStatus(name)
-}
-
-func (systemNetwork) vlanMapping() (vlan.Mapping, error) {
-	return vlan.ReadMapping()
 }

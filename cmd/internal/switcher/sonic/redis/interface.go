@@ -31,7 +31,7 @@ func (a *Applier) ensureNotRouted(ctx context.Context, interfaceName string) err
 	if configured && !known {
 		// the router interface may have been created after the OID maps were refreshed at the start of this apply;
 		// without its OID, we cannot wait for the ASIC to release it before recreating the interface in another VRF
-		if err := a.refreshRifOidMap(ctx); err != nil {
+		if err := a.refreshOidMaps(ctx); err != nil {
 			return err
 		}
 		oid, known = a.rifOidMap[interfaceName]

@@ -182,7 +182,7 @@ func (d *ConfigDB) CreateVrf(ctx context.Context, vrf string, vni uint32) error 
 	return d.c.HSet(ctx, key, Val{"fallback": "false", "vni": fmt.Sprintf("%d", vni)})
 }
 
-// GetVrfVni returns the VNI of the given VRF. If the VRF has no VNI field, the VNI is derived from its name (Vrf<vni>).
+// GetVrfVni returns the VNI stored in the given VRF's configuration.
 func (d *ConfigDB) GetVrfVni(ctx context.Context, vrf string) (uint32, error) {
 	key := Key{vrfTable, vrf}
 
@@ -190,10 +190,6 @@ func (d *ConfigDB) GetVrfVni(ctx context.Context, vrf string) (uint32, error) {
 	if err != nil {
 		return 0, err
 	}
-	if value == "" {
-		value = strings.TrimPrefix(vrf, "Vrf")
-	}
-
 	parsed, err := strconv.ParseUint(value, 10, 32)
 	if err != nil {
 		return 0, fmt.Errorf("could not determine vni of vrf %s: %w", vrf, err)
