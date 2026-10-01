@@ -54,6 +54,10 @@ func TestBuildSwitcherConfig(t *testing.T) {
 				Name: "Ethernet3",
 			},
 			{
+				Name: "Ethernet4",
+				Vrf:  new("vrf200"),
+			},
+			{
 				Name: "Ethernet120",
 			},
 			{
@@ -82,7 +86,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 			Vrfs: map[string]*types.Vrf{
 				"Vrf200": {
 					VNI:       200,
-					Neighbors: []string{"Ethernet3"},
+					Neighbors: []string{"Ethernet4", "Ethernet3"},
 					Cidrs:     []string{"10.1.2.0/24"},
 					Filter: types.Filter{
 						IPPrefixLists: []types.IPPrefixList{

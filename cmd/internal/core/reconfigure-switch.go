@@ -233,12 +233,19 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		p.Vrfs[pointer.SafeDeref(nic.Vrf)] = vrf
 	}
 
-	for name, vrf := range c.staticVRFs {
-		p.Vrfs[name] = &types.Vrf{
-			VNI:       vrf.VNI,
-			Neighbors: vrf.Neighbors,
-			Cidrs:     vrf.Cidrs,
+	for name, static := range c.staticVRFs {
+		if _, ok := p.Vrfs[name]; !ok {
+			p.Vrfs[name] = &types.Vrf{
+				VNI:       static.VNI,
+				Neighbors: static.Neighbors,
+				Cidrs:     static.Cidrs,
+			}
+			continue
 		}
+
+		vrf := p.Vrfs[name]
+		vrf.Neighbors = append(vrf.Neighbors, static.Neighbors...)
+		vrf.Cidrs = append(vrf.Cidrs, static.Cidrs...)
 	}
 
 	switcherConfig.Ports = p
