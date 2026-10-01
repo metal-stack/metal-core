@@ -29,7 +29,7 @@ func TestGetBGPStates_Cumulus(t *testing.T) {
 
 	// swp31 – FABRIC spine peer in the default VRF.
 	swp31 := states["swp31"]
-	assertField(t, "swp31 Neighbor", swp31.Neighbor, "fra-equ01-spine02")
+	assertField(t, "swp31 Neighbor", swp31.Neighbor, new("fra-equ01-spine02"))
 	assertField(t, "swp31 PeerGroup", swp31.PeerGroup, "FABRIC")
 	assertField(t, "swp31 BgpState", swp31.BgpState, apiv2.BGPState_BGP_STATE_ESTABLISHED)
 	assertField(t, "swp31 VrfName", swp31.VrfName, "default")
@@ -39,7 +39,7 @@ func TestGetBGPStates_Cumulus(t *testing.T) {
 
 	// swp6s0 – FIREWALL peer (IPv4 + IPv6 address families).
 	swp6s0 := states["swp6s0"]
-	assertField(t, "swp6s0 Neighbor", swp6s0.Neighbor, "shoot--pcfgbt--inttest20-firewall-9f9ac")
+	assertField(t, "swp6s0 Neighbor", swp6s0.Neighbor, new("shoot--pcfgbt--inttest20-firewall-9f9ac"))
 	assertField(t, "swp6s0 PeerGroup", swp6s0.PeerGroup, "FIREWALL")
 	assertField(t, "swp6s0 BgpState", swp6s0.BgpState, apiv2.BGPState_BGP_STATE_ESTABLISHED)
 	assertField(t, "swp6s0 AcceptedPrefixCounter", swp6s0.AcceptedPrefixCounter, 1) // IPv4 Unicast=1, IPv6 Unicast=0
@@ -62,7 +62,7 @@ func TestGetBGPStates_Sonic(t *testing.T) {
 
 	// Ethernet120 – FABRIC spine peer in the default VRF.
 	e120 := states["Ethernet120"]
-	assertField(t, "Ethernet120 Neighbor", e120.Neighbor, "fra-equ01-spine02")
+	assertField(t, "Ethernet120 Neighbor", e120.Neighbor, new("fra-equ01-spine02"))
 	assertField(t, "Ethernet120 PeerGroup", e120.PeerGroup, "FABRIC")
 	assertField(t, "Ethernet120 BgpState", e120.BgpState, apiv2.BGPState_BGP_STATE_ESTABLISHED)
 	assertField(t, "Ethernet120 VrfName", e120.VrfName, "default")
@@ -72,7 +72,7 @@ func TestGetBGPStates_Sonic(t *testing.T) {
 
 	// Ethernet20 – FIREWALL peer with IPv4 + IPv6 address families.
 	e20 := states["Ethernet20"]
-	assertField(t, "Ethernet20 Neighbor", e20.Neighbor, "shoot--pcfgbt--inttest20-firewall-9f9ac")
+	assertField(t, "Ethernet20 Neighbor", e20.Neighbor, new("shoot--pcfgbt--inttest20-firewall-9f9ac"))
 	assertField(t, "Ethernet20 PeerGroup", e20.PeerGroup, "FIREWALL")
 	assertField(t, "Ethernet20 BgpState", e20.BgpState, apiv2.BGPState_BGP_STATE_ESTABLISHED)
 	assertField(t, "Ethernet20 SentPrefixCounter", e20.SentPrefixCounter, 60)        // ipv4Unicast=59 + ipv6Unicast=1
@@ -81,7 +81,7 @@ func TestGetBGPStates_Sonic(t *testing.T) {
 	// Ethernet23 – peer in Idle state with no hostname reported.
 	e23 := states["Ethernet23"]
 	assertField(t, "Ethernet23 BgpState", e23.BgpState, apiv2.BGPState_BGP_STATE_IDLE)
-	assertField(t, "Ethernet23 Neighbor", e23.Neighbor, "") // hostname absent in JSON
+	assertField(t, "Ethernet23 Neighbor", e23.Neighbor, new("")) // hostname absent in JSON
 	assertField(t, "Ethernet23 BgpTimerUpEstablished", e23.BgpTimerUpEstablished, &timestamppb.Timestamp{})
 }
 
