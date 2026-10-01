@@ -2,7 +2,10 @@ package test
 
 import (
 	"context"
+	"io"
 	"maps"
+	"net"
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
@@ -151,4 +154,36 @@ func getKeysAndValues(data StringMap) []keysAndValue {
 func hset(ctx context.Context, vc valkey.Client, key, field, value string) error {
 	cmd := vc.B().Hset().Key(key).FieldValue().FieldValue(field, value).Build()
 	return vc.Do(ctx, cmd).Error()
+}
+
+// StartUnixProxy exposes a TCP Redis server over a Unix socket for tests.
+func StartUnixProxy(t *testing.T, tcpAddr string) string {
+	t.Helper()
+	sock := filepath.Join(t.TempDir(), "redis.sock")
+	l, err := net.Listen("unix", sock)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = l.Close() })
+
+	go func() {
+		for {
+			client, err := l.Accept()
+			if err != nil {
+				return
+			}
+			go proxyConn(client, tcpAddr)
+		}
+	}()
+	return sock
+}
+
+func proxyConn(client net.Conn, tcpAddr string) {
+	defer func() { _ = client.Close() }()
+	server, err := net.Dial("tcp", tcpAddr)
+	if err != nil {
+		return
+	}
+	defer func() { _ = server.Close() }()
+
+	go func() { _, _ = io.Copy(server, client) }()
+	_, _ = io.Copy(client, server)
 }

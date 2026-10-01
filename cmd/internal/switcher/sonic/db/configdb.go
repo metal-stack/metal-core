@@ -64,11 +64,6 @@ func newConfigDB(rdb valkey.Client, sep string) *ConfigDB {
 	}
 }
 
-// Client returns the underlying redis client, intended for tests.
-func (d *ConfigDB) Client() *Client {
-	return d.c
-}
-
 func (d *ConfigDB) ExistVlan(ctx context.Context, vid uint16) (bool, error) {
 	key := Key{vlanTable, fmt.Sprintf("Vlan%d", vid)}
 
