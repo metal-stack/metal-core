@@ -156,7 +156,7 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		Underlay:      c.spineUplinks,
 		BladePorts:    c.additionalBridgePorts,
 		Unprovisioned: []string{},
-		Vrfs:          c.staticVRFs,
+		Vrfs:          types.Vrfs{},
 		Firewalls:     map[string]*types.Firewall{},
 		AdminStatus:   map[string]types.PortStatus{},
 	}
@@ -231,6 +231,14 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		}
 
 		p.Vrfs[pointer.SafeDeref(nic.Vrf)] = vrf
+	}
+
+	for name, vrf := range c.staticVRFs {
+		p.Vrfs[name] = &types.Vrf{
+			VNI:       vrf.VNI,
+			Neighbors: vrf.Neighbors,
+			Cidrs:     vrf.Cidrs,
+		}
 	}
 
 	switcherConfig.Ports = p

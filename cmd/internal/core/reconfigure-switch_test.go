@@ -134,4 +134,15 @@ func TestBuildSwitcherConfig(t *testing.T) {
 	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(types.Vrf{}, "VLANID")); diff != "" {
 		t.Errorf("TestBuildSwitcherConfig() diff = %s", diff)
 	}
+
+	expectedStaticVrfs := types.Vrfs{
+		"vrf200": {
+			VNI:       200,
+			Neighbors: []string{"Ethernet3"},
+			Cidrs:     []string{"10.1.2.0/24"},
+		},
+	}
+	if diff := cmp.Diff(expectedStaticVrfs, c.staticVRFs); diff != "" {
+		t.Errorf("TestBuildSwitcherConfig() Core.staticVrfs unexpectedly changed: %s", diff)
+	}
 }
