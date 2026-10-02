@@ -14,6 +14,28 @@ Ensure you have `libpcap-dev` installed.
 make
 ```
 
+## Static VRFs
+
+Typically, metal-core configures the ports based on information is receives from the API.
+Ports that are connected to unprovisioned machines will be added to the PXE VLAN.
+Once a machine is allocated the port it is connected to is bound to the tenant VRF of the machine.
+You can also add a port to a VRF if the port isn't connected to any registered machine by adding it as a neighbor to a statically configured VRF.
+Static VRFs are read from a file read from the `METAL_CORE_STATIC_VRFS_FILE` environment variable.
+The file may look like this:
+
+```yaml
+# VRF name must be of the form `vrf<VNI>`, where VNI is the VNI of the network.
+vrf100:
+  # Which ports to add to the VRF.
+  neighbors:
+    - Ethernet0
+  # Which CIDRs to allow from the neighbors.
+  cidrs:
+    - 10.10.1.0/24
+```
+
+Static VRFs can be used to connect external hosts, i.e. hosts that are not registered machines, to a network that is managed by our API.
+
 ## Interface Naming on SONiC Switches
 
 On SONiC switches, there are different naming schemas for interfaces.

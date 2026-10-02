@@ -156,7 +156,7 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		Underlay:      c.spineUplinks,
 		BladePorts:    c.additionalBridgePorts,
 		Unprovisioned: []string{},
-		Vrfs:          map[string]*types.Vrf{},
+		Vrfs:          types.Vrfs{},
 		Firewalls:     map[string]*types.Firewall{},
 		AdminStatus:   map[string]types.PortStatus{},
 	}
@@ -170,6 +170,9 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		if slices.Contains(p.Underlay, port) {
 			continue
 		}
+		if slices.Contains(c.additionalBridgePorts, port) {
+			continue
+		}
 
 		adminStatus := pointer.SafeDeref(pointer.SafeDeref(nic.State).Desired)
 		switch adminStatus {
@@ -181,7 +184,14 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 			// noop
 		}
 
-		if slices.Contains(c.additionalBridgePorts, port) {
+		var isStaticNeighbor bool
+		for _, vrf := range c.staticVRFs {
+			if slices.Contains(vrf.Neighbors, port) {
+				isStaticNeighbor = true
+			}
+		}
+
+		if isStaticNeighbor {
 			continue
 		}
 
@@ -221,6 +231,21 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		}
 
 		p.Vrfs[pointer.SafeDeref(nic.Vrf)] = vrf
+	}
+
+	for name, static := range c.staticVRFs {
+		if _, ok := p.Vrfs[name]; !ok {
+			p.Vrfs[name] = &types.Vrf{
+				VNI:       static.VNI,
+				Neighbors: static.Neighbors,
+				Cidrs:     static.Cidrs,
+			}
+			continue
+		}
+
+		vrf := p.Vrfs[name]
+		vrf.Neighbors = append(vrf.Neighbors, static.Neighbors...)
+		vrf.Cidrs = append(vrf.Cidrs, static.Cidrs...)
 	}
 
 	switcherConfig.Ports = p
