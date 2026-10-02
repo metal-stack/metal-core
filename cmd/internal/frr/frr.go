@@ -9,6 +9,7 @@ import (
 
 	"github.com/metal-stack/api/go/enum"
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
+	"github.com/metal-stack/metal-lib/pkg/pointer"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -109,7 +110,7 @@ func GetBGPStates(filepath string) (map[string]*apiv2.SwitchBGPPortState, error)
 			}
 
 			bgpstates[key] = &apiv2.SwitchBGPPortState{
-				Neighbor:              new(port.Hostname),
+				Neighbor:              pointer.PointerOrNil(port.Hostname),
 				PeerGroup:             port.PeerGroup,
 				BgpState:              bgpState,
 				BgpTimerUpEstablished: timestamppb.New(time.Unix(port.BgpTimerUpEstablished, 0)),
