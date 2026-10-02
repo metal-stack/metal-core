@@ -109,7 +109,7 @@ func GetBGPStates(filepath string) (map[string]*apiv2.SwitchBGPPortState, error)
 			}
 
 			bgpstates[key] = &apiv2.SwitchBGPPortState{
-				Neighbor:              port.Hostname,
+				Neighbor:              new(port.Hostname),
 				PeerGroup:             port.PeerGroup,
 				BgpState:              bgpState,
 				BgpTimerUpEstablished: timestamppb.New(time.Unix(port.BgpTimerUpEstablished, 0)),
