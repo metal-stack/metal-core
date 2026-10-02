@@ -8,11 +8,7 @@ import (
 )
 
 func (a *Applier) ensureNotBridged(ctx context.Context, interfaceName string) error {
-	oid, ok := a.bridgePortOidMap[interfaceName]
-	if !ok {
-		return nil
-	}
-	bridged, err := a.db.Asic.ExistBridgePort(ctx, oid)
+	bridged, err := a.portState.isBridged(ctx, interfaceName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve state data for interface %s: %w", interfaceName, err)
 	}
@@ -35,7 +31,7 @@ func (a *Applier) ensureNotBridged(ctx context.Context, interfaceName string) er
 
 	return retry.Do(
 		func() error {
-			bridged, err := a.db.Asic.ExistBridgePort(ctx, oid)
+			bridged, err := a.portState.isBridged(ctx, interfaceName)
 			if err != nil {
 				return err
 			}
