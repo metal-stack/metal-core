@@ -81,7 +81,7 @@ func TestGetBGPStates_Sonic(t *testing.T) {
 	// Ethernet23 – peer in Idle state with no hostname reported.
 	e23 := states["Ethernet23"]
 	assertField(t, "Ethernet23 BgpState", e23.BgpState, apiv2.BGPState_BGP_STATE_IDLE)
-	assertField(t, "Ethernet23 Neighbor", e23.Neighbor, new("")) // hostname absent in JSON
+	assertField(t, "Ethernet23 Neighbor", e23.Neighbor, nil) // hostname absent in JSON
 	assertField(t, "Ethernet23 BgpTimerUpEstablished", e23.BgpTimerUpEstablished, &timestamppb.Timestamp{})
 }
 
