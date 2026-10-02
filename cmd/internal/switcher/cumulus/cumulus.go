@@ -70,7 +70,6 @@ func (c *Cumulus) GetNics(ctx context.Context, blacklist []string) (nics []*apiv
 		}
 
 		nic := &apiv2.SwitchNic{
-			Mac:        &mac,
 			Identifier: mac,
 			Name:       name,
 			State: &apiv2.NicState{
