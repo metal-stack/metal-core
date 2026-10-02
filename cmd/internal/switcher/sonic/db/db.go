@@ -31,6 +31,7 @@ type (
 		Asic     *AsicDB
 		Config   *ConfigDB
 		Counters *CountersDB
+		State    *StateDB
 	}
 )
 
@@ -39,6 +40,7 @@ func New(cfg *Config) (*DB, error) {
 	asicDB := cfg.Databases["ASIC_DB"]
 	configDB := cfg.Databases["CONFIG_DB"]
 	countersDB := cfg.Databases["COUNTERS_DB"]
+	stateDB := cfg.Databases["STATE_DB"]
 
 	applClient, err := newRedisClient(cfg.Instances[applDB.Instance], applDB.Id)
 	if err != nil {
@@ -60,11 +62,17 @@ func New(cfg *Config) (*DB, error) {
 		return nil, fmt.Errorf("could not create client for COUNTERS_DB: %w", err)
 	}
 
+	stateClient, err := newRedisClient(cfg.Instances[stateDB.Instance], stateDB.Id)
+	if err != nil {
+		return nil, fmt.Errorf("could not create client for STATE_DB: %w", err)
+	}
+
 	db := &DB{
 		Appl:     newApplDB(applClient, applDB.Separator),
 		Asic:     newAsicDB(asicClient, asicDB.Separator),
 		Config:   newConfigDB(configClient, configDB.Separator),
 		Counters: newCountersDB(countersClient, countersDB.Separator),
+		State:    newStateDB(stateClient, stateDB.Separator),
 	}
 	return db, nil
 }

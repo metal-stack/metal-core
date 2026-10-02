@@ -17,18 +17,21 @@ import (
 type Applier struct {
 	db          *db.DB
 	log         *slog.Logger
+	portState   portStateChecker
 	previousCfg *types.Conf
-
-	bridgePortOidMap map[string]db.OID
-	portOidMap       map[string]db.OID
-	rifOidMap        map[string]db.OID
 }
 
-func NewApplier(log *slog.Logger, db *db.DB) *Applier {
-	return &Applier{
-		db:  db,
-		log: log,
+func NewApplier(log *slog.Logger, sonicDb *db.DB, portStateSource PortStateSource) (*Applier, error) {
+	portState, err := newPortStateChecker(log, sonicDb, portStateSource)
+	if err != nil {
+		return nil, err
 	}
+
+	return &Applier{
+		db:        sonicDb,
+		log:       log,
+		portState: portState,
+	}, nil
 }
 
 func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
@@ -62,7 +65,7 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 		return nil
 	}
 
-	if err := a.refreshOidMaps(ctx); err != nil {
+	if err := a.portState.refresh(ctx); err != nil {
 		return err
 	}
 
@@ -114,39 +117,6 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 
 func (a *Applier) GetPorts(ctx context.Context) ([]*db.Port, error) {
 	return a.db.Config.GetPorts(ctx)
-}
-
-func (a *Applier) refreshOidMaps(ctx context.Context) error {
-	a.log.Debug("refresh oid maps")
-
-	oidMap, err := a.db.Counters.GetPortNameMap(ctx)
-	if err != nil {
-		return fmt.Errorf("could not update port to oid map: %w", err)
-	}
-	a.log.Debug("set port oid map", "map", oidMap)
-	a.portOidMap = oidMap
-
-	oidMap, err = a.db.Counters.GetRifNameMap(ctx)
-	if err != nil {
-		return fmt.Errorf("could not update rif to oid ma: %w", err)
-	}
-	a.log.Debug("set rif oid map", "map", oidMap)
-	a.rifOidMap = oidMap
-
-	bridgePortMap, err := a.db.Asic.GetPortIdBridgePortMap(ctx)
-	if err != nil {
-		return fmt.Errorf("could not update bridge port to oid map: %w", err)
-	}
-	oidMap = make(map[string]db.OID, len(bridgePortMap))
-	for port, oid := range a.portOidMap {
-		if bridgePort, ok := bridgePortMap[oid]; ok {
-			oidMap[port] = bridgePort
-		}
-	}
-	a.log.Debug("set bridge port oid map", "map", oidMap)
-	a.bridgePortOidMap = oidMap
-
-	return nil
 }
 
 func (a *Applier) configureUnprovisionedPort(ctx context.Context, interfaceName string, adminStatus types.PortStatus, pxeVlan string) error {
