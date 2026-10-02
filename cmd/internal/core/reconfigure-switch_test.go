@@ -24,16 +24,12 @@ func TestBuildSwitcherConfig(t *testing.T) {
 	}
 
 	n1 := "swp1"
-	m1 := "00:00:00:00:00:01"
 	swp1 := &apiv2.SwitchNic{
 		Name: n1,
-		Mac:  &m1,
 	}
 	n2 := "swp2"
-	m2 := "00:00:00:00:00:02"
 	swp2 := &apiv2.SwitchNic{
 		Name: n2,
-		Mac:  &m2,
 		Vrf:  new("vrf104001"),
 		BgpFilter: &apiv2.BGPFilter{
 			Cidrs: []string{
@@ -42,10 +38,8 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		},
 	}
 	n3 := "swp3"
-	m3 := "00:00:00:00:00:03"
 	swp3 := &apiv2.SwitchNic{
 		Name: n3,
-		Mac:  &m3,
 		Vrf:  new("default"),
 	}
 	s := &apiv2.Switch{
