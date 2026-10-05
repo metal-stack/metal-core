@@ -32,7 +32,6 @@ type (
 		pxeVlanID               uint16
 		bgpNeighborStateFile    string
 		setSrcLoopback          bool
-		bootMode                BootMode
 
 		nos     switcher.NOS
 		client  clientv2.Client
@@ -62,7 +61,6 @@ type (
 		AdditionalBridgeVIDs  []string
 		SpineUplinks          []string
 		SetSrcLoopback        bool
-		BootMode              BootMode
 
 		NOS     switcher.NOS
 		Client  clientv2.Client
@@ -95,6 +93,5 @@ func New(c Config) *Core {
 		metrics:                 c.Metrics,
 		pxeVlanID:               c.PXEVlanID,
 		bgpNeighborStateFile:    c.BGPNeighborStateFile,
-		bootMode:                c.BootMode,
 	}
 }

@@ -8,26 +8,6 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
-// BootMode defines how unprovisioned machines boot.
-type BootMode string
-
-const (
-	// BootModePXE puts unprovisioned ports into the PXE VLAN; machines boot via DHCP/PXE.
-	BootModePXE = BootMode("pxe")
-	// BootModeL3 puts unprovisioned ports into the IPv6 boot VRF; machines boot via SLAAC and an ISO mounted through the BMC.
-	BootModeL3 = BootMode("l3")
-)
-
-// ParseBootMode validates the configured boot mode.
-func ParseBootMode(mode string) (BootMode, error) {
-	switch BootMode(mode) {
-	case BootModePXE, BootModeL3:
-		return BootMode(mode), nil
-	default:
-		return "", fmt.Errorf("unknown boot mode %q, must be one of %q or %q", mode, BootModePXE, BootModeL3)
-	}
-}
-
 // validateRDNSS checks that the given RDNSS addresses are IPv6 addresses, the only ones FRR accepts in router advertisements.
 func validateRDNSS(rdnss []string) error {
 	for _, server := range rdnss {
@@ -48,7 +28,7 @@ func validateRDNSS(rdnss []string) error {
 // RDNSS addresses come from the partition's boot configuration.
 func (c *Core) configureBoot(s *apiv2.Switch, cfg *types.Conf) error {
 	if s.BootVni == nil {
-		return fmt.Errorf("boot mode l3 requires a boot network in partition %s, the switch has no boot vni", s.Partition)
+		return fmt.Errorf("switch has no boot network assigned in partition %s", s.Partition)
 	}
 	if err := validateRDNSS(s.BootRdnss); err != nil {
 		return err

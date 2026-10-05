@@ -28,7 +28,6 @@ type Config struct {
 	InterfacesTplFile         string        `required:"false" default:"" desc:"the golang template file used to render /etc/network/interfaces, a default template is included" envconfig:"interfaces_tpl_file"`
 	FrrTplFile                string        `required:"false" default:"" desc:"the golang template file used to render /etc/frr/frr.conf, a default template is included" envconfig:"frr_tpl_file"`
 	PXEVlanID                 uint16        `required:"false" default:"4000" desc:"the id of the pxe vlan, only used in boot mode pxe" envconfig:"pxe_vlan_id"`
-	BootMode                  string        `required:"false" default:"pxe" desc:"how unprovisioned machines boot: pxe puts their ports into the pxe vlan, l3 puts them into the ipv6 boot vrf (MEP-20, SONiC only)" envconfig:"boot_mode"`
 	BGPNeighborStateFile      string        `required:"false" default:"/var/run/bgp-neighbors/bgp-neighbors.json" desc:"the file to read the BGP neighbor state from" envconfig:"bgp_neighbor_state_file"`
 	InterfaceNamingSchema     string        `required:"false" default:"default" desc:"schema for interface and alias naming of switch nics" envconfig:"interface_naming_schema"`
 }

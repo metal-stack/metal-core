@@ -60,16 +60,6 @@ func TestAPIBoundary(t *testing.T) {
 		}},
 	})
 	require.NoError(t, err)
-	_, err = admin.Adminv2().Network().Create(ctx, &adminv2.NetworkServiceCreateRequest{
-		Id:                       new("boundary-boot"),
-		Partition:                new(partitionID),
-		Type:                     apiv2.NetworkType_NETWORK_TYPE_BOOT,
-		Prefixes:                 []string{"fd00:20::/62"},
-		Vrf:                      new(uint32(42)),
-		DefaultChildPrefixLength: &apiv2.ChildPrefixLength{Ipv6: new(uint32(64))},
-	})
-	require.NoError(t, err)
-
 	// The core must work with an infra-only token, not the administrator's token.
 	tok, err := admin.Adminv2().Token().Create(ctx, &adminv2.TokenServiceCreateRequest{
 		User: new("metal-core-boundary"),
@@ -87,7 +77,7 @@ func TestAPIBoundary(t *testing.T) {
 	c := New(Config{
 		Log: log, ASN: "420000001", LoopbackIP: "10.0.0.1", CIDR: "192.0.2.2/24",
 		PartitionID: partitionID, RackID: "boundary-rack", ManagementGateway: "192.0.2.1",
-		BootMode: BootModeL3, ReconfigureSwitch: true, Client: infra, NOS: nos, Metrics: metrics.New(),
+		PXEVlanID: 4000, ReconfigureSwitch: true, Client: infra, NOS: nos, Metrics: metrics.New(),
 	})
 	c.fillManagementInfo = func(cfg *types.Conf, gateway string) error {
 		cfg.Ports.Eth0 = types.Nic{AddressCIDR: "192.0.2.2/24", Gateway: gateway}
@@ -107,11 +97,42 @@ func TestAPIBoundary(t *testing.T) {
 		}
 		return resp.Switch, nil
 	}
+
+	// Initially the API has no boot network, so core configures PXE. Creating the
+	// network below must migrate this same core instance without a local mode flag.
+	runBoundaryLoop(t, c, func(ct *assert.CollectT) {
+		sw, err := getSwitch()
+		if !assert.NoError(ct, err) {
+			return
+		}
+		assert.Nil(ct, sw.BootVni)
+		cfg := nos.applied()
+		if !assert.NotNil(ct, cfg) {
+			return
+		}
+		assert.NotContains(ct, cfg.Ports.Vrfs, types.BootVrfName)
+		assert.Equal(ct, uint16(4000), cfg.PXEVlanID)
+		assert.Len(ct, cfg.Ports.Unprovisioned, 2)
+		for _, port := range cfg.Ports.Unprovisioned {
+			assert.False(ct, port.BootPrefix.IsValid())
+		}
+	})
+	_, err = admin.Adminv2().Network().Create(ctx, &adminv2.NetworkServiceCreateRequest{
+		Id:                       new("boundary-boot"),
+		Partition:                new(partitionID),
+		Type:                     apiv2.NetworkType_NETWORK_TYPE_BOOT,
+		Prefixes:                 []string{"fd00:20::/62"},
+		Vrf:                      new(uint32(42)),
+		DefaultChildPrefixLength: &apiv2.ChildPrefixLength{Ipv6: new(uint32(64))},
+	})
+	require.NoError(t, err)
+
 	pool := netip.MustParsePrefix("fd00:20::/48")
 	assertPrefixes := func(ct *assert.CollectT, sw *apiv2.Switch) map[string]netip.Prefix {
 		got := map[string]netip.Prefix{}
 		seen := map[netip.Prefix]string{}
 		for _, nic := range sw.Nics {
+			assert.Equal(ct, types.BootVrfName, nic.GetVrf())
 			prefix, err := netip.ParsePrefix(nic.GetBootPrefix())
 			if !assert.NoError(ct, err) {
 				continue

@@ -272,7 +272,7 @@ func testProvisioningBoundary(t *testing.T, c *Core, nos *boundaryNOS, admin, in
 		if assert.NoError(ct, err) {
 			for _, nic := range sw.Switch.Nics {
 				if nic.Name == "Ethernet0" {
-					assert.Empty(ct, nic.GetVrf())
+					assert.Equal(ct, types.BootVrfName, nic.GetVrf())
 					currentPrefix, err = netip.ParsePrefix(nic.GetBootPrefix())
 					assert.NoError(ct, err)
 					assert.Equal(ct, 64, currentPrefix.Bits())

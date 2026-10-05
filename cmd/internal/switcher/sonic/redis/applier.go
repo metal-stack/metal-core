@@ -34,9 +34,21 @@ func NewApplier(log *slog.Logger, db *db.DB) *Applier {
 }
 
 func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
+	// The API selects L3 boot by assigning a boot network. Losing that assignment
+	// must not turn a migrated switch back into a PXE switch, including after restart.
+	if cfg.Ports.Vrfs[types.BootVrfName] == nil {
+		boot, err := a.db.Config.ExistVrf(ctx, types.BootVrfName)
+		if err != nil {
+			return fmt.Errorf("could not check existing boot vrf: %w", err)
+		}
+		if boot {
+			return fmt.Errorf("switch has a boot vrf but no API-assigned boot network; reverting to PXE is unsupported")
+		}
+	}
+
 	var (
 		errs    []error
-		changed bool
+		changed = a.previousCfg == nil
 	)
 
 	if a.previousCfg != nil {

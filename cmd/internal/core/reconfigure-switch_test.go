@@ -122,7 +122,6 @@ func TestBuildSwitcherConfigL3(t *testing.T) {
 		asn:          "420000001",
 		loopbackIP:   "10.0.0.1",
 		spineUplinks: []string{"Ethernet120"},
-		bootMode:     BootModeL3,
 		nos:          &fakeNOS{},
 	}
 
@@ -131,12 +130,12 @@ func TestBuildSwitcherConfigL3(t *testing.T) {
 		BootVni:   new(uint32(104000)),
 		BootRdnss: []string{"fd00:20:ffff::53"},
 		Nics: []*apiv2.SwitchNic{
-			{Name: "Ethernet0", BootPrefix: new("fd00:20::/64")},
+			{Name: "Ethernet0", Vrf: new(types.BootVrfName), BootPrefix: new("fd00:20::/64")},
 			{Name: "Ethernet4", Vrf: new("vrf104001"), BootPrefix: new("fd00:20:0:1::/64")},
-			{Name: "Ethernet8", BootPrefix: new("fd00:20:0:2::/64")},
-			{Name: "Ethernet12"}, // no prefix assigned yet
-			{Name: "Ethernet16", BootPrefix: new("fd00:20::/56")}, // invalid prefix
-			{Name: "Ethernet120", BootPrefix: new("fd00:20:0:3::/64")},
+			{Name: "Ethernet8", Vrf: new(types.BootVrfName), BootPrefix: new("fd00:20:0:2::/64")},
+			{Name: "Ethernet12", Vrf: new(types.BootVrfName)},                                  // no prefix assigned yet
+			{Name: "Ethernet16", Vrf: new(types.BootVrfName), BootPrefix: new("fd00:20::/56")}, // invalid prefix
+			{Name: "Ethernet120", Vrf: new(types.BootVrfName), BootPrefix: new("fd00:20:0:3::/64")},
 		},
 	}
 
@@ -168,13 +167,17 @@ func TestBuildSwitcherConfigL3(t *testing.T) {
 	require.ErrorContains(t, err, `invalid boot rdnss address "dns"`)
 	s.BootRdnss = nil
 
-	// without a boot network in the partition, the switch cannot be configured in L3 mode
+	// A port assignment without the VRF's VNI is invalid.
 	s.BootVni = nil
 	_, err = c.buildSwitcherConfig(s)
-	require.ErrorContains(t, err, "requires a boot network in partition partition-1")
+	require.ErrorContains(t, err, "port Ethernet0 is assigned to VrfBoot but the switch has no boot VNI")
 
-	// PXE mode does not build a boot config
-	c.bootMode = BootModePXE
+	// A partition without an API-assigned boot network still uses PXE.
+	for _, nic := range s.Nics {
+		if nic.GetVrf() == types.BootVrfName {
+			nic.Vrf = nil
+		}
+	}
 	actual, err = c.buildSwitcherConfig(s)
 	require.NoError(t, err)
 	require.NotContains(t, actual.Ports.Vrfs, types.BootVrfName)
@@ -182,4 +185,26 @@ func TestBuildSwitcherConfigL3(t *testing.T) {
 		require.False(t, port.BootPrefix.IsValid())
 	}
 	require.Empty(t, actual.BootRDNSS)
+
+	// Creating the partition's boot network enables L3 on the next poll without
+	// changing any local configuration or restarting core.
+	s.BootVni = new(uint32(104000))
+	_, err = c.buildSwitcherConfig(s)
+	require.ErrorContains(t, err, "port Ethernet0 has no VRF assignment despite an API-assigned boot network")
+	for _, nic := range s.Nics {
+		if nic.GetVrf() == "" {
+			nic.Vrf = new(types.BootVrfName)
+		}
+	}
+	actual, err = c.buildSwitcherConfig(s)
+	require.NoError(t, err)
+	require.Contains(t, actual.Ports.Vrfs, types.BootVrfName)
+	require.Equal(t, netip.MustParsePrefix("fd00:20::/64"), actual.Ports.Unprovisioned["Ethernet0"].BootPrefix)
+
+	// Keep the boot VRF infrastructure even when all its ports are provisioned.
+	s.Nics = s.Nics[1:2]
+	actual, err = c.buildSwitcherConfig(s)
+	require.NoError(t, err)
+	require.Empty(t, actual.Ports.Unprovisioned)
+	require.Contains(t, actual.Ports.Vrfs, types.BootVrfName)
 }

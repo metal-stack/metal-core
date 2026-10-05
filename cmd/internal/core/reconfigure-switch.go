@@ -184,12 +184,20 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 			continue
 		}
 
-		if pointer.SafeDeref(nic.Vrf) == "" {
-			unprovisioned := &types.UnprovisionedPort{Port: port}
-			if c.bootMode == BootModeL3 {
-				unprovisioned.BootPrefix = c.bootPrefix(nic)
+		switch pointer.SafeDeref(nic.Vrf) {
+		case "":
+			// PXE and L3 boot cannot coexist during the partition migration.
+			// A VNI describes the boot VRF; it does not assign a port to it.
+			if s.BootVni != nil {
+				return nil, fmt.Errorf("port %s has no VRF assignment despite an API-assigned boot network", port)
 			}
-			p.Unprovisioned[port] = unprovisioned
+			p.Unprovisioned[port] = &types.UnprovisionedPort{Port: port}
+			continue
+		case types.BootVrfName:
+			if s.BootVni == nil {
+				return nil, fmt.Errorf("port %s is assigned to %s but the switch has no boot VNI", port, types.BootVrfName)
+			}
+			p.Unprovisioned[port] = &types.UnprovisionedPort{Port: port, BootPrefix: c.bootPrefix(nic)}
 			continue
 		}
 
@@ -226,7 +234,7 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 
 	switcherConfig.Ports = p
 
-	if c.bootMode == BootModeL3 {
+	if s.BootVni != nil {
 		if err := c.configureBoot(s, switcherConfig); err != nil {
 			return nil, err
 		}

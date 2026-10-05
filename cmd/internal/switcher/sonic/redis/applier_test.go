@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/netip"
 	"strings"
@@ -112,9 +113,6 @@ func newTestApplier(t *testing.T, data test.StringMap) *testApplier {
 	require.NoError(t, test.LoadData(ctx, config, data, sep))
 
 	a := NewApplier(slog.Default(), d)
-	// force the applier to apply the first configuration
-	a.previousCfg = &types.Conf{Name: "previous"}
-
 	return &testApplier{
 		Applier:        a,
 		asicClient:     db.NewClient(asic, sep),
@@ -277,23 +275,34 @@ func TestApplier_L3ToFirewall(t *testing.T) {
 	require.Equal(t, "Ethernet4", a.config["ACL_TABLE|BOOT_V6"]["ports@"])
 }
 
-func TestApplier_L3ToPxeRollback(t *testing.T) {
+func TestApplier_FirstApplyWithMatchingPortStatus(t *testing.T) {
 	a := newTestApplier(t, baseConfigDB)
-	a.apply(t, l3Conf([]string{"Ethernet0", "Ethernet4"}))
+	c := l3Conf([]string{"Ethernet0", "Ethernet4"})
+	c.Ports.AdminStatus = map[string]types.PortStatus{"Ethernet0": types.PortStatusUp, "Ethernet4": types.PortStatusUp}
+	a.apply(t, c)
+	require.NotEmpty(t, a.config["VRF|VrfBoot"])
+	require.Equal(t, "Ethernet0,Ethernet4", a.config["ACL_TABLE|BOOT_V6"]["ports@"])
+}
 
-	a.apply(t, pxeConf([]string{"Ethernet0", "Ethernet4"}))
+func TestApplier_RejectsMissingBootNetwork(t *testing.T) {
+	for _, restart := range []bool{false, true} {
+		t.Run(fmt.Sprintf("restart=%t", restart), func(t *testing.T) {
+			a := newTestApplier(t, baseConfigDB)
+			a.apply(t, l3Conf([]string{"Ethernet0", "Ethernet4"}))
+			before := a.config
+			if restart {
+				a.Applier = NewApplier(slog.Default(), a.db)
+			}
 
-	require.Empty(t, a.keysWithPrefix("INTERFACE|"), "boot interfaces must be removed")
-	require.Equal(t, map[string]string{"tagging_mode": "untagged"}, a.config["VLAN_MEMBER|Vlan4000|Ethernet0"])
-	require.Equal(t, map[string]string{"tagging_mode": "untagged"}, a.config["VLAN_MEMBER|Vlan4000|Ethernet4"])
-	require.Empty(t, a.config["VRF|VrfBoot"], "boot vrf must be removed")
-	require.Empty(t, a.config["VLAN|Vlan1001"])
-	require.Empty(t, a.config["VLAN_INTERFACE|Vlan1001"])
-	require.Empty(t, a.config["SUPPRESS_VLAN_NEIGH|Vlan1001"])
-	require.Empty(t, a.config["VXLAN_TUNNEL_MAP|vtep|map_104000_Vlan1001"])
-	require.Equal(t, "", a.config["ACL_TABLE|BOOT_V6"]["ports@"])
-	require.Equal(t, "", a.config["ACL_TABLE|BOOT_V4"]["ports@"])
-	require.Equal(t, map[string]string{"vlanid": "4000"}, a.config["VLAN|Vlan4000"], "pxe vlan must survive")
+			err := a.Apply(t.Context(), pxeConf([]string{"Ethernet0", "Ethernet4"}))
+			require.ErrorContains(t, err, "no API-assigned boot network")
+			a.refresh(t)
+			require.Equal(t, before, a.config, "missing API assignment must leave existing boot networking and ACLs intact")
+
+			// Restoring the assignment allows reconciliation to resume.
+			a.apply(t, l3Conf([]string{"Ethernet0", "Ethernet4"}))
+		})
+	}
 }
 
 func TestApplier_L3RequiresBootACLTables(t *testing.T) {
@@ -347,18 +356,6 @@ func TestApplier_ACLBindingSurvivesFailedTransition(t *testing.T) {
 	require.NoError(t, db.NewClient(a.configClient, sep).HSet(t.Context(), db.Key{"PORT", "Ethernet0"}, db.Val{"admin_status": "up", "mtu": "9000"}))
 	a.apply(t, c)
 	require.Equal(t, "Ethernet4", a.config["ACL_TABLE|BOOT_V6"]["ports@"])
-}
-
-func TestApplier_PxeRollbackKeepsBindingOnFailure(t *testing.T) {
-	a := newTestApplier(t, baseConfigDB)
-	a.apply(t, l3Conf([]string{"Ethernet0", "Ethernet4"}))
-
-	require.NoError(t, db.NewClient(a.configClient, sep).Del(t.Context(), db.Key{"PORT", "Ethernet4"}))
-	err := a.Apply(t.Context(), pxeConf([]string{"Ethernet0", "Ethernet4"}))
-	require.ErrorContains(t, err, "port Ethernet4 does not exist in CONFIG_DB")
-	a.refresh(t)
-
-	require.Equal(t, "Ethernet4", a.config["ACL_TABLE|BOOT_V6"]["ports@"], "only the port that left the boot vrf is unbound")
 }
 
 func TestApplier_FailedBootTransitionDoesNotDuplicateBinding(t *testing.T) {

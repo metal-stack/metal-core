@@ -31,6 +31,10 @@ func New(log *slog.Logger, frrTplFile, interfacesTplFile string) *Cumulus {
 }
 
 func (c *Cumulus) Apply(ctx context.Context, cfg *types.Conf) error {
+	if cfg.Ports.Vrfs[types.BootVrfName] != nil {
+		return fmt.Errorf("API-assigned layer 3 boot network is only supported on SONiC")
+	}
+
 	withoutDownPorts := cfg.NewWithoutDownPorts()
 	err := c.interfacesApplier.Apply(ctx, withoutDownPorts)
 	if err != nil {
