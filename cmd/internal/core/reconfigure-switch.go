@@ -15,6 +15,7 @@ import (
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	infrav2 "github.com/metal-stack/api/go/metalstack/infra/v2"
 	"github.com/metal-stack/metal-core/cmd/internal/frr"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/cumulus"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/metal-lib/pkg/pointer"
 
@@ -131,6 +132,10 @@ func (c *Core) reconfigureSwitch(ctx context.Context, hostname string) (*apiv2.S
 }
 
 func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
+	if _, isCumulus := c.nos.(*cumulus.Cumulus); isCumulus && s.BootVni != nil {
+		return nil, fmt.Errorf("API-assigned layer 3 boot network is only supported on SONiC")
+	}
+
 	asn64, err := strconv.ParseUint(c.asn, 10, 32)
 	if err != nil {
 		return nil, err

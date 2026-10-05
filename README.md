@@ -55,7 +55,7 @@ If you need to have both of the fields to have the same value, use either `name`
 
 The metal-apiserver assigns boot ports explicitly with `SwitchNic.vrf = VrfBoot`. `Switch.boot_vni` supplies the boot VRF's VNI; it does not select a port's role. Before a partition has a boot network, unprovisioned ports use the PXE VLAN (`METAL_CORE_PXE_VLAN_ID`) and machines boot via DHCP/PXE.
 
-Creating a **boot network** in the partition makes metal-core put unprovisioned ports into the IPv6 boot VRF `VrfBoot` on its next poll, without a local mode flag or restart (SONiC only), as described in [MEP-20](https://metal-stack.io/community/MEP-20-full-layer-3-dataplane). The network has type `boot`, an IPv6 prefix, a `vrf` (the layer 3 VNI of `VrfBoot`) and a default child prefix length of 64 for IPv6, for example:
+Creating a **boot network** in the partition makes metal-core put unprovisioned ports into the IPv6 boot VRF `VrfBoot` on its next poll, without a restart (SONiC only), as described in [MEP-20](https://metal-stack.io/community/MEP-20-full-layer-3-dataplane). The network has type `boot`, an IPv6 prefix, a `vrf` (the layer 3 VNI of `VrfBoot`) and a default child prefix length of 64 for IPv6, for example:
 
 ```bash
 metalctlv2 admin network create --id boot-mini-lab --name "Boot Network" --type boot --partition mini-lab \
@@ -73,7 +73,7 @@ A `VrfBoot` port without a boot VNI, or an unassigned machine port alongside a b
 
 Ports of allocated machines and firewalls are moved out of `VrfBoot` (their addresses and the ACL binding are removed) and back when the machine is freed. Migration from PXE to ISO/L3 boot is one-way. If the API stops assigning a boot network after `VrfBoot` has been created, metal-core reports an error and retains the existing switch configuration, including after a core restart. It does not revert the switch to PXE. Restore the boot-network assignment to resume reconciliation.
 
-`METAL_CORE_BOOT_MODE` is no longer used. Boot VNI, per-port prefixes and RDNSS all come from the API. A boot-network assignment on Cumulus is rejected before applying configuration.
+Boot VNI, per-port prefixes and RDNSS all come from the API. A boot-network assignment on Cumulus is rejected before building configuration, even when configuration application is disabled.
 
 ## API boundary test
 

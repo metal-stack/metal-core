@@ -107,6 +107,30 @@ func TestBuildSwitcherConfig(t *testing.T) {
 	require.EqualValues(t, expected, actual)
 }
 
+func TestBuildSwitcherConfigRejectsCumulusBootBeforeBuild(t *testing.T) {
+	for _, tt := range []struct {
+		name string
+		nics []*apiv2.SwitchNic
+	}{
+		{name: "boot port", nics: []*apiv2.SwitchNic{{Name: "swp1", Vrf: new(types.BootVrfName)}}},
+		{name: "all ports provisioned", nics: []*apiv2.SwitchNic{{Name: "swp1", Vrf: new("vrf104001")}}},
+		{name: "no ports"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			// Invalid ASN and RDNSS, and no VLAN reader: backend rejection must
+			// precede configuration building. Application is disabled by default.
+			c := &Core{nos: &cumulus.Cumulus{}, asn: "invalid"}
+			cfg, err := c.buildSwitcherConfig(&apiv2.Switch{
+				BootVni:   new(uint32(104000)),
+				BootRdnss: []string{"invalid"},
+				Nics:      tt.nics,
+			})
+			require.EqualError(t, err, "API-assigned layer 3 boot network is only supported on SONiC")
+			require.Nil(t, cfg)
+		})
+	}
+}
+
 type fakeNOS struct {
 	switcher.NOS
 }
