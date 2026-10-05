@@ -24,10 +24,12 @@ type (
 		Underlay      []string
 		Unprovisioned []string
 		BladePorts    []string
-		Vrfs          map[string]*Vrf
+		Vrfs          Vrfs
 		Firewalls     map[string]*Firewall
 		AdminStatus   map[string]PortStatus
 	}
+
+	Vrfs map[string]*Vrf
 
 	Vrf struct {
 		Filter
