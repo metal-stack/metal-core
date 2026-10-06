@@ -71,7 +71,9 @@ metalctlv2 admin network create --id boot-mini-lab --name "Boot Network" --type 
 
 A `VrfBoot` port without a boot VNI, or an unassigned machine port alongside a boot VNI, causes configuration validation to fail before application. The boot VRF infrastructure remains configured when all ports are allocated.
 
-Ports of allocated machines and firewalls are moved out of `VrfBoot` (their addresses and the ACL binding are removed) and back when the machine is freed. Migration from PXE to ISO/L3 boot is one-way. If the API stops assigning a boot network after `VrfBoot` has been created, metal-core reports an error and retains the existing switch configuration, including after a core restart. It does not revert the switch to PXE. Restore the boot-network assignment to resume reconciliation.
+Ports of allocated machines and firewalls are moved out of `VrfBoot` (their addresses and the ACL binding are removed) and back when the machine is freed. Migration from PXE to ISO/L3 boot is one-way through the supported API lifecycle. Core applies the API-provided configuration; the API preserves boot assignments through deletion protection and controlled replacement.
+
+The API supports drained replacement of boot address pools through `NetworkService.Update`, keeping the network ID and VNI. Disable boot ports and wait for DOWN observations before replacing pools. Core acknowledges `boot_network_revision` only after successful enabled application. Old pools remain reserved until every registered switch acknowledges; boot ports can then be re-enabled. Older or offline cores hold replacement completion. Network deletion is rejected while switches remain registered.
 
 Boot VNI, per-port prefixes and RDNSS all come from the API. A boot-network assignment on Cumulus is rejected before building configuration, even when configuration application is disabled.
 

@@ -54,6 +54,10 @@ func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval, timeou
 				c.log.Info("reconfiguration succeeded")
 			}
 
+			if err == nil && c.enableReconfigureSwitch && s != nil {
+				req.AppliedBootNetworkRevision = s.BootNetworkRevision
+			}
+
 			var nics []*apiv2.SwitchNic
 			if s != nil {
 				nics = s.Nics

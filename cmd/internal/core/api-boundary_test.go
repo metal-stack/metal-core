@@ -217,6 +217,100 @@ func TestAPIBoundary(t *testing.T) {
 	testProvisioningBoundary(t, c, nos, admin, infra, artifacts.URL)
 	// Both ports must return to boot configuration using their current API prefixes.
 	runBoundaryLoop(t, c, checkApplied(rdnss, time.Now()))
+
+	// Drained replacement must retain old pools until a successful enabled apply.
+	partitionSwitches, err := admin.Adminv2().Switch().List(ctx, &adminv2.SwitchServiceListRequest{Query: &apiv2.SwitchQuery{Partition: new(partitionID)}})
+	require.NoError(t, err)
+	for _, sw := range partitionSwitches.Switches {
+		states := map[string]apiv2.SwitchPortStatus{}
+		for _, nic := range sw.Nics {
+			nic.State.Desired = apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN.Enum()
+			states[nic.Name] = apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN
+		}
+		_, err = admin.Adminv2().Switch().Update(ctx, &adminv2.SwitchServiceUpdateRequest{
+			Id: sw.Id, UpdateMeta: &apiv2.UpdateMeta{UpdatedAt: sw.Meta.UpdatedAt}, Nics: sw.Nics,
+		})
+		require.NoError(t, err)
+		if sw.Id != hostname {
+			_, err = infra.Infrav2().Switch().Heartbeat(ctx, &infrav2.SwitchServiceHeartbeatRequest{Id: sw.Id, PortStates: states})
+			require.NoError(t, err)
+		}
+	}
+	c.linkStatus = func(string) (apiv2.SwitchPortStatus, error) {
+		return apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN, nil
+	}
+	runBoundaryLoop(t, c, func(ct *assert.CollectT) {
+		sw, err := getSwitch()
+		if !assert.NoError(ct, err) {
+			return
+		}
+		for _, nic := range sw.Nics {
+			assert.Equal(ct, apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN, nic.State.Actual)
+			assert.Equal(ct, apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN, nic.State.GetDesired())
+		}
+	})
+	_, err = admin.Adminv2().Network().Delete(ctx, &adminv2.NetworkServiceDeleteRequest{Id: "boundary-boot"})
+	require.Equal(t, connect.CodeFailedPrecondition, connect.CodeOf(err))
+	replacement, err := admin.Adminv2().Network().Update(ctx, &adminv2.NetworkServiceUpdateRequest{
+		Id: "boundary-boot", UpdateMeta: &apiv2.UpdateMeta{LockingStrategy: apiv2.OptimisticLockingStrategy_OPTIMISTIC_LOCKING_STRATEGY_SERVER}, Prefixes: []string{"fd00:30::/60"},
+	})
+	require.NoError(t, err)
+	require.NotEmpty(t, replacement.Network.RetiringBootPrefixes)
+	checkRetained := func() {
+		t.Helper()
+		nw, err := admin.Adminv2().Network().Get(ctx, &adminv2.NetworkServiceGetRequest{Id: "boundary-boot"})
+		require.NoError(t, err)
+		require.Equal(t, replacement.Network.RetiringBootPrefixes, nw.Network.RetiringBootPrefixes)
+	}
+	c.enableReconfigureSwitch = false
+	since = time.Now()
+	runBoundaryLoop(t, c, func(ct *assert.CollectT) {
+		sw, err := getSwitch()
+		if !assert.NoError(ct, err) || !assert.NotNil(ct, sw.LastSync) {
+			return
+		}
+		assert.True(ct, sw.LastSync.Time.AsTime().After(since))
+	})
+	checkRetained()
+	c.enableReconfigureSwitch = true
+	nos.failWith(errors.New("replacement apply failure"))
+	since = time.Now()
+	runBoundaryLoop(t, c, func(ct *assert.CollectT) {
+		sw, err := getSwitch()
+		if !assert.NoError(ct, err) || !assert.NotNil(ct, sw.LastSyncError) {
+			return
+		}
+		assert.Contains(ct, sw.LastSyncError.GetError(), "replacement apply failure")
+		assert.True(ct, sw.LastSyncError.Time.AsTime().After(since))
+	})
+	checkRetained()
+	for _, sw := range partitionSwitches.Switches {
+		if sw.Id == hostname {
+			continue
+		}
+		peerCore := *c
+		peerCore.nos = &boundaryNOS{}
+		applied, err := peerCore.reconfigureSwitch(ctx, sw.Id)
+		require.NoError(t, err)
+		_, err = infra.Infrav2().Switch().Heartbeat(ctx, &infrav2.SwitchServiceHeartbeatRequest{Id: sw.Id, AppliedBootNetworkRevision: applied.BootNetworkRevision})
+		require.NoError(t, err)
+	}
+	checkRetained()
+	nos.failWith(nil)
+	runBoundaryLoop(t, c, func(ct *assert.CollectT) {
+		nw, err := admin.Adminv2().Network().Get(ctx, &adminv2.NetworkServiceGetRequest{Id: "boundary-boot"})
+		if !assert.NoError(ct, err) {
+			return
+		}
+		assert.Empty(ct, nw.Network.RetiringBootPrefixes)
+		cfg := nos.applied()
+		if !assert.NotNil(ct, cfg) {
+			return
+		}
+		for _, port := range cfg.Ports.Unprovisioned {
+			assert.True(ct, netip.MustParsePrefix("fd00:30::/60").Contains(port.BootPrefix.Addr()))
+		}
+	})
 }
 
 func runBoundaryLoop(t *testing.T, c *Core, check func(*assert.CollectT)) {

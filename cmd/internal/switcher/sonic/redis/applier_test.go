@@ -284,22 +284,22 @@ func TestApplier_FirstApplyWithMatchingPortStatus(t *testing.T) {
 	require.Equal(t, "Ethernet0,Ethernet4", a.config["ACL_TABLE|BOOT_V6"]["ports@"])
 }
 
-func TestApplier_RejectsMissingBootNetwork(t *testing.T) {
+func TestApplier_UsesDesiredBootAssignment(t *testing.T) {
 	for _, restart := range []bool{false, true} {
 		t.Run(fmt.Sprintf("restart=%t", restart), func(t *testing.T) {
 			a := newTestApplier(t, baseConfigDB)
 			a.apply(t, l3Conf([]string{"Ethernet0", "Ethernet4"}))
-			before := a.config
 			if restart {
 				a.Applier = NewApplier(slog.Default(), a.db)
 			}
 
-			err := a.Apply(t.Context(), pxeConf([]string{"Ethernet0", "Ethernet4"}))
-			require.ErrorContains(t, err, "no API-assigned boot network")
-			a.refresh(t)
-			require.Equal(t, before, a.config, "missing API assignment must leave existing boot networking and ACLs intact")
+			a.apply(t, pxeConf([]string{"Ethernet0", "Ethernet4"}))
+			require.Empty(t, a.config["VRF|VrfBoot"])
+			require.Empty(t, a.config["ACL_TABLE|BOOT_V6"]["ports@"])
+			require.Empty(t, a.config["ACL_TABLE|BOOT_V4"]["ports@"])
+			require.Empty(t, a.keysWithPrefix("INTERFACE|Ethernet0"))
+			require.NotEmpty(t, a.config["VLAN_MEMBER|Vlan4000|Ethernet0"])
 
-			// Restoring the assignment allows reconciliation to resume.
 			a.apply(t, l3Conf([]string{"Ethernet0", "Ethernet4"}))
 		})
 	}
@@ -400,4 +400,20 @@ func TestApplier_MoveRefreshesRifOidMap(t *testing.T) {
 
 	require.Equal(t, map[string]string{"ipv6_use_link_local_only": "enable", "vrf_name": "Vrf104001"}, a.config["INTERFACE|Ethernet0"])
 	require.Equal(t, db.OID("oid:0x6000000000001"), a.rifOidMap["Ethernet0"], "rif oid map must have been refreshed")
+}
+
+func TestApplier_DrainedBootPrefixReplacement(t *testing.T) {
+	a := newTestApplier(t, baseConfigDB)
+	old := l3Conf([]string{"Ethernet0"})
+	old.Ports.AdminStatus["Ethernet0"] = types.PortStatusDown
+	a.apply(t, old)
+	replacement := l3Conf([]string{"Ethernet0"})
+	replacement.Ports.AdminStatus["Ethernet0"] = types.PortStatusDown
+	replacement.Ports.Unprovisioned["Ethernet0"].BootPrefix = netip.MustParsePrefix("fd00:30::/64")
+	a.apply(t, replacement)
+	require.NotContains(t, a.config, "INTERFACE|Ethernet0|fd00:20:0:100::1/64")
+	require.Equal(t, map[string]string{"NULL": "NULL"}, a.config["INTERFACE|Ethernet0|fd00:30::1/64"])
+	require.Equal(t, "down", a.config["PORT|Ethernet0"]["admin_status"])
+	require.Equal(t, "104000", a.config["VRF|VrfBoot"]["vni"])
+	require.Equal(t, "Ethernet0", a.config["ACL_TABLE|BOOT_V6"]["ports@"])
 }
