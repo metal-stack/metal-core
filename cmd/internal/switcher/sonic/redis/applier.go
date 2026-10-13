@@ -39,6 +39,10 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 		changed bool
 	)
 
+	if err := a.configureLLDP(ctx, cfg); len(err) != 0 {
+		errs = append(errs, err...)
+	}
+
 	if a.previousCfg != nil {
 		diff := cmp.Diff(a.previousCfg, cfg)
 		if diff != "" {
@@ -116,6 +120,27 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 
 func (a *Applier) GetPorts(ctx context.Context) ([]*db.Port, error) {
 	return a.db.Config.GetPorts(ctx)
+}
+
+func (a *Applier) configureLLDP(ctx context.Context, cfg *types.Conf) []error {
+	var errs []error
+
+	err := a.db.Config.SetLldpTxInterval(ctx, a.quirks.LldpTxIntervalMode())
+	if err != nil {
+		errs = append(errs, fmt.Errorf("failed to update LLDP tx_interval: %w", err))
+	}
+	ports, err := a.GetPorts(ctx)
+	if err != nil {
+		errs = append(errs, fmt.Errorf("failed to get ports: %w", err))
+	}
+	for _, port := range ports {
+		err := a.db.Config.SetLldpForPor(ctx, port.Name, port.Alias, a.quirks.LldpPortConfigMode())
+		if err != nil {
+			errs = append(errs, fmt.Errorf("failed to update LLDP settings for port %s: %w", port.Name, err))
+		}
+	}
+
+	return errs
 }
 
 func (a *Applier) configureUnprovisionedPort(ctx context.Context, interfaceName string, adminStatus types.PortStatus, pxeVlan string) error {

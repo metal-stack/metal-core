@@ -11,6 +11,7 @@ import (
 
 var QuirkProfiles = map[string]func() Quirks{
 	"community": func() Quirks { return communityQuirks{} },
+	"edgecore":  func() Quirks { return edgecoreQuirks{} },
 	"asternos":  func() Quirks { return asterNOSQuirks{} },
 }
 
@@ -34,6 +35,10 @@ type Quirks interface {
 	// Remove Interface configuration instead of deleting them in FRR
 	// Required true on newer FRR versions (observed on asternos 202511)
 	frrKeepInterfaces() bool
+	// Location of the Key containing the global LLDP tx_inteval
+	LldpTxIntervalMode() db.LldpSetTxIntervalMode
+	// Configure the LLDP Port config for a managed port
+	LldpPortConfigMode() db.LldpSetPortMode
 }
 
 // communityQuirks is upstream SONiC behaviour. Profiles that only differ in some
@@ -67,6 +72,16 @@ func (communityQuirks) frrDisableNextHopGroups() bool { return false }
 
 func (communityQuirks) frrKeepInterfaces() bool { return false }
 
+func (communityQuirks) LldpTxIntervalMode() db.LldpSetTxIntervalMode {
+	// TODO: Verify
+	return db.Broadcom2022IntervalMode
+}
+
+func (communityQuirks) LldpPortConfigMode() db.LldpSetPortMode {
+	// TODO: Verify
+	return db.Broadcom2022PortMode
+}
+
 //nolint:unused
 type asterNOSQuirks struct{ communityQuirks }
 
@@ -94,6 +109,25 @@ func (asterNOSQuirks) frrKeepInterfaces() bool { return false }
 
 // FRR 10.3 in Asternos refuses to apply a frr.conf that deletes active interfaces
 func (asterNOSQuirks) frrDisableNextHopGroups() bool { return true }
+
+func (asterNOSQuirks) LldpTxIntervalMode() db.LldpSetTxIntervalMode {
+	return db.AsterNOSIntervalMode
+}
+
+func (asterNOSQuirks) LldpPortConfigMode() db.LldpSetPortMode {
+	return db.LldpSetPortMode(db.AsterNOSIntervalMode)
+}
+
+//nolint:unused
+type edgecoreQuirks struct{ communityQuirks }
+
+func (edgecoreQuirks) Name() string { return "edgecore" }
+
+func (edgecoreQuirks) LldpTxIntervalMode() db.LldpSetTxIntervalMode {
+	return db.Broadcom2022IntervalMode
+}
+
+func (edgecoreQuirks) LldpPortConfigMode() db.LldpSetPortMode { return db.Broadcom2022PortMode }
 
 // Apply the Quirks to the FRR Configuration
 //
