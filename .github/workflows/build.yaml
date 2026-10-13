@@ -21,4 +21,5 @@ jobs:
     secrets: inherit
     with:
       build-command: make all
+      test-command: make test
       lint-args: --build-tags client
