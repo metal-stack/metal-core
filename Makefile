@@ -45,3 +45,8 @@ gofmt:
 .PHONY: test-switcher
 test-switcher:
 	cd ./switcher/templates && ./validate.sh && cd -
+
+.PHONY: ci-build
+ci-build:
+	sudo apt-get install -y libpcap-dev
+	$(MAKE)	all
