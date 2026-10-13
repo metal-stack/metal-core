@@ -17,8 +17,8 @@ jobs:
     uses: metal-stack/actions-common/.github/workflows/release-drafter.yaml@v1
 
   go-build:
-    uses: metal-stack/actions-common/.github/workflows/go-build.yaml@lint-args
+    uses: metal-stack/actions-common/.github/workflows/go-build.yaml@setup
     secrets: inherit
     with:
-      build-command: make ci-build
+      build-command: make all
       lint-args: --build-tags client
