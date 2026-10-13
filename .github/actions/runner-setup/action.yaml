@@ -1,0 +1,11 @@
+---
+name: Runner Setup
+description: Sets up the runner for running reusable workflows.
+
+runs:
+  using: composite
+  steps:
+    - name: Runner setup
+      shell: bash
+      run: |
+        sudo apt-get install -y libpcap-dev
