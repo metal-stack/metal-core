@@ -1,4 +1,4 @@
-package redis
+package quirks
 
 import (
 	"log/slog"
@@ -60,7 +60,7 @@ func TestQuirks_PortState(t *testing.T) {
 	tests := []struct {
 		name   string
 		quirks Quirks
-		want   portStateChecker
+		want   PortStateChecker
 	}{
 		{
 			name:   "community",

@@ -14,6 +14,7 @@ import (
 
 	"github.com/metal-stack/metal-core/cmd/internal"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
@@ -27,6 +28,7 @@ type (
 		log                   *slog.Logger
 		redisApplier          *redis.Applier
 		interfaceNamingSchema InterfaceNamingSchema
+		quirks                quirks.Quirks
 	}
 
 	PortInfo struct {
@@ -52,7 +54,7 @@ const (
 	redisConfigFile  = "/var/run/redis/sonic-db/database_config.json"
 )
 
-func New(log *slog.Logger, frrTplFile string, interfaceNamingSchema InterfaceNamingSchema, quirks redis.Quirks) (*Sonic, error) {
+func New(log *slog.Logger, frrTplFile string, interfaceNamingSchema InterfaceNamingSchema, quirks quirks.Quirks) (*Sonic, error) {
 	cfg, err := loadRedisConfig(redisConfigFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load database config for SONiC: %w", err)
@@ -72,6 +74,7 @@ func New(log *slog.Logger, frrTplFile string, interfaceNamingSchema InterfaceNam
 		log:                   log,
 		redisApplier:          redisApplier,
 		interfaceNamingSchema: interfaceNamingSchema,
+		quirks:                quirks,
 	}, nil
 }
 
@@ -94,7 +97,7 @@ func (s *Sonic) Apply(ctx context.Context, cfg *types.Conf) error {
 		return err
 	}
 
-	return s.frrApplier.Apply(ctx, cfg)
+	return s.frrApplier.Apply(ctx, quirks.ApplyFRRTemplateQuirks(s.quirks, *cfg))
 }
 
 func (s *Sonic) IsInitialized(ctx context.Context) (initialized bool, err error) {

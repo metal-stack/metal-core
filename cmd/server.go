@@ -24,7 +24,7 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks"
 	metalgo "github.com/metal-stack/metal-go"
 	"github.com/metal-stack/v"
 )
@@ -91,7 +91,7 @@ func Run() {
 		os.Exit(1)
 	}
 
-	quirkProfile, ok := redis.QuirkProfiles[cfg.QuirkProfile]
+	quirkProfile, ok := quirks.QuirkProfiles[cfg.QuirkProfile]
 
 	if !ok {
 		log.Error("invalid quirk profile specified")

@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
+	sonic "github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
@@ -19,11 +20,11 @@ type Applier struct {
 	db          *db.DB
 	log         *slog.Logger
 	previousCfg *types.Conf
-	quirks      Quirks
-	portState   portStateChecker
+	quirks      sonic.Quirks
+	portState   sonic.PortStateChecker
 }
 
-func NewApplier(log *slog.Logger, sonicDb *db.DB, quirks Quirks) (*Applier, error) {
+func NewApplier(log *slog.Logger, sonicDb *db.DB, quirks sonic.Quirks) (*Applier, error) {
 	return &Applier{
 		db:        sonicDb,
 		log:       log,
@@ -63,7 +64,7 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 		return nil
 	}
 
-	if err := a.portState.refresh(ctx); err != nil {
+	if err := a.portState.Refresh(ctx); err != nil {
 		return err
 	}
 

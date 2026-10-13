@@ -1,4 +1,4 @@
-package redis
+package quirks
 
 import (
 	"context"
@@ -8,11 +8,11 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
 )
 
-// portStateChecker tells whether a port is still bridged or routed before it gets reconfigured.
-type portStateChecker interface {
-	refresh(ctx context.Context) error
-	isBridged(ctx context.Context, interfaceName string) (bool, error)
-	isRouted(ctx context.Context, interfaceName string) (bool, error)
+// PortStateChecker tells whether a port is still bridged or routed before it gets reconfigured.
+type PortStateChecker interface {
+	Refresh(ctx context.Context) error
+	IsBridged(ctx context.Context, interfaceName string) (bool, error)
+	IsRouted(ctx context.Context, interfaceName string) (bool, error)
 }
 
 // asicDBPortState checks the SAI objects in the ASIC_DB, i.e. waits until syncd removed the
@@ -26,7 +26,7 @@ type asicDBPortState struct {
 	rifOidMap        map[string]db.OID
 }
 
-func (s *asicDBPortState) refresh(ctx context.Context) error {
+func (s *asicDBPortState) Refresh(ctx context.Context) error {
 	s.log.Debug("refresh oid maps")
 
 	oidMap, err := s.db.Counters.GetPortNameMap(ctx)
@@ -59,7 +59,7 @@ func (s *asicDBPortState) refresh(ctx context.Context) error {
 	return nil
 }
 
-func (s *asicDBPortState) isBridged(ctx context.Context, interfaceName string) (bool, error) {
+func (s *asicDBPortState) IsBridged(ctx context.Context, interfaceName string) (bool, error) {
 	oid, ok := s.bridgePortOidMap[interfaceName]
 	if !ok {
 		return false, nil
@@ -67,7 +67,7 @@ func (s *asicDBPortState) isBridged(ctx context.Context, interfaceName string) (
 	return s.db.Asic.ExistBridgePort(ctx, oid)
 }
 
-func (s *asicDBPortState) isRouted(ctx context.Context, interfaceName string) (bool, error) {
+func (s *asicDBPortState) IsRouted(ctx context.Context, interfaceName string) (bool, error) {
 	oid, ok := s.rifOidMap[interfaceName]
 	if !ok {
 		return false, nil
@@ -80,14 +80,14 @@ type stateDBPortState struct {
 	db *db.DB
 }
 
-func (s *stateDBPortState) refresh(_ context.Context) error {
+func (s *stateDBPortState) Refresh(_ context.Context) error {
 	return nil
 }
 
-func (s *stateDBPortState) isBridged(ctx context.Context, interfaceName string) (bool, error) {
+func (s *stateDBPortState) IsBridged(ctx context.Context, interfaceName string) (bool, error) {
 	return s.db.State.ExistVlanMember(ctx, interfaceName)
 }
 
-func (s *stateDBPortState) isRouted(ctx context.Context, interfaceName string) (bool, error) {
+func (s *stateDBPortState) IsRouted(ctx context.Context, interfaceName string) (bool, error) {
 	return s.db.State.ExistInterface(ctx, interfaceName)
 }

@@ -8,7 +8,7 @@ import (
 )
 
 func (a *Applier) ensureNotRouted(ctx context.Context, interfaceName string) error {
-	routed, err := a.portState.isRouted(ctx, interfaceName)
+	routed, err := a.portState.IsRouted(ctx, interfaceName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve state data for interface %s: %w", interfaceName, err)
 	}
@@ -24,7 +24,7 @@ func (a *Applier) ensureNotRouted(ctx context.Context, interfaceName string) err
 
 	return retry.Do(
 		func() error {
-			configured, err := a.portState.isRouted(ctx, interfaceName)
+			configured, err := a.portState.IsRouted(ctx, interfaceName)
 			if err != nil {
 				return err
 			}

@@ -8,7 +8,7 @@ import (
 )
 
 func (a *Applier) ensureNotBridged(ctx context.Context, interfaceName string) error {
-	bridged, err := a.portState.isBridged(ctx, interfaceName)
+	bridged, err := a.portState.IsBridged(ctx, interfaceName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve state data for interface %s: %w", interfaceName, err)
 	}
@@ -31,7 +31,7 @@ func (a *Applier) ensureNotBridged(ctx context.Context, interfaceName string) er
 
 	return retry.Do(
 		func() error {
-			bridged, err := a.portState.isBridged(ctx, interfaceName)
+			bridged, err := a.portState.IsBridged(ctx, interfaceName)
 			if err != nil {
 				return err
 			}
