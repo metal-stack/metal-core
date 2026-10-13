@@ -8,36 +8,15 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
 )
 
-// PortStateSource selects the database that is used to check whether a port is still bridged or routed
-// before it gets reconfigured.
-type PortStateSource string
-
-const (
-	// PortStateSourceAsicDB checks the SAI objects in the ASIC_DB, i.e. waits until syncd removed the
-	// bridge port or router interface from the ASIC.
-	PortStateSourceAsicDB = PortStateSource("asic_db")
-	// PortStateSourceStateDB checks the state published by vlanmgrd and intfmgrd in the STATE_DB, i.e. waits
-	// until the vlan membership or router interface was removed from the kernel and handed to orchagent.
-	PortStateSourceStateDB = PortStateSource("state_db")
-)
-
+// portStateChecker tells whether a port is still bridged or routed before it gets reconfigured.
 type portStateChecker interface {
 	refresh(ctx context.Context) error
 	isBridged(ctx context.Context, interfaceName string) (bool, error)
 	isRouted(ctx context.Context, interfaceName string) (bool, error)
 }
 
-func newPortStateChecker(log *slog.Logger, sonicDb *db.DB, source PortStateSource) (portStateChecker, error) {
-	switch source {
-	case PortStateSourceAsicDB:
-		return &asicDBPortState{db: sonicDb, log: log}, nil
-	case PortStateSourceStateDB:
-		return &stateDBPortState{db: sonicDb}, nil
-	default:
-		return nil, fmt.Errorf("unknown port state source %q, must be one of %q or %q", source, PortStateSourceAsicDB, PortStateSourceStateDB)
-	}
-}
-
+// asicDBPortState checks the SAI objects in the ASIC_DB, i.e. waits until syncd removed the
+// bridge port or router interface from the ASIC.
 type asicDBPortState struct {
 	db  *db.DB
 	log *slog.Logger
@@ -96,6 +75,7 @@ func (s *asicDBPortState) isRouted(ctx context.Context, interfaceName string) (b
 	return s.db.Asic.ExistRouterInterface(ctx, oid)
 }
 
+// stateDBPortState uses the STATE_DB to report port status
 type stateDBPortState struct {
 	db *db.DB
 }

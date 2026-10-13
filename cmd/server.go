@@ -91,7 +91,14 @@ func Run() {
 		os.Exit(1)
 	}
 
-	nos, err := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile, sonic.InterfaceNamingSchema(cfg.InterfaceNamingSchema), redis.PortStateSource(cfg.SonicPortStateSource))
+	quirkProfile, ok := redis.QuirkProfiles[cfg.QuirkProfile]
+
+	if !ok {
+		log.Error("invalid quirk profile specified")
+		os.Exit(1)
+	}
+
+	nos, err := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile, sonic.InterfaceNamingSchema(cfg.InterfaceNamingSchema), quirkProfile())
 	if err != nil {
 		log.Error("failed to create NOS instance", "error", err)
 		os.Exit(1)

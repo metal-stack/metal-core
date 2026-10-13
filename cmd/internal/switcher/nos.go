@@ -25,10 +25,10 @@ type NOS interface {
 	GetManagement() (ip, user string, err error)
 }
 
-func NewNOS(log *slog.Logger, frrTplFile, interfacesTplFile string, interfaceNamingSchema sonic.InterfaceNamingSchema, portStateSource redis.PortStateSource) (NOS, error) {
+func NewNOS(log *slog.Logger, frrTplFile, interfacesTplFile string, interfaceNamingSchema sonic.InterfaceNamingSchema, quirks redis.Quirks) (NOS, error) {
 	if _, err := os.Stat(sonic.SonicVersionFile); err == nil {
 		log.Info("create sonic NOS")
-		nos, err := sonic.New(log.With("os", "sonic"), frrTplFile, interfaceNamingSchema, portStateSource)
+		nos, err := sonic.New(log.With("os", "sonic"), frrTplFile, interfaceNamingSchema, quirks)
 		if err != nil {
 			return nil, fmt.Errorf("failed to initialize SONiC NOS %w", err)
 		}
