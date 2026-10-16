@@ -184,17 +184,6 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 			// noop
 		}
 
-		var isStaticNeighbor bool
-		for _, vrf := range c.staticVRFs {
-			if slices.Contains(vrf.Neighbors, port) {
-				isStaticNeighbor = true
-			}
-		}
-
-		if isStaticNeighbor {
-			continue
-		}
-
 		if pointer.SafeDeref(nic.Vrf) == "" {
 			if !slices.Contains(p.Unprovisioned, port) {
 				p.Unprovisioned = append(p.Unprovisioned, port)
@@ -231,21 +220,6 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		}
 
 		p.Vrfs[pointer.SafeDeref(nic.Vrf)] = vrf
-	}
-
-	for name, static := range c.staticVRFs {
-		if _, ok := p.Vrfs[name]; !ok {
-			p.Vrfs[name] = &types.Vrf{
-				VNI:       static.VNI,
-				Neighbors: static.Neighbors,
-				Cidrs:     static.Cidrs,
-			}
-			continue
-		}
-
-		vrf := p.Vrfs[name]
-		vrf.Neighbors = append(vrf.Neighbors, static.Neighbors...)
-		vrf.Cidrs = append(vrf.Cidrs, static.Cidrs...)
 	}
 
 	switcherConfig.Ports = p

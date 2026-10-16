@@ -13,7 +13,6 @@ import (
 	"net/netip"
 	"os"
 	"os/signal"
-	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -87,9 +86,9 @@ func Run() {
 	}
 
 	metrics := metrics.New()
-	vrfs, err := getStaticVRFs(cfg.StaticVRFsFile)
+	staticBGPConfig, err := getStaticBGPConfig(cfg.StaticBGPConfigFile)
 	if err != nil {
-		log.Error("failed to assemble static vrfs", "error", err)
+		log.Error("failed to assemble static bgp config", "error", err)
 		os.Exit(1)
 	}
 
@@ -114,7 +113,7 @@ func Run() {
 		Metrics:               metrics,
 		PXEVlanID:             cfg.PXEVlanID,
 		BGPNeighborStateFile:  cfg.BGPNeighborStateFile,
-		StaticVRFs:            vrfs,
+		StaticBGPConfig:       staticBGPConfig,
 	})
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -173,32 +172,40 @@ func Run() {
 	wg.Wait()
 }
 
-func getStaticVRFs(filePath string) (types.Vrfs, error) {
-	vrfs := types.Vrfs{}
+func getStaticBGPConfig(filePath string) (*types.StaticBGPConfig, error) {
 	if filePath == "" {
-		return vrfs, nil
+		return nil, nil
 	}
 
 	fileBytes, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read static VRFs file: %w", err)
+		return nil, fmt.Errorf("failed to read static bgp config file: %w", err)
 	}
+
 	dec := yaml.NewDecoder(bytes.NewReader(fileBytes))
 	dec.KnownFields(true)
-	err = dec.Decode(vrfs)
+
+	conf := &types.StaticBGPConfig{}
+	err = dec.Decode(conf)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal static VRFs file: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal static bgp config file: %w", err)
 	}
 
-	for name, vrf := range vrfs {
-		vni, err := strconv.Atoi(strings.TrimPrefix(name, "vrf"))
-		if err != nil {
-			return nil, fmt.Errorf("failed to apply static vrfs: %w", err)
+	for _, session := range conf.BGPSessions {
+		for name, peer := range session.Neighbors {
+			if _, err := netip.ParseAddr(name); err == nil {
+				continue
+			}
+
+			unnumberedPeer := types.BGPPeer{
+				PeerGroup:  peer.PeerGroup,
+				Unnumbered: true,
+			}
+			session.Neighbors[name] = unnumberedPeer
 		}
-		vrf.VNI = uint32(vni)
 	}
 
-	return vrfs, nil
+	return conf, nil
 }
 
 func newApiClient(logger *slog.Logger, apiURL, tokenfilePath string) (clientv2.Client, error) {

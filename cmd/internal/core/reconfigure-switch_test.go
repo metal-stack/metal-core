@@ -23,13 +23,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		spineUplinks:         []string{"Ethernet120", "Ethernet124"},
 		additionalBridgeVIDs: []string{"201-256", "301-356"},
 		nos:                  &sonic.Sonic{},
-		staticVRFs: types.Vrfs{
-			"vrf200": {
-				VNI:       200,
-				Neighbors: []string{"Ethernet3"},
-				Cidrs:     []string{"10.1.2.0/24"},
-			},
-		},
+		// TODO: test static BGP config
 	}
 
 	s := &apiv2.Switch{
@@ -49,13 +43,6 @@ func TestBuildSwitcherConfig(t *testing.T) {
 			{
 				Name: "Ethernet2",
 				Vrf:  new("default"),
-			},
-			{
-				Name: "Ethernet3",
-			},
-			{
-				Name: "Ethernet4",
-				Vrf:  new("vrf200"),
 			},
 			{
 				Name: "Ethernet120",
@@ -84,29 +71,6 @@ func TestBuildSwitcherConfig(t *testing.T) {
 				},
 			},
 			Vrfs: map[string]*types.Vrf{
-				"Vrf200": {
-					VNI:       200,
-					Neighbors: []string{"Ethernet4", "Ethernet3"},
-					Cidrs:     []string{"10.1.2.0/24"},
-					Filter: types.Filter{
-						IPPrefixLists: []types.IPPrefixList{
-							{
-								AddressFamily: "ip",
-								Name:          "Vrf200-in-prefixes",
-								Spec:          "permit 10.1.2.0/24 le 32",
-							},
-						},
-						RouteMaps: []types.RouteMap{
-							{
-								Name:    "Vrf200-in",
-								Entries: []string{"match ip address prefix-list Vrf200-in-prefixes"},
-								Policy:  "permit",
-								Order:   10,
-							},
-						},
-					},
-					Has4: true,
-				},
 				"Vrf104001": {
 					VNI:       104001,
 					Neighbors: []string{"Ethernet1"},
@@ -122,7 +86,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 							{
 								Name:    "Vrf104001-in",
 								Entries: []string{"match ip address prefix-list Vrf104001-in-prefixes"},
-								Policy:  "permit",
+								Policy:  types.RouteMapPolicyPermit,
 								Order:   10,
 							},
 						},
@@ -137,16 +101,5 @@ func TestBuildSwitcherConfig(t *testing.T) {
 	// VLANID is ignored because it is reserved dynamically and the order in which the map is iterated matters so the test becomes flaky.
 	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(types.Vrf{}, "VLANID")); diff != "" {
 		t.Errorf("TestBuildSwitcherConfig() diff = %s", diff)
-	}
-
-	expectedStaticVrfs := types.Vrfs{
-		"vrf200": {
-			VNI:       200,
-			Neighbors: []string{"Ethernet3"},
-			Cidrs:     []string{"10.1.2.0/24"},
-		},
-	}
-	if diff := cmp.Diff(expectedStaticVrfs, c.staticVRFs); diff != "" {
-		t.Errorf("TestBuildSwitcherConfig() Core.staticVrfs unexpectedly changed: %s", diff)
 	}
 }
