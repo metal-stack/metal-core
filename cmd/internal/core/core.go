@@ -25,7 +25,7 @@ type (
 		additionalMgmtRoutes    []string
 		additionalBridgePorts   []string
 		additionalBridgeVIDs    []string
-		staticVRFs              types.Vrfs
+		staticBGPConfig         *types.StaticBGPConfig
 		spineUplinks            []string
 		pxeVlanID               uint16
 		bgpNeighborStateFile    string
@@ -55,7 +55,7 @@ type (
 		AdditionalBridgeVIDs  []string
 		SpineUplinks          []string
 		SetSrcLoopback        bool
-		StaticVRFs            types.Vrfs
+		StaticBGPConfig       *types.StaticBGPConfig
 
 		NOS     switcher.NOS
 		Client  clientv2.Client
@@ -85,6 +85,6 @@ func New(c Config) *Core {
 		metrics:                 c.Metrics,
 		pxeVlanID:               c.PXEVlanID,
 		bgpNeighborStateFile:    c.BGPNeighborStateFile,
-		staticVRFs:              c.StaticVRFs,
+		staticBGPConfig:         c.StaticBGPConfig,
 	}
 }

@@ -29,6 +29,30 @@ type (
 		AdminStatus   map[string]PortStatus
 	}
 
+	StaticBGPConfig struct {
+		BGPSessions []BGPSession                    `yaml:"bgp_sessions"`
+		PeerGroups  map[string]map[string]PeerGroup `yaml:"peer_groups"`
+	}
+
+	BGPSession struct {
+		VRF       string             `yaml:"vrf"`
+		Neighbors map[string]BGPPeer `yaml:"neighbors"`
+	}
+
+	BGPPeer struct {
+		PeerGroup  string `yaml:"peer_group"`
+		Unnumbered bool   `yaml:"-"`
+	}
+
+	PeerGroup struct {
+		Cidrs  []string `yaml:"cidrs"`
+		Filter Filter   `yaml:"filter"`
+		// TODO: document in the README that activating EVPN will only work for peers in the default VRF
+		// That's because only one VRF can be the underlay for sharing EVPN routes and there currently is no need for allowing to change that to something other than the default VRF.
+		EVPN     bool     `yaml:"evpn"`
+		Commands []string `yaml:"commands"`
+	}
+
 	Vrfs map[string]*Vrf
 
 	Vrf struct {
@@ -49,8 +73,8 @@ type (
 	}
 
 	Filter struct {
-		IPPrefixLists []IPPrefixList
-		RouteMaps     []RouteMap
+		IPPrefixLists []IPPrefixList `yaml:"ip_prefix_lists"`
+		RouteMaps     []RouteMap     `yaml:"route_maps"`
 	}
 
 	Nic struct {
@@ -59,16 +83,16 @@ type (
 	}
 
 	RouteMap struct {
-		Name    string
-		Entries []string
-		Policy  string
-		Order   int
+		Name    string         `yaml:"name"`
+		Entries []string       `yaml:"entries"`
+		Policy  RouteMapPolicy `yaml:"policy"`
+		Order   int            `yaml:"order"`
 	}
 
 	IPPrefixList struct {
-		AddressFamily string
-		Name          string
-		Spec          string
+		AddressFamily AddressFamily `yaml:"address_family"`
+		Name          string        `yaml:"name"`
+		Spec          string        `yaml:"spec"`
 	}
 
 	cidrsByAf struct {
@@ -76,12 +100,20 @@ type (
 		ipv6Cidrs []string
 	}
 
-	PortStatus string
+	PortStatus     string
+	AddressFamily  string
+	RouteMapPolicy string
 )
 
 const (
 	PortStatusUp   = PortStatus("up")
 	PortStatusDown = PortStatus("down")
+
+	AddressFamilyIPv4 = AddressFamily("ip")
+	AddressFamilyIPv6 = AddressFamily("ipv6")
+
+	RouteMapPolicyPermit = RouteMapPolicy("permit")
+	RouteMapPolicyDeny   = RouteMapPolicy("deny")
 )
 
 func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
@@ -92,11 +124,11 @@ func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
 		rm := RouteMap{
 			Name:    prefixRouteMapName,
 			Entries: []string{fmt.Sprintf("match ip address prefix-list %s", prefixListName)},
-			Policy:  "permit",
+			Policy:  RouteMapPolicyPermit,
 			Order:   10,
 		}
 		s.RouteMaps = append(s.RouteMaps, rm)
-		s.addPrefixList(prefixListName, cidrsByAf.ipv4Cidrs, "ip")
+		s.addPrefixList(prefixListName, cidrsByAf.ipv4Cidrs, AddressFamilyIPv4)
 	}
 	if len(cidrsByAf.ipv6Cidrs) > 0 {
 		prefixRouteMapName := fmt.Sprintf("%s-in6", rmPrefix)
@@ -104,11 +136,11 @@ func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
 		rm := RouteMap{
 			Name:    prefixRouteMapName,
 			Entries: []string{fmt.Sprintf("match ipv6 address prefix-list %s", prefixListName)},
-			Policy:  "permit",
+			Policy:  RouteMapPolicyPermit,
 			Order:   10,
 		}
 		s.RouteMaps = append(s.RouteMaps, rm)
-		s.addPrefixList(prefixListName, cidrsByAf.ipv6Cidrs, "ipv6")
+		s.addPrefixList(prefixListName, cidrsByAf.ipv6Cidrs, AddressFamilyIPv6)
 	}
 	if len(vnis) > 0 {
 		vniRouteMapName := fmt.Sprintf("%s-vni", rmPrefix)
@@ -116,7 +148,7 @@ func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
 			rm := RouteMap{
 				Name:    vniRouteMapName,
 				Entries: []string{fmt.Sprintf("match evpn vni %s", vni)},
-				Policy:  "permit",
+				Policy:  RouteMapPolicyPermit,
 				Order:   10 + j,
 			}
 			s.RouteMaps = append(s.RouteMaps, rm)
@@ -124,7 +156,7 @@ func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
 	}
 }
 
-func (s *Filter) addPrefixList(prefixListName string, cidrs []string, af string) {
+func (s *Filter) addPrefixList(prefixListName string, cidrs []string, af AddressFamily) {
 	for _, cidr := range cidrs {
 		prefix, err := netip.ParsePrefix(cidr)
 		if err != nil {
