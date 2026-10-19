@@ -3,7 +3,6 @@ package db
 import (
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/valkey-io/valkey-go"
@@ -11,19 +10,20 @@ import (
 
 type (
 	Config struct {
-		Databases map[string]database `json:"DATABASES"`
-		Instances map[string]instance `json:"INSTANCES"`
+		Databases map[string]Database `json:"DATABASES"`
+		Instances map[string]Instance `json:"INSTANCES"`
 	}
 
-	database struct {
+	Database struct {
 		Id        int    `json:"id"`
 		Instance  string `json:"instance"`
 		Separator string `json:"separator"`
 	}
 
-	instance struct {
-		Addr         string `json:"unix_socket_path"`
-		PasswordPath string `json:"password_path"`
+	Instance struct {
+		Hostname       string `json:"hostname"`
+		UnixSocketPath string `json:"unix_socket_path"`
+		PasswordPath   string `json:"password_path"`
 	}
 
 	DB struct {
@@ -32,30 +32,37 @@ type (
 		Config   *ConfigDB
 		Counters *CountersDB
 	}
+
+	Scheme string
 )
 
-func New(cfg *Config) (*DB, error) {
+const (
+	SchemeUnix  = Scheme("unix")
+	SchemeRedis = Scheme("redis")
+)
+
+func New(cfg *Config, scheme Scheme) (*DB, error) {
 	applDB := cfg.Databases["APPL_DB"]
 	asicDB := cfg.Databases["ASIC_DB"]
 	configDB := cfg.Databases["CONFIG_DB"]
 	countersDB := cfg.Databases["COUNTERS_DB"]
 
-	applClient, err := newRedisClient(cfg.Instances[applDB.Instance], applDB.Id)
+	applClient, err := newRedisClient(cfg.Instances[applDB.Instance], applDB.Id, scheme)
 	if err != nil {
 		return nil, fmt.Errorf("could not create client for APPL_DB: %w", err)
 	}
 
-	asicClient, err := newRedisClient(cfg.Instances[asicDB.Instance], asicDB.Id)
+	asicClient, err := newRedisClient(cfg.Instances[asicDB.Instance], asicDB.Id, scheme)
 	if err != nil {
 		return nil, fmt.Errorf("could not create client for ASIC_DB: %w", err)
 	}
 
-	configClient, err := newRedisClient(cfg.Instances[configDB.Instance], configDB.Id)
+	configClient, err := newRedisClient(cfg.Instances[configDB.Instance], configDB.Id, scheme)
 	if err != nil {
 		return nil, fmt.Errorf("could not create client for CONFIG_DB: %w", err)
 	}
 
-	countersClient, err := newRedisClient(cfg.Instances[countersDB.Instance], countersDB.Id)
+	countersClient, err := newRedisClient(cfg.Instances[countersDB.Instance], countersDB.Id, scheme)
 	if err != nil {
 		return nil, fmt.Errorf("could not create client for COUNTERS_DB: %w", err)
 	}
@@ -69,10 +76,20 @@ func New(cfg *Config) (*DB, error) {
 	return db, nil
 }
 
-func newRedisClient(redisInstance instance, redisDatabase int) (valkey.Client, error) {
-	opt, err := valkey.ParseURL("unix://" + redisInstance.Addr + "?db=" + strconv.Itoa(redisDatabase))
+func newRedisClient(redisInstance Instance, redisDatabase int, scheme Scheme) (valkey.Client, error) {
+	var url string
+	switch scheme {
+	case SchemeUnix:
+		url = fmt.Sprintf("%s://%s?db=%d", scheme, redisInstance.UnixSocketPath, redisDatabase)
+	case SchemeRedis:
+		url = fmt.Sprintf("%s://%s/%d", scheme, redisInstance.Hostname, redisDatabase)
+	default:
+		return nil, fmt.Errorf("invalid scheme %s for redis connection", scheme)
+	}
+
+	opt, err := valkey.ParseURL(url)
 	if err != nil {
-		return nil, fmt.Errorf("invalid unix socket path %q: %w", redisInstance.Addr, err)
+		return nil, fmt.Errorf("failed to parse redis url %s: %w", url, err)
 	}
 	opt.ClientName = "metal-core"
 	opt.DisableCache = true

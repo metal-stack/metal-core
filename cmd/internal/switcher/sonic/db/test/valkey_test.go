@@ -183,7 +183,7 @@ func TestGetData(t *testing.T) {
 			},
 			want: HashMap{
 				"LOOPBACK_INTERFACE|Loopback0": map[string]string{
-					"NULL": "NULL",
+					null: null,
 				},
 				"PORT|Ethernet0": map[string]string{
 					"admin_status": "up",
@@ -196,10 +196,10 @@ func TestGetData(t *testing.T) {
 					"vrf_name": "Vrf50",
 				},
 				"VLAN_INTERFACE|Vlan4000": map[string]string{
-					"NULL": "NULL",
+					null: null,
 				},
 				"VLAN_INTERFACE|Vlan4000|10.255.0.1/24": map[string]string{
-					"NULL": "NULL",
+					null: null,
 				},
 			},
 		},

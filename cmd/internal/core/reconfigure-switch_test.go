@@ -3,12 +3,17 @@ package core
 import (
 	"testing"
 
+	"github.com/alicebob/miniredis/v2"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/require"
+	"github.com/valkey-io/valkey-go"
 
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db/test"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
@@ -148,5 +153,78 @@ func TestBuildSwitcherConfig(t *testing.T) {
 	}
 	if diff := cmp.Diff(expectedStaticVrfs, c.staticVRFs); diff != "" {
 		t.Errorf("TestBuildSwitcherConfig() Core.staticVrfs unexpectedly changed: %s", diff)
+	}
+}
+
+func TestSonicConfig(t *testing.T) {
+	var (
+		dbcfg = &db.Config{
+			Databases: map[string]db.Database{
+				"APPL_DB": {
+					Id:        0,
+					Instance:  "redis",
+					Separator: ":",
+				},
+				"ASIC_DB": {
+					Id:        1,
+					Instance:  "redis",
+					Separator: ":",
+				},
+				"COUNTERS_DB": {
+					Id:        2,
+					Instance:  "redis",
+					Separator: ":",
+				},
+				"CONFIG_DB": {
+					Id:        4,
+					Instance:  "redis",
+					Separator: "|",
+				},
+			},
+		}
+	)
+
+	core := New(testcoreCfg)
+
+	mr := miniredis.RunT(t)
+	dbcfg.Instances = map[string]db.Instance{
+		"redis": {
+			Hostname: mr.Addr(),
+		},
+	}
+
+	vc, err := valkey.NewClient(valkey.ClientOption{
+		InitAddress:  []string{mr.Addr()},
+		DisableCache: true,
+		SelectDB:     4,
+	})
+	require.NoError(t, err)
+
+	err = test.LoadData(t.Context(), vc, leaf01PreviousConfigDB, "|")
+	require.NoError(t, err)
+
+	database, err := db.New(dbcfg, db.SchemeRedis)
+	require.NoError(t, err)
+
+	redisApplier := redis.NewTestApplier(testcoreLog, database)
+	err = redisApplier.Apply(t.Context(), leaf01PreviousCfg)
+	require.NoError(t, err)
+
+	switcherCfg, err := core.buildSwitcherConfig(leaf01)
+	require.NoError(t, err)
+
+	injectStaticVrfVlanMapping(switcherCfg, map[string]uint16{
+		"Vrf100": 1001,
+		"Vrf200": 1002,
+	})
+
+	err = redisApplier.Apply(t.Context(), switcherCfg)
+	require.NoError(t, err)
+
+	configDB, err := test.GetData(t.Context(), vc, "|")
+	require.NoError(t, err)
+
+	if diff := cmp.Diff(leaf01WantConfigDB, configDB); diff != "" {
+		t.Errorf("TestSonicConfig sonic configDB diff = %s", diff)
 	}
 }
