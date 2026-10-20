@@ -1,7 +1,10 @@
 package core
 
 import (
+	"bytes"
+	"os"
 	"testing"
+	"text/template"
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/google/go-cmp/cmp"
@@ -14,6 +17,7 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db/test"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
@@ -227,4 +231,24 @@ func TestSonicConfig(t *testing.T) {
 	if diff := cmp.Diff(leaf01WantConfigDB, configDB); diff != "" {
 		t.Errorf("TestSonicConfig sonic configDB diff = %s", diff)
 	}
+
+	tpl := templates.SonicFrrTemplate("")
+	frrConf := renderTemplate(t, tpl, switcherCfg)
+	wantConf := readFile(t, "testdata/leaf01-sonic-frr.conf")
+	if diff := cmp.Diff(wantConf, frrConf); diff != "" {
+		t.Errorf("TestSonicConfig sonic frr.conf diff = %s", diff)
+	}
+}
+
+func renderTemplate(t *testing.T, tpl *template.Template, c *types.Conf) string {
+	var b bytes.Buffer
+	err := tpl.Execute(&b, c)
+	require.NoError(t, err)
+	return b.String()
+}
+
+func readFile(t *testing.T, path string) string {
+	f, err := os.ReadFile(path)
+	require.NoError(t, err)
+	return string(f)
 }

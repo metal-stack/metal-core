@@ -11,10 +11,8 @@ import (
 )
 
 const (
-	null = "NULL"
-
 	testcoreCIDR           = "10.255.0.1/24"
-	testcoreLoopback       = "10.1.1.1/32"
+	testcoreLoopback       = "10.1.1.1"
 	testcoreASN            = "42"
 	testcoreMgmtGateway    = "10.253.1.129/30"
 	testcorePXEVLAN        = 4000
