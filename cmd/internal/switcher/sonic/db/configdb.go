@@ -273,6 +273,19 @@ func (d *ConfigDB) DeleteInterfaceConfiguration(ctx context.Context, interfaceNa
 	return d.c.Del(ctx, key)
 }
 
+func (d *ConfigDB) DeleteInterfaceAddresses(ctx context.Context, interfaceName string) error {
+	keys, err := d.c.Keys(ctx, Key{interfaceTable, interfaceName, "*"})
+	if err != nil {
+		return err
+	}
+	for _, key := range keys {
+		if err := d.c.Del(ctx, key); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (d *ConfigDB) IsLinkLocalOnly(ctx context.Context, interfaceName string) (bool, error) {
 	key := Key{interfaceTable, interfaceName}
 

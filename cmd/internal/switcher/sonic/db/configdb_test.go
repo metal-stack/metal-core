@@ -5,10 +5,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/alicebob/miniredis/v2"
+	"github.com/alicebob/miniredis/v2/server"
 	"github.com/google/go-cmp/cmp"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db/test"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/stretchr/testify/require"
+	"github.com/valkey-io/valkey-go"
 )
 
 var (
@@ -1522,6 +1525,59 @@ func TestConfigDB_DeleteInterfaceConfiguration(t *testing.T) {
 			if diff := cmp.Diff(initData, data); diff != "" {
 				t.Errorf("ConfigDB.DeleteInterfaceConfiguration() data differs = %s", diff)
 			}
+		})
+	}
+}
+
+func TestConfigDB_DeleteInterfaceAddresses(t *testing.T) {
+	for _, tt := range []struct {
+		name, port, failCommand string
+	}{
+		{name: "IPv4 and IPv6 addresses", port: "Ethernet0"},
+		{name: "no addresses", port: "Ethernet1"},
+		{name: "absent interface", port: "Ethernet2"},
+		{name: "lookup error", port: "Ethernet0", failCommand: "KEYS"},
+		{name: "deletion error", port: "Ethernet0", failCommand: "DEL"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := t.Context()
+			mr := miniredis.RunT(t)
+			vc, err := valkey.NewClient(valkey.ClientOption{InitAddress: []string{mr.Addr()}, DisableCache: true})
+			require.NoError(t, err)
+			t.Cleanup(vc.Close)
+			d := newConfigDB(vc, "|")
+			require.NoError(t, test.LoadData(ctx, vc, test.StringMap{
+				"INTERFACE": test.StringMap{
+					"Ethernet0":               test.StringMap{"vrf_name": "Vrf104001"},
+					"Ethernet0|192.0.2.1/24":  test.StringMap{},
+					"Ethernet0|fd00:20::1/64": test.StringMap{},
+					"Ethernet1":               test.StringMap{"ipv6_use_link_local_only": "enable"},
+					"Ethernet00":              test.StringMap{"vrf_name": "Vrf104002"},
+					"Ethernet00|192.0.2.2/24": test.StringMap{},
+				},
+			}, "|"))
+			want, err := test.GetData(ctx, vc, "|")
+			require.NoError(t, err)
+			mr.Server().SetPreHook(func(peer *server.Peer, cmd string, _ ...string) bool {
+				if cmd == tt.failCommand {
+					peer.WriteError("ERR injected " + cmd + " failure")
+					return true
+				}
+				return false
+			})
+
+			err = d.DeleteInterfaceAddresses(ctx, tt.port)
+			mr.Server().SetPreHook(nil)
+			if tt.failCommand != "" {
+				require.ErrorContains(t, err, "injected "+tt.failCommand+" failure")
+			} else {
+				require.NoError(t, err)
+				delete(want, "INTERFACE|"+tt.port+"|192.0.2.1/24")
+				delete(want, "INTERFACE|"+tt.port+"|fd00:20::1/64")
+			}
+			got, err := test.GetData(ctx, vc, "|")
+			require.NoError(t, err)
+			require.Equal(t, want, got)
 		})
 	}
 }
