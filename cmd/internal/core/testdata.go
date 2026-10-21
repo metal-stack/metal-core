@@ -5,6 +5,7 @@ import (
 	"os"
 
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/cumulus"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db/test"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
@@ -23,10 +24,11 @@ var (
 	testcoreAdditionalMgmtRoutes  = []string{}
 	testcoreAdditionalBridgePorts = []string{}
 	testcoreAdditionalBridgeVIDs  = []string{}
-	testcoreSpineUplinks          = []string{"Ethernet120", "Ethernet124"}
+	testcoreSpineUplinksSonic     = []string{"Ethernet120", "Ethernet124"}
+	testcoreSpineUplinksCumulus   = []string{"swp31", "swp32"}
 	testcoreLog                   = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
-	testcoreCfg = Config{
+	testcoreCfgSonic = Config{
 		Log:                   testcoreLog,
 		CIDR:                  testcoreCIDR,
 		LoopbackIP:            testcoreLoopback,
@@ -36,9 +38,24 @@ var (
 		AdditionalMgmtRoutes:  testcoreAdditionalMgmtRoutes,
 		AdditionalBridgePorts: testcoreAdditionalBridgePorts,
 		AdditionalBridgeVIDs:  testcoreAdditionalBridgeVIDs,
-		SpineUplinks:          testcoreSpineUplinks,
+		SpineUplinks:          testcoreSpineUplinksSonic,
 		SetSrcLoopback:        testcoreSetSrcLoopback,
 		NOS:                   &sonic.Sonic{},
+	}
+
+	testcoreCfgCumulus = Config{
+		Log:                   testcoreLog,
+		CIDR:                  testcoreCIDR,
+		LoopbackIP:            testcoreLoopback,
+		ASN:                   testcoreASN,
+		ManagementGateway:     testcoreMgmtGateway,
+		PXEVlanID:             testcorePXEVLAN,
+		AdditionalMgmtRoutes:  testcoreAdditionalMgmtRoutes,
+		AdditionalBridgePorts: testcoreAdditionalBridgePorts,
+		AdditionalBridgeVIDs:  testcoreAdditionalBridgeVIDs,
+		SpineUplinks:          testcoreSpineUplinksCumulus,
+		SetSrcLoopback:        testcoreSetSrcLoopback,
+		NOS:                   &cumulus.Cumulus{},
 	}
 
 	leaf01 = &apiv2.Switch{
@@ -100,6 +117,60 @@ var (
 			{
 				Name:       "Ethernet124",
 				Identifier: "Eth32",
+			},
+		},
+	}
+
+	leaf02 = &apiv2.Switch{
+		Id: "leaf02",
+		Nics: []*apiv2.SwitchNic{
+			{
+				Name: "swp1",
+			},
+			{
+				Name: "swp2",
+				State: &apiv2.NicState{
+					Desired: apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN.Enum(),
+					Actual:  apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_UP,
+				},
+			},
+			{
+				Name: "swp3",
+			},
+			{
+				Name: "swp4",
+			},
+			{
+				Name: "swp5",
+				Vrf:  new("default"),
+				BgpFilter: &apiv2.BGPFilter{
+					Cidrs: []string{"10.32.24.0/24"},
+					Vnis:  []string{"104009", "200"},
+				},
+			},
+			{
+				Name: "swp6",
+				Vrf:  new("vrf200"),
+				BgpFilter: &apiv2.BGPFilter{
+					Cidrs: []string{"10.32.24.0/24"},
+				},
+			},
+			{
+				Name: "swp7",
+				State: &apiv2.NicState{
+					Desired: apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN.Enum(),
+					Actual:  apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_UP,
+				},
+				Vrf: new("vrf100"),
+				BgpFilter: &apiv2.BGPFilter{
+					Cidrs: []string{"10.32.25.0/24"},
+				},
+			},
+			{
+				Name: "swp31",
+			},
+			{
+				Name: "swp32",
 			},
 		},
 	}
@@ -262,7 +333,7 @@ var (
 		},
 		"VXLAN_TUNNEL": test.StringMap{
 			"vtep": test.StringMap{
-				"src_ip": testcoreCfg.LoopbackIP,
+				"src_ip": testcoreCfgSonic.LoopbackIP,
 			},
 		},
 	}
@@ -371,7 +442,7 @@ var (
 			"vni":  "200",
 		},
 		"VXLAN_TUNNEL|vtep": map[string]string{
-			"src_ip": testcoreCfg.LoopbackIP,
+			"src_ip": testcoreCfgSonic.LoopbackIP,
 		},
 	}
 )

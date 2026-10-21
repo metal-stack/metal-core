@@ -188,7 +188,7 @@ func TestSonicConfig(t *testing.T) {
 		}
 	)
 
-	core := New(testcoreCfg)
+	core := New(testcoreCfgSonic)
 
 	mr := miniredis.RunT(t)
 	dbcfg.Instances = map[string]db.Instance{
@@ -229,14 +229,40 @@ func TestSonicConfig(t *testing.T) {
 	require.NoError(t, err)
 
 	if diff := cmp.Diff(leaf01WantConfigDB, configDB); diff != "" {
-		t.Errorf("TestSonicConfig sonic configDB diff = %s", diff)
+		t.Errorf("TestSonicConfig configDB diff = %s", diff)
 	}
 
 	tpl := templates.SonicFrrTemplate("")
 	frrConf := renderTemplate(t, tpl, switcherCfg)
-	wantConf := readFile(t, "testdata/leaf01-sonic-frr.conf")
+	wantConf := readFile(t, "testdata/leaf01-frr.conf")
 	if diff := cmp.Diff(wantConf, frrConf); diff != "" {
-		t.Errorf("TestSonicConfig sonic frr.conf diff = %s", diff)
+		t.Errorf("TestSonicConfig frr.conf diff = %s", diff)
+	}
+}
+
+func TestCumulusConfig(t *testing.T) {
+	core := New(testcoreCfgCumulus)
+
+	switcherCfg, err := core.buildSwitcherConfig(leaf02)
+	require.NoError(t, err)
+
+	injectStaticVrfVlanMapping(switcherCfg, map[string]uint16{
+		"vrf100": 1001,
+		"vrf200": 1002,
+	})
+
+	tpl := templates.InterfacesTemplate("")
+	intfConf := renderTemplate(t, tpl, switcherCfg)
+	wantConf := readFile(t, "testdata/leaf02-interfaces")
+	if diff := cmp.Diff(wantConf, intfConf); diff != "" {
+		t.Errorf("TestCumulusConfig interfaces diff = %s", diff)
+	}
+
+	tpl = templates.CumulusFrrTemplate("")
+	frrConf := renderTemplate(t, tpl, switcherCfg)
+	wantConf = readFile(t, "testdata/leaf02-frr.conf")
+	if diff := cmp.Diff(wantConf, frrConf); diff != "" {
+		t.Errorf("TestCumulusConfig frr.conf diff = %s", diff)
 	}
 }
 
