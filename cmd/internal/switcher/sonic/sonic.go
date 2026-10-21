@@ -54,7 +54,7 @@ func New(log *slog.Logger, frrTplFile string, interfaceNamingSchema InterfaceNam
 	if err != nil {
 		return nil, fmt.Errorf("failed to load database config for SONiC: %w", err)
 	}
-	sonicDb, err := db.New(cfg)
+	sonicDb, err := db.New(cfg, db.SchemeUnix)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to SONiC databases: %w", err)
 	}

@@ -47,7 +47,7 @@ func TestNewRedisClient_UnixSocket(t *testing.T) {
 	mr := miniredis.RunT(t)
 	sock := startUnixProxy(t, mr.Addr())
 
-	_, err := newRedisClient(instance{Addr: sock}, 0)
+	_, err := newRedisClient(Instance{UnixSocketPath: sock}, 0, SchemeUnix)
 	require.NoError(t, err)
 }
 
@@ -61,6 +61,6 @@ func TestNewRedisClient_UnixSocket_Auth(t *testing.T) {
 	pwFile := filepath.Join(t.TempDir(), "pw")
 	require.NoError(t, os.WriteFile(pwFile, []byte(password+"\n"), 0o600))
 
-	_, err := newRedisClient(instance{Addr: sock, PasswordPath: pwFile}, 0)
+	_, err := newRedisClient(Instance{UnixSocketPath: sock, PasswordPath: pwFile}, 0, SchemeUnix)
 	require.NoError(t, err)
 }

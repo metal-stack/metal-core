@@ -7,7 +7,7 @@ import (
 	"github.com/avast/retry-go/v4"
 )
 
-func (a *Applier) ensureNotRouted(ctx context.Context, interfaceName string) error {
+func (a *Applier) EnsureNotRouted(ctx context.Context, interfaceName string) error {
 	oid, ok := a.rifOidMap[interfaceName]
 	if !ok {
 		return nil
