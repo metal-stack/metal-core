@@ -34,7 +34,7 @@ func NewApplier(log *slog.Logger, db *db.DB) *Applier {
 func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 	var (
 		errs    []error
-		changed bool
+		changed = a.previousCfg == nil
 	)
 
 	if a.previousCfg != nil {
