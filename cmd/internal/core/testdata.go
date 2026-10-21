@@ -122,7 +122,7 @@ var (
 	}
 
 	leaf02 = &apiv2.Switch{
-		Id: "leaf02",
+		Id: "cumulus-leaf02",
 		Nics: []*apiv2.SwitchNic{
 			{
 				Name: "swp1",
