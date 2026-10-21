@@ -7,7 +7,7 @@ import (
 	"github.com/avast/retry-go/v4"
 )
 
-func (a *Applier) ensureNotBridged(ctx context.Context, interfaceName string) error {
+func (a *Applier) EnsureNotBridged(ctx context.Context, interfaceName string) error {
 	oid, ok := a.bridgePortOidMap[interfaceName]
 	if !ok {
 		return nil
