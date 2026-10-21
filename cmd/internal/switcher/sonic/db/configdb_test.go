@@ -1025,6 +1025,38 @@ func TestConfigDB_CreateVrf(t *testing.T) {
 	}
 }
 
+func TestConfigDB_GetVrfVni(t *testing.T) {
+	for _, tt := range []struct {
+		name, value string
+		want        uint32
+		wantErr     bool
+	}{
+		{name: "stored vni", value: "200", want: 200},
+		{name: "malformed", value: "invalid", wantErr: true},
+		{name: "negative", value: "-1", wantErr: true},
+		{name: "overflow", value: "4294967296", wantErr: true},
+		{name: "missing field", wantErr: true},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			vc := test.StartValkey(t)
+			defer vc.Close()
+			d := newConfigDB(vc, "|")
+			fields := Val{"fallback": "false"}
+			if tt.value != "" {
+				fields["vni"] = tt.value
+			}
+			require.NoError(t, d.c.HSet(t.Context(), Key{"VRF", "Vrf102"}, fields))
+			got, err := d.GetVrfVni(t.Context(), "Vrf102")
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
 func TestConfigDB_DeleteVrf(t *testing.T) {
 	tests := []struct {
 		name string
