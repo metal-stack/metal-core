@@ -16,17 +16,19 @@ const (
 	testcoreLoopback       = "10.1.1.1"
 	testcoreASN            = "42"
 	testcoreMgmtGateway    = "10.253.1.129/30"
+	testcoreMgmtAddr       = "10.253.1.130/30"
 	testcorePXEVLAN        = 4000
 	testcoreSetSrcLoopback = true
 )
 
 var (
-	testcoreAdditionalMgmtRoutes  = []string{}
-	testcoreAdditionalBridgePorts = []string{}
-	testcoreAdditionalBridgeVIDs  = []string{}
-	testcoreSpineUplinksSonic     = []string{"Ethernet120", "Ethernet124"}
-	testcoreSpineUplinksCumulus   = []string{"swp31", "swp32"}
-	testcoreLog                   = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	testcoreAdditionalMgmtRoutes         = []string{"10.100.0.0/16"}
+	testcoreAdditionalBridgePortsSonic   = []string{"Ethernet24"}
+	testcoreAdditionalBridgePortsCumulus = []string{"swp24"}
+	testcoreAdditionalBridgeVIDs         = []string{"3000"}
+	testcoreSpineUplinksSonic            = []string{"Ethernet120", "Ethernet124"}
+	testcoreSpineUplinksCumulus          = []string{"swp31", "swp32"}
+	testcoreLog                          = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
 	testcoreCfgSonic = Config{
 		Log:                   testcoreLog,
@@ -36,7 +38,7 @@ var (
 		ManagementGateway:     testcoreMgmtGateway,
 		PXEVlanID:             testcorePXEVLAN,
 		AdditionalMgmtRoutes:  testcoreAdditionalMgmtRoutes,
-		AdditionalBridgePorts: testcoreAdditionalBridgePorts,
+		AdditionalBridgePorts: testcoreAdditionalBridgePortsSonic,
 		AdditionalBridgeVIDs:  testcoreAdditionalBridgeVIDs,
 		SpineUplinks:          testcoreSpineUplinksSonic,
 		SetSrcLoopback:        testcoreSetSrcLoopback,
@@ -51,7 +53,7 @@ var (
 		ManagementGateway:     testcoreMgmtGateway,
 		PXEVlanID:             testcorePXEVLAN,
 		AdditionalMgmtRoutes:  testcoreAdditionalMgmtRoutes,
-		AdditionalBridgePorts: testcoreAdditionalBridgePorts,
+		AdditionalBridgePorts: testcoreAdditionalBridgePortsCumulus,
 		AdditionalBridgeVIDs:  testcoreAdditionalBridgeVIDs,
 		SpineUplinks:          testcoreSpineUplinksCumulus,
 		SetSrcLoopback:        testcoreSetSrcLoopback,
@@ -451,4 +453,9 @@ func injectStaticVrfVlanMapping(conf *types.Conf, mapping map[string]uint16) {
 	for vrf, vlan := range mapping {
 		conf.Ports.Vrfs[vrf].VLANID = vlan
 	}
+}
+
+func injectMgmtGateway(conf *types.Conf, gw string) {
+	conf.Ports.Eth0.Gateway = gw
+	conf.Ports.Eth0.AddressCIDR = testcoreMgmtAddr
 }

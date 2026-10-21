@@ -11,8 +11,8 @@ iface lo inet loopback
 # The primary network interface
 auto eth0
 iface eth0
-    address 
-    gateway 
+    address 10.253.1.130/30
+    gateway 10.253.1.129/30
     vrf mgmt
 
 auto mgmt
@@ -34,8 +34,8 @@ iface swp5
 
 auto bridge
 iface bridge
-    bridge-ports vni104000 swp1 swp2 swp3 swp4 vni100 vni200
-    bridge-vids 4000 1001 1002
+    bridge-ports vni104000 swp1 swp2 swp3 swp4 swp24 vni100 vni200
+    bridge-vids 4000 1001 1002 3000
     bridge-vlan-aware yes
 
 # Tenants

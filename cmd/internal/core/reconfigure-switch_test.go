@@ -224,6 +224,7 @@ func TestSonicConfig(t *testing.T) {
 		"Vrf100": 1001,
 		"Vrf200": 1002,
 	})
+	injectMgmtGateway(switcherCfg, core.managementGateway)
 
 	err = redisApplier.Apply(t.Context(), switcherCfg)
 	require.NoError(t, err)
@@ -259,6 +260,7 @@ func TestCumulusConfig(t *testing.T) {
 		"vrf100": 1001,
 		"vrf200": 1002,
 	})
+	injectMgmtGateway(switcherCfg, core.managementGateway)
 
 	tpl := templates.InterfacesTemplate("")
 	intfConf := renderTemplate(t, tpl, switcherCfg)
