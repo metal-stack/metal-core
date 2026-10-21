@@ -2,7 +2,7 @@ package core
 
 import (
 	"bytes"
-	"os"
+	_ "embed"
 	"testing"
 	"text/template"
 
@@ -160,6 +160,9 @@ func TestBuildSwitcherConfig(t *testing.T) {
 	}
 }
 
+//go:embed testdata/leaf01-frr.conf
+var wantSonicFRRConf string
+
 func TestSonicConfig(t *testing.T) {
 	var (
 		dbcfg = &db.Config{
@@ -234,11 +237,17 @@ func TestSonicConfig(t *testing.T) {
 
 	tpl := templates.SonicFrrTemplate("")
 	frrConf := renderTemplate(t, tpl, switcherCfg)
-	wantConf := readFile(t, "testdata/leaf01-frr.conf")
-	if diff := cmp.Diff(wantConf, frrConf); diff != "" {
+
+	if diff := cmp.Diff(wantSonicFRRConf, frrConf); diff != "" {
 		t.Errorf("TestSonicConfig frr.conf diff = %s", diff)
 	}
 }
+
+//go:embed testdata/leaf02-frr.conf
+var wantCumulusFRRConf string
+
+//go:embed testdata/leaf02-interfaces
+var wantCumulusInterfaces string
 
 func TestCumulusConfig(t *testing.T) {
 	core := New(testcoreCfgCumulus)
@@ -253,15 +262,13 @@ func TestCumulusConfig(t *testing.T) {
 
 	tpl := templates.InterfacesTemplate("")
 	intfConf := renderTemplate(t, tpl, switcherCfg)
-	wantConf := readFile(t, "testdata/leaf02-interfaces")
-	if diff := cmp.Diff(wantConf, intfConf); diff != "" {
+	if diff := cmp.Diff(wantCumulusInterfaces, intfConf); diff != "" {
 		t.Errorf("TestCumulusConfig interfaces diff = %s", diff)
 	}
 
 	tpl = templates.CumulusFrrTemplate("")
 	frrConf := renderTemplate(t, tpl, switcherCfg)
-	wantConf = readFile(t, "testdata/leaf02-frr.conf")
-	if diff := cmp.Diff(wantConf, frrConf); diff != "" {
+	if diff := cmp.Diff(wantCumulusFRRConf, frrConf); diff != "" {
 		t.Errorf("TestCumulusConfig frr.conf diff = %s", diff)
 	}
 }
@@ -271,10 +278,4 @@ func renderTemplate(t *testing.T, tpl *template.Template, c *types.Conf) string 
 	err := tpl.Execute(&b, c)
 	require.NoError(t, err)
 	return b.String()
-}
-
-func readFile(t *testing.T, path string) string {
-	f, err := os.ReadFile(path)
-	require.NoError(t, err)
-	return string(f)
 }
