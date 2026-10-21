@@ -14,20 +14,47 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
-type Applier struct {
-	db          *db.DB
-	log         *slog.Logger
-	previousCfg *types.Conf
+type (
+	Applier struct {
+		db          *db.DB
+		log         *slog.Logger
+		previousCfg *types.Conf
 
-	bridgePortOidMap map[string]db.OID
-	portOidMap       map[string]db.OID
-	rifOidMap        map[string]db.OID
-}
+		bridgePortOidMap map[string]db.OID
+		portOidMap       map[string]db.OID
+		rifOidMap        map[string]db.OID
+		asic
+	}
+
+	asic interface {
+		EnsureNotRouted(ctx context.Context, interfaceName string) error
+		EnsureNotBridged(ctx context.Context, interfaceName string) error
+	}
+
+	testASIC struct {
+		db *db.DB
+	}
+)
 
 func NewApplier(log *slog.Logger, db *db.DB) *Applier {
-	return &Applier{
+	applier := &Applier{
 		db:  db,
 		log: log,
+	}
+	applier.asic = applier
+
+	return applier
+}
+
+func NewTestApplier(log *slog.Logger, db *db.DB) *Applier {
+	asic := &testASIC{
+		db: db,
+	}
+
+	return &Applier{
+		db:   db,
+		log:  log,
+		asic: asic,
 	}
 }
 
@@ -37,12 +64,10 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 		changed = a.previousCfg == nil
 	)
 
-	if a.previousCfg != nil {
-		diff := cmp.Diff(a.previousCfg, cfg)
-		if diff != "" {
-			changed = true
-			a.log.Debug("interface changes", "changes", diff)
-		}
+	diff := cmp.Diff(a.previousCfg, cfg)
+	if diff != "" {
+		changed = true
+		a.log.Debug("interface changes", "changes", diff)
 	}
 
 	currentPorts, err := a.db.Config.GetPorts(ctx)
@@ -150,7 +175,7 @@ func (a *Applier) refreshOidMaps(ctx context.Context) error {
 }
 
 func (a *Applier) configureUnprovisionedPort(ctx context.Context, interfaceName string, adminStatus types.PortStatus, pxeVlan string) error {
-	err := a.ensureNotRouted(ctx, interfaceName)
+	err := a.asic.EnsureNotRouted(ctx, interfaceName)
 	if err != nil {
 		return err
 	}
@@ -163,7 +188,7 @@ func (a *Applier) configureUnprovisionedPort(ctx context.Context, interfaceName 
 }
 
 func (a *Applier) configureFirewallPort(ctx context.Context, interfaceName string, adminStatus types.PortStatus) error {
-	err := a.ensureNotBridged(ctx, interfaceName)
+	err := a.asic.EnsureNotBridged(ctx, interfaceName)
 	if err != nil {
 		return err
 	}
@@ -184,7 +209,7 @@ func (a *Applier) configureUnderlayPort(ctx context.Context, interfaceName strin
 }
 
 func (a *Applier) configureVrfNeighbor(ctx context.Context, interfaceName, vrfName string, adminStatus types.PortStatus) error {
-	err := a.ensureNotBridged(ctx, interfaceName)
+	err := a.asic.EnsureNotBridged(ctx, interfaceName)
 	if err != nil {
 		return err
 	}
