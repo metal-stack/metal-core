@@ -295,17 +295,17 @@ func (a *Applier) cleanupVrfs(ctx context.Context, cfg *types.Conf) error {
 			continue
 		}
 
-		vni, err := strconv.ParseUint(strings.TrimPrefix(vrfName, "Vrf"), 10, 32)
+		vni, err := a.db.Config.GetVrfVni(ctx, vrfName)
 		if err != nil {
-			return fmt.Errorf("could not parse vni for vrf %s: %w", vrfName, err)
+			return fmt.Errorf("could not retrieve vni for vrf %s: %w", vrfName, err)
 		}
 
 		vrf := &types.Vrf{
-			VNI: uint32(vni),
+			VNI: vni,
 		}
 
 		a.log.Debug("find vxlan tunnel map for vrf", "vrf", vrf)
-		tunnelMap, err := a.db.Config.FindVxlanTunnelMapByVni(ctx, uint32(vni))
+		tunnelMap, err := a.db.Config.FindVxlanTunnelMapByVni(ctx, vni)
 		if err != nil {
 			return fmt.Errorf("could not look up vxlan tunnel map for vni %d: %w", vni, err)
 		}
