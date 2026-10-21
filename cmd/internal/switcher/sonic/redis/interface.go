@@ -20,6 +20,11 @@ func (a *Applier) EnsureNotRouted(ctx context.Context, interfaceName string) err
 		return nil
 	}
 
+	// SONiC defers interface removal until its addresses have been removed.
+	if err := a.db.Config.DeleteInterfaceAddresses(ctx, interfaceName); err != nil {
+		return fmt.Errorf("could not remove addresses for interface %s: %w", interfaceName, err)
+	}
+
 	a.log.Info("remove routing configuration for interface", "name", interfaceName)
 	err = a.db.Config.DeleteInterfaceConfiguration(ctx, interfaceName)
 	if err != nil {
