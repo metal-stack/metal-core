@@ -6,7 +6,6 @@ import (
 	clientv2 "github.com/metal-stack/api/go/client"
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
 type (
@@ -24,8 +23,6 @@ type (
 		managementGateway       string
 		additionalMgmtRoutes    []string
 		additionalBridgePorts   []string
-		additionalBridgeVIDs    []string
-		staticVRFs              types.Vrfs
 		spineUplinks            []string
 		pxeVlanID               uint16
 		bgpNeighborStateFile    string
@@ -52,10 +49,8 @@ type (
 		BGPNeighborStateFile  string
 		AdditionalMgmtRoutes  []string
 		AdditionalBridgePorts []string
-		AdditionalBridgeVIDs  []string
 		SpineUplinks          []string
 		SetSrcLoopback        bool
-		StaticVRFs            types.Vrfs
 
 		NOS     switcher.NOS
 		Client  clientv2.Client
@@ -77,7 +72,6 @@ func New(c Config) *Core {
 		managementGateway:       c.ManagementGateway,
 		additionalMgmtRoutes:    c.AdditionalMgmtRoutes,
 		additionalBridgePorts:   c.AdditionalBridgePorts,
-		additionalBridgeVIDs:    c.AdditionalBridgeVIDs,
 		spineUplinks:            c.SpineUplinks,
 		setSrcLoopback:          c.SetSrcLoopback,
 		nos:                     c.NOS,
@@ -85,6 +79,5 @@ func New(c Config) *Core {
 		metrics:                 c.Metrics,
 		pxeVlanID:               c.PXEVlanID,
 		bgpNeighborStateFile:    c.BGPNeighborStateFile,
-		staticVRFs:              c.StaticVRFs,
 	}
 }

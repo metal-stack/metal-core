@@ -13,32 +13,32 @@ type (
 		ASN                  uint32
 		Ports                Ports
 		MetalCoreCIDR        string
-		AdditionalBridgeVIDs []string
+		UnderlayPorts        []string
+		IgnorePorts          []string
 		AdditionalMgmtRoutes []string
+		Eth0                 MgmtInterface
 		PXEVlanID            uint16
 		SetSrcLoopback       bool
 	}
 
-	Ports struct {
-		Eth0          Nic
-		Underlay      []string
-		Unprovisioned []string
-		BladePorts    []string
-		Vrfs          Vrfs
-		Firewalls     map[string]*Firewall
-		AdminStatus   map[string]PortStatus
+	Ports map[string]*Port
+
+	Port struct {
+		Vrf         *string
+		AdminStatus PortStatus
+		MTU         uint16
+		VLAN        uint16
 	}
 
 	Vrfs map[string]*Vrf
 
 	Vrf struct {
 		Filter
-		VNI       uint32
-		VLANID    uint16
-		Neighbors []string
-		Cidrs     []string
-		Has4      bool
-		Has6      bool
+		VNI    uint32
+		VLANID uint16
+		Cidrs  []string
+		Has4   bool
+		Has6   bool
 	}
 
 	Firewall struct {
@@ -53,7 +53,7 @@ type (
 		RouteMaps     []RouteMap
 	}
 
-	Nic struct {
+	MgmtInterface struct {
 		AddressCIDR string
 		Gateway     string
 	}

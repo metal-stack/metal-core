@@ -25,7 +25,6 @@ var (
 	testcoreAdditionalMgmtRoutes         = []string{"10.100.0.0/16"}
 	testcoreAdditionalBridgePortsSonic   = []string{"Ethernet24"}
 	testcoreAdditionalBridgePortsCumulus = []string{"swp24"}
-	testcoreAdditionalBridgeVIDs         = []string{"3000"}
 	testcoreSpineUplinksSonic            = []string{"Ethernet120", "Ethernet124"}
 	testcoreSpineUplinksCumulus          = []string{"swp31", "swp32"}
 	testcoreLog                          = slog.New(slog.NewJSONHandler(os.Stdout, nil))
@@ -39,7 +38,6 @@ var (
 		PXEVlanID:             testcorePXEVLAN,
 		AdditionalMgmtRoutes:  testcoreAdditionalMgmtRoutes,
 		AdditionalBridgePorts: testcoreAdditionalBridgePortsSonic,
-		AdditionalBridgeVIDs:  testcoreAdditionalBridgeVIDs,
 		SpineUplinks:          testcoreSpineUplinksSonic,
 		SetSrcLoopback:        testcoreSetSrcLoopback,
 		NOS:                   &sonic.Sonic{},
@@ -54,7 +52,6 @@ var (
 		PXEVlanID:             testcorePXEVLAN,
 		AdditionalMgmtRoutes:  testcoreAdditionalMgmtRoutes,
 		AdditionalBridgePorts: testcoreAdditionalBridgePortsCumulus,
-		AdditionalBridgeVIDs:  testcoreAdditionalBridgeVIDs,
 		SpineUplinks:          testcoreSpineUplinksCumulus,
 		SetSrcLoopback:        testcoreSetSrcLoopback,
 		NOS:                   &cumulus.Cumulus{},
@@ -178,42 +175,9 @@ var (
 	}
 
 	leaf01PreviousCfg = &types.Conf{
-		Ports: types.Ports{
-			Unprovisioned: []string{"Ethernet0", "Ethernet1", "Ethernet4", "Ethernet5"},
-			Underlay:      []string{"Ethernet120", "Ethernet124"},
-			Vrfs: types.Vrfs{
-				"Vrf300": {
-					VNI:       300,
-					VLANID:    1003,
-					Neighbors: []string{"Ethernet3"},
-				},
-				"Vrf100": {
-					VNI:       100,
-					VLANID:    1001,
-					Neighbors: []string{"Ethernet6"},
-				},
-			},
-			Firewalls: map[string]*types.Firewall{
-				"Ethernet2": {
-					Port: "Ethernet2",
-				},
-			},
-			AdminStatus: map[string]types.PortStatus{
-				"Ethernet0":   types.PortStatusUp,
-				"Ethernet1":   types.PortStatusUp,
-				"Ethernet2":   types.PortStatusUp,
-				"Ethernet3":   types.PortStatusUp,
-				"Ethernet4":   types.PortStatusUp,
-				"Ethernet5":   types.PortStatusUp,
-				"Ethernet6":   types.PortStatusUp,
-				"Ethernet120": types.PortStatusUp,
-				"Ethernet124": types.PortStatusUp,
-			},
-		},
 		Name:                 leaf01.Id,
 		Loopback:             testcoreLoopback,
 		MetalCoreCIDR:        testcoreCIDR,
-		AdditionalBridgeVIDs: testcoreAdditionalBridgeVIDs,
 		AdditionalMgmtRoutes: testcoreAdditionalMgmtRoutes,
 		PXEVlanID:            testcorePXEVLAN,
 		SetSrcLoopback:       testcoreSetSrcLoopback,
@@ -450,12 +414,11 @@ var (
 )
 
 func injectStaticVrfVlanMapping(conf *types.Conf, mapping map[string]uint16) {
-	for vrf, vlan := range mapping {
-		conf.Ports.Vrfs[vrf].VLANID = vlan
-	}
+	// for vrf, vlan := range mapping {
+	// }
 }
 
 func injectMgmtGateway(conf *types.Conf, gw string) {
-	conf.Ports.Eth0.Gateway = gw
-	conf.Ports.Eth0.AddressCIDR = testcoreMgmtAddr
+	conf.Eth0.Gateway = gw
+	conf.Eth0.AddressCIDR = testcoreMgmtAddr
 }

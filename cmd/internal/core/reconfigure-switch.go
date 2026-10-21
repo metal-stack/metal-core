@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -17,7 +16,6 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/frr"
 	"github.com/metal-stack/metal-core/cmd/internal/net"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
-	"github.com/metal-stack/metal-lib/pkg/pointer"
 
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 )
@@ -146,109 +144,83 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		ASN:                  uint32(asn64), // nolint:gosec
 		Loopback:             c.loopbackIP,
 		MetalCoreCIDR:        c.cidr,
-		AdditionalBridgeVIDs: c.additionalBridgeVIDs,
 		AdditionalMgmtRoutes: c.additionalMgmtRoutes,
 		PXEVlanID:            c.pxeVlanID,
 		SetSrcLoopback:       c.setSrcLoopback,
 	}
 
-	p := types.Ports{
-		Underlay:      c.spineUplinks,
-		BladePorts:    c.additionalBridgePorts,
-		Unprovisioned: []string{},
-		Vrfs:          types.Vrfs{},
-		Firewalls:     map[string]*types.Firewall{},
-		AdminStatus:   map[string]types.PortStatus{},
-	}
+	// for _, nic := range s.Nics {
+	// 	if nic == nil {
+	// 		continue
+	// 	}
 
-	for _, nic := range s.Nics {
-		if nic == nil {
-			continue
-		}
+	// 	port := nic.Name
+	// 	if slices.Contains(p.UnderlayPorts, port) {
+	// 		continue
+	// 	}
+	// 	if slices.Contains(c.additionalBridgePorts, port) {
+	// 		continue
+	// 	}
 
-		port := nic.Name
-		if slices.Contains(p.Underlay, port) {
-			continue
-		}
-		if slices.Contains(c.additionalBridgePorts, port) {
-			continue
-		}
+	// 	adminStatus := pointer.SafeDeref(pointer.SafeDeref(nic.State).Desired)
+	// 	switch adminStatus {
+	// 	case apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN:
+	// 		p.AdminStatus[port] = types.PortStatusDown
+	// 	case apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_UP:
+	// 		p.AdminStatus[port] = types.PortStatusUp
+	// 	default:
+	// 		// noop
+	// 	}
 
-		adminStatus := pointer.SafeDeref(pointer.SafeDeref(nic.State).Desired)
-		switch adminStatus {
-		case apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN:
-			p.AdminStatus[port] = types.PortStatusDown
-		case apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_UP:
-			p.AdminStatus[port] = types.PortStatusUp
-		default:
-			// noop
-		}
+	// 	var isStaticNeighbor bool
+	// 	for _, vrf := range c.staticVRFs {
+	// 		if slices.Contains(vrf.Neighbors, port) {
+	// 			isStaticNeighbor = true
+	// 		}
+	// 	}
 
-		var isStaticNeighbor bool
-		for _, vrf := range c.staticVRFs {
-			if slices.Contains(vrf.Neighbors, port) {
-				isStaticNeighbor = true
-			}
-		}
+	// 	if isStaticNeighbor {
+	// 		continue
+	// 	}
 
-		if isStaticNeighbor {
-			continue
-		}
+	// 	if pointer.SafeDeref(nic.Vrf) == "" {
+	// 		if !slices.Contains(p.Unprovisioned, port) {
+	// 			p.Unprovisioned = append(p.Unprovisioned, port)
+	// 		}
+	// 		continue
+	// 	}
 
-		if pointer.SafeDeref(nic.Vrf) == "" {
-			if !slices.Contains(p.Unprovisioned, port) {
-				p.Unprovisioned = append(p.Unprovisioned, port)
-			}
-			continue
-		}
+	// 	if pointer.SafeDeref(nic.Vrf) == "default" {
+	// 		fw := &types.Firewall{
+	// 			Port: port,
+	// 		}
+	// 		if nic.BgpFilter != nil {
+	// 			fw.Vnis = nic.BgpFilter.Vnis
+	// 			fw.Cidrs = nic.BgpFilter.Cidrs
+	// 		}
+	// 		p.Firewalls[port] = fw
+	// 		continue
+	// 	}
 
-		if pointer.SafeDeref(nic.Vrf) == "default" {
-			fw := &types.Firewall{
-				Port: port,
-			}
-			if nic.BgpFilter != nil {
-				fw.Vnis = nic.BgpFilter.Vnis
-				fw.Cidrs = nic.BgpFilter.Cidrs
-			}
-			p.Firewalls[port] = fw
-			continue
-		}
+	// 	vrf := &types.Vrf{}
+	// 	if v, has := p.Vrfs[pointer.SafeDeref(nic.Vrf)]; has {
+	// 		vrf = v
+	// 	}
 
-		vrf := &types.Vrf{}
-		if v, has := p.Vrfs[pointer.SafeDeref(nic.Vrf)]; has {
-			vrf = v
-		}
+	// 	vni64, err := strconv.ParseUint(strings.TrimPrefix(pointer.SafeDeref(nic.Vrf), "vrf"), 10, 32)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	vrf.VNI = uint32(vni64) // nolint:gosec
 
-		vni64, err := strconv.ParseUint(strings.TrimPrefix(pointer.SafeDeref(nic.Vrf), "vrf"), 10, 32)
-		if err != nil {
-			return nil, err
-		}
-		vrf.VNI = uint32(vni64) // nolint:gosec
+	// 	vrf.Neighbors = append(vrf.Neighbors, port)
+	// 	if nic.BgpFilter != nil {
+	// 		vrf.Cidrs = nic.BgpFilter.Cidrs
+	// 	}
 
-		vrf.Neighbors = append(vrf.Neighbors, port)
-		if nic.BgpFilter != nil {
-			vrf.Cidrs = nic.BgpFilter.Cidrs
-		}
+	// 	p.Vrfs[pointer.SafeDeref(nic.Vrf)] = vrf
+	// }
 
-		p.Vrfs[pointer.SafeDeref(nic.Vrf)] = vrf
-	}
-
-	for name, static := range c.staticVRFs {
-		if _, ok := p.Vrfs[name]; !ok {
-			p.Vrfs[name] = &types.Vrf{
-				VNI:       static.VNI,
-				Neighbors: static.Neighbors,
-				Cidrs:     static.Cidrs,
-			}
-			continue
-		}
-
-		vrf := p.Vrfs[name]
-		vrf.Neighbors = append(vrf.Neighbors, static.Neighbors...)
-		vrf.Cidrs = append(vrf.Cidrs, static.Cidrs...)
-	}
-
-	switcherConfig.Ports = p
 	c.nos.SanitizeConfig(switcherConfig)
 
 	err = switcherConfig.FillRouteMapsAndIPPrefixLists()
@@ -287,7 +259,7 @@ func mapLogLevel(level string) string {
 }
 
 func fillEth0Info(c *types.Conf, gw string) error {
-	c.Ports.Eth0 = types.Nic{}
+	c.Eth0 = types.MgmtInterface{}
 	eth0, err := netlink.LinkByName("eth0")
 	if err != nil {
 		return err
@@ -302,7 +274,7 @@ func fillEth0Info(c *types.Conf, gw string) error {
 
 	ip := addrs[0].IP
 	s, _ := addrs[0].Mask.Size()
-	c.Ports.Eth0.AddressCIDR = fmt.Sprintf("%s/%d", ip.String(), s)
-	c.Ports.Eth0.Gateway = gw
+	c.Eth0.AddressCIDR = fmt.Sprintf("%s/%d", ip.String(), s)
+	c.Eth0.Gateway = gw
 	return nil
 }
