@@ -59,7 +59,7 @@ var (
 	}
 
 	leaf01 = &apiv2.Switch{
-		Id: "leaf01",
+		Id: "sonic-leaf01",
 		Nics: []*apiv2.SwitchNic{
 			{
 				Name:       "Ethernet0",
