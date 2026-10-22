@@ -16,6 +16,7 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal"
 	corenet "github.com/metal-stack/metal-core/cmd/internal/net"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
@@ -49,7 +50,7 @@ const (
 	redisConfigFile  = "/var/run/redis/sonic-db/database_config.json"
 )
 
-func New(log *slog.Logger, frrTplFile string, interfaceNamingSchema InterfaceNamingSchema) (*Sonic, error) {
+func New(log *slog.Logger, frrTplFile string, interfaceNamingSchema InterfaceNamingSchema, quirks quirks.Quirks) (*Sonic, error) {
 	cfg, err := loadRedisConfig(redisConfigFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load database config for SONiC: %w", err)
@@ -58,12 +59,16 @@ func New(log *slog.Logger, frrTplFile string, interfaceNamingSchema InterfaceNam
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to SONiC databases: %w", err)
 	}
+	redisApplier, err := redis.NewApplier(log, sonicDb, quirks)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create redis applier: %w", err)
+	}
 
 	return &Sonic{
 		db:                    sonicDb,
 		frrApplier:            NewFrrApplier(log, frrTplFile),
 		log:                   log,
-		redisApplier:          redis.NewApplier(log, sonicDb),
+		redisApplier:          redisApplier,
 		interfaceNamingSchema: interfaceNamingSchema,
 	}, nil
 }

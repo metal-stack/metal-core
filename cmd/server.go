@@ -28,6 +28,7 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/v"
 	"go.yaml.in/yaml/v4"
@@ -80,7 +81,14 @@ func Run() {
 		},
 	})
 
-	nos, err := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile, sonic.InterfaceNamingSchema(cfg.InterfaceNamingSchema))
+	quirkProfile, ok := quirks.QuirkProfiles[cfg.QuirkProfile]
+
+	if !ok {
+		log.Error("invalid quirk profile specified")
+		os.Exit(1)
+	}
+
+	nos, err := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile, sonic.InterfaceNamingSchema(cfg.InterfaceNamingSchema), quirkProfile())
 	if err != nil {
 		log.Error("failed to create NOS instance", "error", err)
 		os.Exit(1)

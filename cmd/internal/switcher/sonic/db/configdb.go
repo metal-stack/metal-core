@@ -199,6 +199,12 @@ func (d *ConfigDB) DeleteInterfaceConfiguration(ctx context.Context, interfaceNa
 	return d.c.Del(ctx, key)
 }
 
+func (d *ConfigDB) ExistInterfaceConfiguration(ctx context.Context, interfaceName string) (bool, error) {
+	key := Key{interfaceTable, interfaceName}
+
+	return d.c.Exists(ctx, key)
+}
+
 func (d *ConfigDB) IsLinkLocalOnly(ctx context.Context, interfaceName string) (bool, error) {
 	key := Key{interfaceTable, interfaceName}
 

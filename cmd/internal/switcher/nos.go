@@ -11,6 +11,7 @@ import (
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/cumulus"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks"
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
@@ -25,10 +26,10 @@ type NOS interface {
 	GetManagement() (ip, user string, err error)
 }
 
-func NewNOS(log *slog.Logger, frrTplFile, interfacesTplFile string, interfaceNamingSchema sonic.InterfaceNamingSchema) (NOS, error) {
+func NewNOS(log *slog.Logger, frrTplFile, interfacesTplFile string, interfaceNamingSchema sonic.InterfaceNamingSchema, quirks quirks.Quirks) (NOS, error) {
 	if _, err := os.Stat(sonic.SonicVersionFile); err == nil {
 		log.Info("create sonic NOS")
-		nos, err := sonic.New(log.With("os", "sonic"), frrTplFile, interfaceNamingSchema)
+		nos, err := sonic.New(log.With("os", "sonic"), frrTplFile, interfaceNamingSchema, quirks)
 		if err != nil {
 			return nil, fmt.Errorf("failed to initialize SONiC NOS %w", err)
 		}

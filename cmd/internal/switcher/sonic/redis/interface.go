@@ -7,12 +7,8 @@ import (
 	"github.com/avast/retry-go/v4"
 )
 
-func (a *Applier) EnsureNotRouted(ctx context.Context, interfaceName string) error {
-	oid, ok := a.rifOidMap[interfaceName]
-	if !ok {
-		return nil
-	}
-	routed, err := a.db.Asic.ExistRouterInterface(ctx, oid)
+func (a *Applier) ensureNotRouted(ctx context.Context, interfaceName string) error {
+	routed, err := a.portState.IsRouted(ctx, interfaceName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve state data for interface %s: %w", interfaceName, err)
 	}
@@ -28,7 +24,7 @@ func (a *Applier) EnsureNotRouted(ctx context.Context, interfaceName string) err
 
 	return retry.Do(
 		func() error {
-			configured, err := a.db.Asic.ExistRouterInterface(ctx, oid)
+			configured, err := a.portState.IsRouted(ctx, interfaceName)
 			if err != nil {
 				return err
 			}
