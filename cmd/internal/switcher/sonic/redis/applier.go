@@ -91,7 +91,7 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 		return err
 	}
 
-	a.log.Debug("configure underlay ports", "ports", cfg.UnderlayPorts)
+	// a.log.Debug("configure underlay ports", "ports", cfg.UnderlayPorts)
 	// for _, interfaceName := range cfg.UnderlayPorts {
 	// 	if err := a.configureUnderlayPort(ctx, interfaceName, cfg.Ports.AdminStatus[interfaceName]); err != nil {
 	// 		errs = append(errs, err)

@@ -22,7 +22,7 @@ type (
 		enableReconfigureSwitch bool
 		managementGateway       string
 		additionalMgmtRoutes    []string
-		additionalBridgePorts   []string
+		ignorePorts             []string
 		spineUplinks            []string
 		pxeVlanID               uint16
 		bgpNeighborStateFile    string
@@ -37,20 +37,20 @@ type (
 		Log      *slog.Logger
 		LogLevel string
 
-		CIDR                  string
-		LoopbackIP            string
-		ASN                   string
-		PartitionID           string
-		RackID                string
-		RoomID                string
-		ReconfigureSwitch     bool
-		ManagementGateway     string
-		PXEVlanID             uint16
-		BGPNeighborStateFile  string
-		AdditionalMgmtRoutes  []string
-		AdditionalBridgePorts []string
-		SpineUplinks          []string
-		SetSrcLoopback        bool
+		CIDR                 string
+		LoopbackIP           string
+		ASN                  string
+		PartitionID          string
+		RackID               string
+		RoomID               string
+		ReconfigureSwitch    bool
+		ManagementGateway    string
+		PXEVlanID            uint16
+		BGPNeighborStateFile string
+		AdditionalMgmtRoutes []string
+		IgnorePorts          []string
+		SpineUplinks         []string
+		SetSrcLoopback       bool
 
 		NOS     switcher.NOS
 		Client  clientv2.Client
@@ -71,7 +71,7 @@ func New(c Config) *Core {
 		enableReconfigureSwitch: c.ReconfigureSwitch,
 		managementGateway:       c.ManagementGateway,
 		additionalMgmtRoutes:    c.AdditionalMgmtRoutes,
-		additionalBridgePorts:   c.AdditionalBridgePorts,
+		ignorePorts:             c.IgnorePorts,
 		spineUplinks:            c.SpineUplinks,
 		setSrcLoopback:          c.SetSrcLoopback,
 		nos:                     c.NOS,

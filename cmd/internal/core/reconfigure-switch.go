@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -147,79 +148,25 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		AdditionalMgmtRoutes: c.additionalMgmtRoutes,
 		PXEVlanID:            c.pxeVlanID,
 		SetSrcLoopback:       c.setSrcLoopback,
+		Ports:                types.Ports{},
+		Vrfs:                 types.Vrfs{},
 	}
 
-	// for _, nic := range s.Nics {
-	// 	if nic == nil {
-	// 		continue
-	// 	}
+	for _, nic := range s.Nics {
+		if nic == nil {
+			continue
+		}
 
-	// 	port := nic.Name
-	// 	if slices.Contains(p.UnderlayPorts, port) {
-	// 		continue
-	// 	}
-	// 	if slices.Contains(c.additionalBridgePorts, port) {
-	// 		continue
-	// 	}
+		if slices.Contains(c.ignorePorts, nic.Name) {
+			continue
+		}
+		// Add port here and populate it based on the nic's information
 
-	// 	adminStatus := pointer.SafeDeref(pointer.SafeDeref(nic.State).Desired)
-	// 	switch adminStatus {
-	// 	case apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN:
-	// 		p.AdminStatus[port] = types.PortStatusDown
-	// 	case apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_UP:
-	// 		p.AdminStatus[port] = types.PortStatusUp
-	// 	default:
-	// 		// noop
-	// 	}
-
-	// 	var isStaticNeighbor bool
-	// 	for _, vrf := range c.staticVRFs {
-	// 		if slices.Contains(vrf.Neighbors, port) {
-	// 			isStaticNeighbor = true
-	// 		}
-	// 	}
-
-	// 	if isStaticNeighbor {
-	// 		continue
-	// 	}
-
-	// 	if pointer.SafeDeref(nic.Vrf) == "" {
-	// 		if !slices.Contains(p.Unprovisioned, port) {
-	// 			p.Unprovisioned = append(p.Unprovisioned, port)
-	// 		}
-	// 		continue
-	// 	}
-
-	// 	if pointer.SafeDeref(nic.Vrf) == "default" {
-	// 		fw := &types.Firewall{
-	// 			Port: port,
-	// 		}
-	// 		if nic.BgpFilter != nil {
-	// 			fw.Vnis = nic.BgpFilter.Vnis
-	// 			fw.Cidrs = nic.BgpFilter.Cidrs
-	// 		}
-	// 		p.Firewalls[port] = fw
-	// 		continue
-	// 	}
-
-	// 	vrf := &types.Vrf{}
-	// 	if v, has := p.Vrfs[pointer.SafeDeref(nic.Vrf)]; has {
-	// 		vrf = v
-	// 	}
-
-	// 	vni64, err := strconv.ParseUint(strings.TrimPrefix(pointer.SafeDeref(nic.Vrf), "vrf"), 10, 32)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	vrf.VNI = uint32(vni64) // nolint:gosec
-
-	// 	vrf.Neighbors = append(vrf.Neighbors, port)
-	// 	if nic.BgpFilter != nil {
-	// 		vrf.Cidrs = nic.BgpFilter.Cidrs
-	// 	}
-
-	// 	p.Vrfs[pointer.SafeDeref(nic.Vrf)] = vrf
-	// }
+		if slices.Contains(c.spineUplinks, nic.Name) {
+			// TODO: add to ports with mtu 9216
+			// should it be allowed to set the port to down?
+		}
+	}
 
 	c.nos.SanitizeConfig(switcherConfig)
 

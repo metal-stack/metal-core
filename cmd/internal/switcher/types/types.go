@@ -12,9 +12,8 @@ type (
 		Loopback             string
 		ASN                  uint32
 		Ports                Ports
+		Vrfs                 Vrfs
 		MetalCoreCIDR        string
-		UnderlayPorts        []string
-		IgnorePorts          []string
 		AdditionalMgmtRoutes []string
 		Eth0                 MgmtInterface
 		PXEVlanID            uint16
@@ -61,12 +60,12 @@ type (
 	RouteMap struct {
 		Name    string
 		Entries []string
-		Policy  string
+		Policy  Policy
 		Order   int
 	}
 
 	IPPrefixList struct {
-		AddressFamily string
+		AddressFamily AddressFamily
 		Name          string
 		Spec          string
 	}
@@ -76,12 +75,20 @@ type (
 		ipv6Cidrs []string
 	}
 
-	PortStatus string
+	PortStatus    string
+	AddressFamily string
+	Policy        string
 )
 
 const (
 	PortStatusUp   = PortStatus("up")
 	PortStatusDown = PortStatus("down")
+
+	AddressFamilyIPv4 = AddressFamily("ip")
+	AddressFamilyIPv6 = AddressFamily("ipv6")
+
+	PolicyPermit = Policy("permit")
+	PolicyDeny   = Policy("deny")
 )
 
 func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
@@ -92,11 +99,11 @@ func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
 		rm := RouteMap{
 			Name:    prefixRouteMapName,
 			Entries: []string{fmt.Sprintf("match ip address prefix-list %s", prefixListName)},
-			Policy:  "permit",
+			Policy:  PolicyPermit,
 			Order:   10,
 		}
 		s.RouteMaps = append(s.RouteMaps, rm)
-		s.addPrefixList(prefixListName, cidrsByAf.ipv4Cidrs, "ip")
+		s.addPrefixList(prefixListName, cidrsByAf.ipv4Cidrs, AddressFamilyIPv4)
 	}
 	if len(cidrsByAf.ipv6Cidrs) > 0 {
 		prefixRouteMapName := fmt.Sprintf("%s-in6", rmPrefix)
@@ -104,11 +111,11 @@ func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
 		rm := RouteMap{
 			Name:    prefixRouteMapName,
 			Entries: []string{fmt.Sprintf("match ipv6 address prefix-list %s", prefixListName)},
-			Policy:  "permit",
+			Policy:  PolicyPermit,
 			Order:   10,
 		}
 		s.RouteMaps = append(s.RouteMaps, rm)
-		s.addPrefixList(prefixListName, cidrsByAf.ipv6Cidrs, "ipv6")
+		s.addPrefixList(prefixListName, cidrsByAf.ipv6Cidrs, AddressFamilyIPv6)
 	}
 	if len(vnis) > 0 {
 		vniRouteMapName := fmt.Sprintf("%s-vni", rmPrefix)
@@ -116,7 +123,7 @@ func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
 			rm := RouteMap{
 				Name:    vniRouteMapName,
 				Entries: []string{fmt.Sprintf("match evpn vni %s", vni)},
-				Policy:  "permit",
+				Policy:  PolicyPermit,
 				Order:   10 + j,
 			}
 			s.RouteMaps = append(s.RouteMaps, rm)
@@ -124,7 +131,7 @@ func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
 	}
 }
 
-func (s *Filter) addPrefixList(prefixListName string, cidrs []string, af string) {
+func (s *Filter) addPrefixList(prefixListName string, cidrs []string, af AddressFamily) {
 	for _, cidr := range cidrs {
 		prefix, err := netip.ParsePrefix(cidr)
 		if err != nil {

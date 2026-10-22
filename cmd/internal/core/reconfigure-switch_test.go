@@ -23,17 +23,21 @@ import (
 
 func TestBuildSwitcherConfig(t *testing.T) {
 	c := &Core{
-		cidr:         "10.255.255.2/24",
-		partitionID:  "partition1",
-		rackID:       "rack01",
-		roomID:       "room01",
-		asn:          "420000001",
-		loopbackIP:   "10.0.0.1",
-		spineUplinks: []string{"Ethernet120", "Ethernet124"},
-		nos:          &sonic.Sonic{},
+		cidr:                 "10.255.0.1/24",
+		partitionID:          "partition1",
+		rackID:               "rack01",
+		roomID:               "room01",
+		asn:                  "420000001",
+		loopbackIP:           "10.0.0.1",
+		spineUplinks:         []string{"Ethernet120", "Ethernet124"},
+		nos:                  &sonic.Sonic{},
+		additionalMgmtRoutes: []string{"100.1.1.0/24"},
+		ignorePorts:          []string{"Ethernet24"},
+		pxeVlanID:            4000,
 	}
 
 	s := &apiv2.Switch{
+		Id: "leaf01",
 		Nics: []*apiv2.SwitchNic{
 			{
 				Name: "Ethernet0",
@@ -42,9 +46,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 				Name: "Ethernet1",
 				Vrf:  new("vrf104001"),
 				BgpFilter: &apiv2.BGPFilter{
-					Cidrs: []string{
-						"10.240.0.0/12",
-					},
+					Cidrs: []string{"10.240.0.0/12"},
 				},
 			},
 			{
@@ -57,6 +59,12 @@ func TestBuildSwitcherConfig(t *testing.T) {
 			{
 				Name: "Ethernet4",
 				Vrf:  new("vrf200"),
+				BgpFilter: &apiv2.BGPFilter{
+					Cidrs: []string{"10.132.0.0/24", "fe80::10e2::/64"},
+				},
+			},
+			{
+				Name: "Ethernet24",
 			},
 			{
 				Name: "Ethernet120",
@@ -73,8 +81,105 @@ func TestBuildSwitcherConfig(t *testing.T) {
 	expected := &types.Conf{
 		LogLevel:      "warnings",
 		Loopback:      "10.0.0.1",
-		MetalCoreCIDR: "10.255.255.2/24",
+		MetalCoreCIDR: "10.255.0.1/24",
 		ASN:           420000001,
+		Name:          s.Id,
+		Ports: types.Ports{
+			"Ethernet0": {
+				AdminStatus: types.PortStatusUp,
+				MTU:         9000,
+				VLAN:        4000,
+			},
+			"Ethernet1": {
+				Vrf:         new("Vrf104001"),
+				AdminStatus: types.PortStatusUp,
+				MTU:         9000,
+			},
+			"Ethernet2": {
+				Vrf:         new("default"),
+				AdminStatus: types.PortStatusUp,
+				MTU:         9216,
+			},
+			"Ethernet3": {
+				AdminStatus: types.PortStatusUp,
+				MTU:         9000,
+				VLAN:        4000,
+			},
+			"Ethernet4": {
+				Vrf:         new("Vrf200"),
+				AdminStatus: types.PortStatusUp,
+				MTU:         9000,
+			},
+			"Ethernet120": {
+				AdminStatus: types.PortStatusUp,
+				MTU:         9216,
+			},
+			"Ethernet124": {
+				AdminStatus: types.PortStatusUp,
+				MTU:         9216,
+			},
+		},
+		Vrfs: types.Vrfs{
+			"Vrf104001": {
+				Filter: types.Filter{
+					IPPrefixLists: []types.IPPrefixList{
+						{
+							AddressFamily: types.AddressFamilyIPv4,
+							Name:          "Vrf104001-in-prefixes",
+							Spec:          "permit 10.240.0.0/12 le 32",
+						},
+					},
+					RouteMaps: []types.RouteMap{
+						{
+							Name:    "Vrf104001-in",
+							Entries: []string{"match ip address prefix-list Vrf104001-in-prefixes"},
+							Policy:  types.PolicyPermit,
+							Order:   10,
+						},
+					},
+				},
+				VNI:   104001,
+				Cidrs: []string{"10.240.0.0/12"},
+				Has4:  true,
+			},
+			"Vrf200": {
+				Filter: types.Filter{
+					IPPrefixLists: []types.IPPrefixList{
+
+						{
+							AddressFamily: types.AddressFamilyIPv4,
+							Name:          "Vrf200-in-prefixes",
+							Spec:          "permit 10.132.0.0/24 le 32",
+						},
+						{
+							AddressFamily: types.AddressFamilyIPv6,
+							Name:          "Vrf200-in6-prefixes",
+							Spec:          "permit fe80::10e2::/64 le 128",
+						},
+					},
+					RouteMaps: []types.RouteMap{
+						{
+							Name:    "Vrf200-in",
+							Entries: []string{"match ip address prefix-list Vrf200-in-prefixes"},
+							Policy:  types.PolicyPermit,
+							Order:   10,
+						},
+						{
+							Name:    "Vrf200-in6",
+							Entries: []string{"match ip address prefix-list Vrf200-in6-prefixes"},
+							Policy:  types.PolicyPermit,
+							Order:   10,
+						},
+					},
+				},
+				VNI:   200,
+				Cidrs: []string{"10.132.0.0/24", "fe80::10e2::/64"},
+				Has4:  true,
+				Has6:  true,
+			},
+		},
+		AdditionalMgmtRoutes: []string{"100.1.1.0/24"},
+		PXEVlanID:            4000,
 	}
 	// VLANID is ignored because it is reserved dynamically and the order in which the map is iterated matters so the test becomes flaky.
 	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(types.Vrf{}, "VLANID")); diff != "" {

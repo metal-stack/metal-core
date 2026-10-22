@@ -22,39 +22,39 @@ const (
 )
 
 var (
-	testcoreAdditionalMgmtRoutes         = []string{"10.100.0.0/16"}
-	testcoreAdditionalBridgePortsSonic   = []string{"Ethernet24"}
-	testcoreAdditionalBridgePortsCumulus = []string{"swp24"}
-	testcoreSpineUplinksSonic            = []string{"Ethernet120", "Ethernet124"}
-	testcoreSpineUplinksCumulus          = []string{"swp31", "swp32"}
-	testcoreLog                          = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	testcoreAdditionalMgmtRoutes = []string{"10.100.0.0/16"}
+	testcoreIgnorePortsSonic     = []string{"Ethernet24"}
+	testcoreIgnorePortsCumulus   = []string{"swp24"}
+	testcoreSpineUplinksSonic    = []string{"Ethernet120", "Ethernet124"}
+	testcoreSpineUplinksCumulus  = []string{"swp31", "swp32"}
+	testcoreLog                  = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
 	testcoreCfgSonic = Config{
-		Log:                   testcoreLog,
-		CIDR:                  testcoreCIDR,
-		LoopbackIP:            testcoreLoopback,
-		ASN:                   testcoreASN,
-		ManagementGateway:     testcoreMgmtGateway,
-		PXEVlanID:             testcorePXEVLAN,
-		AdditionalMgmtRoutes:  testcoreAdditionalMgmtRoutes,
-		AdditionalBridgePorts: testcoreAdditionalBridgePortsSonic,
-		SpineUplinks:          testcoreSpineUplinksSonic,
-		SetSrcLoopback:        testcoreSetSrcLoopback,
-		NOS:                   &sonic.Sonic{},
+		Log:                  testcoreLog,
+		CIDR:                 testcoreCIDR,
+		LoopbackIP:           testcoreLoopback,
+		ASN:                  testcoreASN,
+		ManagementGateway:    testcoreMgmtGateway,
+		PXEVlanID:            testcorePXEVLAN,
+		AdditionalMgmtRoutes: testcoreAdditionalMgmtRoutes,
+		IgnorePorts:          testcoreIgnorePortsSonic,
+		SpineUplinks:         testcoreSpineUplinksSonic,
+		SetSrcLoopback:       testcoreSetSrcLoopback,
+		NOS:                  &sonic.Sonic{},
 	}
 
 	testcoreCfgCumulus = Config{
-		Log:                   testcoreLog,
-		CIDR:                  testcoreCIDR,
-		LoopbackIP:            testcoreLoopback,
-		ASN:                   testcoreASN,
-		ManagementGateway:     testcoreMgmtGateway,
-		PXEVlanID:             testcorePXEVLAN,
-		AdditionalMgmtRoutes:  testcoreAdditionalMgmtRoutes,
-		AdditionalBridgePorts: testcoreAdditionalBridgePortsCumulus,
-		SpineUplinks:          testcoreSpineUplinksCumulus,
-		SetSrcLoopback:        testcoreSetSrcLoopback,
-		NOS:                   &cumulus.Cumulus{},
+		Log:                  testcoreLog,
+		CIDR:                 testcoreCIDR,
+		LoopbackIP:           testcoreLoopback,
+		ASN:                  testcoreASN,
+		ManagementGateway:    testcoreMgmtGateway,
+		PXEVlanID:            testcorePXEVLAN,
+		AdditionalMgmtRoutes: testcoreAdditionalMgmtRoutes,
+		IgnorePorts:          testcoreIgnorePortsCumulus,
+		SpineUplinks:         testcoreSpineUplinksCumulus,
+		SetSrcLoopback:       testcoreSetSrcLoopback,
+		NOS:                  &cumulus.Cumulus{},
 	}
 
 	leaf01 = &apiv2.Switch{
