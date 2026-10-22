@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
+	sonic "github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
@@ -19,17 +20,17 @@ type Applier struct {
 	db          *db.DB
 	log         *slog.Logger
 	previousCfg *types.Conf
-
-	bridgePortOidMap map[string]db.OID
-	portOidMap       map[string]db.OID
-	rifOidMap        map[string]db.OID
+	quirks      sonic.Quirks
+	portState   sonic.PortStateChecker
 }
 
-func NewApplier(log *slog.Logger, db *db.DB) *Applier {
+func NewApplier(log *slog.Logger, sonicDb *db.DB, quirks sonic.Quirks) (*Applier, error) {
 	return &Applier{
-		db:  db,
-		log: log,
-	}
+		db:        sonicDb,
+		log:       log,
+		quirks:    quirks,
+		portState: quirks.PortState(log, sonicDb),
+	}, nil
 }
 
 func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
@@ -63,7 +64,7 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 		return nil
 	}
 
-	if err := a.refreshOidMaps(ctx); err != nil {
+	if err := a.portState.Refresh(ctx); err != nil {
 		return err
 	}
 
@@ -115,39 +116,6 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 
 func (a *Applier) GetPorts(ctx context.Context) ([]*db.Port, error) {
 	return a.db.Config.GetPorts(ctx)
-}
-
-func (a *Applier) refreshOidMaps(ctx context.Context) error {
-	a.log.Debug("refresh oid maps")
-
-	oidMap, err := a.db.Counters.GetPortNameMap(ctx)
-	if err != nil {
-		return fmt.Errorf("could not update port to oid map: %w", err)
-	}
-	a.log.Debug("set port oid map", "map", oidMap)
-	a.portOidMap = oidMap
-
-	oidMap, err = a.db.Counters.GetRifNameMap(ctx)
-	if err != nil {
-		return fmt.Errorf("could not update rif to oid ma: %w", err)
-	}
-	a.log.Debug("set rif oid map", "map", oidMap)
-	a.rifOidMap = oidMap
-
-	bridgePortMap, err := a.db.Asic.GetPortIdBridgePortMap(ctx)
-	if err != nil {
-		return fmt.Errorf("could not update bridge port to oid map: %w", err)
-	}
-	oidMap = make(map[string]db.OID, len(bridgePortMap))
-	for port, oid := range a.portOidMap {
-		if bridgePort, ok := bridgePortMap[oid]; ok {
-			oidMap[port] = bridgePort
-		}
-	}
-	a.log.Debug("set bridge port oid map", "map", oidMap)
-	a.bridgePortOidMap = oidMap
-
-	return nil
 }
 
 func (a *Applier) configureUnprovisionedPort(ctx context.Context, interfaceName string, adminStatus types.PortStatus, pxeVlan string) error {
@@ -202,31 +170,13 @@ func (a *Applier) configureVrfNeighbor(ctx context.Context, interfaceName, vrfNa
 	return a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
 }
 
-// vrfEntries returns the CONFIG_DB entries that make up a VRF in the order they need to be created.
-// They are deleted in reverse order.
-//
-// The entries are the objects that are required to create an EVPN VXLAN according to
-// https://github.com/sonic-net/SONiC/blob/master/doc/vxlan/EVPN/EVPN_VXLAN_HLD.md#511-configuration-commands
-func vrfEntries(vrfName string, vrf *types.Vrf, vtep string) []db.Entry {
-	vlan := fmt.Sprintf("Vlan%d", vrf.VLANID)
-	vni := strconv.FormatUint(uint64(vrf.VNI), 10)
-
-	return []db.Entry{
-		{Key: db.Key{"VRF", vrfName}, Val: db.Val{"fallback": "false", "vni": vni}},
-		{Key: db.Key{"VLAN", vlan}, Val: db.Val{"vlanid": strconv.FormatUint(uint64(vrf.VLANID), 10)}},
-		{Key: db.Key{"SUPPRESS_VLAN_NEIGH", vlan}, Val: db.Val{"suppress": "on"}},
-		{Key: db.Key{"VLAN_INTERFACE", vlan}, Val: db.Val{"vrf_name": vrfName}},
-		{Key: db.Key{"VXLAN_TUNNEL_MAP", vtep, "map_" + vni + "_" + vlan}, Val: db.Val{"vlan": vlan, "vni": vni}},
-	}
-}
-
 func (a *Applier) configureVrf(ctx context.Context, vrfName string, vrf *types.Vrf) error {
 	vtep, err := a.db.Config.GetVTEPName(ctx)
 	if err != nil {
 		return err
 	}
 
-	for _, e := range vrfEntries(vrfName, vrf, vtep) {
+	for _, e := range a.quirks.VrfEntries(vrfName, vrf, vtep) {
 		if err := a.db.Config.EnsureEntry(ctx, e); err != nil {
 			return fmt.Errorf("could not configure %v for vrf %s: %w", e.Key, vrfName, err)
 		}
@@ -287,7 +237,7 @@ func (a *Applier) cleanupVrf(ctx context.Context, vrfName string, vrf *types.Vrf
 		return err
 	}
 
-	for _, e := range slices.Backward(vrfEntries(vrfName, vrf, vtep)) {
+	for _, e := range slices.Backward(a.quirks.VrfEntries(vrfName, vrf, vtep)) {
 		deleted, err := a.db.Config.DeleteEntry(ctx, e.Key)
 		if err != nil {
 			return fmt.Errorf("could not delete %v of vrf %s: %w", e.Key, vrfName, err)
