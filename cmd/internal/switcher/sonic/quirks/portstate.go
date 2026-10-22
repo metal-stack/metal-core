@@ -74,3 +74,30 @@ func (s *asicDBPortState) IsRouted(ctx context.Context, interfaceName string) (b
 	}
 	return s.db.Asic.ExistRouterInterface(ctx, oid)
 }
+
+// stateDBPortState uses the STATE_DB to report port status
+type stateDBPortState struct {
+	db *db.DB
+
+	// vlans is cached to look up vlan memberships by key instead of scanning the STATE_DB.
+	// metal-core does not create vlans with bridged members while applying a config.
+	vlans []string
+}
+
+func (s *stateDBPortState) Refresh(ctx context.Context) error {
+	vlans, err := s.db.State.GetVlans(ctx)
+	if err != nil {
+		return fmt.Errorf("could not update vlans: %w", err)
+	}
+	s.vlans = vlans
+
+	return nil
+}
+
+func (s *stateDBPortState) IsBridged(ctx context.Context, interfaceName string) (bool, error) {
+	return s.db.State.ExistVlanMember(ctx, interfaceName, s.vlans)
+}
+
+func (s *stateDBPortState) IsRouted(ctx context.Context, interfaceName string) (bool, error) {
+	return s.db.State.ExistInterface(ctx, interfaceName)
+}

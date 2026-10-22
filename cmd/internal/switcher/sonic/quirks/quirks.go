@@ -11,6 +11,7 @@ import (
 
 var QuirkProfiles = map[string]func() Quirks{
 	"community": func() Quirks { return communityQuirks{} },
+	"asternos":  func() Quirks { return asterNOSQuirks{} },
 }
 
 // Quirks describes what differs between SONiC distributions.
@@ -48,4 +49,23 @@ func (communityQuirks) VrfEntries(vrfName string, vrf *types.Vrf, vtep string) [
 
 func (communityQuirks) PortState(log *slog.Logger, sonicDb *db.DB) PortStateChecker {
 	return &asicDBPortState{db: sonicDb, log: log}
+}
+
+//nolint:unused
+type asterNOSQuirks struct{ communityQuirks }
+
+func (asterNOSQuirks) Name() string { return "asternos" }
+
+// VrfEntries uses an L3-only VNI: AsterNOS does not support mapping the VRF VNI to a VLAN,
+// so the VRF is bound to the VTEP directly and no VLAN, SVI or tunnel map is created.
+// ARP suppression is skipped, as it is an L2 protocol
+func (asterNOSQuirks) VrfEntries(vrfName string, vrf *types.Vrf, vtep string) []db.Entry {
+	return []db.Entry{
+		{Key: db.Key{"VRF", vrfName}, Val: db.Val{"vni": strconv.FormatUint(uint64(vrf.VNI), 10), "source_vtep": vtep}},
+	}
+}
+
+// PortState checks the STATE_DB instead of the ASIC_DB.
+func (asterNOSQuirks) PortState(log *slog.Logger, sonicDb *db.DB) PortStateChecker {
+	return &stateDBPortState{db: sonicDb}
 }

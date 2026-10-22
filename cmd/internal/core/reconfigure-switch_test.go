@@ -188,6 +188,11 @@ func TestSonicConfig(t *testing.T) {
 					Instance:  "redis",
 					Separator: "|",
 				},
+				"STATE_DB": {
+					Id:        6,
+					Instance:  "redis",
+					Separator: "|",
+				},
 			},
 		}
 	)
