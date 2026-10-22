@@ -50,3 +50,12 @@ If they match the correct value for `InterfaceNamingSchema` is `default`.
 If not, check if `portdescription` matches the alias and `portidsubtype` matches the name.
 In that case you can use `swap`.
 If you need to have both of the fields to have the same value, use either `name` or `alias`.
+
+## Port State Checks on SONiC Switches
+
+Before a port changes its role, e.g. from a machine port in a VRF to an unprovisioned port in the PXE VLAN, metal-core removes the old configuration and waits until the switch has actually torn it down.
+Where metal-core looks for that state depends on the quirk profile selected with the `QuirkProfile` option (`METAL_CORE_QUIRK_PROFILE`).
+Profiles not listed here behave like `community`.
+
+- `community` (default): checks the SAI bridge port and router interface objects in the `ASIC_DB`, located via the OID maps in the `COUNTERS_DB`. This waits until syncd has removed the objects from the ASIC, but relies on SONiC internals that differ between vendors and releases.
+- `asternos`: checks `VLAN_MEMBER_TABLE` and `INTERFACE_TABLE` in the `STATE_DB`, which are maintained by vlanmgrd and intfmgrd. This only depends on the state tables SONiC uses to coordinate its own daemons, but it confirms that the change was handed to orchagent, not that it reached the ASIC.

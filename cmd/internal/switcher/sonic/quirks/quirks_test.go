@@ -38,6 +38,13 @@ func TestQuirks_VrfEntries(t *testing.T) {
 				{Key: db.Key{"VXLAN_TUNNEL_MAP", "vtep", "map_104001_Vlan1001"}, Val: db.Val{"vlan": "Vlan1001", "vni": "104001"}},
 			},
 		},
+		{
+			name:   "asternos",
+			quirks: asterNOSQuirks{},
+			want: []db.Entry{
+				{Key: db.Key{"VRF", "Vrf104001"}, Val: db.Val{"vni": "104001", "source_vtep": "vtep"}},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -59,6 +66,11 @@ func TestQuirks_PortState(t *testing.T) {
 			name:   "community",
 			quirks: communityQuirks{},
 			want:   &asicDBPortState{},
+		},
+		{
+			name:   "asternos",
+			quirks: asterNOSQuirks{},
+			want:   &stateDBPortState{},
 		},
 	}
 	for _, tt := range tests {
