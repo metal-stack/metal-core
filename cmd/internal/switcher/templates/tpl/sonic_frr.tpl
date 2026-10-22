@@ -1,5 +1,11 @@
 {{- $ASN := .ASN -}}{{- $RouterId := .Loopback -}}! The frr version is not rendered since it seems to be optional.
 frr defaults datacenter
+{{- if .SetFPMAddress }}
+fpm address 127.0.0.1
+{{- end }}
+{{- if .DisableNextHopGroups }}
+no fpm use-next-hop-groups
+{{- end }}
 hostname {{ .Name }}
 password zebra
 enable password zebra
@@ -15,6 +21,13 @@ debug zebra events
 debug zebra nexthop detail
 debug zebra rib detailed
 debug zebra nht detailed
+{{- if .KeepUnprovisionedInterfaces }}
+{{- range .Ports.Unprovisioned }}
+!
+interface {{ . }}
+ ipv6 nd suppress-ra
+{{- end }}
+{{- end }}
 {{- range $vrf, $t := .Ports.Vrfs }}
 !
 vrf Vrf{{ $t.VNI }}

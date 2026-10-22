@@ -7,16 +7,19 @@ import (
 
 type (
 	Conf struct {
-		Name                 string
-		LogLevel             string
-		Loopback             string
-		ASN                  uint32
-		Ports                Ports
-		MetalCoreCIDR        string
-		AdditionalBridgeVIDs []string
-		AdditionalMgmtRoutes []string
-		PXEVlanID            uint16
-		SetSrcLoopback       bool
+		Name                        string
+		LogLevel                    string
+		Loopback                    string
+		ASN                         uint32
+		Ports                       Ports
+		MetalCoreCIDR               string
+		AdditionalBridgeVIDs        []string
+		AdditionalMgmtRoutes        []string
+		PXEVlanID                   uint16
+		SetSrcLoopback              bool
+		SetFPMAddress               bool
+		DisableNextHopGroups        bool
+		KeepUnprovisionedInterfaces bool
 	}
 
 	Ports struct {

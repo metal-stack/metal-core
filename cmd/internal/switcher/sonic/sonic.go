@@ -29,6 +29,7 @@ type (
 		log                   *slog.Logger
 		redisApplier          *redis.Applier
 		interfaceNamingSchema InterfaceNamingSchema
+		quirks                quirks.Quirks
 	}
 
 	PortInfo struct {
@@ -70,6 +71,7 @@ func New(log *slog.Logger, frrTplFile string, interfaceNamingSchema InterfaceNam
 		log:                   log,
 		redisApplier:          redisApplier,
 		interfaceNamingSchema: interfaceNamingSchema,
+		quirks:                quirks,
 	}, nil
 }
 
@@ -79,7 +81,7 @@ func (s *Sonic) Apply(ctx context.Context, cfg *types.Conf) error {
 		return err
 	}
 
-	return s.frrApplier.Apply(ctx, cfg)
+	return s.frrApplier.Apply(ctx, quirks.ApplyFRRTemplateQuirks(s.quirks, *cfg))
 }
 
 func (s *Sonic) IsInitialized(ctx context.Context) (initialized bool, err error) {

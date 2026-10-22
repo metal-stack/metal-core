@@ -1,5 +1,11 @@
 {{- $ASN := .ASN -}}{{- $RouterId := .Loopback -}}! The frr version is not rendered since it seems to be optional.
 frr defaults datacenter
+{{- if .SetFPMAddress }}
+fpm address 127.0.0.1
+{{- end }}
+{{- if .DisableNextHopGroups }}
+no fpm use-next-hop-groups
+{{- end }}
 hostname {{ .Name }}
 username cumulus nopassword
 service integrated-vtysh-config
@@ -9,6 +15,13 @@ debug bgp updates
 debug bgp nht
 debug bgp update-groups
 debug bgp zebra
+{{- if .KeepUnprovisionedInterfaces }}
+{{- range .Ports.Unprovisioned }}
+!
+interface {{ . }}
+ ipv6 nd suppress-ra
+{{- end }}
+{{- end }}
 {{- range $vrf, $t := .Ports.Vrfs }}
 !
 vrf vrf{{ $t.VNI }}
