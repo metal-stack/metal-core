@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -201,57 +202,35 @@ func (a *Applier) configureVrfNeighbor(ctx context.Context, interfaceName, vrfNa
 	return a.ensureLinkLocalOnlyIsEnabled(ctx, interfaceName)
 }
 
+// vrfEntries returns the CONFIG_DB entries that make up a VRF in the order they need to be created.
+// They are deleted in reverse order.
+//
+// The entries are the objects that are required to create an EVPN VXLAN according to
+// https://github.com/sonic-net/SONiC/blob/master/doc/vxlan/EVPN/EVPN_VXLAN_HLD.md#511-configuration-commands
+func vrfEntries(vrfName string, vrf *types.Vrf, vtep string) []db.Entry {
+	vlan := fmt.Sprintf("Vlan%d", vrf.VLANID)
+	vni := strconv.FormatUint(uint64(vrf.VNI), 10)
+
+	return []db.Entry{
+		{Key: db.Key{"VRF", vrfName}, Val: db.Val{"fallback": "false", "vni": vni}},
+		{Key: db.Key{"VLAN", vlan}, Val: db.Val{"vlanid": strconv.FormatUint(uint64(vrf.VLANID), 10)}},
+		{Key: db.Key{"SUPPRESS_VLAN_NEIGH", vlan}, Val: db.Val{"suppress": "on"}},
+		{Key: db.Key{"VLAN_INTERFACE", vlan}, Val: db.Val{"vrf_name": vrfName}},
+		{Key: db.Key{"VXLAN_TUNNEL_MAP", vtep, "map_" + vni + "_" + vlan}, Val: db.Val{"vlan": vlan, "vni": vni}},
+	}
+}
+
 func (a *Applier) configureVrf(ctx context.Context, vrfName string, vrf *types.Vrf) error {
-	exist, err := a.db.Config.ExistVrf(ctx, vrfName)
+	vtep, err := a.db.Config.GetVTEPName(ctx)
 	if err != nil {
 		return err
 	}
-	if !exist {
-		if err := a.db.Config.CreateVrf(ctx, vrfName, vrf.VNI); err != nil {
-			return fmt.Errorf("could not create vrf %s: %w", vrfName, err)
+
+	for _, e := range vrfEntries(vrfName, vrf, vtep) {
+		if err := a.db.Config.EnsureEntry(ctx, e); err != nil {
+			return fmt.Errorf("could not configure %v for vrf %s: %w", e.Key, vrfName, err)
 		}
 	}
-
-	exist, err = a.db.Config.ExistVlan(ctx, vrf.VLANID)
-	if err != nil {
-		return err
-	}
-	if !exist {
-		if err := a.db.Config.CreateVlan(ctx, vrf.VLANID); err != nil {
-			return fmt.Errorf("could not create vlan %d: %w", vrf.VLANID, err)
-		}
-	}
-
-	exist, err = a.db.Config.AreNeighborsSuppressed(ctx, vrf.VLANID)
-	if err != nil {
-		return err
-	}
-	if !exist {
-		if err := a.db.Config.SuppressNeighbors(ctx, vrf.VLANID); err != nil {
-			return fmt.Errorf("could not suppress neighbors for vlan %d: %w", vrf.VLANID, err)
-		}
-	}
-
-	exist, err = a.db.Config.ExistVlanInterface(ctx, vrf.VLANID)
-	if err != nil {
-		return err
-	}
-	if !exist {
-		if err := a.db.Config.CreateVlanInterface(ctx, vrf.VLANID, vrfName); err != nil {
-			return fmt.Errorf("could not create vlan interface for vlan %d: %w", vrf.VLANID, err)
-		}
-	}
-
-	exist, err = a.db.Config.ExistVxlanTunnelMap(ctx, vrf.VLANID, vrf.VNI)
-	if err != nil {
-		return err
-	}
-	if !exist {
-		if err := a.db.Config.CreateVxlanTunnelMap(ctx, vrf.VLANID, vrf.VNI); err != nil {
-			return fmt.Errorf("could not create vxlan tunnel between vlan %d and vni %d: %w", vrf.VLANID, vrf.VNI, err)
-		}
-	}
-
 	return nil
 }
 
@@ -303,61 +282,18 @@ func (a *Applier) cleanupVrfs(ctx context.Context, cfg *types.Conf) error {
 
 func (a *Applier) cleanupVrf(ctx context.Context, vrfName string, vrf *types.Vrf) error {
 	a.log.Debug("cleanup unused vrf", "vrf", vrf)
-	exists, err := a.db.Config.ExistVxlanTunnelMap(ctx, vrf.VLANID, vrf.VNI)
+	vtep, err := a.db.Config.GetVTEPName(ctx)
 	if err != nil {
 		return err
 	}
-	if exists {
-		a.log.Debug("delete vxlan tunnel map", "vlan id", vrf.VLANID, "vni", vrf.VNI)
-		err = a.db.Config.DeleteVxlanTunnelMap(ctx, vrf.VLANID, vrf.VNI)
+
+	for _, e := range slices.Backward(vrfEntries(vrfName, vrf, vtep)) {
+		deleted, err := a.db.Config.DeleteEntry(ctx, e.Key)
 		if err != nil {
-			return fmt.Errorf("could not remove vxlan tunnel map for vlan %d and vni %d: %w", vrf.VLANID, vrf.VNI, err)
+			return fmt.Errorf("could not delete %v of vrf %s: %w", e.Key, vrfName, err)
 		}
-	}
-
-	exists, err = a.db.Config.ExistVlanInterface(ctx, vrf.VLANID)
-	if err != nil {
-		return err
-	}
-	if exists {
-		a.log.Debug("delete vlan interface", "vlan id", vrf.VLANID)
-		err = a.db.Config.DeleteVlanInterface(ctx, vrf.VLANID)
-		if err != nil {
-			return fmt.Errorf("could not remove vlan interface %d: %w", vrf.VLANID, err)
-		}
-	}
-
-	neighborSuppression, err := a.db.Config.AreNeighborsSuppressed(ctx, vrf.VLANID)
-	if err != nil {
-		return err
-	}
-	if neighborSuppression {
-		a.log.Debug("delete neighbor suppression", "vlan id", vrf.VLANID)
-		if err := a.db.Config.DeleteNeighborSuppression(ctx, vrf.VLANID); err != nil {
-			return fmt.Errorf("could not delete neighbor suppression for vlan %d: %w", vrf.VLANID, err)
-		}
-	}
-
-	exists, err = a.db.Config.ExistVlan(ctx, vrf.VLANID)
-	if err != nil {
-		return err
-	}
-	if exists {
-		a.log.Debug("delete vlan", "vlan id", vrf.VLANID)
-		err = a.db.Config.DeleteVlan(ctx, vrf.VLANID)
-		if err != nil {
-			return fmt.Errorf("could not remove vlan %d: %w", vrf.VLANID, err)
-		}
-	}
-
-	exists, err = a.db.Config.ExistVrf(ctx, vrfName)
-	if err != nil {
-		return err
-	}
-	if exists {
-		a.log.Debug("delete vrf", "vrf", vrfName)
-		if err := a.db.Config.DeleteVrf(ctx, vrfName); err != nil {
-			return fmt.Errorf("could not delete vrf %s: %w", vrfName, err)
+		if deleted {
+			a.log.Debug("deleted vrf entry", "vrf", vrfName, "key", e.Key)
 		}
 	}
 	return nil

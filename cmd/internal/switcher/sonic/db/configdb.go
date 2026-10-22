@@ -24,6 +24,12 @@ type (
 		Vni  string
 		Vlan string
 	}
+
+	// Entry is a CONFIG_DB entry with the fields it should have.
+	Entry struct {
+		Key Key
+		Val Val
+	}
 )
 
 const (
@@ -34,11 +40,8 @@ const (
 	linkLocalOnly       = "ipv6_use_link_local_only" // nolint:gosec
 	mtu                 = "mtu"
 	portTable           = "PORT"
-	suppressVlanNeigh   = "SUPPRESS_VLAN_NEIGH"
 	taggingMode         = "tagging_mode"
 	untagged            = "untagged"
-	vlanTable           = "VLAN"
-	vlanInterfaceTable  = "VLAN_INTERFACE"
 	vlanMemberTable     = "VLAN_MEMBER"
 	vrfTable            = "VRF"
 	vrfName             = "vrf_name"
@@ -51,64 +54,38 @@ func newConfigDB(rdb valkey.Client, sep string) *ConfigDB {
 	}
 }
 
-func (d *ConfigDB) ExistVlan(ctx context.Context, vid uint16) (bool, error) {
-	key := Key{vlanTable, fmt.Sprintf("Vlan%d", vid)}
-
-	return d.c.Exists(ctx, key)
-}
-
-func (d *ConfigDB) CreateVlan(ctx context.Context, vid uint16) error {
-	vlanId := fmt.Sprintf("%d", vid)
-	key := Key{vlanTable, "Vlan" + vlanId}
-
-	return d.c.HSet(ctx, key, Val{"vlanid": vlanId})
-}
-
-func (d *ConfigDB) DeleteVlan(ctx context.Context, vid uint16) error {
-	vlanId := fmt.Sprintf("%d", vid)
-	key := Key{vlanTable, "Vlan" + vlanId}
-
-	return d.c.Del(ctx, key)
-}
-
-func (d *ConfigDB) AreNeighborsSuppressed(ctx context.Context, vid uint16) (bool, error) {
-	key := Key{suppressVlanNeigh, fmt.Sprintf("Vlan%d", vid)}
-
-	suppress, err := d.c.HGet(ctx, key, "suppress")
+// EnsureEntry creates the entry or updates it if any of its fields differ.
+// Fields of an existing entry that are not part of e.Val are left untouched.
+func (d *ConfigDB) EnsureEntry(ctx context.Context, e Entry) error {
+	current, err := d.c.HGetAll(ctx, e.Key)
 	if err != nil {
+		return err
+	}
+
+	val := e.Val
+	if len(val) == 0 {
+		if len(current) > 0 {
+			return nil
+		}
+		// SONiC represents entries without fields with a NULL field
+		val = Val{"NULL": "NULL"}
+	}
+
+	for field, value := range val {
+		if v, ok := current[field]; !ok || v != value {
+			return d.c.HSet(ctx, e.Key, val)
+		}
+	}
+	return nil
+}
+
+// DeleteEntry deletes the entry and reports whether it existed.
+func (d *ConfigDB) DeleteEntry(ctx context.Context, key Key) (bool, error) {
+	exists, err := d.c.Exists(ctx, key)
+	if err != nil || !exists {
 		return false, err
 	}
-	return suppress == "on", nil
-}
-
-func (d *ConfigDB) SuppressNeighbors(ctx context.Context, vid uint16) error {
-	key := Key{suppressVlanNeigh, fmt.Sprintf("Vlan%d", vid)}
-
-	return d.c.HSet(ctx, key, Val{"suppress": "on"})
-}
-
-func (d *ConfigDB) DeleteNeighborSuppression(ctx context.Context, vid uint16) error {
-	key := Key{suppressVlanNeigh, fmt.Sprintf("Vlan%d", vid)}
-
-	return d.c.Del(ctx, key)
-}
-
-func (d *ConfigDB) ExistVlanInterface(ctx context.Context, vid uint16) (bool, error) {
-	key := Key{vlanInterfaceTable, fmt.Sprintf("Vlan%d", vid)}
-
-	return d.c.Exists(ctx, key)
-}
-
-func (d *ConfigDB) CreateVlanInterface(ctx context.Context, vid uint16, vrf string) error {
-	key := Key{vlanInterfaceTable, "Vlan" + fmt.Sprintf("%d", vid)}
-
-	return d.c.HSet(ctx, key, Val{vrfName: vrf})
-}
-
-func (d *ConfigDB) DeleteVlanInterface(ctx context.Context, vid uint16) error {
-	key := Key{vlanInterfaceTable, "Vlan" + fmt.Sprintf("%d", vid)}
-
-	return d.c.Del(ctx, key)
+	return true, d.c.Del(ctx, key)
 }
 
 func (d *ConfigDB) GetVlanMembership(ctx context.Context, interfaceName string) ([]string, error) {
@@ -157,24 +134,6 @@ func (d *ConfigDB) GetVrfs(ctx context.Context) ([]string, error) {
 	return vrfs, nil
 }
 
-func (d *ConfigDB) ExistVrf(ctx context.Context, vrf string) (bool, error) {
-	key := Key{vrfTable, vrf}
-
-	return d.c.Exists(ctx, key)
-}
-
-func (d *ConfigDB) CreateVrf(ctx context.Context, vrf string, vni uint32) error {
-	key := Key{vrfTable, vrf}
-
-	return d.c.HSet(ctx, key, Val{"fallback": "false", "vni": fmt.Sprintf("%d", vni)})
-}
-
-func (d *ConfigDB) DeleteVrf(ctx context.Context, vrf string) error {
-	key := Key{vrfTable, vrf}
-
-	return d.c.Del(ctx, key)
-}
-
 func (d *ConfigDB) SetVrfMember(ctx context.Context, interfaceName string, vrf string) error {
 	key := Key{interfaceTable, interfaceName}
 
@@ -187,41 +146,8 @@ func (d *ConfigDB) GetVrfMembership(ctx context.Context, interfaceName string) (
 	return d.c.HGet(ctx, key, vrfName)
 }
 
-func (d *ConfigDB) ExistVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) (bool, error) {
-	vtep, err := d.getVTEPName(ctx)
-	if err != nil {
-		return false, err
-	}
-	key := Key{vxlanTunnelMapTable, vtep, fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
-
-	return d.c.Exists(ctx, key)
-}
-
-func (d *ConfigDB) CreateVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) error {
-	vtep, err := d.getVTEPName(ctx)
-	if err != nil {
-		return err
-	}
-	key := Key{vxlanTunnelMapTable, vtep, fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
-	val := Val{
-		"vlan": fmt.Sprintf("Vlan%d", vid),
-		"vni":  fmt.Sprintf("%d", vni),
-	}
-	return d.c.HSet(ctx, key, val)
-}
-
-func (d *ConfigDB) DeleteVxlanTunnelMap(ctx context.Context, vid uint16, vni uint32) error {
-	vtep, err := d.getVTEPName(ctx)
-	if err != nil {
-		return err
-	}
-	key := Key{vxlanTunnelMapTable, vtep, fmt.Sprintf("map_%d_Vlan%d", vni, vid)}
-
-	return d.c.Del(ctx, key)
-}
-
 func (d *ConfigDB) FindVxlanTunnelMapByVni(ctx context.Context, vni uint32) (*VxlanMap, error) {
-	vtep, err := d.getVTEPName(ctx)
+	vtep, err := d.GetVTEPName(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +180,7 @@ func (d *ConfigDB) FindVxlanTunnelMapByVni(ctx context.Context, vni uint32) (*Vx
 	return nil, nil
 }
 
-func (d *ConfigDB) getVTEPName(ctx context.Context) (string, error) {
+func (d *ConfigDB) GetVTEPName(ctx context.Context) (string, error) {
 	pattern := Key{"VXLAN_TUNNEL", "*"}
 	keys, err := d.c.Keys(ctx, pattern)
 	if err != nil {
