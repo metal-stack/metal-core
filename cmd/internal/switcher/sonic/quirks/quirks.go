@@ -24,6 +24,16 @@ type Quirks interface {
 	VrfEntries(vrfName string, vrf *types.Vrf, vtep string) []db.Entry
 	// PortState returns how to tell whether a port is still bridged or routed
 	PortState(log *slog.Logger, sonicDb *db.DB) PortStateChecker
+	// Is the SONiC distribution using the new dplane_fpm_sonic module to sync zebra with the Forwarding Plane Manager
+	// https://github.com/sonic-net/SONiC/blob/master/doc/sonic-fpm-module/frr_sonic_communication_channel.md
+	frrUseDplaneFpmSonic() bool
+	// Do we need to disable NextHopGroups in FRR?
+	// Seems like NextHopGroups are not supported in newer SONiC versions with dplane_fpm_sonic
+	// (at least sonic-vpp 202605 and asternos 202511)
+	frrDisableNextHopGroups() bool
+	// Remove Interface configuration instead of deleting them in FRR
+	// Required true on newer FRR versions (observed on asternos 202511)
+	frrKeepInterfaces() bool
 }
 
 // communityQuirks is upstream SONiC behaviour. Profiles that only differ in some
@@ -51,6 +61,12 @@ func (communityQuirks) PortState(log *slog.Logger, sonicDb *db.DB) PortStateChec
 	return &asicDBPortState{db: sonicDb, log: log}
 }
 
+func (communityQuirks) frrUseDplaneFpmSonic() bool { return false }
+
+func (communityQuirks) frrDisableNextHopGroups() bool { return false }
+
+func (communityQuirks) frrKeepInterfaces() bool { return false }
+
 //nolint:unused
 type asterNOSQuirks struct{ communityQuirks }
 
@@ -68,4 +84,26 @@ func (asterNOSQuirks) VrfEntries(vrfName string, vrf *types.Vrf, vtep string) []
 // PortState checks the STATE_DB instead of the ASIC_DB.
 func (asterNOSQuirks) PortState(log *slog.Logger, sonicDb *db.DB) PortStateChecker {
 	return &stateDBPortState{db: sonicDb}
+}
+
+// Asternos uses dplane_fpm_sonic
+func (asterNOSQuirks) frrUseDplaneFpmSonic() bool { return true }
+
+// FRR 10.3 in Asternos refuses to apply a frr.conf that deletes active interfaces
+func (asterNOSQuirks) frrKeepInterfaces() bool { return true }
+
+// Asternos does not support NextHopGroups with dplane_fpm_sonic
+func (asterNOSQuirks) frrDisableNextHopGroups() bool { return true }
+
+// Apply the Quirks to the FRR Configuration
+//
+// Fun Fact: Go does not have virtual dispatch in member methods. Making this a
+// member of the interface and defining the community implementation only would
+// make the asternos quirks call the q.frrKeepInterfaces of the community
+// implementation even if it is overridden
+func ApplyFRRTemplateQuirks(q Quirks, cfg types.Conf) *types.Conf {
+	cfg.KeepUnprovisionedInterfaces = q.frrKeepInterfaces()
+	cfg.DisableNextHopGroups = q.frrDisableNextHopGroups()
+	cfg.SetFPMAddress = q.frrUseDplaneFpmSonic()
+	return &cfg
 }
