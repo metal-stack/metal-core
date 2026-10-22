@@ -1,5 +1,4 @@
 //go:build client
-// +build client
 
 package core
 
@@ -47,14 +46,12 @@ func (c *Core) ConstantlyPhoneHome(ctx context.Context, interval time.Duration) 
 
 		ifaceName := iface.Name
 		// constantly observe LLDP traffic on current machine and current interface
-		discoveryResultChanWG.Add(1)
-		go func() {
-			defer discoveryResultChanWG.Done()
+		discoveryResultChanWG.Go(func() {
 			err = lldpcli.Start(c.log, discoveryResultChan)
 			if err != nil {
 				c.log.Error("unable to start lldp discovery for interface", "interface", ifaceName)
 			}
-		}()
+		})
 	}
 
 	// wait all lldp routines to finish to close result channel
@@ -82,7 +79,7 @@ func (c *Core) ConstantlyPhoneHome(ctx context.Context, interval time.Duration) 
 		select {
 		case <-ticker.C:
 			msgs := []phoneHomeMessage{}
-			phoneHomeMessages.Range(func(key, value interface{}) bool {
+			phoneHomeMessages.Range(func(key, value any) bool {
 				msg, ok := value.(phoneHomeMessage)
 				if !ok {
 					return true

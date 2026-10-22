@@ -100,7 +100,7 @@ func (c *Cumulus) GetOS() (*models.V1SwitchOS, error) {
 	if err != nil {
 		c.log.Error("unable to read /etc/lsb-release", "error", err)
 	} else {
-		for _, line := range strings.Fields(string(lsbReleaseBytes)) {
+		for line := range strings.FieldsSeq(string(lsbReleaseBytes)) {
 			if strings.HasPrefix(line, "DISTRIB_RELEASE") {
 				_, v, found := strings.Cut(line, "=")
 				if found {
