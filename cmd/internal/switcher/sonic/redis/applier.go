@@ -52,6 +52,11 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 		return fmt.Errorf("failed to apply config: %w", err)
 	}
 
+	// LLDP is independent of the port configuration, so its failures are only logged and must not block it
+	for _, err := range a.configureLLDP(ctx, currentPorts) {
+		a.log.Error("failed to configure lldp", "error", err)
+	}
+
 	for _, port := range currentPorts {
 		if types.PortStatus(port.AdminStatus) != cfg.Ports.AdminStatus[port.Name] {
 			changed = true
@@ -116,6 +121,23 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 
 func (a *Applier) GetPorts(ctx context.Context) ([]*db.Port, error) {
 	return a.db.Config.GetPorts(ctx)
+}
+
+func (a *Applier) configureLLDP(ctx context.Context, ports []*db.Port) []error {
+	var errs []error
+
+	err := a.db.Config.SetLldpTxInterval(ctx, a.quirks.LldpTxIntervalMode())
+	if err != nil {
+		errs = append(errs, fmt.Errorf("failed to update LLDP tx_interval: %w", err))
+	}
+	for _, port := range ports {
+		err := a.db.Config.SetLldpForPor(ctx, port.Name, port.Alias, a.quirks.LldpPortConfigMode())
+		if err != nil {
+			errs = append(errs, fmt.Errorf("failed to update LLDP settings for port %s: %w", port.Name, err))
+		}
+	}
+
+	return errs
 }
 
 func (a *Applier) configureUnprovisionedPort(ctx context.Context, interfaceName string, adminStatus types.PortStatus, pxeVlan string) error {
