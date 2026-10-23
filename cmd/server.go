@@ -3,7 +3,6 @@
 package cmd
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -13,7 +12,6 @@ import (
 	"net/netip"
 	"os"
 	"os/signal"
-	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -28,9 +26,7 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/v"
-	"go.yaml.in/yaml/v4"
 )
 
 const phonedHomeInterval = time.Minute
@@ -87,34 +83,27 @@ func Run() {
 	}
 
 	metrics := metrics.New()
-	vrfs, err := getStaticVRFs(cfg.StaticVRFsFile)
-	if err != nil {
-		log.Error("failed to assemble static vrfs", "error", err)
-		os.Exit(1)
-	}
 
 	c := core.New(core.Config{
-		Log:                   log,
-		LogLevel:              cfg.LogLevel,
-		CIDR:                  cfg.CIDR,
-		LoopbackIP:            cfg.LoopbackIP,
-		ASN:                   cfg.ASN,
-		PartitionID:           cfg.PartitionID,
-		RackID:                cfg.RackID,
-		RoomID:                cfg.RoomID,
-		ReconfigureSwitch:     cfg.ReconfigureSwitch,
-		ManagementGateway:     cfg.ManagementGateway,
-		AdditionalMgmtRoutes:  cfg.AdditionalMgmtRoutes,
-		AdditionalBridgePorts: cfg.AdditionalBridgePorts,
-		AdditionalBridgeVIDs:  cfg.AdditionalBridgeVIDs,
-		SpineUplinks:          cfg.SpineUplinks,
-		SetSrcLoopback:        cfg.SetSrcLoopback,
-		NOS:                   nos,
-		Client:                client,
-		Metrics:               metrics,
-		PXEVlanID:             cfg.PXEVlanID,
-		BGPNeighborStateFile:  cfg.BGPNeighborStateFile,
-		StaticVRFs:            vrfs,
+		Log:                  log,
+		LogLevel:             cfg.LogLevel,
+		CIDR:                 cfg.CIDR,
+		LoopbackIP:           cfg.LoopbackIP,
+		ASN:                  cfg.ASN,
+		PartitionID:          cfg.PartitionID,
+		RackID:               cfg.RackID,
+		RoomID:               cfg.RoomID,
+		ReconfigureSwitch:    cfg.ReconfigureSwitch,
+		ManagementGateway:    cfg.ManagementGateway,
+		AdditionalMgmtRoutes: cfg.AdditionalMgmtRoutes,
+		IgnorePorts:          cfg.IgnorePorts,
+		SpineUplinks:         cfg.SpineUplinks,
+		SetSrcLoopback:       cfg.SetSrcLoopback,
+		NOS:                  nos,
+		Client:               client,
+		Metrics:              metrics,
+		PXEVlanID:            cfg.PXEVlanID,
+		BGPNeighborStateFile: cfg.BGPNeighborStateFile,
 	})
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -171,34 +160,6 @@ func Run() {
 	})
 
 	wg.Wait()
-}
-
-func getStaticVRFs(filePath string) (types.Vrfs, error) {
-	vrfs := types.Vrfs{}
-	if filePath == "" {
-		return vrfs, nil
-	}
-
-	fileBytes, err := os.ReadFile(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read static VRFs file: %w", err)
-	}
-	dec := yaml.NewDecoder(bytes.NewReader(fileBytes))
-	dec.KnownFields(true)
-	err = dec.Decode(vrfs)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal static VRFs file: %w", err)
-	}
-
-	for name, vrf := range vrfs {
-		vni, err := strconv.Atoi(strings.TrimPrefix(name, "vrf"))
-		if err != nil {
-			return nil, fmt.Errorf("failed to apply static vrfs: %w", err)
-		}
-		vrf.VNI = uint32(vni)
-	}
-
-	return vrfs, nil
 }
 
 func newApiClient(logger *slog.Logger, apiURL, tokenfilePath string) (clientv2.Client, error) {

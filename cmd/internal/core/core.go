@@ -6,7 +6,6 @@ import (
 	clientv2 "github.com/metal-stack/api/go/client"
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
 type (
@@ -23,9 +22,7 @@ type (
 		enableReconfigureSwitch bool
 		managementGateway       string
 		additionalMgmtRoutes    []string
-		additionalBridgePorts   []string
-		additionalBridgeVIDs    []string
-		staticVRFs              types.Vrfs
+		ignorePorts             []string
 		spineUplinks            []string
 		pxeVlanID               uint16
 		bgpNeighborStateFile    string
@@ -40,22 +37,20 @@ type (
 		Log      *slog.Logger
 		LogLevel string
 
-		CIDR                  string
-		LoopbackIP            string
-		ASN                   string
-		PartitionID           string
-		RackID                string
-		RoomID                string
-		ReconfigureSwitch     bool
-		ManagementGateway     string
-		PXEVlanID             uint16
-		BGPNeighborStateFile  string
-		AdditionalMgmtRoutes  []string
-		AdditionalBridgePorts []string
-		AdditionalBridgeVIDs  []string
-		SpineUplinks          []string
-		SetSrcLoopback        bool
-		StaticVRFs            types.Vrfs
+		CIDR                 string
+		LoopbackIP           string
+		ASN                  string
+		PartitionID          string
+		RackID               string
+		RoomID               string
+		ReconfigureSwitch    bool
+		ManagementGateway    string
+		PXEVlanID            uint16
+		BGPNeighborStateFile string
+		AdditionalMgmtRoutes []string
+		IgnorePorts          []string
+		SpineUplinks         []string
+		SetSrcLoopback       bool
 
 		NOS     switcher.NOS
 		Client  clientv2.Client
@@ -76,8 +71,7 @@ func New(c Config) *Core {
 		enableReconfigureSwitch: c.ReconfigureSwitch,
 		managementGateway:       c.ManagementGateway,
 		additionalMgmtRoutes:    c.AdditionalMgmtRoutes,
-		additionalBridgePorts:   c.AdditionalBridgePorts,
-		additionalBridgeVIDs:    c.AdditionalBridgeVIDs,
+		ignorePorts:             c.IgnorePorts,
 		spineUplinks:            c.SpineUplinks,
 		setSrcLoopback:          c.SetSrcLoopback,
 		nos:                     c.NOS,
@@ -85,6 +79,5 @@ func New(c Config) *Core {
 		metrics:                 c.Metrics,
 		pxeVlanID:               c.PXEVlanID,
 		bgpNeighborStateFile:    c.BGPNeighborStateFile,
-		staticVRFs:              c.StaticVRFs,
 	}
 }

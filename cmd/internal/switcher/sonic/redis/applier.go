@@ -70,17 +70,17 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 		a.log.Debug("interface changes", "changes", diff)
 	}
 
-	currentPorts, err := a.db.Config.GetPorts(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to apply config: %w", err)
-	}
+	// currentPorts, err := a.db.Config.GetPorts(ctx)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to apply config: %w", err)
+	// }
 
-	for _, port := range currentPorts {
-		if types.PortStatus(port.AdminStatus) != cfg.Ports.AdminStatus[port.Name] {
-			changed = true
-			break
-		}
-	}
+	// for _, port := range currentPorts {
+	// 	if types.PortStatus(port.AdminStatus) != cfg.Ports.AdminStatus[port.Name] {
+	// 		changed = true
+	// 		break
+	// 	}
+	// }
 
 	if !changed {
 		a.log.Info("no changes on interfaces detected, nothing to do")
@@ -91,44 +91,44 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 		return err
 	}
 
-	a.log.Debug("configure underlay ports", "ports", cfg.Ports.Underlay)
-	for _, interfaceName := range cfg.Ports.Underlay {
-		if err := a.configureUnderlayPort(ctx, interfaceName, cfg.Ports.AdminStatus[interfaceName]); err != nil {
-			errs = append(errs, err)
-		}
-	}
+	// a.log.Debug("configure underlay ports", "ports", cfg.UnderlayPorts)
+	// for _, interfaceName := range cfg.UnderlayPorts {
+	// 	if err := a.configureUnderlayPort(ctx, interfaceName, cfg.Ports.AdminStatus[interfaceName]); err != nil {
+	// 		errs = append(errs, err)
+	// 	}
+	// }
 
-	a.log.Debug("configure unprovisioned ports", "ports", cfg.Ports.Unprovisioned)
-	for _, interfaceName := range cfg.Ports.Unprovisioned {
-		pxeVlan := fmt.Sprintf("Vlan%d", cfg.PXEVlanID)
-		if err := a.configureUnprovisionedPort(ctx, interfaceName, cfg.Ports.AdminStatus[interfaceName], pxeVlan); err != nil {
-			errs = append(errs, err)
-		}
-	}
+	// a.log.Debug("configure unprovisioned ports", "ports", cfg.Ports.Unprovisioned)
+	// for _, interfaceName := range cfg.Ports.Unprovisioned {
+	// 	pxeVlan := fmt.Sprintf("Vlan%d", cfg.PXEVlanID)
+	// 	if err := a.configureUnprovisionedPort(ctx, interfaceName, cfg.Ports.AdminStatus[interfaceName], pxeVlan); err != nil {
+	// 		errs = append(errs, err)
+	// 	}
+	// }
 
-	a.log.Debug("configure firewall ports", "ports", cfg.Ports.Firewalls)
-	for interfaceName := range cfg.Ports.Firewalls {
-		if err := a.configureFirewallPort(ctx, interfaceName, cfg.Ports.AdminStatus[interfaceName]); err != nil {
-			errs = append(errs, err)
-		}
-	}
+	// a.log.Debug("configure firewall ports", "ports", cfg.Ports.Firewalls)
+	// for interfaceName := range cfg.Ports.Firewalls {
+	// 	if err := a.configureFirewallPort(ctx, interfaceName, cfg.Ports.AdminStatus[interfaceName]); err != nil {
+	// 		errs = append(errs, err)
+	// 	}
+	// }
 
-	a.log.Debug("configure port vrfs", "vrfs", cfg.Ports.Vrfs)
-	for vrfName, vrf := range cfg.Ports.Vrfs {
-		if err := a.configureVrf(ctx, vrfName, vrf); err != nil {
-			errs = append(errs, err)
-		}
-		for _, interfaceName := range vrf.Neighbors {
-			if err := a.configureVrfNeighbor(ctx, interfaceName, vrfName, cfg.Ports.AdminStatus[interfaceName]); err != nil {
-				errs = append(errs, err)
-			}
-		}
-	}
+	// a.log.Debug("configure port vrfs", "vrfs", cfg.Ports.Vrfs)
+	// for vrfName, vrf := range cfg.Ports.Vrfs {
+	// 	if err := a.configureVrf(ctx, vrfName, vrf); err != nil {
+	// 		errs = append(errs, err)
+	// 	}
+	// 	for _, interfaceName := range vrf.Neighbors {
+	// 		if err := a.configureVrfNeighbor(ctx, interfaceName, vrfName, cfg.Ports.AdminStatus[interfaceName]); err != nil {
+	// 			errs = append(errs, err)
+	// 		}
+	// 	}
+	// }
 
-	err = a.cleanupVrfs(ctx, cfg)
-	if err != nil {
-		errs = append(errs, err)
-	}
+	// err = a.cleanupVrfs(ctx, cfg)
+	// if err != nil {
+	// 	errs = append(errs, err)
+	// }
 
 	// config is only treated as applied if no errors are encountered
 	if len(errs) == 0 {
@@ -291,9 +291,9 @@ func (a *Applier) cleanupVrfs(ctx context.Context, cfg *types.Conf) error {
 			continue
 		}
 
-		if _, found := cfg.Ports.Vrfs[vrfName]; found {
-			continue
-		}
+		// if _, found := cfg.Ports.Vrfs[vrfName]; found {
+		// 	continue
+		// }
 
 		vni, err := strconv.ParseUint(strings.TrimPrefix(vrfName, "Vrf"), 10, 32)
 		if err != nil {

@@ -146,19 +146,12 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		ASN:                  uint32(asn64), // nolint:gosec
 		Loopback:             c.loopbackIP,
 		MetalCoreCIDR:        c.cidr,
-		AdditionalBridgeVIDs: c.additionalBridgeVIDs,
 		AdditionalMgmtRoutes: c.additionalMgmtRoutes,
 		PXEVlanID:            c.pxeVlanID,
 		SetSrcLoopback:       c.setSrcLoopback,
-	}
-
-	p := types.Ports{
-		Underlay:      c.spineUplinks,
-		BladePorts:    c.additionalBridgePorts,
-		Unprovisioned: []string{},
-		Vrfs:          types.Vrfs{},
-		Firewalls:     map[string]*types.Firewall{},
-		AdminStatus:   map[string]types.PortStatus{},
+		Ports:                types.Ports{},
+		Vrfs:                 types.Vrfs{},
+		BGPSessions:          types.BGPSessions{},
 	}
 
 	for _, nic := range s.Nics {
@@ -166,89 +159,66 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 			continue
 		}
 
-		port := nic.Name
-		if slices.Contains(p.Underlay, port) {
-			continue
-		}
-		if slices.Contains(c.additionalBridgePorts, port) {
+		if slices.Contains(c.ignorePorts, nic.Name) {
 			continue
 		}
 
+		port := &types.Port{
+			Vrf: nic.Vrf,
+		}
+
+		// TODO: discuss if it should be allowed to set `admin_status: down` for spine uplinks
 		adminStatus := pointer.SafeDeref(pointer.SafeDeref(nic.State).Desired)
 		switch adminStatus {
 		case apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN:
-			p.AdminStatus[port] = types.PortStatusDown
+			port.AdminStatus = types.PortStatusDown
 		case apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_UP:
-			p.AdminStatus[port] = types.PortStatusUp
+			port.AdminStatus = types.PortStatusUp
 		default:
 			// noop
 		}
 
-		var isStaticNeighbor bool
-		for _, vrf := range c.staticVRFs {
-			if slices.Contains(vrf.Neighbors, port) {
-				isStaticNeighbor = true
-			}
-		}
-
-		if isStaticNeighbor {
+		// FIXME: too many implicit assumptions; try to make everything more explicit
+		switch pointer.SafeDeref(port.Vrf) {
+		case "default":
+			port.MTU = 9216
+			port.Routed = true
+			port.PeerGroup = new("FIREWALL")
+		case "":
+			port.MTU = 900
+			port.VLAN = &c.pxeVlanID
+			switcherConfig.Ports[nic.Name] = port
 			continue
+		default:
+			port.MTU = 9000
+			port.Routed = true
+			port.PeerGroup = new("MACHINE")
 		}
 
-		if pointer.SafeDeref(nic.Vrf) == "" {
-			if !slices.Contains(p.Unprovisioned, port) {
-				p.Unprovisioned = append(p.Unprovisioned, port)
-			}
-			continue
+		if slices.Contains(c.spineUplinks, nic.Name) {
+			port.MTU = 9216
+			port.Routed = true
+			port.PeerGroup = new("FABRIC")
 		}
 
-		if pointer.SafeDeref(nic.Vrf) == "default" {
-			fw := &types.Firewall{
-				Port: port,
-			}
-			if nic.BgpFilter != nil {
-				fw.Vnis = nic.BgpFilter.Vnis
-				fw.Cidrs = nic.BgpFilter.Cidrs
-			}
-			p.Firewalls[port] = fw
-			continue
+		// CONTINUE:
+		// - populate bgp sessions for frr config
+
+		vrf := pointer.SafeDeref(port.Vrf)
+		// peerGroup := "MACHINE"
+		// if vrf == "default" {
+		// 	peerGroup = "FIREWALL"
+		// }
+
+		session, ok := switcherConfig.BGPSessions[vrf]
+		if !ok {
+			session = &types.BGPSession{}
 		}
 
-		vrf := &types.Vrf{}
-		if v, has := p.Vrfs[pointer.SafeDeref(nic.Vrf)]; has {
-			vrf = v
-		}
-
-		vni64, err := strconv.ParseUint(strings.TrimPrefix(pointer.SafeDeref(nic.Vrf), "vrf"), 10, 32)
-		if err != nil {
-			return nil, err
-		}
-		vrf.VNI = uint32(vni64) // nolint:gosec
-
-		vrf.Neighbors = append(vrf.Neighbors, port)
-		if nic.BgpFilter != nil {
-			vrf.Cidrs = nic.BgpFilter.Cidrs
-		}
-
-		p.Vrfs[pointer.SafeDeref(nic.Vrf)] = vrf
+		switcherConfig.BGPSessions[vrf] = session
+		switcherConfig.Ports[nic.Name] = port
 	}
 
-	for name, static := range c.staticVRFs {
-		if _, ok := p.Vrfs[name]; !ok {
-			p.Vrfs[name] = &types.Vrf{
-				VNI:       static.VNI,
-				Neighbors: static.Neighbors,
-				Cidrs:     static.Cidrs,
-			}
-			continue
-		}
-
-		vrf := p.Vrfs[name]
-		vrf.Neighbors = append(vrf.Neighbors, static.Neighbors...)
-		vrf.Cidrs = append(vrf.Cidrs, static.Cidrs...)
-	}
-
-	switcherConfig.Ports = p
 	c.nos.SanitizeConfig(switcherConfig)
 
 	err = switcherConfig.FillRouteMapsAndIPPrefixLists()
@@ -287,7 +257,7 @@ func mapLogLevel(level string) string {
 }
 
 func fillEth0Info(c *types.Conf, gw string) error {
-	c.Ports.Eth0 = types.Nic{}
+	c.Eth0 = types.MgmtInterface{}
 	eth0, err := netlink.LinkByName("eth0")
 	if err != nil {
 		return err
@@ -302,7 +272,7 @@ func fillEth0Info(c *types.Conf, gw string) error {
 
 	ip := addrs[0].IP
 	s, _ := addrs[0].Mask.Size()
-	c.Ports.Eth0.AddressCIDR = fmt.Sprintf("%s/%d", ip.String(), s)
-	c.Ports.Eth0.Gateway = gw
+	c.Eth0.AddressCIDR = fmt.Sprintf("%s/%d", ip.String(), s)
+	c.Eth0.Gateway = gw
 	return nil
 }
