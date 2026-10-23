@@ -13,6 +13,7 @@ type (
 		ASN                  uint32
 		Ports                Ports
 		Vrfs                 Vrfs
+		BGPSessions          BGPSessions
 		MetalCoreCIDR        string
 		AdditionalMgmtRoutes []string
 		Eth0                 MgmtInterface
@@ -26,7 +27,9 @@ type (
 		Vrf         *string
 		AdminStatus PortStatus
 		MTU         uint16
-		VLAN        uint16
+		VLAN        *uint16 // if port doesn't have a VLAN, treat it as routed
+		Routed      bool
+		PeerGroup   *string
 	}
 
 	Vrfs map[string]*Vrf
@@ -40,11 +43,21 @@ type (
 		Has6   bool
 	}
 
-	Firewall struct {
-		Filter
-		Port  string
-		Cidrs []string
-		Vnis  []string
+	BGPSessions map[string]*BGPSession
+
+	BGPSession struct {
+		PeerGroups PeerGroups
+	}
+
+	PeerGroups map[string]*PeerGroup
+
+	PeerGroup struct {
+		Cidrs     []string
+		Vnis      []string
+		Evpn      bool // TODO: document that `true` only works in the default VRF.
+		Commands  []string
+		Neighbors []string
+		Filter    Filter `yaml:"-"`
 	}
 
 	Filter struct {

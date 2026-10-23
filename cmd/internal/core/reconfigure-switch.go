@@ -17,6 +17,7 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/frr"
 	"github.com/metal-stack/metal-core/cmd/internal/net"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
+	"github.com/metal-stack/metal-lib/pkg/pointer"
 
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 )
@@ -150,6 +151,7 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		SetSrcLoopback:       c.setSrcLoopback,
 		Ports:                types.Ports{},
 		Vrfs:                 types.Vrfs{},
+		BGPSessions:          types.BGPSessions{},
 	}
 
 	for _, nic := range s.Nics {
@@ -160,12 +162,61 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		if slices.Contains(c.ignorePorts, nic.Name) {
 			continue
 		}
-		// Add port here and populate it based on the nic's information
+
+		port := &types.Port{
+			Vrf: nic.Vrf,
+		}
+
+		// TODO: discuss if it should be allowed to set `admin_status: down` for spine uplinks
+		adminStatus := pointer.SafeDeref(pointer.SafeDeref(nic.State).Desired)
+		switch adminStatus {
+		case apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN:
+			port.AdminStatus = types.PortStatusDown
+		case apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_UP:
+			port.AdminStatus = types.PortStatusUp
+		default:
+			// noop
+		}
+
+		// FIXME: too many implicit assumptions; try to make everything more explicit
+		switch pointer.SafeDeref(port.Vrf) {
+		case "default":
+			port.MTU = 9216
+			port.Routed = true
+			port.PeerGroup = new("FIREWALL")
+		case "":
+			port.MTU = 900
+			port.VLAN = &c.pxeVlanID
+			switcherConfig.Ports[nic.Name] = port
+			continue
+		default:
+			port.MTU = 9000
+			port.Routed = true
+			port.PeerGroup = new("MACHINE")
+		}
 
 		if slices.Contains(c.spineUplinks, nic.Name) {
-			// TODO: add to ports with mtu 9216
-			// should it be allowed to set the port to down?
+			port.MTU = 9216
+			port.Routed = true
+			port.PeerGroup = new("FABRIC")
 		}
+
+		// CONTINUE:
+		// - populate bgp sessions for frr config
+
+		vrf := pointer.SafeDeref(port.Vrf)
+		// peerGroup := "MACHINE"
+		// if vrf == "default" {
+		// 	peerGroup = "FIREWALL"
+		// }
+
+		session, ok := switcherConfig.BGPSessions[vrf]
+		if !ok {
+			session = &types.BGPSession{}
+		}
+
+		switcherConfig.BGPSessions[vrf] = session
+		switcherConfig.Ports[nic.Name] = port
 	}
 
 	c.nos.SanitizeConfig(switcherConfig)

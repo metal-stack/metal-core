@@ -88,7 +88,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 			"Ethernet0": {
 				AdminStatus: types.PortStatusUp,
 				MTU:         9000,
-				VLAN:        4000,
+				VLAN:        new(uint16(4000)),
 			},
 			"Ethernet1": {
 				Vrf:         new("Vrf104001"),
@@ -103,7 +103,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 			"Ethernet3": {
 				AdminStatus: types.PortStatusUp,
 				MTU:         9000,
-				VLAN:        4000,
+				VLAN:        new(uint16(4000)),
 			},
 			"Ethernet4": {
 				Vrf:         new("Vrf200"),
