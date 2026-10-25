@@ -17,6 +17,7 @@ type (
 		AdditionalMgmtRoutes []string
 		PXEVlanID            uint16
 		SetSrcLoopback       bool
+		BootRDNSS            []string
 	}
 
 	Ports struct {
@@ -30,7 +31,8 @@ type (
 	}
 
 	UnprovisionedPort struct {
-		Port string
+		Port       string
+		BootPrefix netip.Prefix
 	}
 
 	Vrfs map[string]*Vrf
@@ -86,6 +88,8 @@ type (
 const (
 	PortStatusUp   = PortStatus("up")
 	PortStatusDown = PortStatus("down")
+
+	BootVrfName = "VrfBoot"
 )
 
 func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {

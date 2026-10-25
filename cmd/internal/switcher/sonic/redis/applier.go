@@ -5,10 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/netip"
 	"strconv"
 	"strings"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
@@ -64,7 +66,7 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 		changed bool
 	)
 
-	diff := cmp.Diff(a.previousCfg, cfg)
+	diff := cmp.Diff(a.previousCfg, cfg, cmpopts.EquateComparable(netip.Prefix{}))
 	if diff != "" {
 		changed = true
 		a.log.Debug("interface changes", "changes", diff)

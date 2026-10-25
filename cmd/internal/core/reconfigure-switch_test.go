@@ -3,6 +3,7 @@ package core
 import (
 	"bytes"
 	_ "embed"
+	"net/netip"
 	"testing"
 	"text/template"
 
@@ -144,7 +145,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		AdditionalBridgeVIDs: []string{"201-256", "301-356"},
 	}
 	// VLANID is ignored because it is reserved dynamically and the order in which the map is iterated matters so the test becomes flaky.
-	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(types.Vrf{}, "VLANID")); diff != "" {
+	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(types.Vrf{}, "VLANID"), cmpopts.EquateComparable(netip.Prefix{})); diff != "" {
 		t.Errorf("TestBuildSwitcherConfig() diff = %s", diff)
 	}
 

@@ -80,8 +80,10 @@ func (c *Conf) CapitalizeVrfName() {
 	caser := cases.Title(language.English)
 	capitalizedVRFs := make(map[string]*Vrf)
 	for name, vrf := range c.Ports.Vrfs {
-		s := caser.String(name)
-		capitalizedVRFs[s] = vrf
+		if name != BootVrfName {
+			name = caser.String(name)
+		}
+		capitalizedVRFs[name] = vrf
 	}
 
 	c.Ports.Vrfs = capitalizedVRFs
@@ -105,7 +107,10 @@ func (c *Conf) NewWithoutDownPorts() *Conf {
 
 	for name, port := range ports.Unprovisioned {
 		if ports.AdminStatus[port.Port] != PortStatusDown {
-			unprovisioned[name] = &UnprovisionedPort{Port: port.Port}
+			unprovisioned[name] = &UnprovisionedPort{
+				Port:       port.Port,
+				BootPrefix: port.BootPrefix,
+			}
 		}
 	}
 
