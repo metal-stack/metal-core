@@ -22,11 +22,15 @@ type (
 	Ports struct {
 		Eth0          Nic
 		Underlay      []string
-		Unprovisioned []string
+		Unprovisioned map[string]*UnprovisionedPort
 		BladePorts    []string
 		Vrfs          Vrfs
 		Firewalls     map[string]*Firewall
 		AdminStatus   map[string]PortStatus
+	}
+
+	UnprovisionedPort struct {
+		Port string
 	}
 
 	Vrfs map[string]*Vrf

@@ -99,7 +99,8 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 	}
 
 	a.log.Debug("configure unprovisioned ports", "ports", cfg.Ports.Unprovisioned)
-	for _, interfaceName := range cfg.Ports.Unprovisioned {
+	for _, port := range cfg.Ports.Unprovisioned {
+		interfaceName := port.Port
 		pxeVlan := fmt.Sprintf("Vlan%d", cfg.PXEVlanID)
 		if err := a.configureUnprovisionedPort(ctx, interfaceName, cfg.Ports.AdminStatus[interfaceName], pxeVlan); err != nil {
 			errs = append(errs, err)

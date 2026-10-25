@@ -14,6 +14,11 @@ Ensure you have `libpcap-dev` installed.
 make
 ```
 
+## Custom switch templates
+
+Custom switch templates must use `.Port` when iterating over `Ports.Unprovisioned`.
+Entries are keyed by port name and rendered in sorted order.
+
 ## Static VRFs
 
 Typically, metal-core configures the ports based on information is receives from the API.
