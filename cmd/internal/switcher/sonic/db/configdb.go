@@ -46,6 +46,7 @@ const (
 	vrfTable            = "VRF"
 	vrfName             = "vrf_name"
 	vxlanTunnelMapTable = "VXLAN_TUNNEL_MAP"
+	null                = "NULL"
 )
 
 func newConfigDB(rdb valkey.Client, sep string) *ConfigDB {
@@ -68,7 +69,7 @@ func (d *ConfigDB) EnsureEntry(ctx context.Context, e Entry) error {
 			return nil
 		}
 		// SONiC represents entries without fields with a NULL field
-		val = Val{"NULL": "NULL"}
+		val = Val{null: null}
 	}
 
 	for field, value := range val {

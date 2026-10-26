@@ -155,7 +155,7 @@ func TestConfigDB_EnsureEntry(t *testing.T) {
 			data:  configDBTestData,
 			entry: Entry{Key: Key{"VLAN_INTERFACE", "Vlan2000"}},
 			mods: func(data test.HashMap) {
-				data["VLAN_INTERFACE|Vlan2000"] = map[string]string{"NULL": "NULL"}
+				data["VLAN_INTERFACE|Vlan2000"] = map[string]string{null: null}
 			},
 		},
 		{
