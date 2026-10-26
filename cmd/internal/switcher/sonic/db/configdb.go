@@ -33,23 +33,19 @@ type (
 )
 
 const (
-	adminStatusField     = "admin_status"
-	alias                = "alias"
-	enable               = "enable"
-	interfaceTable       = "INTERFACE"
-	linkLocalOnly        = "ipv6_use_link_local_only" // nolint:gosec
-	mtu                  = "mtu"
-	portTable            = "PORT"
-	taggingMode          = "tagging_mode"
-	untagged             = "untagged"
-	vlanMemberTable      = "VLAN_MEMBER"
-	vrfTable             = "VRF"
-	vrfName              = "vrf_name"
-	vxlanTunnelMapTable  = "VXLAN_TUNNEL_MAP"
-	lldpTable            = "LLDP"
-	lldpTxIntervalModern = "tx_interval"
-	lldpTxInterval202211 = "hello_time"
-	lldpPortIdKey        = "lldp_local_portid"
+	adminStatusField    = "admin_status"
+	alias               = "alias"
+	enable              = "enable"
+	interfaceTable      = "INTERFACE"
+	linkLocalOnly       = "ipv6_use_link_local_only" // nolint:gosec
+	mtu                 = "mtu"
+	portTable           = "PORT"
+	taggingMode         = "tagging_mode"
+	untagged            = "untagged"
+	vlanMemberTable     = "VLAN_MEMBER"
+	vrfTable            = "VRF"
+	vrfName             = "vrf_name"
+	vxlanTunnelMapTable = "VXLAN_TUNNEL_MAP"
 )
 
 func newConfigDB(rdb valkey.Client, sep string) *ConfigDB {
@@ -295,60 +291,4 @@ func (d *ConfigDB) SetAdminStatus(ctx context.Context, interfaceName string, adm
 	}
 	key := Key{portTable, interfaceName}
 	return d.c.HSet(ctx, key, Val{adminStatusField: string(adminStatus)})
-}
-
-type LldpSetTxIntervalMode int
-
-const (
-	CommunityIntervalMode LldpSetTxIntervalMode = iota
-	AsterNOSIntervalMode
-)
-
-func (d *ConfigDB) SetLldpTxInterval(ctx context.Context, mode LldpSetTxIntervalMode) error {
-	switch mode {
-	case CommunityIntervalMode:
-		return d.EnsureEntry(ctx, Entry{Key: Key{lldpTable, "GLOBAL"}, Val: Val{lldpTxInterval202211: "10"}})
-	case AsterNOSIntervalMode:
-		fallthrough
-	default:
-		return d.EnsureEntry(ctx, Entry{Key: Key{lldpTable, "lldp"}, Val: Val{lldpTxIntervalModern: "10"}})
-	}
-}
-
-type LldpSetPortMode int
-
-const (
-	CommunityPortMode LldpSetPortMode = iota
-	AsterNOSPortMode
-)
-
-func (d *ConfigDB) SetLldpForPor(ctx context.Context, portName string, advertisedName string, mode LldpSetPortMode) error {
-	switch mode {
-	case CommunityPortMode:
-		// The lldpmgrd shipped in edgecore202211 is just peak
-		// docker exec -it lldp cat /usr/bin/lldpmgrd if you want to take a look
-		//
-		// CONFIG_DB Example:
-		//
-		//	"LLDP_PORT|Ethernet1":	{
-		//	  enabled: "true", # options: true and literally anything else
-		//	  mode: "RECEIVE", # options: RECEIVE and literally anything else
-		//	}
-		//
-		// enabled == "true" and mode unset is a KeyError in lldpmgrd
-		// enabled == "true" means mode == "RECEIVE" means rx-only
-		// enabled == "true" means mode != "RECEIVE" means tx-only (???)
-		// LLDP_PORT|EthernetX KEY missing means tx-and-rx LLDP (???)
-		// enabled != "true" means means disabled
-		// enabled unset means "whatever the previous state was; Pray you never have to restart" (???)
-		//
-		// Are these people ok?
-		_, err := d.DeleteEntry(ctx, Key{"LLDP_PORT", portName})
-		return err
-	case AsterNOSPortMode:
-		fallthrough
-	default:
-		return d.EnsureEntry(ctx, Entry{Key: Key{lldpTable, portName}, Val: Val{lldpPortIdKey: advertisedName}})
-	}
-
 }
