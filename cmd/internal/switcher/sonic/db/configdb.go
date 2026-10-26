@@ -300,13 +300,13 @@ func (d *ConfigDB) SetAdminStatus(ctx context.Context, interfaceName string, adm
 type LldpSetTxIntervalMode int
 
 const (
-	Broadcom2022IntervalMode LldpSetTxIntervalMode = iota
+	CommunityIntervalMode LldpSetTxIntervalMode = iota
 	AsterNOSIntervalMode
 )
 
 func (d *ConfigDB) SetLldpTxInterval(ctx context.Context, mode LldpSetTxIntervalMode) error {
 	switch mode {
-	case Broadcom2022IntervalMode:
+	case CommunityIntervalMode:
 		return d.EnsureEntry(ctx, Entry{Key: Key{lldpTable, "GLOBAL"}, Val: Val{lldpTxInterval202211: "10"}})
 	case AsterNOSIntervalMode:
 		fallthrough
@@ -318,13 +318,13 @@ func (d *ConfigDB) SetLldpTxInterval(ctx context.Context, mode LldpSetTxInterval
 type LldpSetPortMode int
 
 const (
-	Broadcom2022PortMode LldpSetPortMode = iota
+	CommunityPortMode LldpSetPortMode = iota
 	AsterNOSPortMode
 )
 
 func (d *ConfigDB) SetLldpForPor(ctx context.Context, portName string, advertisedName string, mode LldpSetPortMode) error {
 	switch mode {
-	case Broadcom2022PortMode:
+	case CommunityPortMode:
 		// The lldpmgrd shipped in edgecore202211 is just peak
 		// docker exec -it lldp cat /usr/bin/lldpmgrd if you want to take a look
 		//

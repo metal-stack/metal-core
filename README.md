@@ -51,11 +51,25 @@ If not, check if `portdescription` matches the alias and `portidsubtype` matches
 In that case you can use `swap`.
 If you need to have both of the fields to have the same value, use either `name` or `alias`.
 
+## Quirk Profiles on SONiC Switches
+
+SONiC distributions and releases differ in how some things have to be configured.
+The `QuirkProfile` option (`METAL_CORE_QUIRK_PROFILE`) selects a profile that combines one behavior per quirk.
+metal-core logs the selected behaviors on startup and refuses to start with an unknown profile.
+
+The behaviors are implemented in [`cmd/internal/switcher/sonic/quirks/behaviors`](cmd/internal/switcher/sonic/quirks/behaviors):
+
+- **VRF entries**: `Community` creates the VRF, VLAN, SVI, ARP suppression and VXLAN tunnel map of an L2 VNI as described in the [SONiC EVPN HLD](https://github.com/sonic-net/SONiC/blob/master/doc/vxlan/EVPN/EVPN_VXLAN_HLD.md#511-configuration-commands). `L3Only` binds the VRF to the VTEP directly for platforms that cannot map the VRF VNI to a VLAN.
+- **Port state**: see [Port State Checks](#port-state-checks-on-sonic-switches).
+- **FRR dplane_fpm_sonic**: zebra syncs with the Forwarding Plane Manager via the [dplane_fpm_sonic module](https://github.com/sonic-net/SONiC/blob/master/doc/sonic-fpm-module/frr_sonic_communication_channel.md), so the FPM address is set in `frr.conf`.
+- **FRR disable next hop groups**: next hop groups are disabled in `frr.conf`, as they are not supported together with dplane_fpm_sonic.
+- **FRR keep interfaces**: unprovisioned interfaces stay in `frr.conf` with their configuration removed instead of being deleted, since newer FRR versions refuse to apply a config that deletes active interfaces.
+- **LLDP**: where the global `tx_interval` and the per-port LLDP configuration are written in the `CONFIG_DB`.
+
 ## Port State Checks on SONiC Switches
 
 Before a port changes its role, e.g. from a machine port in a VRF to an unprovisioned port in the PXE VLAN, metal-core removes the old configuration and waits until the switch has actually torn it down.
-Where metal-core looks for that state depends on the quirk profile selected with the `QuirkProfile` option (`METAL_CORE_QUIRK_PROFILE`).
-Profiles not listed here behave like `community`.
+Where metal-core looks for that state depends on the port state behavior of the selected quirk profile.
 
-- `community` (default): checks the SAI bridge port and router interface objects in the `ASIC_DB`, located via the OID maps in the `COUNTERS_DB`. This waits until syncd has removed the objects from the ASIC, but relies on SONiC internals that differ between vendors and releases.
-- `asternos`: checks `VLAN_MEMBER_TABLE` and `INTERFACE_TABLE` in the `STATE_DB`, which are maintained by vlanmgrd and intfmgrd. This only depends on the state tables SONiC uses to coordinate its own daemons, but it confirms that the change was handed to orchagent, not that it reached the ASIC.
+- `AsicDb`: checks the SAI bridge port and router interface objects in the `ASIC_DB`, located via the OID maps in the `COUNTERS_DB`. This waits until syncd has removed the objects from the ASIC, but relies on SONiC internals that differ between vendors and releases.
+- `StateDb`: checks `VLAN_MEMBER_TABLE` and `INTERFACE_TABLE` in the `STATE_DB`, which are maintained by vlanmgrd and intfmgrd. This only depends on the state tables SONiC uses to coordinate its own daemons, but it confirms that the change was handed to orchagent, not that it reached the ASIC.

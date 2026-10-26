@@ -1,4 +1,4 @@
-package quirks
+package portstate
 
 import (
 	"context"

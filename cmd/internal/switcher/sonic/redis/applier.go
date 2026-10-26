@@ -12,7 +12,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
-	sonic "github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks/behaviors/portstate"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
@@ -20,16 +21,16 @@ type Applier struct {
 	db          *db.DB
 	log         *slog.Logger
 	previousCfg *types.Conf
-	quirks      sonic.Quirks
-	portState   sonic.PortStateChecker
+	quirks      quirks.SonicQuirks
+	portState   portstate.PortStateChecker
 }
 
-func NewApplier(log *slog.Logger, sonicDb *db.DB, quirks sonic.Quirks) (*Applier, error) {
+func NewApplier(log *slog.Logger, sonicDb *db.DB, quirks quirks.SonicQuirks) (*Applier, error) {
 	return &Applier{
 		db:        sonicDb,
 		log:       log,
 		quirks:    quirks,
-		portState: quirks.PortState(log, sonicDb),
+		portState: quirks.PortState.NewChecker(log, sonicDb),
 	}, nil
 }
 
@@ -126,12 +127,12 @@ func (a *Applier) GetPorts(ctx context.Context) ([]*db.Port, error) {
 func (a *Applier) configureLLDP(ctx context.Context, ports []*db.Port) []error {
 	var errs []error
 
-	err := a.db.Config.SetLldpTxInterval(ctx, a.quirks.LldpTxIntervalMode())
+	err := a.db.Config.SetLldpTxInterval(ctx, a.quirks.LLDPConfiguration.TxIntervalMode())
 	if err != nil {
 		errs = append(errs, fmt.Errorf("failed to update LLDP tx_interval: %w", err))
 	}
 	for _, port := range ports {
-		err := a.db.Config.SetLldpForPor(ctx, port.Name, port.Alias, a.quirks.LldpPortConfigMode())
+		err := a.db.Config.SetLldpForPor(ctx, port.Name, port.Alias, a.quirks.LLDPConfiguration.PortConfigMode())
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to update LLDP settings for port %s: %w", port.Name, err))
 		}
@@ -198,7 +199,7 @@ func (a *Applier) configureVrf(ctx context.Context, vrfName string, vrf *types.V
 		return err
 	}
 
-	for _, e := range a.quirks.VrfEntries(vrfName, vrf, vtep) {
+	for _, e := range a.quirks.VrfEntries.Entries(vrfName, vrf, vtep) {
 		if err := a.db.Config.EnsureEntry(ctx, e); err != nil {
 			return fmt.Errorf("could not configure %v for vrf %s: %w", e.Key, vrfName, err)
 		}
@@ -259,7 +260,7 @@ func (a *Applier) cleanupVrf(ctx context.Context, vrfName string, vrf *types.Vrf
 		return err
 	}
 
-	for _, e := range slices.Backward(a.quirks.VrfEntries(vrfName, vrf, vtep)) {
+	for _, e := range slices.Backward(a.quirks.VrfEntries.Entries(vrfName, vrf, vtep)) {
 		deleted, err := a.db.Config.DeleteEntry(ctx, e.Key)
 		if err != nil {
 			return fmt.Errorf("could not delete %v of vrf %s: %w", e.Key, vrfName, err)
