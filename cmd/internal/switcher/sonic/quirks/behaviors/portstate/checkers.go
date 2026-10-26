@@ -1,4 +1,4 @@
-package quirks
+package portstate
 
 import (
 	"context"
@@ -100,4 +100,24 @@ func (s *stateDBPortState) IsBridged(ctx context.Context, interfaceName string) 
 
 func (s *stateDBPortState) IsRouted(ctx context.Context, interfaceName string) (bool, error) {
 	return s.db.State.ExistInterface(ctx, interfaceName)
+}
+
+// configDBPortState treats a port as bridged as long as it is a VLAN member and as routed
+// as long as it has an interface configuration in the CONFIG_DB.
+type configDBPortState struct {
+	db *db.DB
+}
+
+func (s *configDBPortState) Refresh(context.Context) error { return nil }
+
+func (s *configDBPortState) IsBridged(ctx context.Context, interfaceName string) (bool, error) {
+	vlans, err := s.db.Config.GetVlanMembership(ctx, interfaceName)
+	if err != nil {
+		return false, err
+	}
+	return len(vlans) > 0, nil
+}
+
+func (s *configDBPortState) IsRouted(ctx context.Context, interfaceName string) (bool, error) {
+	return s.db.Config.ExistInterfaceConfiguration(ctx, interfaceName)
 }

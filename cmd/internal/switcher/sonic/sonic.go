@@ -29,7 +29,7 @@ type (
 		log                   *slog.Logger
 		redisApplier          *redis.Applier
 		interfaceNamingSchema InterfaceNamingSchema
-		quirks                quirks.Quirks
+		quirks                quirks.SonicQuirks
 	}
 
 	PortInfo struct {
@@ -51,7 +51,7 @@ const (
 	redisConfigFile  = "/var/run/redis/sonic-db/database_config.json"
 )
 
-func New(log *slog.Logger, frrTplFile string, interfaceNamingSchema InterfaceNamingSchema, quirks quirks.Quirks) (*Sonic, error) {
+func New(log *slog.Logger, frrTplFile string, interfaceNamingSchema InterfaceNamingSchema, quirks quirks.SonicQuirks) (*Sonic, error) {
 	cfg, err := loadRedisConfig(redisConfigFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load database config for SONiC: %w", err)

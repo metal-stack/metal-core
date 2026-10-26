@@ -8,11 +8,13 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"net/http"
 	httppprof "net/http/pprof"
 	"net/netip"
 	"os"
 	"os/signal"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -84,11 +86,13 @@ func Run() {
 	quirkProfile, ok := quirks.QuirkProfiles[cfg.QuirkProfile]
 
 	if !ok {
-		log.Error("invalid quirk profile specified")
+		log.Error("invalid quirk profile specified", "profile", cfg.QuirkProfile, "valid", slices.Sorted(maps.Keys(quirks.QuirkProfiles)))
 		os.Exit(1)
 	}
+	sonicQuirks := quirkProfile()
+	log.Info("using quirk profile", "profile", cfg.QuirkProfile, "quirks", sonicQuirks)
 
-	nos, err := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile, sonic.InterfaceNamingSchema(cfg.InterfaceNamingSchema), quirkProfile())
+	nos, err := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile, sonic.InterfaceNamingSchema(cfg.InterfaceNamingSchema), sonicQuirks)
 	if err != nil {
 		log.Error("failed to create NOS instance", "error", err)
 		os.Exit(1)
