@@ -19,8 +19,10 @@ ports:
     - swp31
     - swp32
   unprovisioned:
-    - swp4
-    - swp5
+    swp4:
+      port: swp4
+    swp5:
+      port: swp5
   firewalls:
     swp3:
       port: swp3

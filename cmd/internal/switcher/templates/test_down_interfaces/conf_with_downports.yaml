@@ -26,8 +26,10 @@ ports:
     - swp31
     - swp32
   unprovisioned:
-    - swp1
-    - swp2
+    swp1:
+      port: swp1
+    swp2:
+      port: swp2
   adminstatus:
     swp1: down
     swp3: down
