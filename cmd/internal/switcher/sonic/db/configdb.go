@@ -268,9 +268,11 @@ func (d *ConfigDB) getVTEPName(ctx context.Context) (string, error) {
 }
 
 func (d *ConfigDB) DeleteInterfaceConfiguration(ctx context.Context, interfaceName string) error {
-	key := Key{interfaceTable, interfaceName}
-
-	return d.c.Del(ctx, key)
+	keys, err := d.c.Keys(ctx, Key{interfaceTable, interfaceName, "*"})
+	if err != nil {
+		return err
+	}
+	return d.c.Del(ctx, Key{interfaceTable, interfaceName}, keys...)
 }
 
 func (d *ConfigDB) IsLinkLocalOnly(ctx context.Context, interfaceName string) (bool, error) {
