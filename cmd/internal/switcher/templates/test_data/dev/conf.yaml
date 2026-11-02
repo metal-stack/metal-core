@@ -1,49 +1,160 @@
 ---
+# FIXME: why is this a yaml file and not simply a struct?
 name: leaf01
 loglevel: warnings
 loopback: 10.0.0.10
 setsrcloopback: true
 asn: 4200000010
 metalcorecidr: 10.255.255.2/24
+eth0:
+  gateway: 192.168.101.1
 additionalmgmtroutes:
   - 10.100.0.0/16
   - 10.200.0.0/16
-ports:
-  eth0:
-    addresscidr: 192.168.101.12/24
-    gateway: 192.168.101.1
-  bladeports:
-    - swp7
-    - swp8
-  underlay:
-    - swp31
-    - swp32
-  unprovisioned:
-    - swp4
-    - swp5
-  firewalls:
-    swp3:
-      port: swp3
-      vnis:
-        - 104001
-        - 104009
-        - 104010
-      cidrs:
-        - "10.0.2.1/32"
+frrconfig:
   vrfs:
-    vrf104001:
-      vlanid: 4001
-      vni: 104001
+    - vni: 104001
+  unnumberedinterfaces:
+    - name: swp31
+    - name: swp32
+    - name: swp3
+    - name: swp1
+      vrf: Vrf104001
+    - name: swp2
+      vrf: Vrf104001
+  bgp:
+    - peergroups:
+        - name: FABRIC
+          commands:
+            - remote-as external
+            - timers 2 8
+        - name: FIREWALL
+          commands:
+            - remote-as external
+            - timers 2 8
       neighbors:
-        - swp1
-        - swp2
-      cidrs:
-        - "100.127.131.0/24"
-        - "212.17.234.17/32"
-        - "2001:db8:3::1/128"
-        - "10.240.0.0/12" # pod and service ipv4 cidrs
-        - "fd00:10::/64" # pod and service ipv6 cidrs
-additionalbridgevids:
-  - 201-256
-  - 301-356
-pxevlanid: 966
+        - name: swp31 interface
+          peergroup: FABRIC
+        - name: swp32 interface
+          peergroup: FABRIC
+        - name: swp3 interface
+          peergroup: FIREWALL
+      addressfamilies:
+        - addressfamily: ipv4 unicast
+          globalstatements:
+            - redistribute connected route-map DENY_MGMT
+            - redistribute kernel route-map DENY_MGMT
+          neighbors:
+            - neighbor: FIREWALL
+              commands:
+                - allowas-in 2
+            - neighbor: swp3
+              routemapin: fw-swp3-in
+        - addressfamily: ipv6 unicast
+          globalstatements:
+            - redistribute connected route-map DENY_MGMT
+            - redistribute kernel route-map DENY_MGMT
+          neighbors:
+            - neighbor: FIREWALL
+              commands:
+                - allowas-in 2
+                - activate
+            - neighbor: swp3
+              routemapin: fw-swp3-in
+        - addressfamily: l2vpn evpn
+          globalstatements:
+            - advertise-all-vni
+          neighbors:
+            - neighbor: FABRIC
+              commands:
+                - activate
+                - allowas-in 2
+            - neighbor: FIREWALL
+              commands:
+                - activate
+                - allowas-in 2
+            - neighbor: swp3
+              routemapout: fw-swp3-vni
+    - vrf: Vrf104001
+      peergroups:
+        - name: MACHINE
+          commands:
+            - remote-as external
+            - timers 2 8
+      neighbors:
+        - name: swp1 interface
+          peergroup: MACHINE
+        - name: swp2 interface
+          peergroup: MACHINE
+      addressfamilies:
+        - addressfamily: ipv4 unicast
+          globalstatements:
+            - redistribute connected
+          neighbors:
+            - neighbor: MACHINE
+              commands:
+                - maximum-prefix 24000
+              routemapin: Vrf104001-in
+        - addressfamily: ipv6 unicast
+          globalstatements:
+            - redistribute connected
+          neighbors:
+            - neighbor: MACHINE
+              commands:
+                - maximum-prefix 24000
+                - activate
+              routemapin: Vrf104001-in6
+        - addressfamily: l2vpn evpn
+          globalstatements:
+            - advertise ipv4 unicast
+            - advertise ipv6 unicast
+  routemaps:
+    - name: fw-swp3-in
+      entries:
+        - match ip address prefix-list fw-swp3-in-prefixes
+      policy: permit
+      order: 10
+    - name: fw-swp3-vni
+      entries:
+        - match evpn vni 104001
+      policy: permit
+      order: 10
+    - name: fw-swp3-vni
+      entries:
+        - match evpn vni 104009
+      policy: permit
+      order: 11
+    - name: fw-swp3-vni
+      entries:
+        - match evpn vni 104010
+      policy: permit
+      order: 12
+    - name: Vrf104001-in
+      entries:
+        - match ip address prefix-list Vrf104001-in-prefixes
+      policy: permit
+      order: 10
+    - name: Vrf104001-in6
+      entries:
+        - match ipv6 address prefix-list Vrf104001-in6-prefixes
+      policy: permit
+      order: 10
+  prefixlists:
+    - addressfamily: ip
+      name: fw-swp3-in-prefixes
+      spec: permit 10.0.2.1/32 le 32
+    - addressfamily: ip
+      name: Vrf104001-in-prefixes
+      spec: permit 10.240.0.0/12 le 32
+    - addressfamily: ip
+      name: Vrf104001-in-prefixes
+      spec: permit 100.127.131.0/24 le 32
+    - addressfamily: ip
+      name: Vrf104001-in-prefixes
+      spec: permit 212.17.234.17/32 le 32
+    - addressfamily: ipv6
+      name: Vrf104001-in6-prefixes
+      spec: permit 2001:db8:3::1/128 le 128
+    - addressfamily: ipv6
+      name: Vrf104001-in6-prefixes
+      spec: permit fd00:10::/64 le 128

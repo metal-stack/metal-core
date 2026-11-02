@@ -17,7 +17,6 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/frr"
 	"github.com/metal-stack/metal-core/cmd/internal/net"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
-	"github.com/metal-stack/metal-lib/pkg/pointer"
 
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 )
@@ -132,6 +131,13 @@ func (c *Core) reconfigureSwitch(ctx context.Context, hostname string) (*apiv2.S
 }
 
 func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
+	const (
+		defaultVRF        = "default"
+		peerGroupFabric   = "FABRIC"
+		peerGroupFirewall = "FIREWALL"
+		peerGroupMachine  = "MACHINE"
+	)
+
 	asn64, err := strconv.ParseUint(c.asn, 10, 32)
 	if err != nil {
 		return nil, err
@@ -149,9 +155,8 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		AdditionalMgmtRoutes: c.additionalMgmtRoutes,
 		PXEVlanID:            c.pxeVlanID,
 		SetSrcLoopback:       c.setSrcLoopback,
-		Ports:                types.Ports{},
-		Vrfs:                 types.Vrfs{},
-		BGPSessions:          types.BGPSessions{},
+		// Ports:                types.Ports{},
+		// BGPSessions:          types.BGPSessions{},
 	}
 
 	for _, nic := range s.Nics {
@@ -163,60 +168,102 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 			continue
 		}
 
-		port := &types.Port{
-			Vrf: nic.Vrf,
-		}
-
-		// TODO: discuss if it should be allowed to set `admin_status: down` for spine uplinks
-		adminStatus := pointer.SafeDeref(pointer.SafeDeref(nic.State).Desired)
-		switch adminStatus {
-		case apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN:
-			port.AdminStatus = types.PortStatusDown
-		case apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_UP:
-			port.AdminStatus = types.PortStatusUp
-		default:
-			// noop
-		}
-
-		// FIXME: too many implicit assumptions; try to make everything more explicit
-		switch pointer.SafeDeref(port.Vrf) {
-		case "default":
-			port.MTU = 9216
-			port.Routed = true
-			port.PeerGroup = new("FIREWALL")
-		case "":
-			port.MTU = 900
-			port.VLAN = &c.pxeVlanID
-			switcherConfig.Ports[nic.Name] = port
-			continue
-		default:
-			port.MTU = 9000
-			port.Routed = true
-			port.PeerGroup = new("MACHINE")
-		}
-
-		if slices.Contains(c.spineUplinks, nic.Name) {
-			port.MTU = 9216
-			port.Routed = true
-			port.PeerGroup = new("FABRIC")
-		}
-
-		// CONTINUE:
-		// - populate bgp sessions for frr config
-
-		vrf := pointer.SafeDeref(port.Vrf)
-		// peerGroup := "MACHINE"
-		// if vrf == "default" {
-		// 	peerGroup = "FIREWALL"
+		// port := &types.Port{
+		// 	Vrf: nic.Vrf,
+		// 	MTU: 9000,
 		// }
 
-		session, ok := switcherConfig.BGPSessions[vrf]
-		if !ok {
-			session = &types.BGPSession{}
-		}
+		// // TODO: discuss if it should be allowed to set `admin_status: down` for spine uplinks
+		// adminStatus := pointer.SafeDeref(pointer.SafeDeref(nic.State).Desired)
+		// switch adminStatus {
+		// case apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN:
+		// 	port.AdminStatus = types.PortStatusDown
+		// case apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_UP:
+		// 	port.AdminStatus = types.PortStatusUp
+		// default:
+		// 	// noop
+		// }
 
-		switcherConfig.BGPSessions[vrf] = session
-		switcherConfig.Ports[nic.Name] = port
+		// switch {
+		// case pointer.SafeDeref(port.Vrf) == defaultVRF:
+		// 	port.MTU = 9216
+		// 	port.PeerGroup = new(peerGroupFirewall)
+		// 	port.Routed = true
+		// case slices.Contains(c.spineUplinks, nic.Name):
+		// 	port.MTU = 9216
+		// 	port.PeerGroup = new(peerGroupFabric)
+		// 	port.Routed = true
+		// 	port.Vrf = new(defaultVRF)
+		// case port.Vrf != nil:
+		// 	port.PeerGroup = new(peerGroupMachine)
+		// 	port.Routed = true
+		// default:
+		// 	port.VLAN = &c.pxeVlanID
+		// 	switcherConfig.Ports[nic.Name] = port
+		// 	continue
+		// }
+
+		// if nic.BgpFilter != nil {
+		// 	port.Cidrs = nic.BgpFilter.Cidrs
+		// 	port.Vnis = nic.BgpFilter.Vnis
+		// }
+
+		// vrf := pointer.SafeDeref(port.Vrf)
+		// session, ok := switcherConfig.BGPSessions[vrf]
+		// if !ok {
+		// 	has4, has6, err := port.HasAddressFamilies()
+		// 	if err != nil {
+		// 		return nil, fmt.Errorf("failed to check address families for port %s: %w", nic.Name, err)
+		// 	}
+
+		// 	session = &types.BGPSession{
+		// 		Vrf: &types.Vrf{
+		// 			Has4: has4,
+		// 			Has6: has6,
+		// 		},
+		// 		PeerGroups: types.PeerGroups{},
+		// 	}
+		// }
+
+		// pgName := pointer.SafeDeref(port.PeerGroup)
+		// peerGroup, ok := session.PeerGroups[pgName]
+		// if !ok {
+		// 	peerGroup = &types.PeerGroup{}
+		// }
+
+		// peerGroup.Neighbors = append(peerGroup.Neighbors, fmt.Sprintf("%s interface", nic.Name))
+		// if vrf == defaultVRF && peerGroup.Commands == nil {
+		// 	commands := &types.Commands{
+		// 		Global: []string{
+		// 			"remote-as external",
+		// 			"timers 2 8",
+		// 		},
+		// 		EVPN: []string{
+		// 			"activate",
+		// 			"allowas-in 2",
+		// 		},
+		// 	}
+
+		// 	if pgName == "FIREWALL" {
+		// 		if session.Vrf != nil && session.Vrf.Has4 {
+		// 			commands.IPv4 = []string{
+		// 				"allowas-in 2",
+		// 			}
+		// 		}
+		// 		if session.Vrf != nil && session.Vrf.Has6 {
+		// 			commands.IPv6 = []string{
+		// 				"activate",
+		// 				"allowas-in 2",
+		// 			}
+		// 		}
+		// 	}
+
+		// 	peerGroup.Commands = commands
+		// }
+
+		// session.PeerGroups[pgName] = peerGroup
+		// switcherConfig.BGPSessions[vrf] = session
+		// switcherConfig.Ports[nic.Name] = port
 	}
 
 	c.nos.SanitizeConfig(switcherConfig)

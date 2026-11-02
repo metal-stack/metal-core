@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"net/netip"
 )
 
@@ -11,9 +10,7 @@ type (
 		LogLevel             string
 		Loopback             string
 		ASN                  uint32
-		Ports                Ports
-		Vrfs                 Vrfs
-		BGPSessions          BGPSessions
+		FRRConfig            *FRRConfig
 		MetalCoreCIDR        string
 		AdditionalMgmtRoutes []string
 		Eth0                 MgmtInterface
@@ -21,48 +18,55 @@ type (
 		SetSrcLoopback       bool
 	}
 
-	Ports map[string]*Port
-
-	Port struct {
-		Vrf         *string
-		AdminStatus PortStatus
-		MTU         uint16
-		VLAN        *uint16 // if port doesn't have a VLAN, treat it as routed
-		Routed      bool
-		PeerGroup   *string
+	FRRConfig struct {
+		Vrfs                 []Vrf
+		UnnumberedInterfaces []Interface
+		BGP                  []BGP
+		RouteMaps            []RouteMap
+		PrefixLists          []IPPrefixList
 	}
 
-	Vrfs map[string]*Vrf
+	Interface struct {
+		Name string
+		Vrf  *string
+	}
+
+	BGP struct {
+		Vrf             *string
+		PeerGroups      []PeerGroup
+		Neighbors       []BGPNeighbor
+		AddressFamilies []BGPAddressFamily
+	}
+
+	BGPNeighbor struct {
+		Name      string
+		PeerGroup *string
+	}
+
+	BGPAddressFamily struct {
+		AddressFamily    string
+		GlobalStatements []string
+		Neighbors        []AdressFamilyNeighbors
+	}
+
+	// FIXME: naming
+	AdressFamilyNeighbors struct {
+		Neighbor    string
+		Commands    []string
+		RouteMapIn  string
+		RouteMapOut string
+	}
 
 	Vrf struct {
-		Filter
 		VNI    uint32
 		VLANID uint16
-		Cidrs  []string
 		Has4   bool
 		Has6   bool
 	}
 
-	BGPSessions map[string]*BGPSession
-
-	BGPSession struct {
-		PeerGroups PeerGroups
-	}
-
-	PeerGroups map[string]*PeerGroup
-
 	PeerGroup struct {
-		Cidrs     []string
-		Vnis      []string
-		Evpn      bool // TODO: document that `true` only works in the default VRF.
-		Commands  []string
-		Neighbors []string
-		Filter    Filter `yaml:"-"`
-	}
-
-	Filter struct {
-		IPPrefixLists []IPPrefixList
-		RouteMaps     []RouteMap
+		Name     string
+		Commands []string
 	}
 
 	MgmtInterface struct {
@@ -104,61 +108,77 @@ const (
 	PolicyDeny   = Policy("deny")
 )
 
-func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
-	cidrsByAf := cidrsByAddressfamily(cidrs)
-	if len(cidrsByAf.ipv4Cidrs) > 0 {
-		prefixRouteMapName := fmt.Sprintf("%s-in", rmPrefix)
-		prefixListName := fmt.Sprintf("%s-in-prefixes", rmPrefix)
-		rm := RouteMap{
-			Name:    prefixRouteMapName,
-			Entries: []string{fmt.Sprintf("match ip address prefix-list %s", prefixListName)},
-			Policy:  PolicyPermit,
-			Order:   10,
-		}
-		s.RouteMaps = append(s.RouteMaps, rm)
-		s.addPrefixList(prefixListName, cidrsByAf.ipv4Cidrs, AddressFamilyIPv4)
-	}
-	if len(cidrsByAf.ipv6Cidrs) > 0 {
-		prefixRouteMapName := fmt.Sprintf("%s-in6", rmPrefix)
-		prefixListName := fmt.Sprintf("%s-in6-prefixes", rmPrefix)
-		rm := RouteMap{
-			Name:    prefixRouteMapName,
-			Entries: []string{fmt.Sprintf("match ipv6 address prefix-list %s", prefixListName)},
-			Policy:  PolicyPermit,
-			Order:   10,
-		}
-		s.RouteMaps = append(s.RouteMaps, rm)
-		s.addPrefixList(prefixListName, cidrsByAf.ipv6Cidrs, AddressFamilyIPv6)
-	}
-	if len(vnis) > 0 {
-		vniRouteMapName := fmt.Sprintf("%s-vni", rmPrefix)
-		for j, vni := range vnis {
-			rm := RouteMap{
-				Name:    vniRouteMapName,
-				Entries: []string{fmt.Sprintf("match evpn vni %s", vni)},
-				Policy:  PolicyPermit,
-				Order:   10 + j,
-			}
-			s.RouteMaps = append(s.RouteMaps, rm)
-		}
-	}
-}
+// func (s *Filter) Assemble(rmPrefix string, vnis, cidrs []string) {
+// 	cidrsByAf := cidrsByAddressfamily(cidrs)
+// 	if len(cidrsByAf.ipv4Cidrs) > 0 {
+// 		prefixRouteMapName := fmt.Sprintf("%s-in", rmPrefix)
+// 		prefixListName := fmt.Sprintf("%s-in-prefixes", rmPrefix)
+// 		rm := RouteMap{
+// 			Name:    prefixRouteMapName,
+// 			Entries: []string{fmt.Sprintf("match ip address prefix-list %s", prefixListName)},
+// 			Policy:  PolicyPermit,
+// 			Order:   10,
+// 		}
+// 		s.RouteMaps = append(s.RouteMaps, rm)
+// 		s.addPrefixList(prefixListName, cidrsByAf.ipv4Cidrs, AddressFamilyIPv4)
+// 	}
+// 	if len(cidrsByAf.ipv6Cidrs) > 0 {
+// 		prefixRouteMapName := fmt.Sprintf("%s-in6", rmPrefix)
+// 		prefixListName := fmt.Sprintf("%s-in6-prefixes", rmPrefix)
+// 		rm := RouteMap{
+// 			Name:    prefixRouteMapName,
+// 			Entries: []string{fmt.Sprintf("match ipv6 address prefix-list %s", prefixListName)},
+// 			Policy:  PolicyPermit,
+// 			Order:   10,
+// 		}
+// 		s.RouteMaps = append(s.RouteMaps, rm)
+// 		s.addPrefixList(prefixListName, cidrsByAf.ipv6Cidrs, AddressFamilyIPv6)
+// 	}
+// 	if len(vnis) > 0 {
+// 		vniRouteMapName := fmt.Sprintf("%s-vni", rmPrefix)
+// 		for j, vni := range vnis {
+// 			rm := RouteMap{
+// 				Name:    vniRouteMapName,
+// 				Entries: []string{fmt.Sprintf("match evpn vni %s", vni)},
+// 				Policy:  PolicyPermit,
+// 				Order:   10 + j,
+// 			}
+// 			s.RouteMaps = append(s.RouteMaps, rm)
+// 		}
+// 	}
+// }
 
-func (s *Filter) addPrefixList(prefixListName string, cidrs []string, af AddressFamily) {
-	for _, cidr := range cidrs {
-		prefix, err := netip.ParsePrefix(cidr)
-		if err != nil {
-			continue
-		}
-		spec := fmt.Sprintf("permit %s le %d", cidr, prefix.Addr().BitLen())
-		prefixList := IPPrefixList{
-			AddressFamily: af,
-			Name:          prefixListName,
-			Spec:          spec,
-		}
-		s.IPPrefixLists = append(s.IPPrefixLists, prefixList)
-	}
-}
+// func (s *Filter) addPrefixList(prefixListName string, cidrs []string, af AddressFamily) {
+// 	for _, cidr := range cidrs {
+// 		prefix, err := netip.ParsePrefix(cidr)
+// 		if err != nil {
+// 			continue
+// 		}
+// 		spec := fmt.Sprintf("permit %s le %d", cidr, prefix.Addr().BitLen())
+// 		prefixList := IPPrefixList{
+// 			AddressFamily: af,
+// 			Name:          prefixListName,
+// 			Spec:          spec,
+// 		}
+// 		s.IPPrefixLists = append(s.IPPrefixLists, prefixList)
+// 	}
+// }
+
+// func (p *Port) HasAddressFamilies() (has4 bool, has6 bool, err error) {
+// 	for _, cidr := range p.Cidrs {
+// 		addr, _, err := net.ParseCIDR(cidr)
+// 		if err != nil {
+// 			return false, false, err
+// 		}
+// 		if addr.To4() != nil {
+// 			has4 = true
+// 		} else {
+// 			has6 = true
+// 		}
+// 	}
+
+// 	return has4, has6, nil
+// }
 
 func cidrsByAddressfamily(cidrs []string) cidrsByAf {
 	cs := cidrsByAf{

@@ -9,122 +9,81 @@ debug bgp updates
 debug bgp nht
 debug bgp update-groups
 debug bgp zebra
-{{- range $vrf, $t := .Ports.Vrfs }}
+{{- range .FRRConfig.Vrfs }}
 !
-vrf vrf{{ $t.VNI }}
- vni {{ $t.VNI }}
+vrf Vrf{{ .VNI }}
+ vni {{ .VNI }}
  exit-vrf
 {{- end }}
-{{- range .Ports.Underlay }}
+{{- range .FRRConfig.UnnumberedInterfaces }}
 !
-interface {{ . }}
+interface {{ .Name }}{{- if .Vrf }} vrf {{ .Vrf }} {{- end }}
  ipv6 nd ra-interval 6
  no ipv6 nd suppress-ra
 {{- end }}
-{{- range .Ports.Firewalls }}
 !
-interface {{ .Port }}
- ipv6 nd ra-interval 6
- no ipv6 nd suppress-ra
-{{- end }}
-{{- range $vrf, $t := .Ports.Vrfs }}
-{{- range $t.Neighbors }}
-!
-interface {{ . }} vrf {{ $vrf }}
- ipv6 nd ra-interval 6
- no ipv6 nd suppress-ra
-{{- end }}
-{{- end }}
-!
-router bgp {{ $ASN }}
+{{- range .FRRConfig.BGP }}
+{{- $bgp := . }}
+router bgp {{ $ASN }}{{- if .Vrf }} vrf {{ .Vrf }} {{- end }}
  bgp router-id {{ $RouterId }}
  bgp bestpath as-path multipath-relax
- neighbor FABRIC peer-group
- neighbor FABRIC remote-as external
- neighbor FABRIC timers 2 8
- {{- range .Ports.Underlay }}
- neighbor {{ . }} interface peer-group FABRIC
+ {{- range .PeerGroups }}
+ {{- $peergroup := .Name }}
+ neighbor {{ $peergroup }} peer-group
+ {{- range .Commands }}
+ neighbor {{ $peergroup }} {{ . }}
  {{- end }}
- neighbor FIREWALL peer-group
- neighbor FIREWALL remote-as external
- neighbor FIREWALL timers 2 8
- {{- range .Ports.Firewalls }}
- neighbor {{ .Port }} interface peer-group FIREWALL
  {{- end }}
+ {{- range .Neighbors }}
+ neighbor {{ .Name }}{{- if .PeerGroup }} peer-group {{ .PeerGroup }}{{- end }}
+ {{- end }}
+ {{- range .AddressFamilies }}
+ {{- if ne .AddressFamily "ipv6 unicast" }}
  !
- address-family ipv4 unicast
-  redistribute connected route-map LOCALS
-  neighbor FIREWALL allowas-in 2
-  {{- range $k, $f := .Ports.Firewalls }}
-  neighbor {{ $f.Port }} route-map fw-{{ $k }}-in in
+ address-family {{ .AddressFamily }}
+  {{- if eq .AddressFamily "ipv4 unicast" }}
+  redistribute connected {{- if not $bgp.Vrf }} route-map LOCALS {{- end }}
+  {{- else }}
+  {{- range .GlobalStatements }}
+  {{ . }}
+  {{- end }}
+  {{- end -}}
+  {{- range .Neighbors -}}
+  {{ $neighbor := .Neighbor }}
+  {{- range .Commands }}
+  neighbor {{ $neighbor }} {{ . }}
+  {{- end -}}
+  {{- if .RouteMapIn }}
+  neighbor {{ .Neighbor }} route-map {{ .RouteMapIn }} in
+  {{- end -}}
+  {{- if .RouteMapOut }}
+  neighbor {{ .Neighbor }} route-map {{ .RouteMapOut }} out
+  {{- end }}
   {{- end }}
  exit-address-family
- !
- address-family l2vpn evpn
-  advertise-all-vni
-  neighbor FABRIC activate
-  neighbor FABRIC allowas-in 2
-  neighbor FIREWALL activate
-  neighbor FIREWALL allowas-in 2
-  {{- range $k, $f := .Ports.Firewalls }}
-  neighbor {{ $f.Port }} route-map fw-{{ $k }}-vni out
-  {{- end }}
- exit-address-family
+ {{- end }}
+ {{- end }}
 !
+{{- end }}
+{{- if .FRRConfig.PrefixLists }}
+{{- range .FRRConfig.PrefixLists }}
+ip prefix-list {{ .Name }} {{ .Spec }}
+{{- end }}
+!
+{{- end }}
+{{- if .FRRConfig.RouteMaps }}
+{{- range .FRRConfig.RouteMaps }}
+route-map {{ .Name }} {{ .Policy }} {{ .Order }}
+{{- range .Entries }}
+ {{ . }}
+{{- end }}
+{{- end }}
+!
+{{- end }}
 route-map LOCALS permit 10
  match interface lo
-!
 route-map LOCALS permit 12
  match interface vlan4000
 !
-{{- range $k, $f := .Ports.Firewalls }}
-# route-maps for firewall@{{ $k }}
-        {{- range $f.IPPrefixLists }}
-ip prefix-list {{ .Name }} {{ .Spec }}
-        {{- end}}
-        {{- range $f.RouteMaps }}
-route-map {{ .Name }} {{ .Policy }} {{ .Order }}
-                {{- range .Entries }}
- {{ . }}
-                {{- end }}
-        {{- end }}
-!
-{{- end }}
-{{- range $vrf, $t := .Ports.Vrfs }}
-router bgp {{ $ASN }} vrf {{ $vrf }}
- bgp router-id {{ $RouterId }}
- bgp bestpath as-path multipath-relax
- neighbor MACHINE peer-group
- neighbor MACHINE remote-as external
- neighbor MACHINE timers 2 8
- {{- range $t.Neighbors }}
- neighbor {{ . }} interface peer-group MACHINE
- {{- end }}
- !
- address-family ipv4 unicast
-  redistribute connected
-  neighbor MACHINE maximum-prefix 24000
-  {{- if gt (len $t.IPPrefixLists) 0 }}
-  neighbor MACHINE route-map {{ $vrf }}-in in
-  {{- end }}
- exit-address-family
- !
- address-family l2vpn evpn
-  advertise ipv4 unicast
-  advertise ipv6 unicast
- exit-address-family
-!
-{{- if gt (len $t.IPPrefixLists) 0 }}
-# route-maps for {{ $vrf }}
-        {{- range $t.IPPrefixLists }}
-ip prefix-list {{ .Name }} {{ .Spec }}
-        {{- end}}
-        {{- range $t.RouteMaps }}
-route-map {{ .Name }} {{ .Policy }} {{ .Order }}
-                {{- range .Entries }}
- {{ . }}
-                {{- end }}
-        {{- end }}
-!{{- end }}{{- end }}
 line vty
 !

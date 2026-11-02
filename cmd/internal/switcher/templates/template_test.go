@@ -54,9 +54,6 @@ func TestSonicFrrTpl(t *testing.T) {
 		tt := tests[i]
 		t.Run(tt, func(t *testing.T) {
 			c := readConf(t, path.Join("test_data", tt, "conf.yaml"))
-			c.CapitalizeVrfName()
-			err := c.FillRouteMapsAndIPPrefixLists()
-			require.NoError(t, err)
 			tpl := SonicFrrTemplate("")
 			verifyTemplate(t, tpl, &c, path.Join("test_data", tt, "sonic_frr.conf"))
 		})

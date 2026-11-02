@@ -73,16 +73,24 @@ func compactCidrs(cidrs []string) ([]string, error) {
 	return compacted, nil
 }
 
-// CapitalizeVrfName capitalizes VRF names, which is requirement for SONiC
 func (c *Conf) CapitalizeVrfName() {
 	// caser := cases.Title(language.English)
-	// capitalizedVRFs := make(map[string]*Vrf)
-	// for name, vrf := range c.Ports.Vrfs {
-	// 	s := caser.String(name)
-	// 	capitalizedVRFs[s] = vrf
+
+	// for _, port := range c.Ports {
+	// 	if port.Vrf == nil || pointer.SafeDeref(port.Vrf) == "default" {
+	// 		continue
+	// 	}
+	// 	port.Vrf = new(caser.String(pointer.SafeDeref(port.Vrf)))
 	// }
 
-	// c.Ports.Vrfs = capitalizedVRFs
+	// for vrf, session := range c.BGPSessions {
+	// 	if vrf == "default" {
+	// 		continue
+	// 	}
+	// 	capitalizedVrf := caser.String(vrf)
+	// 	delete(c.BGPSessions, vrf)
+	// 	c.BGPSessions[capitalizedVrf] = session
+	// }
 }
 
 func (c *Conf) NewWithoutDownPorts() *Conf {
