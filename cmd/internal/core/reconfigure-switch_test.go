@@ -302,28 +302,28 @@ func TestBuildSwitcherConfig(t *testing.T) {
 			},
 			RouteMaps: []*types.RouteMap{
 				{
-					Name:    "fw-Ethernet4-in",
-					Entries: []string{"match ip address prefix-list fw-Ethernet4-in-prefixes"},
+					Name:    "Vrf104001-in",
+					Entries: []string{"match ip address prefix-list Vrf104001-in-prefixes"},
 					Policy:  types.PolicyPermit,
 					Order:   10,
 				},
 				{
-					Name:    "fw-Ethernet4-vni",
+					Name:    "fw-Ethernet2-in",
+					Entries: []string{"match ip address prefix-list fw-Ethernet2-in-prefixes"},
+					Policy:  types.PolicyPermit,
+					Order:   10,
+				},
+				{
+					Name:    "fw-Ethernet2-vni",
 					Entries: []string{"match evpn vni 104001"},
 					Policy:  types.PolicyPermit,
 					Order:   10,
 				},
 				{
-					Name:    "fw-Ethernet4-vni",
+					Name:    "fw-Ethernet2-vni",
 					Entries: []string{"match evpn vni 200"},
 					Policy:  types.PolicyPermit,
 					Order:   11,
-				},
-				{
-					Name:    "Vrf104001-in",
-					Entries: []string{"match ip address prefix-list Vrf104001-in-prefixes"},
-					Policy:  types.PolicyPermit,
-					Order:   10,
 				},
 				{
 					Name:    "Vrf200-in",
@@ -341,13 +341,13 @@ func TestBuildSwitcherConfig(t *testing.T) {
 			PrefixLists: []*types.IPPrefixList{
 				{
 					AddressFamily: types.AddressFamilyIPv4,
-					Name:          "fw-Ethernet4-in-prefixes",
-					Spec:          "permit 10.240.1.0/24 le 32",
+					Name:          "Vrf104001-in-prefixes",
+					Spec:          "permit 10.240.0.0/12 le 32",
 				},
 				{
 					AddressFamily: types.AddressFamilyIPv4,
-					Name:          "Vrf104001-in-prefixes",
-					Spec:          "permit 10.240.0.0/12 le 32",
+					Name:          "fw-Ethernet2-in-prefixes",
+					Spec:          "permit 10.240.1.0/24 le 32",
 				},
 				{
 					AddressFamily: types.AddressFamilyIPv4,
@@ -355,9 +355,9 @@ func TestBuildSwitcherConfig(t *testing.T) {
 					Spec:          "permit 10.132.0.0/24 le 32",
 				},
 				{
-					AddressFamily: types.AddressFamilyIPv4,
+					AddressFamily: types.AddressFamilyIPv6,
 					Name:          "Vrf200-in6-prefixes",
-					Spec:          "permit fe80:10e2::/64 le 32",
+					Spec:          "permit fe80:10e2::/64 le 128",
 				},
 			},
 		},

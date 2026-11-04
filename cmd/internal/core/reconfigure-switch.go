@@ -3,7 +3,7 @@ package core
 import (
 	"context"
 	"fmt"
-	"net"
+	"net/netip"
 	"os"
 	"slices"
 	"strconv"
@@ -183,7 +183,7 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 			return nil, fmt.Errorf("failed to add l3vni of port %s: %w", nic.Name, err)
 		}
 
-		unnumberedInterface := getUnnumberedInterface(nic, c.spineUplinks)
+		unnumberedInterface := getUnnumberedInterface(nic.Name, c.nos.GetVRF(nic), c.spineUplinks)
 		if unnumberedInterface == nil {
 			// FIXME: this is an unprovisioned port then; treat accordingly
 			continue
@@ -203,7 +203,7 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		if bgp.Vrf == nil {
 			addUnderlayBGPPort(unnumberedInterface, bgp, c.spineUplinks)
 		} else {
-			err := addMachineBGPPort(nic, bgp)
+			err := addMachineBGPPort(*unnumberedInterface, nic.BgpFilter, bgp)
 			if err != nil {
 				return nil, fmt.Errorf("failed to add bgp session for machine port %s: %w", nic.Name, err)
 			}
@@ -211,6 +211,32 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 
 		if !found {
 			bgps = append(bgps, bgp)
+		}
+
+		if nic.BgpFilter == nil {
+			continue
+		}
+
+		if len(nic.BgpFilter.Cidrs) > 0 {
+			var rmName string
+			if unnumberedInterface.Vrf == nil {
+				rmName = fmt.Sprintf("fw-%s-in", unnumberedInterface.Name)
+			} else {
+				rmName = fmt.Sprintf("%s-in", pointer.SafeDeref(unnumberedInterface.Vrf))
+			}
+
+			rms, pfs, err := getCIDRRouteMapsAndPrefixLists(rmName, nic.BgpFilter.Cidrs)
+			if err != nil {
+				return nil, fmt.Errorf("failed to make route-maps and prefix-lists for port %s: %w", nic.Name, err)
+			}
+
+			routeMaps = append(routeMaps, rms...)
+			prefixLists = append(prefixLists, pfs...)
+		}
+
+		if len(nic.BgpFilter.Vnis) > 0 {
+			rms := getVNIRouteMaps(fmt.Sprintf("fw-%s-vni", unnumberedInterface.Name), nic.BgpFilter.Vnis)
+			routeMaps = append(routeMaps, rms...)
 		}
 
 		// port := &types.Port{
@@ -323,8 +349,6 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		PrefixLists:          prefixLists,
 	}
 
-	c.nos.SanitizeConfig(switcherConfig)
-
 	err = switcherConfig.FillRouteMapsAndIPPrefixLists()
 	if err != nil {
 		return nil, err
@@ -343,26 +367,26 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 	return switcherConfig, nil
 }
 
-func getUnnumberedInterface(nic *apiv2.SwitchNic, underlayPorts []string) *types.Interface {
-	if slices.Contains(underlayPorts, nic.Name) {
+func getUnnumberedInterface(nicName string, vrf *string, underlayPorts []string) *types.Interface {
+	if slices.Contains(underlayPorts, nicName) {
 		return &types.Interface{
-			Name: nic.Name,
+			Name: nicName,
 		}
 	}
 
-	if nic.Vrf == nil {
+	if vrf == nil {
 		return nil
 	}
 
-	if pointer.SafeDeref(nic.Vrf) == "default" {
+	if pointer.SafeDeref(vrf) == "default" {
 		return &types.Interface{
-			Name: nic.Name,
+			Name: nicName,
 		}
 	}
 
 	return &types.Interface{
-		Name: nic.Name,
-		Vrf:  nic.Vrf,
+		Name: nicName,
+		Vrf:  vrf,
 	}
 }
 
@@ -494,13 +518,13 @@ func addUnderlayBGPPort(intf *types.Interface, bgp *types.BGP, underlayPorts []s
 	}
 }
 
-func addMachineBGPPort(nic *apiv2.SwitchNic, bgp *types.BGP) error {
+func addMachineBGPPort(intf types.Interface, bgpFilter *apiv2.BGPFilter, bgp *types.BGP) error {
 	if bgp.PeerGroups == nil {
 		bgp.PeerGroups = getPeerGroups([]string{"MACHINE"})
 	}
 
 	neigh := types.BGPNeighbor{
-		Name:      fmt.Sprintf("%s interface", nic.Name),
+		Name:      fmt.Sprintf("%s interface", intf.Name),
 		PeerGroup: new("MACHINE"),
 	}
 
@@ -510,13 +534,13 @@ func addMachineBGPPort(nic *apiv2.SwitchNic, bgp *types.BGP) error {
 		cidrs []string
 	)
 
-	if nic.BgpFilter != nil {
-		cidrs = nic.BgpFilter.Cidrs
+	if bgpFilter != nil {
+		cidrs = bgpFilter.Cidrs
 	}
 
 	has4, err := hasAddressFamily(cidrs, types.AddressFamilyIPv4)
 	if err != nil {
-		return fmt.Errorf("failed to check if port %s has ipv4 addresses: %w", nic.Name, err)
+		return fmt.Errorf("failed to check if port %s has ipv4 addresses: %w", intf.Name, err)
 	}
 
 	if has4 && bgp.AddressFamilies.IPv4Unicast == nil {
@@ -529,7 +553,7 @@ func addMachineBGPPort(nic *apiv2.SwitchNic, bgp *types.BGP) error {
 				{
 					Neighbor:   "MACHINE",
 					Commands:   []string{"maximum-prefix 24000"},
-					RouteMapIn: fmt.Sprintf("%s-in", pointer.SafeDeref(nic.Vrf)),
+					RouteMapIn: fmt.Sprintf("%s-in", pointer.SafeDeref(intf.Vrf)),
 				},
 			},
 		}
@@ -537,7 +561,7 @@ func addMachineBGPPort(nic *apiv2.SwitchNic, bgp *types.BGP) error {
 
 	has6, err := hasAddressFamily(cidrs, types.AddressFamilyIPv6)
 	if err != nil {
-		return fmt.Errorf("failed to check if port %s has ipv6 addresses: %w", nic.Name, err)
+		return fmt.Errorf("failed to check if port %s has ipv6 addresses: %w", intf.Name, err)
 	}
 
 	if has6 && bgp.AddressFamilies.IPv6Unicast == nil {
@@ -550,7 +574,7 @@ func addMachineBGPPort(nic *apiv2.SwitchNic, bgp *types.BGP) error {
 				{
 					Neighbor:   "MACHINE",
 					Commands:   []string{"activate", "maximum-prefix 24000"},
-					RouteMapIn: fmt.Sprintf("%s-in6", pointer.SafeDeref(nic.Vrf)),
+					RouteMapIn: fmt.Sprintf("%s-in6", pointer.SafeDeref(intf.Vrf)),
 				},
 			},
 		}
@@ -563,7 +587,6 @@ func addMachineBGPPort(nic *apiv2.SwitchNic, bgp *types.BGP) error {
 		}
 		if has6 {
 			globalStatements = append(globalStatements, "advertise ipv6 unicast")
-
 		}
 
 		bgp.AddressFamilies.L2VPNEVPN = &types.BGPAddressFamily{
@@ -575,6 +598,77 @@ func addMachineBGPPort(nic *apiv2.SwitchNic, bgp *types.BGP) error {
 	return nil
 }
 
+func getCIDRRouteMapsAndPrefixLists(rmName string, cidrs []string) ([]*types.RouteMap, []*types.IPPrefixList, error) {
+	var (
+		prefixLists []*types.IPPrefixList
+		routeMaps   []*types.RouteMap
+		has4        bool
+		has6        bool
+	)
+
+	for _, cidr := range cidrs {
+		addr, err := netip.ParsePrefix(cidr)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to parse cidr %s: %w", cidr, err)
+		}
+
+		var (
+			af     = types.AddressFamilyIPv4
+			pfName string
+		)
+		if addr.Addr().Is4() {
+			has4 = true
+			pfName = fmt.Sprintf("%s-prefixes", rmName)
+		}
+		if addr.Addr().Is6() {
+			af = types.AddressFamilyIPv6
+			has6 = true
+			pfName = fmt.Sprintf("%s6-prefixes", rmName)
+		}
+
+		prefixLists = append(prefixLists, &types.IPPrefixList{
+			AddressFamily: af,
+			Name:          pfName,
+			Spec:          fmt.Sprintf("permit %s le %d", cidr, addr.Addr().BitLen()),
+		})
+	}
+
+	if has4 {
+		routeMaps = append(routeMaps, &types.RouteMap{
+			Name:    rmName,
+			Entries: []string{fmt.Sprintf("match ip address prefix-list %s-prefixes", rmName)},
+			Policy:  types.PolicyPermit,
+			Order:   10,
+		})
+	}
+
+	if has6 {
+		routeMaps = append(routeMaps, &types.RouteMap{
+			Name:    fmt.Sprintf("%s6", rmName),
+			Entries: []string{fmt.Sprintf("match ip address prefix-list %s6-prefixes", rmName)},
+			Policy:  types.PolicyPermit,
+			Order:   10,
+		})
+	}
+
+	return routeMaps, prefixLists, nil
+}
+
+func getVNIRouteMaps(rmName string, vnis []string) []*types.RouteMap {
+	var routeMaps []*types.RouteMap
+
+	for i, vni := range vnis {
+		routeMaps = append(routeMaps, &types.RouteMap{
+			Name:    rmName,
+			Entries: []string{fmt.Sprintf("match evpn vni %s", vni)},
+			Policy:  types.PolicyPermit,
+			Order:   10 + i,
+		})
+	}
+
+	return routeMaps
+}
+
 func hasAddressFamily(cidrs []string, af types.AddressFamily) (bool, error) {
 	var (
 		has4 bool
@@ -582,13 +676,15 @@ func hasAddressFamily(cidrs []string, af types.AddressFamily) (bool, error) {
 	)
 
 	for _, cidr := range cidrs {
-		addr, _, err := net.ParseCIDR(cidr)
+		addr, err := netip.ParsePrefix(cidr)
 		if err != nil {
 			return false, fmt.Errorf("failed to parse cidr %s: %w", cidr, err)
 		}
-		if addr.To4() != nil {
+
+		if addr.Addr().Is4() {
 			has4 = true
-		} else {
+		}
+		if addr.Addr().Is6() {
 			has6 = true
 		}
 	}

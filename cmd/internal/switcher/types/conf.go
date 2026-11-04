@@ -89,8 +89,13 @@ func (c *Conf) CapitalizeVrfName() {
 		}
 		unnumberedInterfaces = append(unnumberedInterfaces, intf)
 	}
-
 	c.FRRConfig.UnnumberedInterfaces = unnumberedInterfaces
+
+	for _, bgp := range c.FRRConfig.BGP {
+		if strings.HasPrefix(pointer.SafeDeref(bgp.Vrf), "vrf") {
+			bgp.Vrf = new(caser.String(pointer.SafeDeref(bgp.Vrf)))
+		}
+	}
 }
 
 func (c *Conf) NewWithoutDownPorts() *Conf {

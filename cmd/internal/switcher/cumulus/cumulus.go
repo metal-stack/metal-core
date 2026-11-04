@@ -100,8 +100,8 @@ func (c *Cumulus) GetSwitchPorts(_ context.Context) ([]*net.Interface, error) {
 	return switchPorts, nil
 }
 
-func (c *Cumulus) SanitizeConfig(cfg *types.Conf) {
-	// nothing required here
+func (c *Cumulus) GetVRF(nic *apiv2.SwitchNic) *string {
+	return nic.Vrf
 }
 
 func (c *Cumulus) GetOS() (*apiv2.SwitchOS, error) {
