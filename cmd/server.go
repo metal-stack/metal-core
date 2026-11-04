@@ -104,6 +104,7 @@ func Run() {
 		RoomID:                cfg.RoomID,
 		ReconfigureSwitch:     cfg.ReconfigureSwitch,
 		ManagementGateway:     cfg.ManagementGateway,
+		ManagementInterface:   cfg.ManagementInterface,
 		AdditionalMgmtRoutes:  cfg.AdditionalMgmtRoutes,
 		AdditionalBridgePorts: cfg.AdditionalBridgePorts,
 		AdditionalBridgeVIDs:  cfg.AdditionalBridgeVIDs,

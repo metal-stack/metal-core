@@ -54,6 +54,9 @@ type (
 	}
 
 	Nic struct {
+		// Name of the management interface; eth0 unless the NOS names it
+		// differently.
+		Name        string
 		AddressCIDR string
 		Gateway     string
 	}

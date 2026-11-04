@@ -112,7 +112,7 @@ func (c *Core) reconfigureSwitch(ctx context.Context, hostname string) (*apiv2.S
 		return nil, fmt.Errorf("could not build switcher config: %w", err)
 	}
 
-	err = fillEth0Info(switchConfig, c.managementGateway)
+	err = fillEth0Info(switchConfig, c.managementInterface, c.managementGateway)
 	if err != nil {
 		return nil, fmt.Errorf("could not gather information about eth0 nic: %w", err)
 	}
@@ -286,9 +286,12 @@ func mapLogLevel(level string) string {
 	}
 }
 
-func fillEth0Info(c *types.Conf, gw string) error {
-	c.Ports.Eth0 = types.Nic{}
-	eth0, err := netlink.LinkByName("eth0")
+func fillEth0Info(c *types.Conf, name, gw string) error {
+	if name == "" {
+		name = "eth0"
+	}
+	c.Ports.Eth0 = types.Nic{Name: name}
+	eth0, err := netlink.LinkByName(name)
 	if err != nil {
 		return err
 	}
@@ -297,7 +300,7 @@ func fillEth0Info(c *types.Conf, gw string) error {
 		return err
 	}
 	if len(addrs) < 1 {
-		return fmt.Errorf("there is no ip address configured at eth0")
+		return fmt.Errorf("there is no ip address configured at %s", name)
 	}
 
 	ip := addrs[0].IP
