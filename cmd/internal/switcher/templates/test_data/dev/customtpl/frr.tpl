@@ -9,10 +9,10 @@ debug bgp updates
 debug bgp nht
 debug bgp update-groups
 debug bgp zebra
-{{- range .FRRConfig.Vrfs }}
+{{- range .FRRConfig.L3VNIs }}
 !
-vrf Vrf{{ .VNI }}
- vni {{ .VNI }}
+vrf Vrf{{ . }}
+ vni {{ . }}
  exit-vrf
 {{- end }}
 {{- range .FRRConfig.UnnumberedInterfaces }}

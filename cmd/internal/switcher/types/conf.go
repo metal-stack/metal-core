@@ -3,9 +3,13 @@ package types
 import (
 	"fmt"
 	"net/netip"
+	"strings"
 
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
+	"github.com/metal-stack/metal-lib/pkg/pointer"
 	"go4.org/netipx"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // FillVLANIDs fills the given configuration object with switch-local VLAN IDs
@@ -74,23 +78,19 @@ func compactCidrs(cidrs []string) ([]string, error) {
 }
 
 func (c *Conf) CapitalizeVrfName() {
-	// caser := cases.Title(language.English)
+	var (
+		caser                = cases.Title(language.English)
+		unnumberedInterfaces []*Interface
+	)
 
-	// for _, port := range c.Ports {
-	// 	if port.Vrf == nil || pointer.SafeDeref(port.Vrf) == "default" {
-	// 		continue
-	// 	}
-	// 	port.Vrf = new(caser.String(pointer.SafeDeref(port.Vrf)))
-	// }
+	for _, intf := range c.FRRConfig.UnnumberedInterfaces {
+		if strings.HasPrefix(pointer.SafeDeref(intf.Vrf), "vrf") {
+			intf.Vrf = new(caser.String(pointer.SafeDeref(intf.Vrf)))
+		}
+		unnumberedInterfaces = append(unnumberedInterfaces, intf)
+	}
 
-	// for vrf, session := range c.BGPSessions {
-	// 	if vrf == "default" {
-	// 		continue
-	// 	}
-	// 	capitalizedVrf := caser.String(vrf)
-	// 	delete(c.BGPSessions, vrf)
-	// 	c.BGPSessions[capitalizedVrf] = session
-	// }
+	c.FRRConfig.UnnumberedInterfaces = unnumberedInterfaces
 }
 
 func (c *Conf) NewWithoutDownPorts() *Conf {

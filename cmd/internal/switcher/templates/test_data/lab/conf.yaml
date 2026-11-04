@@ -7,8 +7,8 @@ metalcorecidr: 10.255.255.2/24
 eth0:
   gateway: 192.168.0.254
 frrconfig:
-  vrfs:
-    - vni: 104001
+  l3vnis:
+    - 104001
   unnumberedinterfaces:
     - name: swp31
     - name: swp32

@@ -3,20 +3,23 @@ package core
 import (
 	"context"
 	"fmt"
+	"net"
 	"os"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/samber/lo"
 	"github.com/vishvananda/netlink"
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	infrav2 "github.com/metal-stack/api/go/metalstack/infra/v2"
 	"github.com/metal-stack/metal-core/cmd/internal/frr"
-	"github.com/metal-stack/metal-core/cmd/internal/net"
+	corenet "github.com/metal-stack/metal-core/cmd/internal/net"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
+	"github.com/metal-stack/metal-lib/pkg/pointer"
 
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 )
@@ -67,7 +70,7 @@ func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval, timeou
 					c.metrics.CountError("switch-reconfiguration")
 					continue
 				}
-				status, err := net.GetLinkStatus(nic.Name)
+				status, err := corenet.GetLinkStatus(nic.Name)
 				req.PortStates[nic.Name] = status
 				if err != nil {
 					c.log.Error("could not check if link is up", "error", err, "nicname", nic.Name)
@@ -138,6 +141,15 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		peerGroupMachine  = "MACHINE"
 	)
 
+	var (
+		err                  error
+		l3vnis               []uint32
+		unnumberedInterfaces []*types.Interface
+		bgps                 []*types.BGP
+		routeMaps            []*types.RouteMap
+		prefixLists          []*types.IPPrefixList
+	)
+
 	asn64, err := strconv.ParseUint(c.asn, 10, 32)
 	if err != nil {
 		return nil, err
@@ -155,8 +167,6 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		AdditionalMgmtRoutes: c.additionalMgmtRoutes,
 		PXEVlanID:            c.pxeVlanID,
 		SetSrcLoopback:       c.setSrcLoopback,
-		// Ports:                types.Ports{},
-		// BGPSessions:          types.BGPSessions{},
 	}
 
 	for _, nic := range s.Nics {
@@ -166,6 +176,41 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 
 		if slices.Contains(c.ignorePorts, nic.Name) {
 			continue
+		}
+
+		l3vnis, err = addL3VNI(nic.Vrf, l3vnis)
+		if err != nil {
+			return nil, fmt.Errorf("failed to add l3vni of port %s: %w", nic.Name, err)
+		}
+
+		unnumberedInterface := getUnnumberedInterface(nic, c.spineUplinks)
+		if unnumberedInterface == nil {
+			// FIXME: this is an unprovisioned port then; treat accordingly
+			continue
+		}
+		unnumberedInterfaces = append(unnumberedInterfaces, unnumberedInterface)
+
+		bgp, found := lo.Find(bgps, func(b *types.BGP) bool {
+			return pointer.SafeDeref(b.Vrf) == pointer.SafeDeref(unnumberedInterface.Vrf)
+		})
+
+		if !found {
+			bgp = &types.BGP{
+				Vrf: unnumberedInterface.Vrf,
+			}
+		}
+
+		if bgp.Vrf == nil {
+			addUnderlayBGPPort(unnumberedInterface, bgp, c.spineUplinks)
+		} else {
+			err := addMachineBGPPort(nic, bgp)
+			if err != nil {
+				return nil, fmt.Errorf("failed to add bgp session for machine port %s: %w", nic.Name, err)
+			}
+		}
+
+		if !found {
+			bgps = append(bgps, bgp)
 		}
 
 		// port := &types.Port{
@@ -266,6 +311,18 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		// switcherConfig.Ports[nic.Name] = port
 	}
 
+	slices.SortFunc(bgps, func(a, b *types.BGP) int {
+		return strings.Compare(pointer.SafeDeref(a.Vrf), pointer.SafeDeref(b.Vrf))
+	})
+
+	switcherConfig.FRRConfig = &types.FRRConfig{
+		L3VNIs:               l3vnis,
+		UnnumberedInterfaces: unnumberedInterfaces,
+		BGP:                  bgps,
+		RouteMaps:            routeMaps,
+		PrefixLists:          prefixLists,
+	}
+
 	c.nos.SanitizeConfig(switcherConfig)
 
 	err = switcherConfig.FillRouteMapsAndIPPrefixLists()
@@ -284,6 +341,263 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 	}
 
 	return switcherConfig, nil
+}
+
+func getUnnumberedInterface(nic *apiv2.SwitchNic, underlayPorts []string) *types.Interface {
+	if slices.Contains(underlayPorts, nic.Name) {
+		return &types.Interface{
+			Name: nic.Name,
+		}
+	}
+
+	if nic.Vrf == nil {
+		return nil
+	}
+
+	if pointer.SafeDeref(nic.Vrf) == "default" {
+		return &types.Interface{
+			Name: nic.Name,
+		}
+	}
+
+	return &types.Interface{
+		Name: nic.Name,
+		Vrf:  nic.Vrf,
+	}
+}
+
+func addL3VNI(vrf *string, vnis []uint32) ([]uint32, error) {
+	if vrf == nil {
+		return vnis, nil
+	}
+
+	if pointer.SafeDeref(vrf) == "default" {
+		return vnis, nil
+	}
+
+	vniString, _ := strings.CutPrefix(pointer.SafeDeref(vrf), "vrf")
+	vni, err := strconv.ParseUint(vniString, 10, 32)
+	if err != nil {
+		return vnis, fmt.Errorf("failed to parse vni of vrf %s: %w", pointer.SafeDeref(vrf), err)
+	}
+
+	if !slices.Contains(vnis, uint32(vni)) {
+		vnis = append(vnis, uint32(vni))
+	}
+
+	return vnis, nil
+}
+
+func getPeerGroups(groups []string) []types.PeerGroup {
+	var peerGroups []types.PeerGroup
+
+	for _, group := range groups {
+		peerGroups = append(peerGroups, types.PeerGroup{
+			Name: group,
+			Commands: []string{
+				"remote-as external",
+				"timers 2 8",
+			},
+		})
+	}
+
+	return peerGroups
+}
+
+func addUnderlayBGPPort(intf *types.Interface, bgp *types.BGP, underlayPorts []string) {
+	if bgp.PeerGroups == nil {
+		bgp.PeerGroups = getPeerGroups([]string{"FABRIC", "FIREWALL"})
+	}
+
+	neigh := types.BGPNeighbor{
+		Name: fmt.Sprintf("%s interface", intf.Name),
+	}
+
+	if slices.Contains(underlayPorts, intf.Name) {
+		neigh.PeerGroup = new("FABRIC")
+	} else {
+		neigh.PeerGroup = new("FIREWALL")
+	}
+
+	bgp.Neighbors = append(bgp.Neighbors, neigh)
+
+	if bgp.AddressFamilies.IPv4Unicast == nil {
+		bgp.AddressFamilies.IPv4Unicast = &types.BGPAddressFamily{
+			AddressFamily: types.BGPAddressFamilyTypeIPv4,
+			GlobalStatements: []string{
+				"redistribute connected route-map DENY_MGMT",
+				"redistribute kernel route-map DENY_MGMT",
+			},
+			Neighbors: []types.AdressFamilyNeighbor{
+				{
+					Neighbor: "FIREWALL",
+					Commands: []string{"allowas-in 2"},
+				},
+			},
+		}
+	}
+
+	if bgp.AddressFamilies.IPv6Unicast == nil {
+		bgp.AddressFamilies.IPv6Unicast = &types.BGPAddressFamily{
+			AddressFamily: types.BGPAddressFamilyTypeIPv6,
+			GlobalStatements: []string{
+				"redistribute connected route-map DENY_MGMT",
+				`redistribute kernel route-map DENY_MGMT`,
+			},
+			Neighbors: []types.AdressFamilyNeighbor{
+				{
+					Neighbor: "FIREWALL",
+					Commands: []string{"activate", "allowas-in 2"},
+				},
+			},
+		}
+	}
+
+	if bgp.AddressFamilies.L2VPNEVPN == nil {
+		bgp.AddressFamilies.L2VPNEVPN = &types.BGPAddressFamily{
+			AddressFamily:    types.BGPAddressFamilyTypeEVPN,
+			GlobalStatements: []string{"advertise-all-vni"},
+			Neighbors: []types.AdressFamilyNeighbor{
+				{
+					Neighbor: "FABRIC",
+					Commands: []string{"activate", "allowas-in 2"},
+				},
+				{
+					Neighbor: "FIREWALL",
+					Commands: []string{"activate", "allowas-in 2"},
+				},
+			},
+		}
+	}
+
+	if !slices.Contains(underlayPorts, intf.Name) {
+		neighs := bgp.AddressFamilies.IPv4Unicast.Neighbors
+		neighs = append(neighs, types.AdressFamilyNeighbor{
+			Neighbor:   intf.Name,
+			RouteMapIn: fmt.Sprintf("fw-%s-in", intf.Name),
+		})
+		bgp.AddressFamilies.IPv4Unicast.Neighbors = neighs
+
+		neighs = bgp.AddressFamilies.IPv6Unicast.Neighbors
+		neighs = append(neighs, types.AdressFamilyNeighbor{
+			Neighbor:   intf.Name,
+			RouteMapIn: fmt.Sprintf("fw-%s-in", intf.Name),
+		})
+		bgp.AddressFamilies.IPv6Unicast.Neighbors = neighs
+
+		neighs = bgp.AddressFamilies.L2VPNEVPN.Neighbors
+		neighs = append(neighs, types.AdressFamilyNeighbor{
+			Neighbor:    intf.Name,
+			RouteMapOut: fmt.Sprintf("fw-%s-vni", intf.Name),
+		})
+		bgp.AddressFamilies.L2VPNEVPN.Neighbors = neighs
+	}
+}
+
+func addMachineBGPPort(nic *apiv2.SwitchNic, bgp *types.BGP) error {
+	if bgp.PeerGroups == nil {
+		bgp.PeerGroups = getPeerGroups([]string{"MACHINE"})
+	}
+
+	neigh := types.BGPNeighbor{
+		Name:      fmt.Sprintf("%s interface", nic.Name),
+		PeerGroup: new("MACHINE"),
+	}
+
+	bgp.Neighbors = append(bgp.Neighbors, neigh)
+
+	var (
+		cidrs []string
+	)
+
+	if nic.BgpFilter != nil {
+		cidrs = nic.BgpFilter.Cidrs
+	}
+
+	has4, err := hasAddressFamily(cidrs, types.AddressFamilyIPv4)
+	if err != nil {
+		return fmt.Errorf("failed to check if port %s has ipv4 addresses: %w", nic.Name, err)
+	}
+
+	if has4 && bgp.AddressFamilies.IPv4Unicast == nil {
+		bgp.AddressFamilies.IPv4Unicast = &types.BGPAddressFamily{
+			AddressFamily: types.BGPAddressFamilyTypeIPv4,
+			GlobalStatements: []string{
+				"redistribute connected",
+			},
+			Neighbors: []types.AdressFamilyNeighbor{
+				{
+					Neighbor:   "MACHINE",
+					Commands:   []string{"maximum-prefix 24000"},
+					RouteMapIn: fmt.Sprintf("%s-in", pointer.SafeDeref(nic.Vrf)),
+				},
+			},
+		}
+	}
+
+	has6, err := hasAddressFamily(cidrs, types.AddressFamilyIPv6)
+	if err != nil {
+		return fmt.Errorf("failed to check if port %s has ipv6 addresses: %w", nic.Name, err)
+	}
+
+	if has6 && bgp.AddressFamilies.IPv6Unicast == nil {
+		bgp.AddressFamilies.IPv6Unicast = &types.BGPAddressFamily{
+			AddressFamily: types.BGPAddressFamilyTypeIPv6,
+			GlobalStatements: []string{
+				"redistribute connected",
+			},
+			Neighbors: []types.AdressFamilyNeighbor{
+				{
+					Neighbor:   "MACHINE",
+					Commands:   []string{"activate", "maximum-prefix 24000"},
+					RouteMapIn: fmt.Sprintf("%s-in6", pointer.SafeDeref(nic.Vrf)),
+				},
+			},
+		}
+	}
+
+	if bgp.AddressFamilies.L2VPNEVPN == nil {
+		var globalStatements []string
+		if has4 {
+			globalStatements = append(globalStatements, "advertise ipv4 unicast")
+		}
+		if has6 {
+			globalStatements = append(globalStatements, "advertise ipv6 unicast")
+
+		}
+
+		bgp.AddressFamilies.L2VPNEVPN = &types.BGPAddressFamily{
+			AddressFamily:    types.BGPAddressFamilyTypeEVPN,
+			GlobalStatements: globalStatements,
+		}
+	}
+
+	return nil
+}
+
+func hasAddressFamily(cidrs []string, af types.AddressFamily) (bool, error) {
+	var (
+		has4 bool
+		has6 bool
+	)
+
+	for _, cidr := range cidrs {
+		addr, _, err := net.ParseCIDR(cidr)
+		if err != nil {
+			return false, fmt.Errorf("failed to parse cidr %s: %w", cidr, err)
+		}
+		if addr.To4() != nil {
+			has4 = true
+		} else {
+			has6 = true
+		}
+	}
+
+	if af == types.AddressFamilyIPv4 {
+		return has4, nil
+	} else {
+		return has6, nil
+	}
 }
 
 // mapLogLevel maps the metal-core log level to an appropriate FRR log level

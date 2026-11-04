@@ -11,6 +11,7 @@ type (
 		Loopback             string
 		ASN                  uint32
 		FRRConfig            *FRRConfig
+		Vrfs                 []Vrf
 		MetalCoreCIDR        string
 		AdditionalMgmtRoutes []string
 		Eth0                 MgmtInterface
@@ -19,11 +20,11 @@ type (
 	}
 
 	FRRConfig struct {
-		Vrfs                 []Vrf
-		UnnumberedInterfaces []Interface
-		BGP                  []BGP
-		RouteMaps            []RouteMap
-		PrefixLists          []IPPrefixList
+		L3VNIs               []uint32
+		UnnumberedInterfaces []*Interface
+		BGP                  []*BGP
+		RouteMaps            []*RouteMap
+		PrefixLists          []*IPPrefixList
 	}
 
 	Interface struct {
@@ -35,7 +36,7 @@ type (
 		Vrf             *string
 		PeerGroups      []PeerGroup
 		Neighbors       []BGPNeighbor
-		AddressFamilies []BGPAddressFamily
+		AddressFamilies BGPAddressFamilies
 	}
 
 	BGPNeighbor struct {
@@ -44,13 +45,19 @@ type (
 	}
 
 	BGPAddressFamily struct {
-		AddressFamily    string
+		AddressFamily    BGPAddressFamilyType
 		GlobalStatements []string
-		Neighbors        []AdressFamilyNeighbors
+		Neighbors        []AdressFamilyNeighbor
+	}
+
+	BGPAddressFamilies struct {
+		IPv4Unicast *BGPAddressFamily
+		IPv6Unicast *BGPAddressFamily
+		L2VPNEVPN   *BGPAddressFamily
 	}
 
 	// FIXME: naming
-	AdressFamilyNeighbors struct {
+	AdressFamilyNeighbor struct {
 		Neighbor    string
 		Commands    []string
 		RouteMapIn  string
@@ -60,8 +67,6 @@ type (
 	Vrf struct {
 		VNI    uint32
 		VLANID uint16
-		Has4   bool
-		Has6   bool
 	}
 
 	PeerGroup struct {
@@ -92,9 +97,10 @@ type (
 		ipv6Cidrs []string
 	}
 
-	PortStatus    string
-	AddressFamily string
-	Policy        string
+	PortStatus           string
+	AddressFamily        string
+	BGPAddressFamilyType string
+	Policy               string
 )
 
 const (
@@ -103,6 +109,10 @@ const (
 
 	AddressFamilyIPv4 = AddressFamily("ip")
 	AddressFamilyIPv6 = AddressFamily("ipv6")
+
+	BGPAddressFamilyTypeIPv4 = BGPAddressFamilyType("ipv4 unicast")
+	BGPAddressFamilyTypeIPv6 = BGPAddressFamilyType("ipv6 unicast")
+	BGPAddressFamilyTypeEVPN = BGPAddressFamilyType("l2vpn evpn")
 
 	PolicyPermit = Policy("permit")
 	PolicyDeny   = Policy("deny")

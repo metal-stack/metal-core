@@ -15,10 +15,10 @@ debug zebra events
 debug zebra nexthop detail
 debug zebra rib detailed
 debug zebra nht detailed
-{{- range .FRRConfig.Vrfs }}
+{{- range .FRRConfig.L3VNIs }}
 !
-vrf Vrf{{ .VNI }}
- vni {{ .VNI }}
+vrf Vrf{{ . }}
+ vni {{ . }}
  exit-vrf
 {{- end }}
 {{- range .FRRConfig.UnnumberedInterfaces }}

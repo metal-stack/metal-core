@@ -12,8 +12,8 @@ additionalmgmtroutes:
   - 10.100.0.0/16
   - 10.200.0.0/16
 frrconfig:
-  vrfs:
-    - vni: 104001
+  l3vnis:
+    - 104001
   unnumberedinterfaces:
     - name: swp31
     - name: swp32
