@@ -72,3 +72,15 @@ If they match the correct value for `InterfaceNamingSchema` is `default`.
 If not, check if `portdescription` matches the alias and `portidsubtype` matches the name.
 In that case you can use `swap`.
 If you need to have both of the fields to have the same value, use either `name` or `alias`.
+
+## BISDN Linux
+
+On switches running [BISDN Linux](https://www.bisdn.de) (detected by `ID=bisdn-linux` in `/etc/os-release`), metal-core's `bisdn` switcher:
+
+- renders systemd-networkd files `NN-bisdn-*` into `/etc/systemd/network`, cleans up stale netdevs with netlink and reloads networkd via D-Bus
+- renders `/etc/frr/frr.conf`, validates it with `frr-validation@` and reloads `frr.service` (frr-reload.py)
+- reports the front panel ports `port1`..`portN` with their names as identifiers, and uses `enp0` as management interface (`METAL_CORE_MANAGEMENT_INTERFACE` overrides it)
+
+Port breakouts and FEC are not set by metal-core: they live in the Broadcom SDK configuration and need an ofdpa restart. The metal-roles `bisdn-config` role configures them.
+
+The FRR template renders `use-underlays-nexthop-weight` in every `router bgp`. FRR 10.7.1 (BISDN Linux 6.0.0) shows that line in the running config whenever `bgp deterministic-med` is set (FRRouting/frr#22939, fixed by #22552), so without it every reload would flip the setting. The flag only affects underlay link-bandwidth weights, which metal-stack does not use.

@@ -63,6 +63,42 @@ func TestSonicFrrTpl(t *testing.T) {
 	}
 }
 
+func TestBISDNFrrTpl(t *testing.T) {
+	tests := listTestCases()
+	for i := range tests {
+		tt := tests[i]
+		t.Run(tt, func(t *testing.T) {
+			c := readConf(t, path.Join("test_data", tt, "conf.yaml"))
+			c.CapitalizeVrfName()
+			c.Ports.Eth0.Name = "enp0"
+			err := c.FillRouteMapsAndIPPrefixLists()
+			require.NoError(t, err)
+			tpl := BISDNFrrTemplate("")
+			verifyTemplate(t, tpl, &c, path.Join("test_data", tt, "bisdn_frr.conf"))
+		})
+	}
+}
+
+func TestBISDNNetworkdTpl(t *testing.T) {
+	tests := listTestCases()
+	for i := range tests {
+		tt := tests[i]
+		t.Run(tt, func(t *testing.T) {
+			c := readConf(t, path.Join("test_data", tt, "conf.yaml"))
+			c.CapitalizeVrfName()
+			tpl := BISDNNetworkdTemplate("")
+			verifyTemplate(t, tpl, &c, path.Join("test_data", tt, "bisdn_networkd"))
+		})
+	}
+}
+
+func TestBISDNNetworkdTemplateWithDownPorts(t *testing.T) {
+	c := readConf(t, path.Join("test_down_interfaces", "conf_with_downports.yaml"))
+	c.CapitalizeVrfName()
+	tpl := BISDNNetworkdTemplate("")
+	verifyTemplate(t, tpl, &c, path.Join("test_down_interfaces", "bisdn_networkd_with_downports"))
+}
+
 func TestCustomInterfacesTemplate(t *testing.T) {
 	c := readConf(t, "test_data/dev/conf.yaml")
 	tpl := InterfacesTemplate("test_data/dev/customtpl/interfaces.tpl")

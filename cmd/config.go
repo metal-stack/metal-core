@@ -31,5 +31,5 @@ type Config struct {
 	BGPNeighborStateFile      string        `required:"false" default:"/var/run/bgp-neighbors/bgp-neighbors.json" desc:"the file to read the BGP neighbor state from" envconfig:"bgp_neighbor_state_file"`
 	StaticVRFsFile            string        `required:"false" desc:"yaml file containing static vrfs and ports that are not managed by the api" envconfig:"static_vrfs_file"`
 	InterfaceNamingSchema     string        `required:"false" default:"default" desc:"schema for interface and alias naming of switch nics" envconfig:"interface_naming_schema"`
-	ManagementInterface       string        `required:"false" default:"eth0" desc:"the management interface" split_words:"true"`
+	ManagementInterface       string        `required:"false" default:"" desc:"the management interface, empty for the NOS default (eth0, on BISDN Linux enp0)" split_words:"true"`
 }

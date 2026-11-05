@@ -80,7 +80,8 @@ func Run() {
 		},
 	})
 
-	nos, err := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile, sonic.InterfaceNamingSchema(cfg.InterfaceNamingSchema))
+	mgmtInterface := switcher.ManagementInterface(cfg.ManagementInterface)
+	nos, err := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile, sonic.InterfaceNamingSchema(cfg.InterfaceNamingSchema), mgmtInterface)
 	if err != nil {
 		log.Error("failed to create NOS instance", "error", err)
 		os.Exit(1)
@@ -104,7 +105,7 @@ func Run() {
 		RoomID:                cfg.RoomID,
 		ReconfigureSwitch:     cfg.ReconfigureSwitch,
 		ManagementGateway:     cfg.ManagementGateway,
-		ManagementInterface:   cfg.ManagementInterface,
+		ManagementInterface:   mgmtInterface,
 		AdditionalMgmtRoutes:  cfg.AdditionalMgmtRoutes,
 		AdditionalBridgePorts: cfg.AdditionalBridgePorts,
 		AdditionalBridgeVIDs:  cfg.AdditionalBridgeVIDs,

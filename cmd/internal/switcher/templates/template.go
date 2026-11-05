@@ -13,6 +13,9 @@ const (
 	interfaceTpl  = "interfaces.tpl"
 	cumulusFrrTpl = "cumulus_frr.tpl"
 	sonicFrrTpl   = "sonic_frr.tpl"
+
+	bisdnFrrTpl      = "bisdn_frr.tpl"
+	bisdnNetworkdTpl = "bisdn_networkd.tpl"
 )
 
 func mustParseFile(path string) *template.Template {
@@ -40,4 +43,12 @@ func CumulusFrrTemplate(customTplPath string) *template.Template {
 
 func SonicFrrTemplate(customTplPath string) *template.Template {
 	return mustParse(sonicFrrTpl, customTplPath)
+}
+
+func BISDNFrrTemplate(customTplPath string) *template.Template {
+	return mustParse(bisdnFrrTpl, customTplPath)
+}
+
+func BISDNNetworkdTemplate(customTplPath string) *template.Template {
+	return mustParse(bisdnNetworkdTpl, customTplPath)
 }
