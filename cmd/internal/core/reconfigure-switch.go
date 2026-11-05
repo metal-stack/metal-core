@@ -143,7 +143,7 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 
 	var (
 		err                  error
-		l3vnis               []uint32
+		vrfs                 []string
 		unnumberedInterfaces []*types.Interface
 		bgps                 []*types.BGP
 		routeMaps            []*types.RouteMap
@@ -178,17 +178,17 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 			continue
 		}
 
-		l3vnis, err = addL3VNI(nic.Vrf, l3vnis)
-		if err != nil {
-			return nil, fmt.Errorf("failed to add l3vni of port %s: %w", nic.Name, err)
-		}
-
 		unnumberedInterface := getUnnumberedInterface(nic.Name, c.nos.GetVRF(nic), c.spineUplinks)
 		if unnumberedInterface == nil {
 			// FIXME: this is an unprovisioned port then; treat accordingly
 			continue
 		}
 		unnumberedInterfaces = append(unnumberedInterfaces, unnumberedInterface)
+
+		vrfs, err = addVRF(unnumberedInterface.Vrf, vrfs)
+		if err != nil {
+			return nil, fmt.Errorf("failed to add l3vni of port %s: %w", nic.Name, err)
+		}
 
 		bgp, found := lo.Find(bgps, func(b *types.BGP) bool {
 			return pointer.SafeDeref(b.Vrf) == pointer.SafeDeref(unnumberedInterface.Vrf)
@@ -342,7 +342,7 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 	})
 
 	switcherConfig.FRRConfig = &types.FRRConfig{
-		L3VNIs:               l3vnis,
+		VRFs:                 vrfs,
 		UnnumberedInterfaces: unnumberedInterfaces,
 		BGP:                  bgps,
 		RouteMaps:            routeMaps,
@@ -390,26 +390,18 @@ func getUnnumberedInterface(nicName string, vrf *string, underlayPorts []string)
 	}
 }
 
-func addL3VNI(vrf *string, vnis []uint32) ([]uint32, error) {
+func addVRF(vrf *string, vrfs []string) ([]string, error) {
 	if vrf == nil {
-		return vnis, nil
+		return vrfs, nil
 	}
 
 	if pointer.SafeDeref(vrf) == "default" {
-		return vnis, nil
+		return vrfs, nil
 	}
 
-	vniString, _ := strings.CutPrefix(pointer.SafeDeref(vrf), "vrf")
-	vni, err := strconv.ParseUint(vniString, 10, 32)
-	if err != nil {
-		return vnis, fmt.Errorf("failed to parse vni of vrf %s: %w", pointer.SafeDeref(vrf), err)
-	}
+	vrfs = append(vrfs, pointer.SafeDeref(vrf))
 
-	if !slices.Contains(vnis, uint32(vni)) {
-		vnis = append(vnis, uint32(vni))
-	}
-
-	return vnis, nil
+	return vrfs, nil
 }
 
 func getPeerGroups(groups []string) []types.PeerGroup {
@@ -447,7 +439,6 @@ func addUnderlayBGPPort(intf *types.Interface, bgp *types.BGP, underlayPorts []s
 
 	if bgp.AddressFamilies.IPv4Unicast == nil {
 		bgp.AddressFamilies.IPv4Unicast = &types.BGPAddressFamily{
-			AddressFamily: types.BGPAddressFamilyTypeIPv4,
 			GlobalStatements: []string{
 				"redistribute connected route-map DENY_MGMT",
 				"redistribute kernel route-map DENY_MGMT",
@@ -463,7 +454,6 @@ func addUnderlayBGPPort(intf *types.Interface, bgp *types.BGP, underlayPorts []s
 
 	if bgp.AddressFamilies.IPv6Unicast == nil {
 		bgp.AddressFamilies.IPv6Unicast = &types.BGPAddressFamily{
-			AddressFamily: types.BGPAddressFamilyTypeIPv6,
 			GlobalStatements: []string{
 				"redistribute connected route-map DENY_MGMT",
 				`redistribute kernel route-map DENY_MGMT`,
@@ -479,7 +469,6 @@ func addUnderlayBGPPort(intf *types.Interface, bgp *types.BGP, underlayPorts []s
 
 	if bgp.AddressFamilies.L2VPNEVPN == nil {
 		bgp.AddressFamilies.L2VPNEVPN = &types.BGPAddressFamily{
-			AddressFamily:    types.BGPAddressFamilyTypeEVPN,
 			GlobalStatements: []string{"advertise-all-vni"},
 			Neighbors: []types.AdressFamilyNeighbor{
 				{
@@ -545,7 +534,6 @@ func addMachineBGPPort(intf types.Interface, bgpFilter *apiv2.BGPFilter, bgp *ty
 
 	if has4 && bgp.AddressFamilies.IPv4Unicast == nil {
 		bgp.AddressFamilies.IPv4Unicast = &types.BGPAddressFamily{
-			AddressFamily: types.BGPAddressFamilyTypeIPv4,
 			GlobalStatements: []string{
 				"redistribute connected",
 			},
@@ -566,7 +554,6 @@ func addMachineBGPPort(intf types.Interface, bgpFilter *apiv2.BGPFilter, bgp *ty
 
 	if has6 && bgp.AddressFamilies.IPv6Unicast == nil {
 		bgp.AddressFamilies.IPv6Unicast = &types.BGPAddressFamily{
-			AddressFamily: types.BGPAddressFamilyTypeIPv6,
 			GlobalStatements: []string{
 				"redistribute connected",
 			},
@@ -590,7 +577,6 @@ func addMachineBGPPort(intf types.Interface, bgpFilter *apiv2.BGPFilter, bgp *ty
 		}
 
 		bgp.AddressFamilies.L2VPNEVPN = &types.BGPAddressFamily{
-			AddressFamily:    types.BGPAddressFamilyTypeEVPN,
 			GlobalStatements: globalStatements,
 		}
 	}

@@ -7,16 +7,16 @@ metalcorecidr: 10.255.255.2/24
 eth0:
   gateway: 192.168.0.254
 frrconfig:
-  l3vnis:
-    - 104001
+  vrfs:
+    - vrf104001
   unnumberedinterfaces:
     - name: swp31
     - name: swp32
     - name: swp3
     - name: swp1
-      vrf: Vrf104001
+      vrf: vrf104001
     - name: swp2
-      vrf: Vrf104001
+      vrf: vrf104001
   bgp:
     - peergroups:
         - name: FABRIC
@@ -35,7 +35,7 @@ frrconfig:
         - name: swp3 interface
           peergroup: FIREWALL
       addressfamilies:
-        - addressfamily: ipv4 unicast
+        ipv4unicast:
           globalstatements:
             - redistribute connected route-map DENY_MGMT
             - redistribute kernel route-map DENY_MGMT
@@ -45,7 +45,7 @@ frrconfig:
                 - allowas-in 2
             - neighbor: swp3
               routemapin: fw-swp3-in
-        - addressfamily: ipv6 unicast
+        ipv6unicast:
           globalstatements:
             - redistribute connected route-map DENY_MGMT
             - redistribute kernel route-map DENY_MGMT
@@ -56,7 +56,7 @@ frrconfig:
                 - activate
             - neighbor: swp3
               routemapin: fw-swp3-in
-        - addressfamily: l2vpn evpn
+        l2vpnevpn:
           globalstatements:
             - advertise-all-vni
           neighbors:
@@ -70,7 +70,7 @@ frrconfig:
                 - allowas-in 2
             - neighbor: swp3
               routemapout: fw-swp3-vni
-    - vrf: Vrf104001
+    - vrf: vrf104001
       peergroups:
         - name: MACHINE
           commands:
@@ -82,18 +82,26 @@ frrconfig:
         - name: swp2 interface
           peergroup: MACHINE
       addressfamilies:
-        - addressfamily: ipv4 unicast
+        ipv4unicast:
           globalstatements:
             - redistribute connected
           neighbors:
             - neighbor: MACHINE
               commands:
                 - maximum-prefix 24000
-              routemapin: Vrf104001-in
-        - addressfamily: l2vpn evpn
+              routemapin: vrf104001-in
+        l2vpnevpn:
           globalstatements:
             - advertise ipv4 unicast
   routemaps:
+    - name: DENY_MGMT
+      entries:
+        - match interface eth0
+      policy: deny
+      order: 10
+    - name: DENY_MGMT
+      policy: permit
+      order: 20
     - name: fw-swp3-in
       entries:
         - match ip address prefix-list fw-swp3-in-prefixes
@@ -114,9 +122,9 @@ frrconfig:
         - match evpn vni 104010
       policy: permit
       order: 12
-    - name: Vrf104001-in
+    - name: vrf104001-in
       entries:
-        - match ip address prefix-list Vrf104001-in-prefixes
+        - match ip address prefix-list vrf104001-in-prefixes
       policy: permit
       order: 10
   prefixlists:
@@ -124,5 +132,5 @@ frrconfig:
       name: fw-swp3-in-prefixes
       spec: permit 10.0.2.1/32 le 32
     - addressfamily: ip
-      name: Vrf104001-in-prefixes
+      name: vrf104001-in-prefixes
       spec: permit 10.240.0.0/12 le 32

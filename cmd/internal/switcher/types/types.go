@@ -20,7 +20,7 @@ type (
 	}
 
 	FRRConfig struct {
-		L3VNIs               []uint32
+		VRFs                 []string
 		UnnumberedInterfaces []*Interface
 		BGP                  []*BGP
 		RouteMaps            []*RouteMap
@@ -45,7 +45,6 @@ type (
 	}
 
 	BGPAddressFamily struct {
-		AddressFamily    BGPAddressFamilyType
 		GlobalStatements []string
 		Neighbors        []AdressFamilyNeighbor
 	}
@@ -97,10 +96,9 @@ type (
 		ipv6Cidrs []string
 	}
 
-	PortStatus           string
-	AddressFamily        string
-	BGPAddressFamilyType string
-	Policy               string
+	PortStatus    string
+	AddressFamily string
+	Policy        string
 )
 
 const (
@@ -109,10 +107,6 @@ const (
 
 	AddressFamilyIPv4 = AddressFamily("ip")
 	AddressFamilyIPv6 = AddressFamily("ipv6")
-
-	BGPAddressFamilyTypeIPv4 = BGPAddressFamilyType("ipv4 unicast")
-	BGPAddressFamilyTypeIPv6 = BGPAddressFamilyType("ipv6 unicast")
-	BGPAddressFamilyTypeEVPN = BGPAddressFamilyType("l2vpn evpn")
 
 	PolicyPermit = Policy("permit")
 	PolicyDeny   = Policy("deny")

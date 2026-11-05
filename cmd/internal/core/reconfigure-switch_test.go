@@ -98,7 +98,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		PXEVlanID:            4000,
 		// FIXME: vrfs and ports missing
 		FRRConfig: &types.FRRConfig{
-			L3VNIs: []uint32{104001, 200},
+			VRFs: []string{"Vrf104001", "Vrf200"},
 			UnnumberedInterfaces: []*types.Interface{
 				// FIXME: add multiple neighbors to each vrf
 				{
@@ -153,7 +153,6 @@ func TestBuildSwitcherConfig(t *testing.T) {
 					},
 					AddressFamilies: types.BGPAddressFamilies{
 						IPv4Unicast: &types.BGPAddressFamily{
-							AddressFamily: types.BGPAddressFamilyTypeIPv4,
 							GlobalStatements: []string{
 								"redistribute connected route-map DENY_MGMT",
 								"redistribute kernel route-map DENY_MGMT",
@@ -170,7 +169,6 @@ func TestBuildSwitcherConfig(t *testing.T) {
 							},
 						},
 						IPv6Unicast: &types.BGPAddressFamily{
-							AddressFamily: types.BGPAddressFamilyTypeIPv6,
 							GlobalStatements: []string{
 								"redistribute connected route-map DENY_MGMT",
 								"redistribute kernel route-map DENY_MGMT",
@@ -187,7 +185,6 @@ func TestBuildSwitcherConfig(t *testing.T) {
 							},
 						},
 						L2VPNEVPN: &types.BGPAddressFamily{
-							AddressFamily: types.BGPAddressFamilyTypeEVPN,
 							GlobalStatements: []string{
 								"advertise-all-vni",
 							},
@@ -227,7 +224,6 @@ func TestBuildSwitcherConfig(t *testing.T) {
 					},
 					AddressFamilies: types.BGPAddressFamilies{
 						IPv4Unicast: &types.BGPAddressFamily{
-							AddressFamily: types.BGPAddressFamilyTypeIPv4,
 							GlobalStatements: []string{
 								"redistribute connected",
 							},
@@ -240,7 +236,6 @@ func TestBuildSwitcherConfig(t *testing.T) {
 							},
 						},
 						L2VPNEVPN: &types.BGPAddressFamily{
-							AddressFamily: types.BGPAddressFamilyTypeEVPN,
 							GlobalStatements: []string{
 								"advertise ipv4 unicast",
 							},
@@ -266,7 +261,6 @@ func TestBuildSwitcherConfig(t *testing.T) {
 					},
 					AddressFamilies: types.BGPAddressFamilies{
 						IPv4Unicast: &types.BGPAddressFamily{
-							AddressFamily: types.BGPAddressFamilyTypeIPv4,
 							GlobalStatements: []string{
 								"redistribute connected",
 							},
@@ -279,7 +273,6 @@ func TestBuildSwitcherConfig(t *testing.T) {
 							},
 						},
 						IPv6Unicast: &types.BGPAddressFamily{
-							AddressFamily: types.BGPAddressFamilyTypeIPv6,
 							GlobalStatements: []string{
 								"redistribute connected",
 							},
@@ -292,7 +285,6 @@ func TestBuildSwitcherConfig(t *testing.T) {
 							},
 						},
 						L2VPNEVPN: &types.BGPAddressFamily{
-							AddressFamily: types.BGPAddressFamilyTypeEVPN,
 							GlobalStatements: []string{
 								"advertise ipv4 unicast",
 								"advertise ipv6 unicast",

@@ -15,10 +15,10 @@ debug zebra events
 debug zebra nexthop detail
 debug zebra rib detailed
 debug zebra nht detailed
-{{- range .FRRConfig.L3VNIs }}
+{{- range .FRRConfig.VRFs }}
 !
-vrf Vrf{{ . }}
- vni {{ . }}
+vrf {{ . }}
+ vni {{ slice . 3 }}
  exit-vrf
 {{- end }}
 {{- range .FRRConfig.UnnumberedInterfaces }}
@@ -42,13 +42,56 @@ router bgp {{ $ASN }}{{- if .Vrf }} vrf {{ .Vrf }} {{- end }}
  {{- range .Neighbors }}
  neighbor {{ .Name }}{{- if .PeerGroup }} peer-group {{ .PeerGroup }}{{- end }}
  {{- end }}
- {{- range .AddressFamilies }}
+ {{- if .AddressFamilies.IPv4Unicast }}
  !
- address-family {{ .AddressFamily }}
-  {{- range .GlobalStatements }}
+ {{- $af := .AddressFamilies.IPv4Unicast }}
+ address-family ipv4 unicast
+  {{- range $af.GlobalStatements }}
   {{ . }}
   {{- end -}}
-  {{- range .Neighbors -}}
+  {{- range $af.Neighbors -}}
+  {{ $neighbor := .Neighbor }}
+  {{- range .Commands }}
+  neighbor {{ $neighbor }} {{ . }}
+  {{- end -}}
+  {{- if .RouteMapIn }}
+  neighbor {{ .Neighbor }} route-map {{ .RouteMapIn }} in
+  {{- end -}}
+  {{- if .RouteMapOut }}
+  neighbor {{ .Neighbor }} route-map {{ .RouteMapOut }} out
+  {{- end }}
+  {{- end }}
+ exit-address-family
+ {{- end }}
+ {{- if .AddressFamilies.IPv6Unicast }}
+ !
+ {{- $af := .AddressFamilies.IPv6Unicast }}
+ address-family ipv6 unicast
+  {{- range $af.GlobalStatements }}
+  {{ . }}
+  {{- end -}}
+  {{- range $af.Neighbors -}}
+  {{ $neighbor := .Neighbor }}
+  {{- range .Commands }}
+  neighbor {{ $neighbor }} {{ . }}
+  {{- end -}}
+  {{- if .RouteMapIn }}
+  neighbor {{ .Neighbor }} route-map {{ .RouteMapIn }} in
+  {{- end -}}
+  {{- if .RouteMapOut }}
+  neighbor {{ .Neighbor }} route-map {{ .RouteMapOut }} out
+  {{- end }}
+  {{- end }}
+ exit-address-family
+ {{- end }}
+ {{- if .AddressFamilies.L2VPNEVPN }}
+ !
+ {{- $af := .AddressFamilies.L2VPNEVPN }}
+ address-family l2vpn evpn
+  {{- range $af.GlobalStatements }}
+  {{ . }}
+  {{- end -}}
+  {{- range $af.Neighbors -}}
   {{ $neighbor := .Neighbor }}
   {{- range .Commands }}
   neighbor {{ $neighbor }} {{ . }}
@@ -79,18 +122,14 @@ route-map {{ .Name }} {{ .Policy }} {{ .Order }}
 {{- end }}
 !
 {{- end }}
-route-map DENY_MGMT deny 10
-  match interface eth0
-route-map DENY_MGMT permit 20
 {{- if .SetSrcLoopback }}
-!
 route-map RM_SET_SRC permit 10
  set src {{ .Loopback }}
 exit
 !
 ip protocol bgp route-map RM_SET_SRC
-{{- end }}
 !
+{{- end }}
 {{- if .Eth0.Gateway }}
 {{- $gateway := .Eth0.Gateway }}
 ip route 0.0.0.0/0 {{ $gateway }} nexthop-vrf mgmt

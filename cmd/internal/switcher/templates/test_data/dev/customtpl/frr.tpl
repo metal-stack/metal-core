@@ -9,10 +9,10 @@ debug bgp updates
 debug bgp nht
 debug bgp update-groups
 debug bgp zebra
-{{- range .FRRConfig.L3VNIs }}
+{{- range .FRRConfig.VRFs }}
 !
-vrf Vrf{{ . }}
- vni {{ . }}
+vrf {{ . }}
+ vni {{ slice . 3 }}
  exit-vrf
 {{- end }}
 {{- range .FRRConfig.UnnumberedInterfaces }}
@@ -37,18 +37,16 @@ router bgp {{ $ASN }}{{- if .Vrf }} vrf {{ .Vrf }} {{- end }}
  {{- range .Neighbors }}
  neighbor {{ .Name }}{{- if .PeerGroup }} peer-group {{ .PeerGroup }}{{- end }}
  {{- end }}
- {{- range .AddressFamilies }}
- {{- if ne .AddressFamily "ipv6 unicast" }}
+ {{- if .AddressFamilies.IPv4Unicast }}
  !
- address-family {{ .AddressFamily }}
-  {{- if eq .AddressFamily "ipv4 unicast" }}
-  redistribute connected {{- if not $bgp.Vrf }} route-map LOCALS {{- end }}
+ {{- $af := .AddressFamilies.IPv4Unicast }}
+ address-family ipv4 unicast
+  {{- if $bgp.Vrf }}
+  redistribute connected
   {{- else }}
-  {{- range .GlobalStatements }}
-  {{ . }}
+  redistribute connected route-map LOCALS
   {{- end }}
-  {{- end -}}
-  {{- range .Neighbors -}}
+  {{- range $af.Neighbors -}}
   {{ $neighbor := .Neighbor }}
   {{- range .Commands }}
   neighbor {{ $neighbor }} {{ . }}
@@ -62,6 +60,26 @@ router bgp {{ $ASN }}{{- if .Vrf }} vrf {{ .Vrf }} {{- end }}
   {{- end }}
  exit-address-family
  {{- end }}
+ {{- if .AddressFamilies.L2VPNEVPN }}
+ !
+ {{- $af := .AddressFamilies.L2VPNEVPN }}
+ address-family l2vpn evpn
+  {{- range $af.GlobalStatements }}
+  {{ . }}
+  {{- end -}}
+  {{- range $af.Neighbors -}}
+  {{ $neighbor := .Neighbor }}
+  {{- range .Commands }}
+  neighbor {{ $neighbor }} {{ . }}
+  {{- end -}}
+  {{- if .RouteMapIn }}
+  neighbor {{ .Neighbor }} route-map {{ .RouteMapIn }} in
+  {{- end -}}
+  {{- if .RouteMapOut }}
+  neighbor {{ .Neighbor }} route-map {{ .RouteMapOut }} out
+  {{- end }}
+  {{- end }}
+ exit-address-family
  {{- end }}
 !
 {{- end }}
