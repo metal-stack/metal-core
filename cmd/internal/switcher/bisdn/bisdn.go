@@ -65,7 +65,7 @@ func New(log *slog.Logger, frrTplFile, networkdTplFile, mgmtInterface string) *B
 	}
 	return &BISDN{
 		frrApplier:      NewFrrApplier(log, frrTplFile),
-		networkdApplier: newNetworkdApplier(log, templates.BISDNNetworkdTemplate(networkdTplFile)),
+		networkdApplier: newNetworkdApplier(log, templates.BISDNNetworkdTemplates(networkdTplFile)),
 		mgmtInterface:   mgmtInterface,
 		log:             log,
 	}

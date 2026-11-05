@@ -3,6 +3,7 @@ package templates
 import (
 	"embed"
 	"path"
+	"path/filepath"
 	"text/template"
 )
 
@@ -14,8 +15,7 @@ const (
 	cumulusFrrTpl = "cumulus_frr.tpl"
 	sonicFrrTpl   = "sonic_frr.tpl"
 
-	bisdnFrrTpl      = "bisdn_frr.tpl"
-	bisdnNetworkdTpl = "bisdn_networkd.tpl"
+	bisdnFrrTpl = "bisdn_frr.tpl"
 )
 
 func mustParseFile(path string) *template.Template {
@@ -49,6 +49,13 @@ func BISDNFrrTemplate(customTplPath string) *template.Template {
 	return mustParse(bisdnFrrTpl, customTplPath)
 }
 
-func BISDNNetworkdTemplate(customTplPath string) *template.Template {
-	return mustParse(bisdnNetworkdTpl, customTplPath)
+// BISDNNetworkdTemplates returns the systemd-networkd templates for BISDN
+// Linux, one per file kind (tpl/bisdn/<kind>.tpl). Templates in customTplDir
+// replace the embedded ones with the same file name.
+func BISDNNetworkdTemplates(customTplDir string) *template.Template {
+	tpl := template.Must(template.ParseFS(templates, "tpl/bisdn/*.tpl"))
+	if customTplDir != "" {
+		tpl = template.Must(tpl.ParseGlob(filepath.Join(customTplDir, "*.tpl")))
+	}
+	return tpl
 }

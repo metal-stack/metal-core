@@ -1,0 +1,5 @@
+[Match]
+Name=vlan966
+
+[Network]
+Address=10.255.255.2/24

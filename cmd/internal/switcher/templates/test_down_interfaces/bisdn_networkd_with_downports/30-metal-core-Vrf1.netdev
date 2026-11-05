@@ -1,0 +1,6 @@
+[NetDev]
+Name=Vrf1
+Kind=vrf
+
+[VRF]
+Table=1

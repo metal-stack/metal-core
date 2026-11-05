@@ -77,7 +77,8 @@ If you need to have both of the fields to have the same value, use either `name`
 
 On switches running [BISDN Linux](https://www.bisdn.de) (detected by `ID=bisdn-linux` in `/etc/os-release`), metal-core's `bisdn` switcher:
 
-- renders systemd-networkd files `NN-bisdn-*` into `/etc/systemd/network`, cleans up stale netdevs with netlink and reloads networkd via D-Bus
+- renders one systemd-networkd file per interface, `NN-metal-core-<interface>.netdev|network`, into `/etc/systemd/network`, from the templates in `cmd/internal/switcher/templates/tpl/bisdn` (one per file kind). Files of VRFs, VLANs, VNIs and ports that are gone are removed, their netdevs deleted and freed ports released with netlink; files without the `NN-metal-core-` prefix, such as metal-roles' mgmt VRF, are never touched. networkd is reloaded via D-Bus (`org.freedesktop.network1.Manager.Reload`, since BISDN Linux's `systemd-networkd.service` has no reload command)
+- `METAL_CORE_INTERFACES_TPL_FILE` names a directory on BISDN Linux: its `*.tpl` files replace the embedded templates with the same name
 - renders `/etc/frr/frr.conf`, validates it with `frr-validation@` and reloads `frr.service` (frr-reload.py)
 - reports the front panel ports `port1`..`portN` with their names as identifiers, and uses `enp0` as management interface (`METAL_CORE_MANAGEMENT_INTERFACE` overrides it)
 - sends LLDP for metal-hammer itself with `METAL_CORE_LLDP_SEND=true`, since BISDN Linux has no suitable LLDP agent: chassis ID = port MAC, port ID = port name (locally assigned), port description = port name, system name = hostname

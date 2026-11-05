@@ -1,0 +1,16 @@
+[Match]
+Name=swp1
+
+[Link]
+MTUBytes=9000
+
+[Network]
+Bridge=bridge
+LinkLocalAddressing=no
+LLDP=no
+EmitLLDP=no
+
+[BridgeVLAN]
+VLAN=966
+PVID=966
+EgressUntagged=966

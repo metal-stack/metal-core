@@ -1,0 +1,15 @@
+[Match]
+Name=vni1
+
+[Network]
+Bridge=bridge
+LinkLocalAddressing=no
+
+[Bridge]
+Learning=no
+NeighborSuppression=yes
+
+[BridgeVLAN]
+VLAN=2
+PVID=2
+EgressUntagged=2
