@@ -96,6 +96,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		Name:                 s.Id,
 		AdditionalMgmtRoutes: []string{"100.1.1.0/24"},
 		PXEVlanID:            4000,
+		// FIXME: vrfs and ports missing
 		FRRConfig: &types.FRRConfig{
 			L3VNIs: []uint32{104001, 200},
 			UnnumberedInterfaces: []*types.Interface{
