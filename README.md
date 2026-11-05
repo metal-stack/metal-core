@@ -80,6 +80,7 @@ On switches running [BISDN Linux](https://www.bisdn.de) (detected by `ID=bisdn-l
 - renders systemd-networkd files `NN-bisdn-*` into `/etc/systemd/network`, cleans up stale netdevs with netlink and reloads networkd via D-Bus
 - renders `/etc/frr/frr.conf`, validates it with `frr-validation@` and reloads `frr.service` (frr-reload.py)
 - reports the front panel ports `port1`..`portN` with their names as identifiers, and uses `enp0` as management interface (`METAL_CORE_MANAGEMENT_INTERFACE` overrides it)
+- sends LLDP for metal-hammer itself with `METAL_CORE_LLDP_SEND=true`, since BISDN Linux has no suitable LLDP agent: chassis ID = port MAC, port ID = port name (locally assigned), port description = port name, system name = hostname
 
 Port breakouts and FEC are not set by metal-core: they live in the Broadcom SDK configuration and need an ofdpa restart. The metal-roles `bisdn-config` role configures them.
 

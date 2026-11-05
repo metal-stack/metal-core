@@ -33,7 +33,12 @@ import (
 	"go.yaml.in/yaml/v4"
 )
 
-const phonedHomeInterval = time.Minute
+const (
+	phonedHomeInterval = time.Minute
+	// lldpSendInterval matches the tx interval metal-stack configures on
+	// SONiC (10s); metal-hammer waits about twice that for neighbors.
+	lldpSendInterval = 10 * time.Second
+)
 
 func Run() {
 	cfg := &Config{}
@@ -135,6 +140,11 @@ func Run() {
 	wg.Go(func() {
 		c.ConstantlyPhoneHome(ctx, phonedHomeInterval)
 	})
+	if cfg.LLDPSend {
+		wg.Go(func() {
+			c.ConstantlySendLLDP(ctx, lldpSendInterval)
+		})
+	}
 
 	metricsAddr := fmt.Sprintf("%v:%d", cfg.MetricsServerBindAddress, cfg.MetricsServerPort)
 

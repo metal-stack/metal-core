@@ -32,4 +32,5 @@ type Config struct {
 	StaticVRFsFile            string        `required:"false" desc:"yaml file containing static vrfs and ports that are not managed by the api" envconfig:"static_vrfs_file"`
 	InterfaceNamingSchema     string        `required:"false" default:"default" desc:"schema for interface and alias naming of switch nics" envconfig:"interface_naming_schema"`
 	ManagementInterface       string        `required:"false" default:"" desc:"the management interface, empty for the NOS default (eth0, on BISDN Linux enp0)" split_words:"true"`
+	LLDPSend                  bool          `required:"false" default:"false" desc:"if true metal-core sends LLDP on the switch ports for metal-hammer, for NOSes without a suitable LLDP agent (BISDN Linux)" envconfig:"lldp_send"`
 }

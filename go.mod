@@ -52,3 +52,5 @@ require (
 	golang.org/x/sys v0.49.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 )
+
+replace github.com/metal-stack/go-lldpd => github.com/mwindower/go-lldpd v0.4.13-0.20261104184953-d494966c139e

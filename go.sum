@@ -49,8 +49,6 @@ github.com/mdlayher/packet v1.0.0/go.mod h1:eE7/ctqDhoiRhQ44ko5JZU2zxB88g+JH/6jm
 github.com/mdlayher/socket v0.2.1/go.mod h1:QLlNPkFR88mRUNQIzRBMfXxwKal8H7u1h3bL1CV+f0E=
 github.com/metal-stack/api v0.9.1-0.20261105062241-2ae32d6705d8 h1:cJ+AyJmsKNYbyBKyZlq4oseewrky2tXFb9y7CbW4DQw=
 github.com/metal-stack/api v0.9.1-0.20261105062241-2ae32d6705d8/go.mod h1:U0CJxoo35jpS87HNDbVDrilxR106TnE5rJ/xSmgQkPg=
-github.com/metal-stack/go-lldpd v0.4.12 h1:sWicQFm3ItLmfIWjkAyOwcakA8mFfnm6OVuLNUogvy8=
-github.com/metal-stack/go-lldpd v0.4.12/go.mod h1:tpEvX6G+kYycoouN6csQzjFIwXNFuu9hZE3U2Y2INNU=
 github.com/metal-stack/metal-lib v0.25.2 h1:OW8y6PtlV5lv3bXSDU1MaNGvtbroiDYjuhSxqKHKAgw=
 github.com/metal-stack/metal-lib v0.25.2/go.mod h1:tnx4MM5oml10EMN6Nq6oFSbjOKB9B27WUZQUyZ4MywA=
 github.com/metal-stack/v v1.0.3 h1:Sh2oBlnxrCUD+mVpzfC8HiqL045YWkxs0gpTvkjppqs=
@@ -59,6 +57,8 @@ github.com/minio/minlz v1.2.3 h1:xUNhxBd8AlRJbJIsFkVmrN96gk9as9PjheVh3f9x90s=
 github.com/minio/minlz v1.2.3/go.mod h1:xHhZ+MJmC2U4ssK/rSENsoyCfv0VFQo1mT6AdCA2RJ8=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 h1:C3w9PqII01/Oq1c1nUAm88MOHcQC9l5mIlSMApZMrHA=
 github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822/go.mod h1:+n7T8mK8HuQTcFwEeznm/DIxMOiR9yIdICNftLE1DvQ=
+github.com/mwindower/go-lldpd v0.4.13-0.20261104184953-d494966c139e h1:k7SpHwfSV821Nottb2cex5WqVAQVNBWIRRDVvpUV85k=
+github.com/mwindower/go-lldpd v0.4.13-0.20261104184953-d494966c139e/go.mod h1:tpEvX6G+kYycoouN6csQzjFIwXNFuu9hZE3U2Y2INNU=
 github.com/oklog/ulid/v2 v2.1.1 h1:suPZ4ARWLOJLegGFiZZ1dFAkqzhMjL3J1TzI+5wHz8s=
 github.com/oklog/ulid/v2 v2.1.1/go.mod h1:rcEKHmBBKfef9DhnvX7y1HZBYxjXb0cP5ExxNsTT1QQ=
 github.com/onsi/gomega v1.38.3 h1:eTX+W6dobAYfFeGC2PV6RwXRu/MyT+cQguijutvkpSM=
