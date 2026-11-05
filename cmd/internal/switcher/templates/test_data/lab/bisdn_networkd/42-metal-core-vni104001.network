@@ -1,0 +1,15 @@
+[Match]
+Name=vni104001
+
+[Network]
+Bridge=bridge
+LinkLocalAddressing=no
+
+[Bridge]
+Learning=no
+NeighborSuppression=yes
+
+[BridgeVLAN]
+VLAN=4001
+PVID=4001
+EgressUntagged=4001

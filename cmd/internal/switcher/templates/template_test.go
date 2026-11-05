@@ -63,6 +63,33 @@ func TestSonicFrrTpl(t *testing.T) {
 	}
 }
 
+func TestBISDNFrrTpl(t *testing.T) {
+	tests := listTestCases()
+	for i := range tests {
+		tt := tests[i]
+		t.Run(tt, func(t *testing.T) {
+			c := readConf(t, path.Join("test_data", tt, "conf.yaml"))
+			c.CapitalizeVrfName()
+			c.Ports.Eth0.Name = "enp0"
+			err := c.FillRouteMapsAndIPPrefixLists()
+			require.NoError(t, err)
+			tpl := BISDNFrrTemplate("")
+			verifyTemplate(t, tpl, &c, path.Join("test_data", tt, "bisdn_frr.conf"))
+		})
+	}
+}
+
+func TestBISDNNetworkdTemplatesOverride(t *testing.T) {
+	dir := t.TempDir()
+	require.NoError(t, os.WriteFile(path.Join(dir, "lo.network.tpl"), []byte("custom {{ .Address }}\n"), 0o644))
+
+	tpl := BISDNNetworkdTemplates(dir)
+	var b bytes.Buffer
+	require.NoError(t, tpl.ExecuteTemplate(&b, "lo.network.tpl", map[string]string{"Address": "10.0.0.1"}))
+	require.Equal(t, "custom 10.0.0.1\n", b.String())
+	require.NotNil(t, tpl.Lookup("vxlan.netdev.tpl"), "templates that are not overridden stay")
+}
+
 func TestCustomInterfacesTemplate(t *testing.T) {
 	c := readConf(t, "test_data/dev/conf.yaml")
 	tpl := InterfacesTemplate("test_data/dev/customtpl/interfaces.tpl")

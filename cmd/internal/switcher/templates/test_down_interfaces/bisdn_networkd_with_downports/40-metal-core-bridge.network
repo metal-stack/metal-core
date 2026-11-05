@@ -1,0 +1,13 @@
+[Match]
+Name=bridge
+
+[Network]
+VLAN=vlan966
+VLAN=vlan2
+LinkLocalAddressing=no
+
+[BridgeVLAN]
+VLAN=966
+
+[BridgeVLAN]
+VLAN=2

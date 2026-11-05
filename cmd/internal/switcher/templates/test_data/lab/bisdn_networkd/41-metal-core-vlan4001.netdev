@@ -1,0 +1,7 @@
+[NetDev]
+Name=vlan4001
+Kind=vlan
+MTUBytes=9000
+
+[VLAN]
+Id=4001

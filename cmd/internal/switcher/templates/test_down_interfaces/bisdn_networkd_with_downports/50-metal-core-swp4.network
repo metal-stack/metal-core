@@ -1,0 +1,10 @@
+[Match]
+Name=swp4
+
+[Link]
+MTUBytes=9000
+
+[Network]
+VRF=Vrf1
+LinkLocalAddressing=ipv6
+IPv6AcceptRA=no

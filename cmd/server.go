@@ -33,7 +33,12 @@ import (
 	"go.yaml.in/yaml/v4"
 )
 
-const phonedHomeInterval = time.Minute
+const (
+	phonedHomeInterval = time.Minute
+	// lldpSendInterval matches the tx interval metal-stack configures on
+	// SONiC (10s); metal-hammer waits about twice that for neighbors.
+	lldpSendInterval = 10 * time.Second
+)
 
 func Run() {
 	cfg := &Config{}
@@ -80,7 +85,8 @@ func Run() {
 		},
 	})
 
-	nos, err := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile, sonic.InterfaceNamingSchema(cfg.InterfaceNamingSchema))
+	mgmtInterface := switcher.ManagementInterface(cfg.ManagementInterface)
+	nos, err := switcher.NewNOS(log, cfg.FrrTplFile, cfg.InterfacesTplFile, sonic.InterfaceNamingSchema(cfg.InterfaceNamingSchema), mgmtInterface)
 	if err != nil {
 		log.Error("failed to create NOS instance", "error", err)
 		os.Exit(1)
@@ -104,6 +110,7 @@ func Run() {
 		RoomID:                cfg.RoomID,
 		ReconfigureSwitch:     cfg.ReconfigureSwitch,
 		ManagementGateway:     cfg.ManagementGateway,
+		ManagementInterface:   mgmtInterface,
 		AdditionalMgmtRoutes:  cfg.AdditionalMgmtRoutes,
 		AdditionalBridgePorts: cfg.AdditionalBridgePorts,
 		AdditionalBridgeVIDs:  cfg.AdditionalBridgeVIDs,
@@ -133,6 +140,11 @@ func Run() {
 	wg.Go(func() {
 		c.ConstantlyPhoneHome(ctx, phonedHomeInterval)
 	})
+	if cfg.LLDPSend {
+		wg.Go(func() {
+			c.ConstantlySendLLDP(ctx, lldpSendInterval)
+		})
+	}
 
 	metricsAddr := fmt.Sprintf("%v:%d", cfg.MetricsServerBindAddress, cfg.MetricsServerPort)
 
