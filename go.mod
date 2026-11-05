@@ -18,7 +18,6 @@ require (
 	github.com/valkey-io/valkey-go v1.0.74
 	github.com/vishvananda/netlink v1.3.1
 	go.yaml.in/yaml/v4 v4.0.0-rc.6
-	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
 	golang.org/x/text v0.41.0
 	google.golang.org/protobuf v1.36.12
 )

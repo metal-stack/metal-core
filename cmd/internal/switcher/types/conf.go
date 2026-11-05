@@ -1,101 +1,30 @@
 package types
 
 import (
-	"fmt"
-	"net/netip"
-	"strings"
-
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
-	"github.com/metal-stack/metal-lib/pkg/pointer"
-	"go4.org/netipx"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 // FillVLANIDs fills the given configuration object with switch-local VLAN IDs
 // if they are present in the given VLAN-Mapping
 // otherwise: new available VLAN IDs will be used
 func (c *Conf) FillVLANIDs(m vlan.Mapping) error {
-	// outer_loop:
-	// for _, t := range c.Ports.Vrfs {
-	// 	for vl, vni := range m {
-	// 		if vni == t.VNI {
-	// 			t.VLANID = vl
-	// 			continue outer_loop
-	// 		}
-	// 	}
-	// 	vlanids, err := m.ReserveVlanIDs(1)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	vl := vlanids[0]
-	// 	t.VLANID = vl
-	// 	m[vl] = t.VNI
-	// }
-	return nil
-}
-
-func (c *Conf) FillRouteMapsAndIPPrefixLists() error {
-	// for port, f := range c.Ports.Firewalls {
-	// 	f.Assemble("fw-"+port, f.Vnis, f.Cidrs)
-	// }
-	// for vrf, t := range c.Ports.Vrfs {
-	// 	var err error
-	// 	t.Cidrs, err = compactCidrs(t.Cidrs)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-
-	// 	cidrsByAf := cidrsByAddressfamily(t.Cidrs)
-	// 	t.Has4 = len(cidrsByAf.ipv4Cidrs) > 0
-	// 	t.Has6 = len(cidrsByAf.ipv6Cidrs) > 0
-	// 	t.Assemble(vrf, []string{}, t.Cidrs)
-	// }
-	return nil
-}
-func compactCidrs(cidrs []string) ([]string, error) {
-	var (
-		compacted    []string
-		ipsetBuilder netipx.IPSetBuilder
-	)
-
-	for _, cidr := range cidrs {
-		parsed, err := netip.ParsePrefix(cidr)
+outer_loop:
+	for _, t := range c.Vrfs {
+		for vl, vni := range m {
+			if vni == t.VNI {
+				t.VLANID = vl
+				continue outer_loop
+			}
+		}
+		vlanids, err := m.ReserveVlanIDs(1)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		ipsetBuilder.AddPrefix(parsed)
+		vl := vlanids[0]
+		t.VLANID = vl
+		m[vl] = t.VNI
 	}
-	set, err := ipsetBuilder.IPSet()
-	if err != nil {
-		return nil, fmt.Errorf("unable to create ipset:%w", err)
-	}
-	for _, pfx := range set.Prefixes() {
-		compacted = append(compacted, pfx.String())
-	}
-
-	return compacted, nil
-}
-
-func (c *Conf) CapitalizeVrfName() {
-	var (
-		caser                = cases.Title(language.English)
-		unnumberedInterfaces []*Interface
-	)
-
-	for _, intf := range c.FRRConfig.UnnumberedInterfaces {
-		if strings.HasPrefix(pointer.SafeDeref(intf.Vrf), "vrf") {
-			intf.Vrf = new(caser.String(pointer.SafeDeref(intf.Vrf)))
-		}
-		unnumberedInterfaces = append(unnumberedInterfaces, intf)
-	}
-	c.FRRConfig.UnnumberedInterfaces = unnumberedInterfaces
-
-	for _, bgp := range c.FRRConfig.BGP {
-		if strings.HasPrefix(pointer.SafeDeref(bgp.Vrf), "vrf") {
-			bgp.Vrf = new(caser.String(pointer.SafeDeref(bgp.Vrf)))
-		}
-	}
+	return nil
 }
 
 func (c *Conf) NewWithoutDownPorts() *Conf {

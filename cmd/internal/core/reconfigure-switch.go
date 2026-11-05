@@ -134,19 +134,12 @@ func (c *Core) reconfigureSwitch(ctx context.Context, hostname string) (*apiv2.S
 }
 
 func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
-	const (
-		defaultVRF        = "default"
-		peerGroupFabric   = "FABRIC"
-		peerGroupFirewall = "FIREWALL"
-		peerGroupMachine  = "MACHINE"
-	)
-
 	var (
 		err                  error
 		vrfs                 []string
 		unnumberedInterfaces []*types.Interface
 		bgps                 []*types.BGP
-		routeMaps            []*types.RouteMap
+		routeMaps            = c.nos.DefaultRouteMaps()
 		prefixLists          []*types.IPPrefixList
 	)
 
@@ -178,16 +171,42 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 			continue
 		}
 
+		port := types.Port{
+			Name: nic.Name,
+			MTU:  9000,
+		}
+
+		// TODO: discuss if it should be allowed to set `admin_status: down` for spine uplinks
+		adminStatus := pointer.SafeDeref(pointer.SafeDeref(nic.State).Desired)
+		switch adminStatus {
+		case apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN:
+			port.AdminStatus = types.PortStatusDown
+		case apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_UP:
+			port.AdminStatus = types.PortStatusUp
+		default:
+			// noop
+		}
+
 		unnumberedInterface := getUnnumberedInterface(nic.Name, c.nos.GetVRF(nic), c.spineUplinks)
 		if unnumberedInterface == nil {
-			// FIXME: this is an unprovisioned port then; treat accordingly
+			port.VLAN = new(fmt.Sprintf("Vlan%d", c.pxeVlanID))
+			switcherConfig.Ports = append(switcherConfig.Ports, port)
 			continue
 		}
 		unnumberedInterfaces = append(unnumberedInterfaces, unnumberedInterface)
 
-		vrfs, err = addVRF(unnumberedInterface.Vrf, vrfs)
+		switch {
+		case unnumberedInterface.Vrf == nil, pointer.SafeDeref(unnumberedInterface.Vrf) == "default":
+			port.MTU = 9216
+		default:
+			port.VRF = unnumberedInterface.Vrf
+		}
+		switcherConfig.Ports = append(switcherConfig.Ports, port)
+
+		vrfs = addVRFtoFRRConfig(unnumberedInterface.Vrf, vrfs)
+		switcherConfig.Vrfs, err = addVRF(unnumberedInterface.Vrf, switcherConfig.Vrfs)
 		if err != nil {
-			return nil, fmt.Errorf("failed to add l3vni of port %s: %w", nic.Name, err)
+			return nil, fmt.Errorf("failed to add vrf of port %s: %w", nic.Name, err)
 		}
 
 		bgp, found := lo.Find(bgps, func(b *types.BGP) bool {
@@ -201,7 +220,7 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		}
 
 		if bgp.Vrf == nil {
-			addUnderlayBGPPort(unnumberedInterface, bgp, c.spineUplinks)
+			addUnderlayBGPPort(unnumberedInterface, bgp, c.spineUplinks, c.nos.DefaultRouteMaps()[0].Name)
 		} else {
 			err := addMachineBGPPort(*unnumberedInterface, nic.BgpFilter, bgp)
 			if err != nil {
@@ -239,22 +258,6 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 			routeMaps = append(routeMaps, rms...)
 		}
 
-		// port := &types.Port{
-		// 	Vrf: nic.Vrf,
-		// 	MTU: 9000,
-		// }
-
-		// // TODO: discuss if it should be allowed to set `admin_status: down` for spine uplinks
-		// adminStatus := pointer.SafeDeref(pointer.SafeDeref(nic.State).Desired)
-		// switch adminStatus {
-		// case apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN:
-		// 	port.AdminStatus = types.PortStatusDown
-		// case apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_UP:
-		// 	port.AdminStatus = types.PortStatusUp
-		// default:
-		// 	// noop
-		// }
-
 		// switch {
 		// case pointer.SafeDeref(port.Vrf) == defaultVRF:
 		// 	port.MTU = 9216
@@ -273,68 +276,6 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		// 	switcherConfig.Ports[nic.Name] = port
 		// 	continue
 		// }
-
-		// if nic.BgpFilter != nil {
-		// 	port.Cidrs = nic.BgpFilter.Cidrs
-		// 	port.Vnis = nic.BgpFilter.Vnis
-		// }
-
-		// vrf := pointer.SafeDeref(port.Vrf)
-		// session, ok := switcherConfig.BGPSessions[vrf]
-		// if !ok {
-		// 	has4, has6, err := port.HasAddressFamilies()
-		// 	if err != nil {
-		// 		return nil, fmt.Errorf("failed to check address families for port %s: %w", nic.Name, err)
-		// 	}
-
-		// 	session = &types.BGPSession{
-		// 		Vrf: &types.Vrf{
-		// 			Has4: has4,
-		// 			Has6: has6,
-		// 		},
-		// 		PeerGroups: types.PeerGroups{},
-		// 	}
-		// }
-
-		// pgName := pointer.SafeDeref(port.PeerGroup)
-		// peerGroup, ok := session.PeerGroups[pgName]
-		// if !ok {
-		// 	peerGroup = &types.PeerGroup{}
-		// }
-
-		// peerGroup.Neighbors = append(peerGroup.Neighbors, fmt.Sprintf("%s interface", nic.Name))
-		// if vrf == defaultVRF && peerGroup.Commands == nil {
-		// 	commands := &types.Commands{
-		// 		Global: []string{
-		// 			"remote-as external",
-		// 			"timers 2 8",
-		// 		},
-		// 		EVPN: []string{
-		// 			"activate",
-		// 			"allowas-in 2",
-		// 		},
-		// 	}
-
-		// 	if pgName == "FIREWALL" {
-		// 		if session.Vrf != nil && session.Vrf.Has4 {
-		// 			commands.IPv4 = []string{
-		// 				"allowas-in 2",
-		// 			}
-		// 		}
-		// 		if session.Vrf != nil && session.Vrf.Has6 {
-		// 			commands.IPv6 = []string{
-		// 				"activate",
-		// 				"allowas-in 2",
-		// 			}
-		// 		}
-		// 	}
-
-		// 	peerGroup.Commands = commands
-		// }
-
-		// session.PeerGroups[pgName] = peerGroup
-		// switcherConfig.BGPSessions[vrf] = session
-		// switcherConfig.Ports[nic.Name] = port
 	}
 
 	slices.SortFunc(bgps, func(a, b *types.BGP) int {
@@ -347,11 +288,6 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		BGP:                  bgps,
 		RouteMaps:            routeMaps,
 		PrefixLists:          prefixLists,
-	}
-
-	err = switcherConfig.FillRouteMapsAndIPPrefixLists()
-	if err != nil {
-		return nil, err
 	}
 
 	m, err := vlan.ReadMapping()
@@ -390,16 +326,40 @@ func getUnnumberedInterface(nicName string, vrf *string, underlayPorts []string)
 	}
 }
 
-func addVRF(vrf *string, vrfs []string) ([]string, error) {
+func addVRFtoFRRConfig(vrf *string, vrfs []string) []string {
+	if vrf == nil {
+		return vrfs
+	}
+	if pointer.SafeDeref(vrf) == "default" {
+		return vrfs
+	}
+	if slices.Contains(vrfs, pointer.SafeDeref(vrf)) {
+		return vrfs
+	}
+	return append(vrfs, pointer.SafeDeref(vrf))
+}
+
+func addVRF(vrf *string, vrfs []*types.Vrf) ([]*types.Vrf, error) {
 	if vrf == nil {
 		return vrfs, nil
 	}
-
 	if pointer.SafeDeref(vrf) == "default" {
 		return vrfs, nil
 	}
 
-	vrfs = append(vrfs, pointer.SafeDeref(vrf))
+	vni, err := strconv.ParseUint(pointer.SafeDeref(vrf)[3:], 10, 32)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse vni of vrf %s: %w", pointer.SafeDeref(vrf), err)
+	}
+
+	if !slices.ContainsFunc(vrfs, func(v *types.Vrf) bool {
+		return v.VNI == uint32(vni)
+	}) {
+		vrfs = append(vrfs, &types.Vrf{
+			Name: pointer.SafeDeref(vrf),
+			VNI:  uint32(vni),
+		})
+	}
 
 	return vrfs, nil
 }
@@ -420,8 +380,9 @@ func getPeerGroups(groups []string) []types.PeerGroup {
 	return peerGroups
 }
 
-func addUnderlayBGPPort(intf *types.Interface, bgp *types.BGP, underlayPorts []string) {
+func addUnderlayBGPPort(intf *types.Interface, bgp *types.BGP, underlayPorts []string, routeMap string) {
 	if bgp.PeerGroups == nil {
+		// FIXME: use constants for peer group names
 		bgp.PeerGroups = getPeerGroups([]string{"FABRIC", "FIREWALL"})
 	}
 
@@ -440,8 +401,8 @@ func addUnderlayBGPPort(intf *types.Interface, bgp *types.BGP, underlayPorts []s
 	if bgp.AddressFamilies.IPv4Unicast == nil {
 		bgp.AddressFamilies.IPv4Unicast = &types.BGPAddressFamily{
 			GlobalStatements: []string{
-				"redistribute connected route-map DENY_MGMT",
-				"redistribute kernel route-map DENY_MGMT",
+				fmt.Sprintf("redistribute connected route-map %s", routeMap),
+				fmt.Sprintf("redistribute kernel route-map %s", routeMap),
 			},
 			Neighbors: []types.AdressFamilyNeighbor{
 				{
@@ -455,8 +416,8 @@ func addUnderlayBGPPort(intf *types.Interface, bgp *types.BGP, underlayPorts []s
 	if bgp.AddressFamilies.IPv6Unicast == nil {
 		bgp.AddressFamilies.IPv6Unicast = &types.BGPAddressFamily{
 			GlobalStatements: []string{
-				"redistribute connected route-map DENY_MGMT",
-				`redistribute kernel route-map DENY_MGMT`,
+				fmt.Sprintf("redistribute connected route-map %s", routeMap),
+				fmt.Sprintf("redistribute kernel route-map %s", routeMap),
 			},
 			Neighbors: []types.AdressFamilyNeighbor{
 				{

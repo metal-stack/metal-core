@@ -181,6 +181,7 @@ var (
 		AdditionalMgmtRoutes: testcoreAdditionalMgmtRoutes,
 		PXEVlanID:            testcorePXEVLAN,
 		SetSrcLoopback:       testcoreSetSrcLoopback,
+		FRRConfig:            &types.FRRConfig{},
 	}
 
 	leaf01PreviousConfigDB = test.StringMap{
@@ -365,10 +366,10 @@ var (
 			"suppress": "on",
 		},
 		"VLAN_INTERFACE|Vlan1001": map[string]string{
-			"vrf_name": "Vrf100",
+			"vrf_name": "Vrf200",
 		},
 		"VLAN_INTERFACE|Vlan1002": map[string]string{
-			"vrf_name": "Vrf200",
+			"vrf_name": "Vrf100",
 		},
 		"VLAN_MEMBER|Vlan4000|Ethernet0": map[string]string{
 			"tagging_mode": "untagged",
@@ -399,12 +400,12 @@ var (
 			"fallback": "false",
 			"vni":      "200",
 		},
-		"VXLAN_TUNNEL_MAP|vtep|map_100_Vlan1001": map[string]string{
-			"vlan": "Vlan1001",
+		"VXLAN_TUNNEL_MAP|vtep|map_100_Vlan1002": map[string]string{
+			"vlan": "Vlan1002",
 			"vni":  "100",
 		},
-		"VXLAN_TUNNEL_MAP|vtep|map_200_Vlan1002": map[string]string{
-			"vlan": "Vlan1002",
+		"VXLAN_TUNNEL_MAP|vtep|map_200_Vlan1001": map[string]string{
+			"vlan": "Vlan1001",
 			"vni":  "200",
 		},
 		"VXLAN_TUNNEL|vtep": map[string]string{
@@ -412,11 +413,6 @@ var (
 		},
 	}
 )
-
-func injectStaticVrfVlanMapping(conf *types.Conf, mapping map[string]uint16) {
-	// for vrf, vlan := range mapping {
-	// }
-}
 
 func injectMgmtGateway(conf *types.Conf, gw string) {
 	conf.Eth0.Gateway = gw

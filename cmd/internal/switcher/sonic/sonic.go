@@ -116,6 +116,22 @@ func (s *Sonic) GetVRF(nic *apiv2.SwitchNic) *string {
 	return new(caser.String(pointer.SafeDeref(nic.Vrf)))
 }
 
+func (s *Sonic) DefaultRouteMaps() []*types.RouteMap {
+	return []*types.RouteMap{
+		{
+			Name:    "DENY_MGMT",
+			Entries: []string{"match interface eth0"},
+			Policy:  types.PolicyDeny,
+			Order:   10,
+		},
+		{
+			Name:   "DENY_MGMT",
+			Policy: types.PolicyPermit,
+			Order:  20,
+		},
+	}
+}
+
 func (s *Sonic) GetSwitchPorts(ctx context.Context) ([]*net.Interface, error) {
 	ports, err := s.getPortsConfig(ctx)
 	if err != nil {

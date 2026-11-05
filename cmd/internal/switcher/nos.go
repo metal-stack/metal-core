@@ -23,6 +23,7 @@ type NOS interface {
 	GetOS() (*apiv2.SwitchOS, error)
 	GetSwitchPorts(ctx context.Context) ([]*net.Interface, error)
 	GetManagement() (ip, user string, err error)
+	DefaultRouteMaps() []*types.RouteMap
 }
 
 func NewNOS(log *slog.Logger, frrTplFile, interfacesTplFile string, interfaceNamingSchema sonic.InterfaceNamingSchema) (NOS, error) {

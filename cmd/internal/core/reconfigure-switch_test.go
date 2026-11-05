@@ -8,7 +8,6 @@ import (
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/require"
 	"github.com/valkey-io/valkey-go"
 
@@ -74,6 +73,10 @@ func TestBuildSwitcherConfig(t *testing.T) {
 				},
 			},
 			{
+				Name: "Ethernet5",
+				Vrf:  new("vrf200"),
+			},
+			{
 				Name: "Ethernet24",
 			},
 			{
@@ -96,11 +99,62 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		Name:                 s.Id,
 		AdditionalMgmtRoutes: []string{"100.1.1.0/24"},
 		PXEVlanID:            4000,
-		// FIXME: vrfs and ports missing
+		Ports: []types.Port{
+			{
+				Name:        "Ethernet0",
+				AdminStatus: types.PortStatusDown,
+				VLAN:        new("Vlan4000"),
+				MTU:         9000,
+			},
+			{
+				Name:        "Ethernet1",
+				AdminStatus: types.PortStatusUp,
+				VRF:         new("Vrf104001"),
+				MTU:         9000,
+			},
+			{
+				Name: "Ethernet2",
+				MTU:  9216,
+			},
+			{
+				Name: "Ethernet3",
+				MTU:  9000,
+				VLAN: new("Vlan4000"),
+			},
+			{
+				Name: "Ethernet4",
+				VRF:  new("Vrf200"),
+				MTU:  9000,
+			},
+			{
+				Name: "Ethernet5",
+				VRF:  new("Vrf200"),
+				MTU:  9000,
+			},
+			{
+				Name: "Ethernet120",
+				MTU:  9216,
+			},
+			{
+				Name: "Ethernet124",
+				MTU:  9216,
+			},
+		},
+		Vrfs: []*types.Vrf{
+			{
+				Name:   "Vrf104001",
+				VNI:    104001,
+				VLANID: 1001,
+			},
+			{
+				Name:   "Vrf200",
+				VNI:    200,
+				VLANID: 1002,
+			},
+		},
 		FRRConfig: &types.FRRConfig{
 			VRFs: []string{"Vrf104001", "Vrf200"},
 			UnnumberedInterfaces: []*types.Interface{
-				// FIXME: add multiple neighbors to each vrf
 				{
 					Name: "Ethernet1",
 					Vrf:  new("Vrf104001"),
@@ -110,6 +164,10 @@ func TestBuildSwitcherConfig(t *testing.T) {
 				},
 				{
 					Name: "Ethernet4",
+					Vrf:  new("Vrf200"),
+				},
+				{
+					Name: "Ethernet5",
 					Vrf:  new("Vrf200"),
 				},
 				{
@@ -258,6 +316,10 @@ func TestBuildSwitcherConfig(t *testing.T) {
 							Name:      "Ethernet4 interface",
 							PeerGroup: new("MACHINE"),
 						},
+						{
+							Name:      "Ethernet5 interface",
+							PeerGroup: new("MACHINE"),
+						},
 					},
 					AddressFamilies: types.BGPAddressFamilies{
 						IPv4Unicast: &types.BGPAddressFamily{
@@ -294,6 +356,17 @@ func TestBuildSwitcherConfig(t *testing.T) {
 				},
 			},
 			RouteMaps: []*types.RouteMap{
+				{
+					Name:    "DENY_MGMT",
+					Entries: []string{"match interface eth0"},
+					Policy:  types.PolicyDeny,
+					Order:   10,
+				},
+				{
+					Name:   "DENY_MGMT",
+					Policy: types.PolicyPermit,
+					Order:  20,
+				},
 				{
 					Name:    "Vrf104001-in",
 					Entries: []string{"match ip address prefix-list Vrf104001-in-prefixes"},
@@ -356,8 +429,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		},
 	}
 
-	// VLANID is ignored because it is reserved dynamically and the order in which the map is iterated matters so the test becomes flaky.
-	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(types.Vrf{}, "VLANID")); diff != "" {
+	if diff := cmp.Diff(expected, actual); diff != "" {
 		t.Errorf("TestBuildSwitcherConfig() diff = %s", diff)
 	}
 }
@@ -422,10 +494,6 @@ func TestSonicConfig(t *testing.T) {
 	switcherCfg, err := core.buildSwitcherConfig(leaf01)
 	require.NoError(t, err)
 
-	injectStaticVrfVlanMapping(switcherCfg, map[string]uint16{
-		"Vrf100": 1001,
-		"Vrf200": 1002,
-	})
 	injectMgmtGateway(switcherCfg, core.managementGateway)
 
 	err = redisApplier.Apply(t.Context(), switcherCfg)
@@ -458,10 +526,6 @@ func TestCumulusConfig(t *testing.T) {
 	switcherCfg, err := core.buildSwitcherConfig(leaf02)
 	require.NoError(t, err)
 
-	injectStaticVrfVlanMapping(switcherCfg, map[string]uint16{
-		"vrf100": 1001,
-		"vrf200": 1002,
-	})
 	injectMgmtGateway(switcherCfg, core.managementGateway)
 
 	tpl := templates.InterfacesTemplate("")

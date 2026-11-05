@@ -104,6 +104,17 @@ func (c *Cumulus) GetVRF(nic *apiv2.SwitchNic) *string {
 	return nic.Vrf
 }
 
+func (c *Cumulus) DefaultRouteMaps() []*types.RouteMap {
+	return []*types.RouteMap{
+		{
+			Name:    "LOOPBACKS",
+			Entries: []string{"match interface lo"},
+			Policy:  types.PolicyPermit,
+			Order:   10,
+		},
+	}
+}
+
 func (c *Cumulus) GetOS() (*apiv2.SwitchOS, error) {
 	version := "unknown"
 	lsbReleaseBytes, err := os.ReadFile("/etc/lsb-release")

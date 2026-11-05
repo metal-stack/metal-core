@@ -10,13 +10,28 @@ type (
 		LogLevel             string
 		Loopback             string
 		ASN                  uint32
+		Ports                []Port
+		Vrfs                 []*Vrf
 		FRRConfig            *FRRConfig
-		Vrfs                 []Vrf
 		MetalCoreCIDR        string
 		AdditionalMgmtRoutes []string
 		Eth0                 MgmtInterface
 		PXEVlanID            uint16
 		SetSrcLoopback       bool
+	}
+
+	Port struct {
+		Name        string
+		AdminStatus PortStatus
+		VLAN        *string
+		VRF         *string
+		MTU         uint
+	}
+
+	Vrf struct {
+		Name   string
+		VNI    uint32
+		VLANID uint16
 	}
 
 	FRRConfig struct {
@@ -61,11 +76,6 @@ type (
 		Commands    []string
 		RouteMapIn  string
 		RouteMapOut string
-	}
-
-	Vrf struct {
-		VNI    uint32
-		VLANID uint16
 	}
 
 	PeerGroup struct {
