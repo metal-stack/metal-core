@@ -16,8 +16,9 @@ import (
 )
 
 // TestLabApply applies the switch config in BISDN_LAB_CONF to the running
-// system, as metal-core's reconfigure loop does. bsidn-test's conformance lab builds it
-// with go test -c -tags lab and runs it in its BISDN Linux leaves.
+// system, as metal-core's reconfigure loop does. The NOS conformance lab of
+// metal-stack/conformance (test/nos) builds it with go test -c -tags lab and
+// runs it in its BISDN Linux leaves.
 func TestLabApply(t *testing.T) {
 	path := os.Getenv("BISDN_LAB_CONF")
 	if path == "" {
