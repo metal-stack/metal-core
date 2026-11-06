@@ -20,6 +20,16 @@ iface mgmt
     address 127.0.0.1/8
     vrf-table auto
 
+auto swp1
+iface swp1
+    mtu 9000
+    bridge-access 966
+
+auto swp2
+iface swp2
+    mtu 9000
+    bridge-access 966
+
 auto swp31
 iface swp31
     mtu 9216
@@ -33,8 +43,6 @@ iface bridge
     bridge-ports vni100966 swp1 swp2
     bridge-vids 966
     bridge-vlan-aware yes
-
-# Tenants
 
 # PXE-Config
 auto vlan966
@@ -53,13 +61,3 @@ iface vni100966
     mstpctl-portbpdufilter yes
     vxlan-id 100966
     vxlan-local-tunnelip 10.0.0.10
-
-auto swp1
-iface swp1
-    mtu 9000
-    bridge-access 966
-
-auto swp2
-iface swp2
-    mtu 9000
-    bridge-access 966

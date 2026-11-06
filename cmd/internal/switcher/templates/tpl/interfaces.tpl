@@ -22,7 +22,6 @@ auto mgmt
 iface mgmt
     address 127.0.0.1/8
     vrf-table auto
-
 {{- range .Ports }}
 
 auto {{ .Name }}

@@ -4,19 +4,44 @@ loglevel: debugging
 loopback: 10.0.0.10
 asn: 4200000010
 metalcorecidr: 10.255.255.2/24
+pxevlanid: 966
+ports:
+  - name: swp1
+    vrf: vrf104001
+    mtu: 9000
+  - name: swp2
+    vrf: vrf104001
+    mtu: 9000
+  - name: swp3
+    mtu: 9216
+  - name: swp4
+    mtu: 9000
+    vlan: Vlan966
+  - name: swp5
+    mtu: 9000
+    vlan: Vlan966
+  - name: swp31
+    mtu: 9216
+  - name: swp32
+    mtu: 9216
+vrfs:
+  - name: vrf104001
+    vni: 104001
+    vlanid: 1001
 eth0:
+  addresscidr: 192.168.0.11
   gateway: 192.168.0.254
 frrconfig:
   vrfs:
     - vrf104001
   unnumberedinterfaces:
-    - name: swp31
-    - name: swp32
-    - name: swp3
     - name: swp1
       vrf: vrf104001
     - name: swp2
       vrf: vrf104001
+    - name: swp3
+    - name: swp31
+    - name: swp32
   bgp:
     - peergroups:
         - name: FABRIC

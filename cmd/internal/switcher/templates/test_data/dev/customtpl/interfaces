@@ -20,30 +20,6 @@ iface mgmt
     address 127.0.0.1/8
     vrf-table auto
 
-auto swp31
-iface swp31
-    mtu 9216
-
-auto swp32
-iface swp32
-    mtu 9216
-
-auto swp3
-iface swp3
-    mtu 9216
-
-auto bridge
-iface bridge
-    bridge-ports vni104000 swp4 swp5 swp7 swp8 vni104001
-    bridge-vids 4000 4001 201-256 301-356
-    bridge-vlan-aware yes
-
-# Tenants
-
-auto vrf104001
-iface vrf104001
-    vrf-table auto
-
 auto swp1
 iface swp1
     mtu 9000
@@ -56,17 +32,49 @@ iface swp2
     post-up sysctl -w net.ipv6.conf.swp2.disable_ipv6=0
     vrf vrf104001
 
-auto vlan4001
-iface vlan4001
+auto swp3
+iface swp3
+    mtu 9216
+
+auto swp4
+iface swp4
     mtu 9000
-    vlan-id 4001
+    bridge-access 4000
+
+auto swp5
+iface swp5
+    mtu 9000
+    bridge-access 4000
+
+auto swp31
+iface swp31
+    mtu 9216
+
+auto swp32
+iface swp32
+    mtu 9216
+
+auto bridge
+iface bridge
+    bridge-ports vni104000 swp4 swp5 vni104001
+    bridge-vids 4000 1001
+    bridge-vlan-aware yes
+
+auto vrf104001
+iface vrf104001
+    vrf-table auto
+
+auto vlan1001
+iface vlan1001
+    mtu 9000
+    vlan-id 1001
     vlan-raw-device bridge
     vrf vrf104001
 
 auto vni104001
 iface vni104001
     mtu 9000
-    bridge-access 4001
+    bridge-access 1001
     bridge-arp-nd-suppress on
     bridge-learning off
     mstpctl-bpduguard yes
@@ -91,13 +99,3 @@ iface vni104000
     mstpctl-portbpdufilter yes
     vxlan-id 104000
     vxlan-local-tunnelip 10.0.0.10
-
-auto swp4
-iface swp4
-    mtu 9000
-    bridge-access 4000
-
-auto swp5
-iface swp5
-    mtu 9000
-    bridge-access 4000

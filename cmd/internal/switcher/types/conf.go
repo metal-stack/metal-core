@@ -27,75 +27,15 @@ outer_loop:
 	return nil
 }
 
-func (c *Conf) NewWithoutDownPorts() *Conf {
-	// var (
-	// 	underlay      []string
-	// 	unprovisioned []string
-	// 	bladePorts    []string
-	// 	vrfs          = map[string]*Vrf{}
-	// 	firewalls     = map[string]*Firewall{}
-	// )
+func (c *Conf) NewWithoutDownPorts() {
+	var ports []Port
 
-	// ports := c.Ports
-	// for _, port := range c.UnderlayPorts {
-	// 	if ports.AdminStatus[port] != PortStatusDown {
-	// 		underlay = append(underlay, port)
-	// 	}
-	// }
+	for _, port := range c.Ports {
+		if port.AdminStatus == PortStatusDown {
+			continue
+		}
+		ports = append(ports, port)
+	}
 
-	// for _, port := range ports.Unprovisioned {
-	// 	if ports.AdminStatus[port] != PortStatusDown {
-	// 		unprovisioned = append(unprovisioned, port)
-	// 	}
-	// }
-
-	// for _, port := range ports.BladePorts {
-	// 	if ports.AdminStatus[port] != PortStatusDown {
-	// 		bladePorts = append(bladePorts, port)
-	// 	}
-	// }
-
-	// for name, vrf := range ports.Vrfs {
-	// 	newVrf := Vrf{
-	// 		Filter: vrf.Filter,
-	// 		VNI:    vrf.VNI,
-	// 		VLANID: vrf.VLANID,
-	// 		Cidrs:  vrf.Cidrs,
-	// 		Has4:   vrf.Has4,
-	// 		Has6:   vrf.Has6,
-	// 	}
-
-	// 	var neighbors []string
-	// 	for _, neigh := range vrf.Neighbors {
-	// 		if ports.AdminStatus[neigh] != PortStatusDown {
-	// 			neighbors = append(neighbors, neigh)
-	// 		}
-	// 	}
-	// 	newVrf.Neighbors = neighbors
-	// 	vrfs[name] = &newVrf
-	// }
-
-	// for name, fw := range ports.Firewalls {
-	// 	if ports.AdminStatus[fw.Port] == PortStatusDown {
-	// 		continue
-	// 	}
-	// 	firewalls[name] = &Firewall{
-	// 		Filter: fw.Filter,
-	// 		Port:   fw.Port,
-	// 		Cidrs:  fw.Cidrs,
-	// 		Vnis:   fw.Vnis,
-	// 	}
-	// }
-
-	newConf := *c
-	// newConf.Ports = Ports{
-	// 	Eth0:          c.Ports.Eth0,
-	// 	UnderlayPorts: underlay,
-	// 	Unprovisioned: unprovisioned,
-	// 	BladePorts:    bladePorts,
-	// 	Vrfs:          vrfs,
-	// 	Firewalls:     firewalls,
-	// 	AdminStatus:   c.Ports.AdminStatus,
-	// }
-	return &newConf
+	c.Ports = ports
 }

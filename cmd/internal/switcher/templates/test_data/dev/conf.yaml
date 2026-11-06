@@ -1,12 +1,36 @@
 ---
-# FIXME: why is this a yaml file and not simply a struct?
 name: leaf01
 loglevel: warnings
 loopback: 10.0.0.10
 setsrcloopback: true
 asn: 4200000010
 metalcorecidr: 10.255.255.2/24
+pxevlanid: 966
+ports:
+  - name: swp1
+    vrf: vrf104001
+    mtu: 9000
+  - name: swp2
+    vrf: vrf104001
+    mtu: 9000
+  - name: swp3
+    mtu: 9216
+  - name: swp4
+    mtu: 9000
+    vlan: Vlan966
+  - name: swp5
+    mtu: 9000
+    vlan: Vlan966
+  - name: swp31
+    mtu: 9216
+  - name: swp32
+    mtu: 9216
+vrfs:
+  - name: vrf104001
+    vni: 104001
+    vlanid: 1001
 eth0:
+  addresscidr: 192.168.101.12/24
   gateway: 192.168.101.1
 additionalmgmtroutes:
   - 10.100.0.0/16
@@ -15,13 +39,13 @@ frrconfig:
   vrfs:
     - vrf104001
   unnumberedinterfaces:
-    - name: swp31
-    - name: swp32
-    - name: swp3
     - name: swp1
       vrf: vrf104001
     - name: swp2
       vrf: vrf104001
+    - name: swp3
+    - name: swp31
+    - name: swp32
   bgp:
     - peergroups:
         - name: FABRIC

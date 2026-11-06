@@ -4,8 +4,21 @@ loglevel: warnings
 loopback: 10.0.0.10
 asn: 4200000010
 metalcorecidr: 10.255.255.2/24
+pxevlanid: 966
 eth0:
+  addresscidr: 192.168.0.11
   gateway: 192.168.0.254
+ports:
+  - name: swp1
+    mtu: 9000
+    vlan: Vlan966
+  - name: swp2
+    mtu: 9000
+    vlan: Vlan966
+  - name: swp31
+    mtu: 9216
+  - name: swp32
+    mtu: 9216
 frrconfig:
   unnumberedinterfaces:
     - name: swp31
