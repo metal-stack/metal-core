@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -42,7 +43,7 @@ const (
 	SchemeRedis = Scheme("redis")
 )
 
-func New(cfg *Config, scheme Scheme) (*DB, error) {
+func New(cfg *Config, log *slog.Logger, scheme Scheme) (*DB, error) {
 	applDB := cfg.Databases["APPL_DB"]
 	asicDB := cfg.Databases["ASIC_DB"]
 	configDB := cfg.Databases["CONFIG_DB"]
@@ -77,7 +78,7 @@ func New(cfg *Config, scheme Scheme) (*DB, error) {
 	db := &DB{
 		Appl:     newApplDB(applClient, applDB.Separator),
 		Asic:     newAsicDB(asicClient, asicDB.Separator),
-		Config:   newConfigDB(configClient, configDB.Separator),
+		Config:   newConfigDB(log, configClient, configDB.Separator),
 		Counters: newCountersDB(countersClient, countersDB.Separator),
 		State:    newStateDB(stateClient, stateDB.Separator),
 	}

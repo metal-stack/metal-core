@@ -216,7 +216,7 @@ func TestSonicConfig(t *testing.T) {
 	err = test.LoadData(t.Context(), vc, leaf01PreviousConfigDB, "|")
 	require.NoError(t, err)
 
-	database, err := db.New(dbcfg, db.SchemeRedis)
+	database, err := db.New(dbcfg, testcoreLog, db.SchemeRedis)
 	require.NoError(t, err)
 
 	redisApplier, err := redis.NewApplier(testcoreLog, database, quirks.NewTestQuirks())
