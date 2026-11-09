@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/valkey-io/valkey-go"
@@ -10,7 +11,8 @@ import (
 
 type (
 	ConfigDB struct {
-		c *Client
+		c   *Client
+		log *slog.Logger
 	}
 
 	Port struct {
@@ -49,9 +51,10 @@ const (
 	null                = "NULL"
 )
 
-func newConfigDB(rdb valkey.Client, sep string) *ConfigDB {
+func newConfigDB(log *slog.Logger, rdb valkey.Client, sep string) *ConfigDB {
 	return &ConfigDB{
-		c: NewClient(rdb, sep),
+		log: log,
+		c:   NewClient(rdb, sep),
 	}
 }
 
@@ -69,6 +72,7 @@ func (d *ConfigDB) MergeEntry(ctx context.Context, e Entry) error {
 
 	for field, value := range e.Val {
 		if v, ok := current[field]; !ok || v != value {
+			d.log.Debug("Updating entry", "key", e.Key, "previous", v, "value", e.Val)
 			if err := d.c.HSet(ctx, e.Key, e.Val); err != nil {
 				return err
 			}
@@ -80,6 +84,7 @@ func (d *ConfigDB) MergeEntry(ctx context.Context, e Entry) error {
 	// remain once the entry has real fields.
 	if _, hasNull := current[null]; hasNull {
 		if _, wantsNull := e.Val[null]; !wantsNull {
+			d.log.Debug("Deleting entry", "key", e.Key, "previous", e.Val)
 			return d.c.HDel(ctx, e.Key, null)
 		}
 	}
@@ -101,6 +106,7 @@ func (d *ConfigDB) EnsureExactEntry(ctx context.Context, e Entry) error {
 
 	for field, value := range desired {
 		if v, ok := current[field]; !ok || v != value {
+			d.log.Debug("Updating entry", "key", e.Key, "previous", v, "value", desired)
 			if err := d.c.HSet(ctx, e.Key, desired); err != nil {
 				return err
 			}
@@ -109,8 +115,9 @@ func (d *ConfigDB) EnsureExactEntry(ctx context.Context, e Entry) error {
 	}
 
 	var stale []string
-	for field := range current {
+	for field, value := range current {
 		if _, ok := desired[field]; !ok {
+			d.log.Debug("Deleting stale field", "key", field, "previous", value)
 			stale = append(stale, field)
 		}
 	}
@@ -123,6 +130,7 @@ func (d *ConfigDB) DeleteEntry(ctx context.Context, key Key) (bool, error) {
 	if err != nil || !exists {
 		return false, err
 	}
+	d.log.Debug("Deleted Entry", "key", key)
 	return true, d.c.Del(ctx, key)
 }
 

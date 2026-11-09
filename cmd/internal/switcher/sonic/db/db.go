@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
@@ -35,7 +36,7 @@ type (
 	}
 )
 
-func New(cfg *Config) (*DB, error) {
+func New(cfg *Config, log *slog.Logger) (*DB, error) {
 	applDB := cfg.Databases["APPL_DB"]
 	asicDB := cfg.Databases["ASIC_DB"]
 	configDB := cfg.Databases["CONFIG_DB"]
@@ -70,7 +71,7 @@ func New(cfg *Config) (*DB, error) {
 	db := &DB{
 		Appl:     newApplDB(applClient, applDB.Separator),
 		Asic:     newAsicDB(asicClient, asicDB.Separator),
-		Config:   newConfigDB(configClient, configDB.Separator),
+		Config:   newConfigDB(log, configClient, configDB.Separator),
 		Counters: newCountersDB(countersClient, countersDB.Separator),
 		State:    newStateDB(stateClient, stateDB.Separator),
 	}

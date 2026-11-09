@@ -1,6 +1,7 @@
 package db
 
 import (
+	"log/slog"
 	"slices"
 	"strings"
 	"testing"
@@ -187,7 +188,8 @@ func TestConfigDB_MergeEntry(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			err = d.MergeEntry(ctx, tt.entry)
 			require.NoError(t, err)
@@ -282,6 +284,7 @@ func TestConfigDB_EnsureExactEntry(t *testing.T) {
 			}
 
 			d := &ConfigDB{
+				log: slog.Default(),
 				c: &Client{
 					rdb: vc,
 					sep: sep,
@@ -346,7 +349,8 @@ func TestConfigDB_DeleteEntry(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			deleted, err := d.DeleteEntry(ctx, tt.key)
 			require.NoError(t, err)
@@ -415,7 +419,8 @@ func TestConfigDB_DeleteVlanMember(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			err = d.DeleteVlanMember(ctx, tt.interfaceName, tt.vlan)
 			require.NoError(t, err)
@@ -466,7 +471,8 @@ func TestConfigDB_GetVlanMembership(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			got, err := d.GetVlanMembership(ctx, tt.interfaceName)
 			require.NoError(t, err)
@@ -548,7 +554,8 @@ func TestConfigDB_SetVlanMember(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			err = d.SetVlanMember(ctx, tt.interfaceName, tt.vlan)
 			require.NoError(t, err)
@@ -591,7 +598,8 @@ func TestConfigDB_GetVrfs(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			got, err := d.GetVrfs(ctx)
 			slices.Sort(got)
@@ -664,7 +672,8 @@ func TestConfigDB_SetVrfMember(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			err = d.SetVrfMember(ctx, tt.interfaceName, tt.vrf)
 			require.NoError(t, err)
@@ -715,7 +724,8 @@ func TestConfigDB_GetVrfMembership(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			got, err := d.GetVrfMembership(ctx, tt.interfaceName)
 			require.NoError(t, err)
@@ -766,7 +776,8 @@ func TestConfigDB_FindVxlanTunnelMapByVni(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			got, err := d.FindVxlanTunnelMapByVni(ctx, tt.vni)
 			require.NoError(t, err)
@@ -806,7 +817,8 @@ func TestConfigDB_GetVTEPName(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			got, err := d.GetVTEPName(ctx)
 			require.NoError(t, err)
@@ -861,7 +873,8 @@ func TestConfigDB_DeleteInterfaceConfiguration(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			err = d.DeleteInterfaceConfiguration(ctx, tt.interfaceName)
 			require.NoError(t, err)
@@ -911,7 +924,8 @@ func TestConfigDB_IsLinkLocalOnly(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			got, err := d.IsLinkLocalOnly(ctx, tt.interfaceName)
 			require.NoError(t, err)
@@ -968,7 +982,8 @@ func TestConfigDB_EnableLinkLocalOnly(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			err = d.EnableLinkLocalOnly(ctx, tt.interfaceName)
 			require.NoError(t, err)
@@ -1023,7 +1038,8 @@ func TestConfigDB_GetPort(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			got, err := d.GetPort(ctx, tt.interfaceName)
 			require.NoError(t, err)
@@ -1076,7 +1092,8 @@ func TestConfigDB_GetPorts(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			got, err := d.GetPorts(ctx)
 			require.NoError(t, err)
@@ -1148,7 +1165,8 @@ func TestConfigDB_SetPortMtu(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			err = d.SetPortMtu(ctx, tt.interfaceName, tt.val)
 			require.NoError(t, err)
@@ -1227,7 +1245,8 @@ func TestConfigDB_SetAdminStatusUp(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			err = d.SetAdminStatus(ctx, tt.interfaceName, tt.status)
 			if (err != nil) != tt.wantErr {
@@ -1304,7 +1323,8 @@ func TestConfigDB_GetAdminStatus(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			got, err := d.GetAdminStatus(ctx, tt.interfaceName)
 			require.NoError(t, err)
