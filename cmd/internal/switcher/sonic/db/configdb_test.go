@@ -104,7 +104,7 @@ var (
 	}
 )
 
-func TestConfigDB_EnsureEntry(t *testing.T) {
+func TestConfigDB_MergeEntry(t *testing.T) {
 	tests := []struct {
 		name  string
 		data  test.StringMap
@@ -147,22 +147,22 @@ func TestConfigDB_EnsureEntry(t *testing.T) {
 			data:  configDBTestData,
 			entry: Entry{Key: Key{"SUPPRESS_VLAN_NEIGH", "Vlan1004"}, Val: Val{"suppress": "on"}},
 			mods: func(data test.HashMap) {
-				data["SUPPRESS_VLAN_NEIGH|Vlan1004"]["suppress"] = "on"
+				data["SUPPRESS_VLAN_NEIGH|Vlan1004"] = map[string]string{"suppress": "on"}
 			},
 		},
 		{
-			name:  "create new without fields",
+			name:  "empty value is a no-op",
 			data:  configDBTestData,
 			entry: Entry{Key: Key{"VLAN_INTERFACE", "Vlan2000"}},
-			mods: func(data test.HashMap) {
-				data["VLAN_INTERFACE|Vlan2000"] = map[string]string{null: null}
-			},
+			mods:  func(test.HashMap) {},
 		},
 		{
-			name:  "existing without fields",
+			name:  "replace null placeholder with real fields",
 			data:  configDBTestData,
-			entry: Entry{Key: Key{"VLAN_INTERFACE", "Vlan4000"}},
-			mods:  func(test.HashMap) {},
+			entry: Entry{Key: Key{"VLAN_INTERFACE", "Vlan4000"}, Val: Val{"vrf_name": "Vrf4000"}},
+			mods: func(data test.HashMap) {
+				data["VLAN_INTERFACE|Vlan4000"] = map[string]string{"vrf_name": "Vrf4000"}
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -189,13 +189,111 @@ func TestConfigDB_EnsureEntry(t *testing.T) {
 			d := &ConfigDB{
 				c: c,
 			}
-			err = d.EnsureEntry(ctx, tt.entry)
+			err = d.MergeEntry(ctx, tt.entry)
 			require.NoError(t, err)
 			data, err := test.GetData(ctx, vc, sep)
 			require.NoError(t, err)
 
 			if diff := cmp.Diff(initData, data); diff != "" {
-				t.Errorf("ConfigDB.EnsureEntry() data differs = %s", diff)
+				t.Errorf("ConfigDB.MergeEntry() data differs = %s", diff)
+			}
+		})
+	}
+}
+
+func TestConfigDB_EnsureExactEntry(t *testing.T) {
+	tests := []struct {
+		name  string
+		data  test.StringMap
+		entry Entry
+		mods  func(test.HashMap)
+	}{
+		{
+			name:  "create new",
+			data:  configDBTestData,
+			entry: Entry{Key: Key{"VRF", "Vrf200"}, Val: Val{"fallback": "false", "vni": "200"}},
+			mods: func(data test.HashMap) {
+				data["VRF|Vrf200"] = map[string]string{
+					"fallback": "false",
+					"vni":      "200",
+				}
+			},
+		},
+		{
+			name:  "existing with same fields",
+			data:  configDBTestData,
+			entry: Entry{Key: Key{"VRF", "Vrf102"}, Val: Val{"fallback": "false", "vni": "102"}},
+			mods:  func(test.HashMap) {},
+		},
+		{
+			name:  "remove fields outside desired value",
+			data:  configDBTestData,
+			entry: Entry{Key: Key{"VRF", "Vrf102"}, Val: Val{"vni": "102"}},
+			mods: func(data test.HashMap) {
+				data["VRF|Vrf102"] = map[string]string{"vni": "102"}
+			},
+		},
+		{
+			name:  "update and remove fields",
+			data:  configDBTestData,
+			entry: Entry{Key: Key{"VRF", "Vrf102"}, Val: Val{"vni": "103"}},
+			mods: func(data test.HashMap) {
+				data["VRF|Vrf102"] = map[string]string{"vni": "103"}
+			},
+		},
+		{
+			name:  "create new without fields",
+			data:  configDBTestData,
+			entry: Entry{Key: Key{"VLAN_INTERFACE", "Vlan2000"}},
+			mods: func(data test.HashMap) {
+				data["VLAN_INTERFACE|Vlan2000"] = map[string]string{null: null}
+			},
+		},
+		{
+			name:  "replace fields with null placeholder",
+			data:  configDBTestData,
+			entry: Entry{Key: Key{"VLAN_INTERFACE", "Vlan1001"}},
+			mods: func(data test.HashMap) {
+				data["VLAN_INTERFACE|Vlan1001"] = map[string]string{null: null}
+			},
+		},
+		{
+			name:  "existing without fields",
+			data:  configDBTestData,
+			entry: Entry{Key: Key{"VLAN_INTERFACE", "Vlan4000"}},
+			mods:  func(test.HashMap) {},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				ctx = t.Context()
+				sep = "|"
+				vc  = test.StartValkey(t)
+			)
+			defer vc.Close()
+
+			err := test.LoadData(ctx, vc, tt.data, sep)
+			require.NoError(t, err)
+			initData, err := test.GetData(ctx, vc, sep)
+			require.NoError(t, err)
+			if tt.mods != nil {
+				tt.mods(initData)
+			}
+
+			d := &ConfigDB{
+				c: &Client{
+					rdb: vc,
+					sep: sep,
+				},
+			}
+			err = d.EnsureExactEntry(ctx, tt.entry)
+			require.NoError(t, err)
+			data, err := test.GetData(ctx, vc, sep)
+			require.NoError(t, err)
+
+			if diff := cmp.Diff(initData, data); diff != "" {
+				t.Errorf("ConfigDB.EnsureExactEntry() data differs = %s", diff)
 			}
 		})
 	}

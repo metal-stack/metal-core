@@ -19,7 +19,7 @@ type fakeConfigDB struct {
 	err     error
 }
 
-func (f *fakeConfigDB) EnsureEntry(_ context.Context, e db.Entry) error {
+func (f *fakeConfigDB) MergeEntry(_ context.Context, e db.Entry) error {
 	if f.err != nil {
 		return f.err
 	}

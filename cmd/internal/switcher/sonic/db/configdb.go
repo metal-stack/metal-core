@@ -55,29 +55,66 @@ func newConfigDB(rdb valkey.Client, sep string) *ConfigDB {
 	}
 }
 
-// EnsureEntry creates the entry or updates it if any of its fields differ.
-// Fields of an existing entry that are not part of e.Val are left untouched.
-func (d *ConfigDB) EnsureEntry(ctx context.Context, e Entry) error {
+// MergeEntry adds or updates the fields in e.Val while leaving all other fields untouched.
+// An empty value is a no-op.
+func (d *ConfigDB) MergeEntry(ctx context.Context, e Entry) error {
+	if len(e.Val) == 0 {
+		return nil
+	}
+
 	current, err := d.c.HGetAll(ctx, e.Key)
 	if err != nil {
 		return err
 	}
 
-	val := e.Val
-	if len(val) == 0 {
-		if len(current) > 0 {
-			return nil
+	for field, value := range e.Val {
+		if v, ok := current[field]; !ok || v != value {
+			if err := d.c.HSet(ctx, e.Key, e.Val); err != nil {
+				return err
+			}
+			break
 		}
-		// SONiC represents entries without fields with a NULL field
-		val = Val{null: null}
 	}
 
-	for field, value := range val {
-		if v, ok := current[field]; !ok || v != value {
-			return d.c.HSet(ctx, e.Key, val)
+	// NULL is an internal placeholder for entries without fields. It must not
+	// remain once the entry has real fields.
+	if _, hasNull := current[null]; hasNull {
+		if _, wantsNull := e.Val[null]; !wantsNull {
+			return d.c.HDel(ctx, e.Key, null)
 		}
 	}
 	return nil
+}
+
+// EnsureExactEntry creates the entry or makes its fields exactly match e.Val.
+// SONiC represents entries without fields with a NULL field.
+func (d *ConfigDB) EnsureExactEntry(ctx context.Context, e Entry) error {
+	current, err := d.c.HGetAll(ctx, e.Key)
+	if err != nil {
+		return err
+	}
+
+	desired := e.Val
+	if len(desired) == 0 {
+		desired = Val{null: null}
+	}
+
+	for field, value := range desired {
+		if v, ok := current[field]; !ok || v != value {
+			if err := d.c.HSet(ctx, e.Key, desired); err != nil {
+				return err
+			}
+			break
+		}
+	}
+
+	var stale []string
+	for field := range current {
+		if _, ok := desired[field]; !ok {
+			stale = append(stale, field)
+		}
+	}
+	return d.c.HDel(ctx, e.Key, stale...)
 }
 
 // DeleteEntry deletes the entry and reports whether it existed.
