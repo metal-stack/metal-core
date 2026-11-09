@@ -86,6 +86,13 @@ func (c *Client) HGetAll(ctx context.Context, key Key) (Val, error) {
 	return c.rdb.Do(ctx, c.rdb.B().Hgetall().Key(key.toString(c.sep)).Build()).AsStrMap()
 }
 
+func (c *Client) HDel(ctx context.Context, key Key, fields ...string) error {
+	if len(fields) == 0 {
+		return nil
+	}
+	return c.rdb.Do(ctx, c.rdb.B().Hdel().Key(key.toString(c.sep)).Field(fields...).Build()).Error()
+}
+
 func (c *Client) HSet(ctx context.Context, key Key, val Val) error {
 	if len(val) == 0 {
 		return nil

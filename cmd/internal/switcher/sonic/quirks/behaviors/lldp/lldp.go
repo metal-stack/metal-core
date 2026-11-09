@@ -20,7 +20,7 @@ type LLDPConfiguration interface {
 
 // ConfigDB is the part of the CONFIG_DB the LLDP configuration needs, implemented by *db.ConfigDB
 type ConfigDB interface {
-	EnsureEntry(ctx context.Context, e db.Entry) error
+	MergeEntry(ctx context.Context, e db.Entry) error
 	DeleteEntry(ctx context.Context, key db.Key) (bool, error)
 }
 
@@ -36,7 +36,7 @@ type Community struct{}
 func (Community) Configure(ctx context.Context, c ConfigDB, ports []*db.Port) []error {
 	var errs []error
 
-	err := c.EnsureEntry(ctx, db.Entry{Key: db.Key{lldpTable, "GLOBAL"}, Val: db.Val{"hello_time": txInterval}})
+	err := c.MergeEntry(ctx, db.Entry{Key: db.Key{lldpTable, "GLOBAL"}, Val: db.Val{"hello_time": txInterval}})
 	if err != nil {
 		errs = append(errs, fmt.Errorf("failed to update LLDP tx_interval: %w", err))
 	}
@@ -74,12 +74,12 @@ type AsterNOS struct{}
 func (AsterNOS) Configure(ctx context.Context, c ConfigDB, ports []*db.Port) []error {
 	var errs []error
 
-	err := c.EnsureEntry(ctx, db.Entry{Key: db.Key{lldpTable, "lldp"}, Val: db.Val{"tx_interval": txInterval}})
+	err := c.MergeEntry(ctx, db.Entry{Key: db.Key{lldpTable, "lldp"}, Val: db.Val{"tx_interval": txInterval}})
 	if err != nil {
 		errs = append(errs, fmt.Errorf("failed to update LLDP tx_interval: %w", err))
 	}
 	for _, port := range ports {
-		err := c.EnsureEntry(ctx, db.Entry{Key: db.Key{lldpTable, port.Name}, Val: db.Val{"lldp_local_portid": port.Alias}})
+		err := c.MergeEntry(ctx, db.Entry{Key: db.Key{lldpTable, port.Name}, Val: db.Val{"lldp_local_portid": port.Alias}})
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to update LLDP settings for port %s: %w", port.Name, err))
 		}

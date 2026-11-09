@@ -187,7 +187,7 @@ func (a *Applier) configureVrf(ctx context.Context, vrfName string, vrf *types.V
 	}
 
 	for _, e := range a.quirks.VrfEntries.Entries(vrfName, vrf, vtep) {
-		if err := a.db.Config.EnsureEntry(ctx, e); err != nil {
+		if err := a.db.Config.EnsureExactEntry(ctx, e); err != nil {
 			return fmt.Errorf("could not configure %v for vrf %s: %w", e.Key, vrfName, err)
 		}
 	}
