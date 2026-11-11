@@ -130,6 +130,7 @@ func (c *Cumulus) GetOS() (*apiv2.SwitchOS, error) {
 		Version: version,
 	}, nil
 }
+
 func (c *Cumulus) GetManagement() (ip, user string, err error) {
 	ip, err = internal.GetManagementIP("eth0")
 	if err != nil {

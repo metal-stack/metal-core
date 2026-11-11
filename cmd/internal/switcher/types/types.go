@@ -66,13 +66,9 @@ type (
 		L2VPNEVPN   *BGPAddressFamily
 	}
 
-	// FIXME: naming
 	AddressFamilyNeighbor struct {
 		Name     string
 		Commands []string
-		// FIXME: remove routemaps and add the commands to `Commands` instead
-		RouteMapIn  string
-		RouteMapOut string
 	}
 
 	PeerGroup struct {

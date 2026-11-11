@@ -28,7 +28,7 @@ interface {{ .Name }}{{- if .Vrf }} vrf {{ .Vrf }} {{- end }}
  no ipv6 nd suppress-ra
 {{- end }}
 !
-{{- range .FRRConfig.BGP }}
+{{- range .FRRConfig.BGPs }}
 router bgp {{ $ASN }}{{- if .Vrf }} vrf {{ .Vrf }} {{- end }}
  bgp router-id {{ $RouterId }}
  bgp bestpath as-path multipath-relax
@@ -46,20 +46,14 @@ router bgp {{ $ASN }}{{- if .Vrf }} vrf {{ .Vrf }} {{- end }}
  !
  {{- $af := .AddressFamilies.IPv4Unicast }}
  address-family ipv4 unicast
-  {{- range $af.GlobalStatements }}
+  {{- range $af.GlobalCommands }}
   {{ . }}
   {{- end -}}
   {{- range $af.Neighbors -}}
-  {{ $neighbor := .Neighbor }}
+  {{ $neighbor := .Name }}
   {{- range .Commands }}
   neighbor {{ $neighbor }} {{ . }}
   {{- end -}}
-  {{- if .RouteMapIn }}
-  neighbor {{ .Neighbor }} route-map {{ .RouteMapIn }} in
-  {{- end -}}
-  {{- if .RouteMapOut }}
-  neighbor {{ .Neighbor }} route-map {{ .RouteMapOut }} out
-  {{- end }}
   {{- end }}
  exit-address-family
  {{- end }}
@@ -67,20 +61,14 @@ router bgp {{ $ASN }}{{- if .Vrf }} vrf {{ .Vrf }} {{- end }}
  !
  {{- $af := .AddressFamilies.IPv6Unicast }}
  address-family ipv6 unicast
-  {{- range $af.GlobalStatements }}
+  {{- range $af.GlobalCommands }}
   {{ . }}
   {{- end -}}
   {{- range $af.Neighbors -}}
-  {{ $neighbor := .Neighbor }}
+  {{ $neighbor := .Name }}
   {{- range .Commands }}
   neighbor {{ $neighbor }} {{ . }}
   {{- end -}}
-  {{- if .RouteMapIn }}
-  neighbor {{ .Neighbor }} route-map {{ .RouteMapIn }} in
-  {{- end -}}
-  {{- if .RouteMapOut }}
-  neighbor {{ .Neighbor }} route-map {{ .RouteMapOut }} out
-  {{- end }}
   {{- end }}
  exit-address-family
  {{- end }}
@@ -88,20 +76,14 @@ router bgp {{ $ASN }}{{- if .Vrf }} vrf {{ .Vrf }} {{- end }}
  !
  {{- $af := .AddressFamilies.L2VPNEVPN }}
  address-family l2vpn evpn
-  {{- range $af.GlobalStatements }}
+  {{- range $af.GlobalCommands }}
   {{ . }}
   {{- end -}}
   {{- range $af.Neighbors -}}
-  {{ $neighbor := .Neighbor }}
+  {{ $neighbor := .Name }}
   {{- range .Commands }}
   neighbor {{ $neighbor }} {{ . }}
   {{- end -}}
-  {{- if .RouteMapIn }}
-  neighbor {{ .Neighbor }} route-map {{ .RouteMapIn }} in
-  {{- end -}}
-  {{- if .RouteMapOut }}
-  neighbor {{ .Neighbor }} route-map {{ .RouteMapOut }} out
-  {{- end }}
   {{- end }}
  exit-address-family
  {{- end }}

@@ -27,6 +27,118 @@ var (
 	testcoreSpineUplinksCumulus  = []string{"swp31", "swp32"}
 	testcoreLog                  = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
+	staticFRRConfigSonic = &types.FRRConfig{
+		VRFs: []string{"Vrf300"},
+		UnnumberedInterfaces: []*types.Interface{
+			{
+				Name: "Ethernet7",
+				Vrf:  new("Vrf300"),
+			},
+			{
+				Name: "Ethernet8",
+				Vrf:  new("Vrf100"),
+			},
+		},
+		BGPs: []*types.BGP{
+			{
+				Vrf: new("Vrf100"),
+				PeerGroups: []types.PeerGroup{
+					{
+						Name:     "EXTERNAL",
+						Commands: []string{"ebgp-multihop 2"},
+					},
+				},
+				Neighbors: []types.BGPNeighbor{
+					{
+						Name:      "Ethernet8 interface",
+						PeerGroup: new("EXTERNAL"),
+					},
+				},
+				AddressFamilies: types.BGPAddressFamilies{
+					IPv4Unicast: &types.BGPAddressFamily{
+						Neighbors: []*types.AddressFamilyNeighbor{
+							{
+								Name:     "EXTERNAL",
+								Commands: []string{"route-map Vrf100-in in"},
+							},
+						},
+					},
+				},
+			},
+		},
+		RouteMaps: []*types.RouteMap{
+			{
+				Name:    "Vrf300-in",
+				Entries: []string{"match ip address prefix-list Vrf300-in-prefixes"},
+				Policy:  types.PolicyPermit,
+				Order:   10,
+			},
+		},
+		PrefixLists: []*types.IPPrefixList{
+			{
+				AddressFamily: types.AddressFamilyIPv4,
+				Name:          "Vrf300-in-prefixes",
+				Spec:          "permit 10.0.0.0/16 le 32",
+			},
+		},
+	}
+
+	staticFRRConfigCumulus = &types.FRRConfig{
+		VRFs: []string{"vrf300"},
+		UnnumberedInterfaces: []*types.Interface{
+			{
+				Name: "swp8",
+				Vrf:  new("vrf300"),
+			},
+			{
+				Name: "swp9",
+				Vrf:  new("vrf100"),
+			},
+		},
+		BGPs: []*types.BGP{
+			{
+				Vrf: new("vrf100"),
+				PeerGroups: []types.PeerGroup{
+					{
+						Name:     "EXTERNAL",
+						Commands: []string{"ebgp-multihop 2"},
+					},
+				},
+				Neighbors: []types.BGPNeighbor{
+					{
+						Name:      "swp9 interface",
+						PeerGroup: new("EXTERNAL"),
+					},
+				},
+				AddressFamilies: types.BGPAddressFamilies{
+					IPv4Unicast: &types.BGPAddressFamily{
+						Neighbors: []*types.AddressFamilyNeighbor{
+							{
+								Name:     "EXTERNAL",
+								Commands: []string{"route-map vrf100-in in"},
+							},
+						},
+					},
+				},
+			},
+		},
+		RouteMaps: []*types.RouteMap{
+			{
+				Name:    "vrf300-in",
+				Entries: []string{"match ip address prefix-list vrf300-in-prefixes"},
+				Policy:  types.PolicyPermit,
+				Order:   10,
+			},
+		},
+		PrefixLists: []*types.IPPrefixList{
+			{
+				AddressFamily: types.AddressFamilyIPv4,
+				Name:          "vrf300-in-prefixes",
+				Spec:          "permit 10.0.0.0/16 le 32",
+			},
+		},
+	}
+
 	testcoreCfgSonic = Config{
 		Log:                  testcoreLog,
 		CIDR:                 testcoreCIDR,
@@ -38,6 +150,7 @@ var (
 		SpineUplinks:         testcoreSpineUplinksSonic,
 		SetSrcLoopback:       testcoreSetSrcLoopback,
 		NOS:                  &sonic.Sonic{},
+		StaticFRRConfig:      staticFRRConfigSonic,
 	}
 
 	testcoreCfgCumulus = Config{
@@ -51,6 +164,7 @@ var (
 		SpineUplinks:         testcoreSpineUplinksCumulus,
 		SetSrcLoopback:       testcoreSetSrcLoopback,
 		NOS:                  &cumulus.Cumulus{},
+		StaticFRRConfig:      staticFRRConfigCumulus,
 	}
 
 	leaf01 = &apiv2.Switch{
@@ -361,11 +475,17 @@ var (
 		"SUPPRESS_VLAN_NEIGH|Vlan1002": map[string]string{
 			"suppress": "on",
 		},
+		"SUPPRESS_VLAN_NEIGH|Vlan1003": map[string]string{
+			"suppress": "on",
+		},
 		"VLAN_INTERFACE|Vlan1001": map[string]string{
-			"vrf_name": "Vrf200",
+			"vrf_name": "Vrf100",
 		},
 		"VLAN_INTERFACE|Vlan1002": map[string]string{
-			"vrf_name": "Vrf100",
+			"vrf_name": "Vrf200",
+		},
+		"VLAN_INTERFACE|Vlan1003": map[string]string{
+			"vrf_name": "Vrf300",
 		},
 		"VLAN_MEMBER|Vlan4000|Ethernet0": map[string]string{
 			"tagging_mode": "untagged",
@@ -385,6 +505,9 @@ var (
 		"VLAN|Vlan1002": map[string]string{
 			"vlanid": "1002",
 		},
+		"VLAN|Vlan1003": map[string]string{
+			"vlanid": "1003",
+		},
 		"VLAN|Vlan4000": map[string]string{
 			"vlanid": "4000",
 		},
@@ -396,13 +519,21 @@ var (
 			"fallback": "false",
 			"vni":      "200",
 		},
-		"VXLAN_TUNNEL_MAP|vtep|map_100_Vlan1002": map[string]string{
-			"vlan": "Vlan1002",
+		"VRF|Vrf300": map[string]string{
+			"fallback": "false",
+			"vni":      "300",
+		},
+		"VXLAN_TUNNEL_MAP|vtep|map_100_Vlan1001": map[string]string{
+			"vlan": "Vlan1001",
 			"vni":  "100",
 		},
-		"VXLAN_TUNNEL_MAP|vtep|map_200_Vlan1001": map[string]string{
-			"vlan": "Vlan1001",
+		"VXLAN_TUNNEL_MAP|vtep|map_200_Vlan1002": map[string]string{
+			"vlan": "Vlan1002",
 			"vni":  "200",
+		},
+		"VXLAN_TUNNEL_MAP|vtep|map_300_Vlan1003": map[string]string{
+			"vlan": "Vlan1003",
+			"vni":  "300",
 		},
 		"VXLAN_TUNNEL|vtep": map[string]string{
 			"src_ip": testcoreCfgSonic.LoopbackIP,

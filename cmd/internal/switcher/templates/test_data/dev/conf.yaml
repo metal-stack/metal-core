@@ -46,7 +46,7 @@ frrconfig:
     - name: swp3
     - name: swp31
     - name: swp32
-  bgp:
+  bgps:
     - peergroups:
         - name: FABRIC
           commands:
@@ -65,40 +65,43 @@ frrconfig:
           peergroup: FIREWALL
       addressfamilies:
         ipv4unicast:
-          globalstatements:
+          globalcommands:
             - redistribute connected route-map DENY_MGMT
             - redistribute kernel route-map DENY_MGMT
           neighbors:
-            - neighbor: FIREWALL
+            - name: FIREWALL
               commands:
                 - allowas-in 2
-            - neighbor: swp3
-              routemapin: fw-swp3-in
+            - name: swp3
+              commands:
+                - route-map fw-swp3-in in
         ipv6unicast:
-          globalstatements:
+          globalcommands:
             - redistribute connected route-map DENY_MGMT
             - redistribute kernel route-map DENY_MGMT
           neighbors:
-            - neighbor: FIREWALL
+            - name: FIREWALL
               commands:
                 - allowas-in 2
                 - activate
-            - neighbor: swp3
-              routemapin: fw-swp3-in
+            - name: swp3
+              commands:
+                - route-map fw-swp3-in in
         l2vpnevpn:
-          globalstatements:
+          globalcommands:
             - advertise-all-vni
           neighbors:
-            - neighbor: FABRIC
+            - name: FABRIC
               commands:
                 - activate
                 - allowas-in 2
-            - neighbor: FIREWALL
+            - name: FIREWALL
               commands:
                 - activate
                 - allowas-in 2
-            - neighbor: swp3
-              routemapout: fw-swp3-vni
+            - name: swp3
+              commands:
+                - route-map fw-swp3-vni out
     - vrf: vrf104001
       peergroups:
         - name: MACHINE
@@ -112,24 +115,24 @@ frrconfig:
           peergroup: MACHINE
       addressfamilies:
         ipv4unicast:
-          globalstatements:
+          globalcommands:
             - redistribute connected
           neighbors:
-            - neighbor: MACHINE
+            - name: MACHINE
               commands:
                 - maximum-prefix 24000
-              routemapin: vrf104001-in
+                - route-map vrf104001-in in
         ipv6unicast:
-          globalstatements:
+          globalcommands:
             - redistribute connected
           neighbors:
-            - neighbor: MACHINE
+            - name: MACHINE
               commands:
                 - maximum-prefix 24000
                 - activate
-              routemapin: vrf104001-in6
+                - route-map vrf104001-in6 in
         l2vpnevpn:
-          globalstatements:
+          globalcommands:
             - advertise ipv4 unicast
             - advertise ipv6 unicast
   routemaps:

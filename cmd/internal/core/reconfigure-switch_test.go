@@ -96,8 +96,8 @@ func TestBuildSwitcherConfig(t *testing.T) {
 							GlobalCommands: []string{"redistribute static"},
 							Neighbors: []*types.AddressFamilyNeighbor{
 								{
-									Name:       "K3S",
-									RouteMapIn: "K3S-in",
+									Name:     "K3S",
+									Commands: []string{"route-map K3S-in in"},
 								},
 							},
 						},
@@ -249,12 +249,6 @@ func TestBuildSwitcherConfig(t *testing.T) {
 					Vrf:  new("Vrf104001"),
 				},
 				{
-					Name: "Ethernet120",
-				},
-				{
-					Name: "Ethernet124",
-				},
-				{
 					Name: "Ethernet2",
 				},
 				{
@@ -268,6 +262,12 @@ func TestBuildSwitcherConfig(t *testing.T) {
 				{
 					Name: "Ethernet6",
 					Vrf:  new("Vrf300"),
+				},
+				{
+					Name: "Ethernet120",
+				},
+				{
+					Name: "Ethernet124",
 				},
 			},
 			BGPs: []*types.BGP{
@@ -323,8 +323,8 @@ func TestBuildSwitcherConfig(t *testing.T) {
 							},
 							Neighbors: []*types.AddressFamilyNeighbor{
 								{
-									Name:       "Ethernet2",
-									RouteMapIn: "fw-Ethernet2-in",
+									Name:     "Ethernet2",
+									Commands: []string{"route-map fw-Ethernet2-in in"},
 								},
 								{
 									Name:     "FIREWALL",
@@ -343,8 +343,8 @@ func TestBuildSwitcherConfig(t *testing.T) {
 									Commands: []string{"activate", "allowas-in 2"},
 								},
 								{
-									Name:       "Ethernet2",
-									RouteMapIn: "fw-Ethernet2-in",
+									Name:     "Ethernet2",
+									Commands: []string{"route-map fw-Ethernet2-in in"},
 								},
 							},
 						},
@@ -354,8 +354,8 @@ func TestBuildSwitcherConfig(t *testing.T) {
 							},
 							Neighbors: []*types.AddressFamilyNeighbor{
 								{
-									Name:        "Ethernet2",
-									RouteMapOut: "fw-Ethernet2-vni",
+									Name:     "Ethernet2",
+									Commands: []string{"route-map fw-Ethernet2-vni out"},
 								},
 								{
 									Name:     "FABRIC",
@@ -397,9 +397,11 @@ func TestBuildSwitcherConfig(t *testing.T) {
 							},
 							Neighbors: []*types.AddressFamilyNeighbor{
 								{
-									Name:       "MACHINE",
-									Commands:   []string{"maximum-prefix 24000"},
-									RouteMapIn: "Vrf104001-in",
+									Name: "MACHINE",
+									Commands: []string{
+										"maximum-prefix 24000",
+										"route-map Vrf104001-in in",
+									},
 								},
 							},
 						},
@@ -438,9 +440,11 @@ func TestBuildSwitcherConfig(t *testing.T) {
 							},
 							Neighbors: []*types.AddressFamilyNeighbor{
 								{
-									Name:       "MACHINE",
-									Commands:   []string{"maximum-prefix 24000"},
-									RouteMapIn: "Vrf200-in",
+									Name: "MACHINE",
+									Commands: []string{
+										"maximum-prefix 24000",
+										"route-map Vrf200-in in",
+									},
 								},
 							},
 						},
@@ -450,9 +454,12 @@ func TestBuildSwitcherConfig(t *testing.T) {
 							},
 							Neighbors: []*types.AddressFamilyNeighbor{
 								{
-									Name:       "MACHINE",
-									Commands:   []string{"activate", "maximum-prefix 24000"},
-									RouteMapIn: "Vrf200-in6",
+									Name: "MACHINE",
+									Commands: []string{
+										"activate",
+										"maximum-prefix 24000",
+										"route-map Vrf200-in6 in",
+									},
 								},
 							},
 						},
@@ -486,8 +493,8 @@ func TestBuildSwitcherConfig(t *testing.T) {
 							GlobalCommands: []string{"redistribute static"},
 							Neighbors: []*types.AddressFamilyNeighbor{
 								{
-									Name:       "K3S",
-									RouteMapIn: "K3S-in",
+									Name:     "K3S",
+									Commands: []string{"route-map K3S-in in"},
 								},
 							},
 						},
@@ -914,11 +921,6 @@ func Test_mergePrefixLists(t *testing.T) {
 			want: []*types.IPPrefixList{
 				{
 					AddressFamily: types.AddressFamilyIPv4,
-					Name:          "Vrf200-in-prefixes",
-					Spec:          "permit 10.1.2.0/24 le 32",
-				},
-				{
-					AddressFamily: types.AddressFamilyIPv4,
 					Name:          "Vrf100-in-prefixes",
 					Spec:          "permit 10.1.1.0/24 le 32",
 				},
@@ -926,6 +928,11 @@ func Test_mergePrefixLists(t *testing.T) {
 					AddressFamily: types.AddressFamilyIPv4,
 					Name:          "Vrf100-in-prefixes",
 					Spec:          "permit 10.2.0.0/16",
+				},
+				{
+					AddressFamily: types.AddressFamilyIPv4,
+					Name:          "Vrf200-in-prefixes",
+					Spec:          "permit 10.1.2.0/24 le 32",
 				},
 			},
 		},
@@ -1449,6 +1456,65 @@ func Test_mergeBGPAddressFamily(t *testing.T) {
 			got := mergeBGPAddressFamily(tt.af1, tt.af2)
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("mergeBGPAddressFamily() diff = %s", diff)
+			}
+		})
+	}
+}
+
+func Test_interfaceSmallerFunc(t *testing.T) {
+	tests := []struct {
+		name string
+		a    string
+		b    string
+		want int
+	}{
+		{
+			name: "one doesn't contain digits",
+			a:    "Ethernet",
+			b:    "Ethernet0",
+			want: -1,
+		},
+		{
+			name: "standard sonic naming schema",
+			a:    "Ethernet120",
+			b:    "Ethernet2",
+			want: 118,
+		},
+		{
+			name: "alternative sonic naming schema fist number differs",
+			a:    "Eth1/3",
+			b:    "Eth3/2",
+			want: -2,
+		},
+		{
+			name: "alternative sonic naming schema second number differs",
+			a:    "Eth1/3",
+			b:    "Eth1/2",
+			want: 1,
+		},
+		{
+			name: "cumulus naming schema no breakout",
+			a:    "swp1",
+			b:    "swp4",
+			want: -3,
+		},
+		{
+			name: "cumulus naming schema first number differs",
+			a:    "swp1s0",
+			b:    "swp4",
+			want: -3,
+		},
+		{
+			name: "cumulus naming schema second number differs",
+			a:    "swp2s0",
+			b:    "swp2s2",
+			want: -2,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := interfaceSmallerFunc(tt.a, tt.b); got != tt.want {
+				t.Errorf("interfaceSmallerFunc() = %v, want %v", got, tt.want)
 			}
 		})
 	}

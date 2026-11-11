@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/netip"
 	"os"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -229,6 +230,19 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 			}
 		}
 
+		slices.SortFunc(bgp.Neighbors, func(a, b types.BGPNeighbor) int {
+			pgDiff := strings.Compare(pointer.SafeDeref(a.PeerGroup), pointer.SafeDeref(b.PeerGroup))
+			if pgDiff != 0 {
+				return pgDiff
+			}
+			aIfname, aFound := strings.CutSuffix(a.Name, "interface")
+			bIfname, bFound := strings.CutPrefix(b.Name, "interface")
+			if aFound && bFound {
+				return interfaceSmallerFunc(strings.TrimSpace(aIfname), strings.TrimSpace(bIfname))
+			}
+			return strings.Compare(a.Name, b.Name)
+		})
+
 		if !found {
 			bgps = append(bgps, bgp)
 		}
@@ -260,10 +274,12 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		}
 	}
 
-	for _, vrf := range c.staticFRRConfig.VRFs {
-		switcherConfig.Vrfs, err = addVRF(&vrf, switcherConfig.Vrfs)
-		if err != nil {
-			return nil, fmt.Errorf("failed to add vrf %s to config: %w", vrf, err)
+	if c.staticFRRConfig != nil {
+		for _, vrf := range c.staticFRRConfig.VRFs {
+			switcherConfig.Vrfs, err = addVRF(&vrf, switcherConfig.Vrfs)
+			if err != nil {
+				return nil, fmt.Errorf("failed to add vrf %s to config: %w", vrf, err)
+			}
 		}
 	}
 
@@ -306,6 +322,13 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 }
 
 func mergeFRRConfigs(conf1, conf2 *types.FRRConfig) (*types.FRRConfig, error) {
+	if conf1 == nil {
+		return conf2, nil
+	}
+	if conf2 == nil {
+		return conf1, nil
+	}
+
 	conf := &types.FRRConfig{
 		VRFs:        mergeVRFs(conf1.VRFs, conf2.VRFs),
 		PrefixLists: mergePrefixLists(conf1.PrefixLists, conf2.PrefixLists),
@@ -358,7 +381,7 @@ func mergeInterfaces(ifs1, ifs2 []*types.Interface) ([]*types.Interface, error) 
 		ifs = append(ifs, intf)
 	}
 	slices.SortFunc(ifs, func(a, b *types.Interface) int {
-		return strings.Compare(a.Name, b.Name)
+		return interfaceSmallerFunc(a.Name, b.Name)
 	})
 
 	return ifs, nil
@@ -419,6 +442,11 @@ func mergeBGPNeighbors(neighs1, neighs2 []types.BGPNeighbor) ([]types.BGPNeighbo
 		pgDiff := strings.Compare(pointer.SafeDeref(a.PeerGroup), pointer.SafeDeref(b.PeerGroup))
 		if pgDiff != 0 {
 			return pgDiff
+		}
+		aIfname, aFound := strings.CutSuffix(a.Name, "interface")
+		bIfname, bFound := strings.CutPrefix(b.Name, "interface")
+		if aFound && bFound {
+			return interfaceSmallerFunc(strings.TrimSpace(aIfname), strings.TrimSpace(bIfname))
 		}
 		return strings.Compare(a.Name, b.Name)
 	})
@@ -524,6 +552,27 @@ func mergePrefixLists(pfs1, pfs2 []*types.IPPrefixList) []*types.IPPrefixList {
 	})
 
 	return pfs
+}
+
+func interfaceSmallerFunc(a, b string) int {
+	r := regexp.MustCompile("[0-9]+")
+	numsA := r.FindAllString(a, -1)
+	numsB := r.FindAllString(b, -1)
+
+	for i := range numsA {
+		numAStr := numsA[i]
+		numBStr := numsB[i]
+
+		numA, _ := strconv.Atoi(numAStr)
+		numB, _ := strconv.Atoi(numBStr)
+		diff := numA - numB
+
+		if diff != 0 {
+			return diff
+		}
+	}
+
+	return strings.Compare(a, b)
 }
 
 func isPortStaticNeighbor(port string, bgps []*types.BGP) bool {
@@ -678,28 +727,30 @@ func addUnderlayBGPPort(intf *types.Interface, bgp *types.BGP, underlayPorts []s
 		}
 	}
 
-	if !slices.Contains(underlayPorts, intf.Name) {
-		neighs := bgp.AddressFamilies.IPv4Unicast.Neighbors
-		neighs = append(neighs, &types.AddressFamilyNeighbor{
-			Name:       intf.Name,
-			RouteMapIn: fmt.Sprintf("fw-%s-in", intf.Name),
-		})
-		bgp.AddressFamilies.IPv4Unicast.Neighbors = neighs
-
-		neighs = bgp.AddressFamilies.IPv6Unicast.Neighbors
-		neighs = append(neighs, &types.AddressFamilyNeighbor{
-			Name:       intf.Name,
-			RouteMapIn: fmt.Sprintf("fw-%s-in", intf.Name),
-		})
-		bgp.AddressFamilies.IPv6Unicast.Neighbors = neighs
-
-		neighs = bgp.AddressFamilies.L2VPNEVPN.Neighbors
-		neighs = append(neighs, &types.AddressFamilyNeighbor{
-			Name:        intf.Name,
-			RouteMapOut: fmt.Sprintf("fw-%s-vni", intf.Name),
-		})
-		bgp.AddressFamilies.L2VPNEVPN.Neighbors = neighs
+	if slices.Contains(underlayPorts, intf.Name) {
+		return
 	}
+
+	neighs := bgp.AddressFamilies.IPv4Unicast.Neighbors
+	neighs = append(neighs, &types.AddressFamilyNeighbor{
+		Name:     intf.Name,
+		Commands: []string{fmt.Sprintf("route-map fw-%s-in in", intf.Name)},
+	})
+	bgp.AddressFamilies.IPv4Unicast.Neighbors = neighs
+
+	neighs = bgp.AddressFamilies.IPv6Unicast.Neighbors
+	neighs = append(neighs, &types.AddressFamilyNeighbor{
+		Name:     intf.Name,
+		Commands: []string{fmt.Sprintf("route-map fw-%s-in in", intf.Name)},
+	})
+	bgp.AddressFamilies.IPv6Unicast.Neighbors = neighs
+
+	neighs = bgp.AddressFamilies.L2VPNEVPN.Neighbors
+	neighs = append(neighs, &types.AddressFamilyNeighbor{
+		Name:     intf.Name,
+		Commands: []string{fmt.Sprintf("route-map fw-%s-vni out", intf.Name)},
+	})
+	bgp.AddressFamilies.L2VPNEVPN.Neighbors = neighs
 }
 
 func addMachineBGPPort(intf types.Interface, bgpFilter *apiv2.BGPFilter, bgp *types.BGP) error {
@@ -734,9 +785,11 @@ func addMachineBGPPort(intf types.Interface, bgpFilter *apiv2.BGPFilter, bgp *ty
 			},
 			Neighbors: []*types.AddressFamilyNeighbor{
 				{
-					Name:       "MACHINE",
-					Commands:   []string{"maximum-prefix 24000"},
-					RouteMapIn: fmt.Sprintf("%s-in", pointer.SafeDeref(intf.Vrf)),
+					Name: "MACHINE",
+					Commands: []string{
+						"maximum-prefix 24000",
+						fmt.Sprintf("route-map %s-in in", pointer.SafeDeref(intf.Vrf)),
+					},
 				},
 			},
 		}
@@ -754,25 +807,28 @@ func addMachineBGPPort(intf types.Interface, bgpFilter *apiv2.BGPFilter, bgp *ty
 			},
 			Neighbors: []*types.AddressFamilyNeighbor{
 				{
-					Name:       "MACHINE",
-					Commands:   []string{"activate", "maximum-prefix 24000"},
-					RouteMapIn: fmt.Sprintf("%s-in6", pointer.SafeDeref(intf.Vrf)),
+					Name: "MACHINE",
+					Commands: []string{
+						"activate",
+						"maximum-prefix 24000",
+						fmt.Sprintf("route-map %s-in6 in", pointer.SafeDeref(intf.Vrf)),
+					},
 				},
 			},
 		}
 	}
 
 	if bgp.AddressFamilies.L2VPNEVPN == nil {
-		var globalStatements []string
+		var globalCommands []string
 		if has4 {
-			globalStatements = append(globalStatements, "advertise ipv4 unicast")
+			globalCommands = append(globalCommands, "advertise ipv4 unicast")
 		}
 		if has6 {
-			globalStatements = append(globalStatements, "advertise ipv6 unicast")
+			globalCommands = append(globalCommands, "advertise ipv6 unicast")
 		}
 
 		bgp.AddressFamilies.L2VPNEVPN = &types.BGPAddressFamily{
-			GlobalCommands: globalStatements,
+			GlobalCommands: globalCommands,
 		}
 	}
 

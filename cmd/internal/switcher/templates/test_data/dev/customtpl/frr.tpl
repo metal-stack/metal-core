@@ -22,7 +22,7 @@ interface {{ .Name }}{{- if .Vrf }} vrf {{ .Vrf }} {{- end }}
  no ipv6 nd suppress-ra
 {{- end }}
 !
-{{- range .FRRConfig.BGP }}
+{{- range .FRRConfig.BGPs }}
 {{- $bgp := . }}
 router bgp {{ $ASN }}{{- if .Vrf }} vrf {{ .Vrf }} {{- end }}
  bgp router-id {{ $RouterId }}
@@ -47,16 +47,10 @@ router bgp {{ $ASN }}{{- if .Vrf }} vrf {{ .Vrf }} {{- end }}
   redistribute connected route-map LOCALS
   {{- end }}
   {{- range $af.Neighbors -}}
-  {{ $neighbor := .Neighbor }}
+  {{ $neighbor := .Name }}
   {{- range .Commands }}
   neighbor {{ $neighbor }} {{ . }}
   {{- end -}}
-  {{- if .RouteMapIn }}
-  neighbor {{ .Neighbor }} route-map {{ .RouteMapIn }} in
-  {{- end -}}
-  {{- if .RouteMapOut }}
-  neighbor {{ .Neighbor }} route-map {{ .RouteMapOut }} out
-  {{- end }}
   {{- end }}
  exit-address-family
  {{- end }}
@@ -64,20 +58,14 @@ router bgp {{ $ASN }}{{- if .Vrf }} vrf {{ .Vrf }} {{- end }}
  !
  {{- $af := .AddressFamilies.L2VPNEVPN }}
  address-family l2vpn evpn
-  {{- range $af.GlobalStatements }}
+  {{- range $af.GlobalCommands }}
   {{ . }}
   {{- end -}}
   {{- range $af.Neighbors -}}
-  {{ $neighbor := .Neighbor }}
+  {{ $neighbor := .Name }}
   {{- range .Commands }}
   neighbor {{ $neighbor }} {{ . }}
   {{- end -}}
-  {{- if .RouteMapIn }}
-  neighbor {{ .Neighbor }} route-map {{ .RouteMapIn }} in
-  {{- end -}}
-  {{- if .RouteMapOut }}
-  neighbor {{ .Neighbor }} route-map {{ .RouteMapOut }} out
-  {{- end }}
   {{- end }}
  exit-address-family
  {{- end }}

@@ -23,7 +23,7 @@ frrconfig:
   unnumberedinterfaces:
     - name: swp31
     - name: swp32
-  bgp:
+  bgps:
     - peergroups:
         - name: FABRIC
           commands:
@@ -40,31 +40,31 @@ frrconfig:
           peergroup: FABRIC
       addressfamilies:
         ipv4unicast:
-          globalstatements:
+          globalcommands:
             - redistribute connected route-map DENY_MGMT
             - redistribute kernel route-map DENY_MGMT
           neighbors:
-            - neighbor: FIREWALL
+            - name: FIREWALL
               commands:
                 - allowas-in 2
         ipv6unicast:
-          globalstatements:
+          globalcommands:
             - redistribute connected route-map DENY_MGMT
             - redistribute kernel route-map DENY_MGMT
           neighbors:
-            - neighbor: FIREWALL
+            - name: FIREWALL
               commands:
                 - allowas-in 2
                 - activate
         l2vpnevpn:
-          globalstatements:
+          globalcommands:
             - advertise-all-vni
           neighbors:
-            - neighbor: FABRIC
+            - name: FABRIC
               commands:
                 - activate
                 - allowas-in 2
-            - neighbor: FIREWALL
+            - name: FIREWALL
               commands:
                 - activate
                 - allowas-in 2
