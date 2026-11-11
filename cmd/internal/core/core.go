@@ -6,6 +6,7 @@ import (
 	clientv2 "github.com/metal-stack/api/go/client"
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
 type (
@@ -22,11 +23,11 @@ type (
 		enableReconfigureSwitch bool
 		managementGateway       string
 		additionalMgmtRoutes    []string
-		ignorePorts             []string
 		spineUplinks            []string
 		pxeVlanID               uint16
 		bgpNeighborStateFile    string
 		setSrcLoopback          bool
+		staticFRRConfig         *types.FRRConfig
 
 		nos     switcher.NOS
 		client  clientv2.Client
@@ -48,9 +49,9 @@ type (
 		PXEVlanID            uint16
 		BGPNeighborStateFile string
 		AdditionalMgmtRoutes []string
-		IgnorePorts          []string
 		SpineUplinks         []string
 		SetSrcLoopback       bool
+		StaticFRRConfig      *types.FRRConfig
 
 		NOS     switcher.NOS
 		Client  clientv2.Client
@@ -71,7 +72,6 @@ func New(c Config) *Core {
 		enableReconfigureSwitch: c.ReconfigureSwitch,
 		managementGateway:       c.ManagementGateway,
 		additionalMgmtRoutes:    c.AdditionalMgmtRoutes,
-		ignorePorts:             c.IgnorePorts,
 		spineUplinks:            c.SpineUplinks,
 		setSrcLoopback:          c.SetSrcLoopback,
 		nos:                     c.NOS,
@@ -79,5 +79,6 @@ func New(c Config) *Core {
 		metrics:                 c.Metrics,
 		pxeVlanID:               c.PXEVlanID,
 		bgpNeighborStateFile:    c.BGPNeighborStateFile,
+		staticFRRConfig:         c.StaticFRRConfig,
 	}
 }

@@ -3,14 +3,12 @@ package core
 import (
 	"bytes"
 	_ "embed"
+	"fmt"
 	"testing"
 	"text/template"
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/google/go-cmp/cmp"
-	"github.com/stretchr/testify/require"
-	"github.com/valkey-io/valkey-go"
-
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
@@ -18,6 +16,9 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
+	"github.com/metal-stack/metal-lib/pkg/testcommon"
+	"github.com/stretchr/testify/require"
+	"github.com/valkey-io/valkey-go"
 )
 
 func TestBuildSwitcherConfig(t *testing.T) {
@@ -31,8 +32,94 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		spineUplinks:         []string{"Ethernet120", "Ethernet124"},
 		nos:                  &sonic.Sonic{},
 		additionalMgmtRoutes: []string{"100.1.1.0/24"},
-		ignorePorts:          []string{"Ethernet24"},
 		pxeVlanID:            4000,
+		staticFRRConfig: &types.FRRConfig{
+			VRFs: []string{"Vrf300"},
+			UnnumberedInterfaces: []*types.Interface{
+				{
+					Name: "Ethernet6",
+					Vrf:  new("Vrf300"),
+				},
+			},
+			BGPs: []*types.BGP{
+				{
+					PeerGroups: []types.PeerGroup{
+						{
+							Name: "K3S",
+							Commands: []string{
+								"remote-as external",
+								"timers 2 8",
+								"ebgp-multihop 2",
+							},
+						},
+					},
+					Neighbors: []types.BGPNeighbor{
+						{
+							Name:      "10.1.1.10",
+							PeerGroup: new("K3S"),
+						},
+					},
+					AddressFamilies: types.BGPAddressFamilies{
+						IPv4Unicast: &types.BGPAddressFamily{
+							GlobalCommands: []string{"redistribute connected"},
+						},
+						L2VPNEVPN: &types.BGPAddressFamily{
+							GlobalCommands: []string{"advertise-all-vni"},
+							Neighbors: []*types.AddressFamilyNeighbor{
+								{
+									Name:     "K3S",
+									Commands: []string{"activate"},
+								},
+							},
+						},
+					},
+				},
+				{
+					Vrf: new("Vrf300"),
+					PeerGroups: []types.PeerGroup{
+						{
+							Name: "K3S",
+							Commands: []string{
+								"remote-as external",
+								"timers 3 9",
+							},
+						},
+					},
+					Neighbors: []types.BGPNeighbor{
+						{
+							Name:      "Ethernet6 interface",
+							PeerGroup: new("K3S"),
+						},
+					},
+					AddressFamilies: types.BGPAddressFamilies{
+						IPv4Unicast: &types.BGPAddressFamily{
+							GlobalCommands: []string{"redistribute static"},
+							Neighbors: []*types.AddressFamilyNeighbor{
+								{
+									Name:       "K3S",
+									RouteMapIn: "K3S-in",
+								},
+							},
+						},
+					},
+				},
+			},
+			RouteMaps: []*types.RouteMap{
+				{
+					Name:    "K3S-in",
+					Entries: []string{"match ip address prefix-list K3S-in-prefixes"},
+					Policy:  types.PolicyPermit,
+					Order:   10,
+				},
+			},
+			PrefixLists: []*types.IPPrefixList{
+				{
+					AddressFamily: types.AddressFamilyIPv4,
+					Name:          "K3S-in-prefixes",
+					Spec:          "permit 10.245.0.0/14 le 32",
+				},
+			},
+		},
 	}
 
 	s := &apiv2.Switch{
@@ -75,9 +162,6 @@ func TestBuildSwitcherConfig(t *testing.T) {
 			{
 				Name: "Ethernet5",
 				Vrf:  new("vrf200"),
-			},
-			{
-				Name: "Ethernet24",
 			},
 			{
 				Name: "Ethernet120",
@@ -151,13 +235,24 @@ func TestBuildSwitcherConfig(t *testing.T) {
 				VNI:    200,
 				VLANID: 1002,
 			},
+			{
+				Name:   "Vrf300",
+				VNI:    300,
+				VLANID: 1003,
+			},
 		},
 		FRRConfig: &types.FRRConfig{
-			VRFs: []string{"Vrf104001", "Vrf200"},
+			VRFs: []string{"Vrf104001", "Vrf200", "Vrf300"},
 			UnnumberedInterfaces: []*types.Interface{
 				{
 					Name: "Ethernet1",
 					Vrf:  new("Vrf104001"),
+				},
+				{
+					Name: "Ethernet120",
+				},
+				{
+					Name: "Ethernet124",
 				},
 				{
 					Name: "Ethernet2",
@@ -171,13 +266,11 @@ func TestBuildSwitcherConfig(t *testing.T) {
 					Vrf:  new("Vrf200"),
 				},
 				{
-					Name: "Ethernet120",
-				},
-				{
-					Name: "Ethernet124",
+					Name: "Ethernet6",
+					Vrf:  new("Vrf300"),
 				},
 			},
-			BGP: []*types.BGP{
+			BGPs: []*types.BGP{
 				{
 					PeerGroups: []types.PeerGroup{
 						{
@@ -194,12 +287,16 @@ func TestBuildSwitcherConfig(t *testing.T) {
 								"timers 2 8",
 							},
 						},
+						{
+							Name: "K3S",
+							Commands: []string{
+								"remote-as external",
+								"timers 2 8",
+								"ebgp-multihop 2",
+							},
+						},
 					},
 					Neighbors: []types.BGPNeighbor{
-						{
-							Name:      "Ethernet2 interface",
-							PeerGroup: new("FIREWALL"),
-						},
 						{
 							Name:      "Ethernet120 interface",
 							PeerGroup: new("FABRIC"),
@@ -208,56 +305,69 @@ func TestBuildSwitcherConfig(t *testing.T) {
 							Name:      "Ethernet124 interface",
 							PeerGroup: new("FABRIC"),
 						},
+						{
+							Name:      "Ethernet2 interface",
+							PeerGroup: new("FIREWALL"),
+						},
+						{
+							Name:      "10.1.1.10",
+							PeerGroup: new("K3S"),
+						},
 					},
 					AddressFamilies: types.BGPAddressFamilies{
 						IPv4Unicast: &types.BGPAddressFamily{
-							GlobalStatements: []string{
+							GlobalCommands: []string{
+								"redistribute connected",
 								"redistribute connected route-map DENY_MGMT",
 								"redistribute kernel route-map DENY_MGMT",
 							},
-							Neighbors: []types.AdressFamilyNeighbor{
+							Neighbors: []*types.AddressFamilyNeighbor{
 								{
-									Neighbor: "FIREWALL",
-									Commands: []string{"allowas-in 2"},
+									Name:       "Ethernet2",
+									RouteMapIn: "fw-Ethernet2-in",
 								},
 								{
-									Neighbor:   "Ethernet2",
-									RouteMapIn: "fw-Ethernet2-in",
+									Name:     "FIREWALL",
+									Commands: []string{"allowas-in 2"},
 								},
 							},
 						},
 						IPv6Unicast: &types.BGPAddressFamily{
-							GlobalStatements: []string{
+							GlobalCommands: []string{
 								"redistribute connected route-map DENY_MGMT",
 								"redistribute kernel route-map DENY_MGMT",
 							},
-							Neighbors: []types.AdressFamilyNeighbor{
+							Neighbors: []*types.AddressFamilyNeighbor{
 								{
-									Neighbor: "FIREWALL",
+									Name:     "FIREWALL",
 									Commands: []string{"activate", "allowas-in 2"},
 								},
 								{
-									Neighbor:   "Ethernet2",
+									Name:       "Ethernet2",
 									RouteMapIn: "fw-Ethernet2-in",
 								},
 							},
 						},
 						L2VPNEVPN: &types.BGPAddressFamily{
-							GlobalStatements: []string{
+							GlobalCommands: []string{
 								"advertise-all-vni",
 							},
-							Neighbors: []types.AdressFamilyNeighbor{
+							Neighbors: []*types.AddressFamilyNeighbor{
 								{
-									Neighbor: "FABRIC",
-									Commands: []string{"activate", "allowas-in 2"},
-								},
-								{
-									Neighbor: "FIREWALL",
-									Commands: []string{"activate", "allowas-in 2"},
-								},
-								{
-									Neighbor:    "Ethernet2",
+									Name:        "Ethernet2",
 									RouteMapOut: "fw-Ethernet2-vni",
+								},
+								{
+									Name:     "FABRIC",
+									Commands: []string{"activate", "allowas-in 2"},
+								},
+								{
+									Name:     "FIREWALL",
+									Commands: []string{"activate", "allowas-in 2"},
+								},
+								{
+									Name:     "K3S",
+									Commands: []string{"activate"},
 								},
 							},
 						},
@@ -282,19 +392,19 @@ func TestBuildSwitcherConfig(t *testing.T) {
 					},
 					AddressFamilies: types.BGPAddressFamilies{
 						IPv4Unicast: &types.BGPAddressFamily{
-							GlobalStatements: []string{
+							GlobalCommands: []string{
 								"redistribute connected",
 							},
-							Neighbors: []types.AdressFamilyNeighbor{
+							Neighbors: []*types.AddressFamilyNeighbor{
 								{
-									Neighbor:   "MACHINE",
+									Name:       "MACHINE",
 									Commands:   []string{"maximum-prefix 24000"},
 									RouteMapIn: "Vrf104001-in",
 								},
 							},
 						},
 						L2VPNEVPN: &types.BGPAddressFamily{
-							GlobalStatements: []string{
+							GlobalCommands: []string{
 								"advertise ipv4 unicast",
 							},
 						},
@@ -323,33 +433,62 @@ func TestBuildSwitcherConfig(t *testing.T) {
 					},
 					AddressFamilies: types.BGPAddressFamilies{
 						IPv4Unicast: &types.BGPAddressFamily{
-							GlobalStatements: []string{
+							GlobalCommands: []string{
 								"redistribute connected",
 							},
-							Neighbors: []types.AdressFamilyNeighbor{
+							Neighbors: []*types.AddressFamilyNeighbor{
 								{
-									Neighbor:   "MACHINE",
+									Name:       "MACHINE",
 									Commands:   []string{"maximum-prefix 24000"},
 									RouteMapIn: "Vrf200-in",
 								},
 							},
 						},
 						IPv6Unicast: &types.BGPAddressFamily{
-							GlobalStatements: []string{
+							GlobalCommands: []string{
 								"redistribute connected",
 							},
-							Neighbors: []types.AdressFamilyNeighbor{
+							Neighbors: []*types.AddressFamilyNeighbor{
 								{
-									Neighbor:   "MACHINE",
+									Name:       "MACHINE",
 									Commands:   []string{"activate", "maximum-prefix 24000"},
 									RouteMapIn: "Vrf200-in6",
 								},
 							},
 						},
 						L2VPNEVPN: &types.BGPAddressFamily{
-							GlobalStatements: []string{
+							GlobalCommands: []string{
 								"advertise ipv4 unicast",
 								"advertise ipv6 unicast",
+							},
+						},
+					},
+				},
+				{
+					Vrf: new("Vrf300"),
+					PeerGroups: []types.PeerGroup{
+						{
+							Name: "K3S",
+							Commands: []string{
+								"remote-as external",
+								"timers 3 9",
+							},
+						},
+					},
+					Neighbors: []types.BGPNeighbor{
+						{
+							Name:      "Ethernet6 interface",
+							PeerGroup: new("K3S"),
+						},
+					},
+					AddressFamilies: types.BGPAddressFamilies{
+						IPv4Unicast: &types.BGPAddressFamily{
+							GlobalCommands: []string{"redistribute static"},
+							Neighbors: []*types.AddressFamilyNeighbor{
+								{
+									Name:       "K3S",
+									RouteMapIn: "K3S-in",
+								},
 							},
 						},
 					},
@@ -368,8 +507,26 @@ func TestBuildSwitcherConfig(t *testing.T) {
 					Order:  20,
 				},
 				{
+					Name:    "K3S-in",
+					Entries: []string{"match ip address prefix-list K3S-in-prefixes"},
+					Policy:  types.PolicyPermit,
+					Order:   10,
+				},
+				{
 					Name:    "Vrf104001-in",
 					Entries: []string{"match ip address prefix-list Vrf104001-in-prefixes"},
+					Policy:  types.PolicyPermit,
+					Order:   10,
+				},
+				{
+					Name:    "Vrf200-in",
+					Entries: []string{"match ip address prefix-list Vrf200-in-prefixes"},
+					Policy:  types.PolicyPermit,
+					Order:   10,
+				},
+				{
+					Name:    "Vrf200-in6",
+					Entries: []string{"match ip address prefix-list Vrf200-in6-prefixes"},
 					Policy:  types.PolicyPermit,
 					Order:   10,
 				},
@@ -391,29 +548,17 @@ func TestBuildSwitcherConfig(t *testing.T) {
 					Policy:  types.PolicyPermit,
 					Order:   11,
 				},
-				{
-					Name:    "Vrf200-in",
-					Entries: []string{"match ip address prefix-list Vrf200-in-prefixes"},
-					Policy:  types.PolicyPermit,
-					Order:   10,
-				},
-				{
-					Name:    "Vrf200-in6",
-					Entries: []string{"match ip address prefix-list Vrf200-in6-prefixes"},
-					Policy:  types.PolicyPermit,
-					Order:   10,
-				},
 			},
 			PrefixLists: []*types.IPPrefixList{
 				{
 					AddressFamily: types.AddressFamilyIPv4,
-					Name:          "Vrf104001-in-prefixes",
-					Spec:          "permit 10.240.0.0/12 le 32",
+					Name:          "K3S-in-prefixes",
+					Spec:          "permit 10.245.0.0/14 le 32",
 				},
 				{
 					AddressFamily: types.AddressFamilyIPv4,
-					Name:          "fw-Ethernet2-in-prefixes",
-					Spec:          "permit 10.240.1.0/24 le 32",
+					Name:          "Vrf104001-in-prefixes",
+					Spec:          "permit 10.240.0.0/12 le 32",
 				},
 				{
 					AddressFamily: types.AddressFamilyIPv4,
@@ -424,6 +569,11 @@ func TestBuildSwitcherConfig(t *testing.T) {
 					AddressFamily: types.AddressFamilyIPv6,
 					Name:          "Vrf200-in6-prefixes",
 					Spec:          "permit fe80:10e2::/64 le 128",
+				},
+				{
+					AddressFamily: types.AddressFamilyIPv4,
+					Name:          "fw-Ethernet2-in-prefixes",
+					Spec:          "permit 10.240.1.0/24 le 32",
 				},
 			},
 		},
@@ -546,4 +696,760 @@ func renderTemplate(t *testing.T, tpl *template.Template, c *types.Conf) string 
 	err := tpl.Execute(&b, c)
 	require.NoError(t, err)
 	return b.String()
+}
+
+func Test_mergeVRFs(t *testing.T) {
+	tests := []struct {
+		name  string
+		vrfs1 []string
+		vrfs2 []string
+		want  []string
+	}{
+		{
+			name:  "merge vrfs",
+			vrfs1: []string{"vrf200", "vrf300", "vrf100"},
+			vrfs2: []string{"vrf100", "vrf400", "vrf200"},
+			want:  []string{"vrf100", "vrf200", "vrf300", "vrf400"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := mergeVRFs(tt.vrfs1, tt.vrfs2)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("mergeVRFs() diff = %s", diff)
+			}
+		})
+	}
+}
+
+func Test_mergeInterfaces(t *testing.T) {
+	tests := []struct {
+		name    string
+		ifs1    []*types.Interface
+		ifs2    []*types.Interface
+		want    []*types.Interface
+		wantErr error
+	}{
+		{
+			name: "merge interfaces",
+			ifs1: []*types.Interface{
+				{
+					Name: "Ethernet1",
+					Vrf:  new("vrf100"),
+				},
+				{
+					Name: "Ethernet2",
+				},
+			},
+			ifs2: []*types.Interface{
+				{
+					Name: "Ethernet0",
+					Vrf:  new("vrf100"),
+				},
+			},
+			want: []*types.Interface{
+				{
+					Name: "Ethernet0",
+					Vrf:  new("vrf100"),
+				},
+				{
+					Name: "Ethernet1",
+					Vrf:  new("vrf100"),
+				},
+				{
+					Name: "Ethernet2",
+				},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "duplicate interface is not allowed",
+			ifs1: []*types.Interface{
+				{
+					Name: "Ethernet0",
+					Vrf:  new("vrf100"),
+				},
+			},
+			ifs2: []*types.Interface{
+				{
+					Name: "Ethernet0",
+					Vrf:  new("vrf200"),
+				},
+				{
+					Name: "Ethernet1",
+					Vrf:  new("vrf200"),
+				},
+			},
+			wantErr: fmt.Errorf("found duplicate interface Ethernet0"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := mergeInterfaces(tt.ifs1, tt.ifs2)
+			if diff := cmp.Diff(tt.wantErr, err, testcommon.ErrorStringComparer()); diff != "" {
+				t.Errorf("mergeInterfaces() errors differ = %s", diff)
+			}
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("mergeInterfaces() diff = %s", diff)
+			}
+		})
+	}
+}
+
+func Test_mergeRouteMaps(t *testing.T) {
+	tests := []struct {
+		name    string
+		rms1    []*types.RouteMap
+		rms2    []*types.RouteMap
+		want    []*types.RouteMap
+		wantErr error
+	}{
+		{
+			name: "merge routemaps",
+			rms1: []*types.RouteMap{
+				{
+					Name:    "Vrf100-in",
+					Entries: []string{"match ip address prefix-list Vrf100-in-prefixes"},
+					Policy:  types.PolicyPermit,
+					Order:   20,
+				},
+			},
+			rms2: []*types.RouteMap{
+				{
+					Name:    "Vrf200-in",
+					Entries: []string{"match ip address prefix-list Vrf200-in-prefixes"},
+					Policy:  types.PolicyPermit,
+					Order:   10,
+				},
+				{
+					Name:    "Vrf100-in",
+					Entries: []string{"match interface eth0"},
+					Policy:  types.PolicyDeny,
+					Order:   10,
+				},
+			},
+			want: []*types.RouteMap{
+				{
+					Name:    "Vrf100-in",
+					Entries: []string{"match interface eth0"},
+					Policy:  types.PolicyDeny,
+					Order:   10,
+				},
+				{
+					Name:    "Vrf100-in",
+					Entries: []string{"match ip address prefix-list Vrf100-in-prefixes"},
+					Policy:  types.PolicyPermit,
+					Order:   20,
+				},
+				{
+					Name:    "Vrf200-in",
+					Entries: []string{"match ip address prefix-list Vrf200-in-prefixes"},
+					Policy:  types.PolicyPermit,
+					Order:   10,
+				},
+			},
+		},
+		{
+			name: "duplicate name and order not allowed",
+			rms1: []*types.RouteMap{
+				{
+					Name:    "Vrf100-in",
+					Entries: []string{"match ip address prefix-list Vrf100-in-prefixes"},
+					Policy:  types.PolicyPermit,
+					Order:   10,
+				},
+			},
+			rms2: []*types.RouteMap{
+				{
+					Name:    "Vrf100-in",
+					Entries: []string{"match interface eth0"},
+					Policy:  types.PolicyDeny,
+					Order:   10,
+				},
+			},
+			wantErr: fmt.Errorf(`duplicate route-map "Vrf100-in" with equal order 10`),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := mergeRouteMaps(tt.rms1, tt.rms2)
+			if diff := cmp.Diff(tt.wantErr, err, testcommon.ErrorStringComparer()); diff != "" {
+				t.Errorf("mergeRouteMaps() errors differ = %s", diff)
+			}
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("mergeRouteMaps() diff = %s", diff)
+			}
+		})
+	}
+}
+
+func Test_mergePrefixLists(t *testing.T) {
+	tests := []struct {
+		name string
+		pfs1 []*types.IPPrefixList
+		pfs2 []*types.IPPrefixList
+		want []*types.IPPrefixList
+	}{
+		{
+			name: "merge prefix-lists",
+			pfs1: []*types.IPPrefixList{
+				{
+					AddressFamily: types.AddressFamilyIPv4,
+					Name:          "Vrf200-in-prefixes",
+					Spec:          "permit 10.1.2.0/24 le 32",
+				},
+				{
+					AddressFamily: types.AddressFamilyIPv4,
+					Name:          "Vrf100-in-prefixes",
+					Spec:          "permit 10.1.1.0/24 le 32",
+				},
+			},
+			pfs2: []*types.IPPrefixList{
+				{
+					AddressFamily: types.AddressFamilyIPv4,
+					Name:          "Vrf100-in-prefixes",
+					Spec:          "permit 10.2.0.0/16",
+				},
+			},
+			want: []*types.IPPrefixList{
+				{
+					AddressFamily: types.AddressFamilyIPv4,
+					Name:          "Vrf200-in-prefixes",
+					Spec:          "permit 10.1.2.0/24 le 32",
+				},
+				{
+					AddressFamily: types.AddressFamilyIPv4,
+					Name:          "Vrf100-in-prefixes",
+					Spec:          "permit 10.1.1.0/24 le 32",
+				},
+				{
+					AddressFamily: types.AddressFamilyIPv4,
+					Name:          "Vrf100-in-prefixes",
+					Spec:          "permit 10.2.0.0/16",
+				},
+			},
+		},
+		{
+			name: "duplicates get ignored",
+			pfs1: []*types.IPPrefixList{
+				{
+					AddressFamily: types.AddressFamilyIPv4,
+					Name:          "Vrf100-in-prefixes",
+					Spec:          "permit 10.1.1.0/24 le 32",
+				},
+				{
+					AddressFamily: types.AddressFamilyIPv4,
+					Name:          "Vrf100-in-prefixes",
+					Spec:          "permit 10.2.0.0/16",
+				},
+			},
+			pfs2: []*types.IPPrefixList{
+				{
+					AddressFamily: types.AddressFamilyIPv4,
+					Name:          "Vrf100-in-prefixes",
+					Spec:          "permit 10.1.1.0/24 le 32",
+				},
+			},
+			want: []*types.IPPrefixList{
+				{
+					AddressFamily: types.AddressFamilyIPv4,
+					Name:          "Vrf100-in-prefixes",
+					Spec:          "permit 10.1.1.0/24 le 32",
+				},
+				{
+					AddressFamily: types.AddressFamilyIPv4,
+					Name:          "Vrf100-in-prefixes",
+					Spec:          "permit 10.2.0.0/16",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := mergePrefixLists(tt.pfs1, tt.pfs2)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("mergePrefixLists() diff = %s", diff)
+			}
+		})
+	}
+}
+
+func Test_mergeBGPs(t *testing.T) {
+	tests := []struct {
+		name    string
+		bgps1   []*types.BGP
+		bgps2   []*types.BGP
+		want    []*types.BGP
+		wantErr error
+	}{
+		{
+			name: "merge bgps",
+			bgps1: []*types.BGP{
+				{
+					Vrf: new("Vrf100"),
+					PeerGroups: []types.PeerGroup{
+						{
+							Name: "MACHINE",
+							Commands: []string{
+								"remote-as external",
+								"timers 2 8",
+							},
+						},
+					},
+					Neighbors: []types.BGPNeighbor{
+						{
+							Name:      "Ethernet0 interface",
+							PeerGroup: new("MACHINE"),
+						},
+					},
+					AddressFamilies: types.BGPAddressFamilies{
+						IPv4Unicast: &types.BGPAddressFamily{
+							GlobalCommands: []string{"redistribute connected route-map LOOPBACKS"},
+							Neighbors: []*types.AddressFamilyNeighbor{
+								{
+									Name: "MACHINE",
+									Commands: []string{
+										"maximum-prefix 24000",
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					PeerGroups: []types.PeerGroup{
+						{
+							Name: "FABRIC",
+							Commands: []string{
+								"remote-as external",
+							},
+						},
+					},
+					Neighbors: []types.BGPNeighbor{
+						{
+							Name:      "Ethernet2 interface",
+							PeerGroup: new("FABRIC"),
+						},
+					},
+					AddressFamilies: types.BGPAddressFamilies{
+						IPv4Unicast: &types.BGPAddressFamily{
+							GlobalCommands: []string{"redistribute connected"},
+						},
+					},
+				},
+			},
+			bgps2: []*types.BGP{
+				{
+					Vrf: new("Vrf100"),
+					PeerGroups: []types.PeerGroup{
+						{
+							Name: "EXTERNAL",
+							Commands: []string{
+								"remote-as external",
+								"timers 2 8",
+							},
+						},
+					},
+					Neighbors: []types.BGPNeighbor{
+						{
+							Name:      "Ethernet1 interface",
+							PeerGroup: new("EXTERNAL"),
+						},
+					},
+					AddressFamilies: types.BGPAddressFamilies{
+						IPv4Unicast: &types.BGPAddressFamily{
+							GlobalCommands: []string{"redistribute kernel route-map LOOPBACKS"},
+							Neighbors: []*types.AddressFamilyNeighbor{
+								{
+									Name: "EXTERNAL",
+									Commands: []string{
+										"allowas-in 2",
+									},
+								},
+							},
+						},
+						L2VPNEVPN: &types.BGPAddressFamily{
+							GlobalCommands: []string{"advertise-all-vni"},
+							Neighbors: []*types.AddressFamilyNeighbor{
+								{
+									Name:     "MACHINE",
+									Commands: []string{"activate"},
+								},
+							},
+						},
+					},
+				},
+				{
+					Vrf: new("Vrf300"),
+					PeerGroups: []types.PeerGroup{
+						{
+							Name: "MACHINE",
+							Commands: []string{
+								"remote-as external",
+							},
+						},
+					},
+					Neighbors: []types.BGPNeighbor{
+						{
+							Name:      "Ethernet3 interface",
+							PeerGroup: new("MACHINE"),
+						},
+					},
+					AddressFamilies: types.BGPAddressFamilies{
+						IPv6Unicast: &types.BGPAddressFamily{
+							GlobalCommands: []string{"redistribute connected"},
+							Neighbors: []*types.AddressFamilyNeighbor{
+								{
+									Name:     "MACHINE",
+									Commands: []string{"activate"},
+								},
+							},
+						},
+					},
+				},
+			},
+			want: []*types.BGP{
+				{
+					PeerGroups: []types.PeerGroup{
+						{
+							Name: "FABRIC",
+							Commands: []string{
+								"remote-as external",
+							},
+						},
+					},
+					Neighbors: []types.BGPNeighbor{
+						{
+							Name:      "Ethernet2 interface",
+							PeerGroup: new("FABRIC"),
+						},
+					},
+					AddressFamilies: types.BGPAddressFamilies{
+						IPv4Unicast: &types.BGPAddressFamily{
+							GlobalCommands: []string{"redistribute connected"},
+						},
+					},
+				},
+				{
+					Vrf: new("Vrf100"),
+					PeerGroups: []types.PeerGroup{
+						{
+							Name: "EXTERNAL",
+							Commands: []string{
+								"remote-as external",
+								"timers 2 8",
+							},
+						},
+						{
+							Name: "MACHINE",
+							Commands: []string{
+								"remote-as external",
+								"timers 2 8",
+							},
+						},
+					},
+					Neighbors: []types.BGPNeighbor{
+						{
+							Name:      "Ethernet1 interface",
+							PeerGroup: new("EXTERNAL"),
+						},
+						{
+							Name:      "Ethernet0 interface",
+							PeerGroup: new("MACHINE"),
+						},
+					},
+					AddressFamilies: types.BGPAddressFamilies{
+						IPv4Unicast: &types.BGPAddressFamily{
+							GlobalCommands: []string{
+								"redistribute connected route-map LOOPBACKS",
+								"redistribute kernel route-map LOOPBACKS",
+							},
+							Neighbors: []*types.AddressFamilyNeighbor{
+								{
+									Name: "EXTERNAL",
+									Commands: []string{
+										"allowas-in 2",
+									},
+								},
+								{
+									Name: "MACHINE",
+									Commands: []string{
+										"maximum-prefix 24000",
+									},
+								},
+							},
+						},
+						L2VPNEVPN: &types.BGPAddressFamily{
+							GlobalCommands: []string{"advertise-all-vni"},
+							Neighbors: []*types.AddressFamilyNeighbor{
+								{
+									Name:     "MACHINE",
+									Commands: []string{"activate"},
+								},
+							},
+						},
+					},
+				},
+				{
+					Vrf: new("Vrf300"),
+					PeerGroups: []types.PeerGroup{
+						{
+							Name: "MACHINE",
+							Commands: []string{
+								"remote-as external",
+							},
+						},
+					},
+					Neighbors: []types.BGPNeighbor{
+						{
+							Name:      "Ethernet3 interface",
+							PeerGroup: new("MACHINE"),
+						},
+					},
+					AddressFamilies: types.BGPAddressFamilies{
+						IPv6Unicast: &types.BGPAddressFamily{
+							GlobalCommands: []string{"redistribute connected"},
+							Neighbors: []*types.AddressFamilyNeighbor{
+								{
+									Name:     "MACHINE",
+									Commands: []string{"activate"},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := mergeBGPs(tt.bgps1, tt.bgps2)
+			if diff := cmp.Diff(tt.wantErr, err, testcommon.ErrorStringComparer()); diff != "" {
+				t.Errorf("mergeBGPs() errors differ = %s", diff)
+			}
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("mergeBGPs() diff = %s", diff)
+			}
+		})
+	}
+}
+
+func Test_mergePeerGroups(t *testing.T) {
+	tests := []struct {
+		name    string
+		pgs1    []types.PeerGroup
+		pgs2    []types.PeerGroup
+		want    []types.PeerGroup
+		wantErr error
+	}{
+		{
+			name: "cannot add peer-group twice",
+			pgs1: []types.PeerGroup{
+				{
+					Name: "FABRIC",
+				},
+			},
+			pgs2: []types.PeerGroup{
+				{
+					Name: "FABRIC",
+				},
+			},
+			wantErr: fmt.Errorf(`cannot add peer-group "FABRIC" twice`),
+		},
+		{
+			name: "merge peer-groups",
+			pgs1: []types.PeerGroup{
+				{
+					Name: "FABRIC",
+					Commands: []string{
+						"remote-as external",
+					},
+				},
+				{
+					Name: "MACHINE",
+					Commands: []string{
+						"timers 2 8",
+						"ebgp-multihop 2",
+					},
+				},
+			},
+			pgs2: []types.PeerGroup{
+				{
+					Name: "FIREWALL",
+					Commands: []string{
+						"remote-as external",
+					},
+				},
+			},
+			want: []types.PeerGroup{
+				{
+					Name: "FABRIC",
+					Commands: []string{
+						"remote-as external",
+					},
+				},
+				{
+					Name: "FIREWALL",
+					Commands: []string{
+						"remote-as external",
+					},
+				},
+				{
+					Name: "MACHINE",
+					Commands: []string{
+						"timers 2 8",
+						"ebgp-multihop 2",
+					},
+				},
+			},
+			wantErr: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := mergePeerGroups(tt.pgs1, tt.pgs2)
+			if diff := cmp.Diff(tt.wantErr, err, testcommon.ErrorStringComparer()); diff != "" {
+				t.Errorf("mergePeerGroups() errors differ = %s", diff)
+			}
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("mergePeerGroups() diff = %s", diff)
+			}
+		})
+	}
+}
+
+func Test_mergeBGPNeighbors(t *testing.T) {
+	tests := []struct {
+		name    string
+		neighs1 []types.BGPNeighbor
+		neighs2 []types.BGPNeighbor
+		want    []types.BGPNeighbor
+		wantErr error
+	}{
+		{
+			name: "cannot add same neighbor multiple times",
+			neighs1: []types.BGPNeighbor{
+				{
+					Name: "Ethernet0 interface",
+				},
+			},
+			neighs2: []types.BGPNeighbor{
+				{
+					Name: "Ethernet0 interface",
+				},
+			},
+			wantErr: fmt.Errorf(`cannot add neighbor "Ethernet0 interface" twice`),
+		},
+		{
+			name: "merge neighbors",
+			neighs1: []types.BGPNeighbor{
+				{
+					Name:      "Ethernet0 interface",
+					PeerGroup: new("MACHINE"),
+				},
+				{
+					Name:      "Ethernet1",
+					PeerGroup: new("FABRIC"),
+				},
+			},
+			neighs2: []types.BGPNeighbor{
+				{
+					Name:      "Ethernet2",
+					PeerGroup: new("MACHINE"),
+				},
+			},
+			want: []types.BGPNeighbor{
+				{
+					Name:      "Ethernet1",
+					PeerGroup: new("FABRIC"),
+				},
+				{
+					Name:      "Ethernet0 interface",
+					PeerGroup: new("MACHINE"),
+				},
+				{
+					Name:      "Ethernet2",
+					PeerGroup: new("MACHINE"),
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := mergeBGPNeighbors(tt.neighs1, tt.neighs2)
+			if diff := cmp.Diff(tt.wantErr, err, testcommon.ErrorStringComparer()); diff != "" {
+				t.Fatalf("mergeBGPNeighbors() errors differ = %s", diff)
+			}
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("mergeBGPNeighbors() diff = %s", diff)
+			}
+		})
+	}
+}
+
+func Test_mergeBGPAddressFamily(t *testing.T) {
+	tests := []struct {
+		name string
+		af1  *types.BGPAddressFamily
+		af2  *types.BGPAddressFamily
+		want *types.BGPAddressFamily
+	}{
+		{
+			name: "merge address family",
+			af1: &types.BGPAddressFamily{
+				GlobalCommands: []string{"redistribute connected"},
+				Neighbors: []*types.AddressFamilyNeighbor{
+					{
+						Name:     "FABRIC",
+						Commands: []string{"allowas-in 2"},
+					},
+					{
+						Name:     "FIREWALL",
+						Commands: []string{"activate"},
+					},
+				},
+			},
+			af2: &types.BGPAddressFamily{
+				GlobalCommands: []string{"redistribute static route-map DENY_MGMT"},
+				Neighbors: []*types.AddressFamilyNeighbor{
+					{
+						Name:     "FIREWALL",
+						Commands: []string{"allowas-in 2"},
+					},
+					{
+						Name:     "MACHINE",
+						Commands: []string{"activate"},
+					},
+				},
+			},
+			want: &types.BGPAddressFamily{
+				GlobalCommands: []string{
+					"redistribute connected",
+					"redistribute static route-map DENY_MGMT",
+				},
+				Neighbors: []*types.AddressFamilyNeighbor{
+					{
+						Name:     "FABRIC",
+						Commands: []string{"allowas-in 2"},
+					},
+					{
+						Name:     "FIREWALL",
+						Commands: []string{"activate", "allowas-in 2"},
+					},
+					{
+						Name:     "MACHINE",
+						Commands: []string{"activate"},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := mergeBGPAddressFamily(tt.af1, tt.af2)
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("mergeBGPAddressFamily() diff = %s", diff)
+			}
+		})
+	}
 }

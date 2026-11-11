@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -21,11 +22,13 @@ import (
 	clientv2 "github.com/metal-stack/api/go/client"
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.yaml.in/yaml/v4"
 
 	"github.com/metal-stack/metal-core/cmd/internal/core"
 	"github.com/metal-stack/metal-core/cmd/internal/metrics"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/metal-stack/v"
 )
 
@@ -84,6 +87,12 @@ func Run() {
 
 	metrics := metrics.New()
 
+	frrConf, err := getStaticBGPConfig(cfg.StatigBGPConfigFile)
+	if err != nil {
+		log.Error("failed to get static bgp configuration", "error", err)
+		os.Exit(1)
+	}
+
 	c := core.New(core.Config{
 		Log:                  log,
 		LogLevel:             cfg.LogLevel,
@@ -96,7 +105,6 @@ func Run() {
 		ReconfigureSwitch:    cfg.ReconfigureSwitch,
 		ManagementGateway:    cfg.ManagementGateway,
 		AdditionalMgmtRoutes: cfg.AdditionalMgmtRoutes,
-		IgnorePorts:          cfg.IgnorePorts,
 		SpineUplinks:         cfg.SpineUplinks,
 		SetSrcLoopback:       cfg.SetSrcLoopback,
 		NOS:                  nos,
@@ -104,6 +112,7 @@ func Run() {
 		Metrics:              metrics,
 		PXEVlanID:            cfg.PXEVlanID,
 		BGPNeighborStateFile: cfg.BGPNeighborStateFile,
+		StaticFRRConfig:      frrConf,
 	})
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -160,6 +169,23 @@ func Run() {
 	})
 
 	wg.Wait()
+}
+
+func getStaticBGPConfig(file string) (*types.FRRConfig, error) {
+	config := &types.FRRConfig{}
+
+	fileBytes, err := os.ReadFile(file)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read static VRFs file: %w", err)
+	}
+	dec := yaml.NewDecoder(bytes.NewReader(fileBytes))
+	dec.KnownFields(true)
+	err = dec.Decode(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal static VRFs file: %w", err)
+	}
+
+	return config, nil
 }
 
 func newApiClient(logger *slog.Logger, apiURL, tokenfilePath string) (clientv2.Client, error) {

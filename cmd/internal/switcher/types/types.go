@@ -33,7 +33,7 @@ type (
 	FRRConfig struct {
 		VRFs                 []string
 		UnnumberedInterfaces []*Interface
-		BGP                  []*BGP
+		BGPs                 []*BGP
 		RouteMaps            []*RouteMap
 		PrefixLists          []*IPPrefixList
 	}
@@ -56,8 +56,8 @@ type (
 	}
 
 	BGPAddressFamily struct {
-		GlobalStatements []string
-		Neighbors        []AdressFamilyNeighbor
+		GlobalCommands []string
+		Neighbors      []*AddressFamilyNeighbor
 	}
 
 	BGPAddressFamilies struct {
@@ -67,9 +67,10 @@ type (
 	}
 
 	// FIXME: naming
-	AdressFamilyNeighbor struct {
-		Neighbor    string
-		Commands    []string
+	AddressFamilyNeighbor struct {
+		Name     string
+		Commands []string
+		// FIXME: remove routemaps and add the commands to `Commands` instead
 		RouteMapIn  string
 		RouteMapOut string
 	}

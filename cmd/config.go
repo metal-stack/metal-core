@@ -29,4 +29,5 @@ type Config struct {
 	PXEVlanID                 uint16        `required:"false" default:"4000" desc:"the id of the pxe vlan" envconfig:"pxe_vlan_id"`
 	BGPNeighborStateFile      string        `required:"false" default:"/var/run/bgp-neighbors/bgp-neighbors.json" desc:"the file to read the BGP neighbor state from" envconfig:"bgp_neighbor_state_file"`
 	InterfaceNamingSchema     string        `required:"false" default:"default" desc:"schema for interface and alias naming of switch nics" envconfig:"interface_naming_schema"`
+	StatigBGPConfigFile       string        `required:"false" desc:"yaml file containing static bgp configuration, like neighbors, route-maps, prefix-lists, etc., that is not managed by the api" envconfig:"static_bgp_config_file"`
 }
