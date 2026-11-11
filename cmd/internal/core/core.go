@@ -22,7 +22,6 @@ type (
 		enableReconfigureSwitch bool
 		managementGateway       string
 		additionalMgmtRoutes    []string
-		ignorePorts             []string
 		spineUplinks            []string
 		pxeVlanID               uint16
 		bgpNeighborStateFile    string
@@ -48,7 +47,6 @@ type (
 		PXEVlanID            uint16
 		BGPNeighborStateFile string
 		AdditionalMgmtRoutes []string
-		IgnorePorts          []string
 		SpineUplinks         []string
 		SetSrcLoopback       bool
 
@@ -71,7 +69,6 @@ func New(c Config) *Core {
 		enableReconfigureSwitch: c.ReconfigureSwitch,
 		managementGateway:       c.ManagementGateway,
 		additionalMgmtRoutes:    c.AdditionalMgmtRoutes,
-		ignorePorts:             c.IgnorePorts,
 		spineUplinks:            c.SpineUplinks,
 		setSrcLoopback:          c.SetSrcLoopback,
 		nos:                     c.NOS,
