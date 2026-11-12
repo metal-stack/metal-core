@@ -76,9 +76,6 @@ func TestBuildSwitcherConfig(t *testing.T) {
 				Vrf:  new("vrf200"),
 			},
 			{
-				Name: "Ethernet24",
-			},
-			{
 				Name: "Ethernet120",
 			},
 			{
