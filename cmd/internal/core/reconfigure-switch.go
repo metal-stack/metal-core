@@ -300,12 +300,6 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		return nil, fmt.Errorf("failed to merge static and dynamic frr configs: %w", err)
 	}
 
-	// TODO:
-	// validate config:
-	// - unnumbered neighbors must have suffix "interface"
-	// - prefix-lists address family must be consistent with their spec
-	// - referenced entities must be present (prefix-lists, route-maps, peer-groups, vrfs)
-
 	switcherConfig.FRRConfig = mergedConfig
 
 	m, err := vlan.ReadMapping()
