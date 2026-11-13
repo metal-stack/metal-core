@@ -255,7 +255,7 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 				return nil, fmt.Errorf("failed to make route-maps and prefix-lists for port %s: %w", nic.Name, err)
 			}
 
-			routeMaps = append(routeMaps, rms...)
+			routeMaps = appendMissingRouteMaps(routeMaps, rms)
 			prefixLists = append(prefixLists, pfs...)
 		}
 
@@ -524,6 +524,19 @@ func mergeRouteMaps(rms1, rms2 []*types.RouteMap) ([]*types.RouteMap, error) {
 	})
 
 	return rms, nil
+}
+
+func appendMissingRouteMaps(routeMaps, candidates []*types.RouteMap) []*types.RouteMap {
+	for _, candidate := range candidates {
+		if slices.ContainsFunc(routeMaps, func(rm *types.RouteMap) bool {
+			return rm.Name == candidate.Name && rm.Order == candidate.Order
+		}) {
+			continue
+		}
+		routeMaps = append(routeMaps, candidate)
+	}
+
+	return routeMaps
 }
 
 func mergePrefixLists(pfs1, pfs2 []*types.IPPrefixList) []*types.IPPrefixList {

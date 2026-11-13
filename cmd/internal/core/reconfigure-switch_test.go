@@ -1590,3 +1590,48 @@ func Test_mergeBGPsKeepsInputsUntouched(t *testing.T) {
 		t.Errorf("mergeBGPs() changed its first argument, diff = %s", diff)
 	}
 }
+
+func Test_buildSwitcherConfigTwoMachinesInSameVrf(t *testing.T) {
+	c := &Core{
+		asn:             "420000001",
+		nos:             &sonic.Sonic{},
+		pxeVlanID:       4000,
+		staticFRRConfig: &types.FRRConfig{},
+	}
+	s := &apiv2.Switch{
+		Id: "leaf01",
+		Nics: []*apiv2.SwitchNic{
+			{
+				Name:      "Ethernet1",
+				Vrf:       new("vrf104001"),
+				BgpFilter: &apiv2.BGPFilter{Cidrs: []string{"10.240.0.0/12", "212.1.1.1/32"}},
+			},
+			{
+				Name:      "Ethernet2",
+				Vrf:       new("vrf104001"),
+				BgpFilter: &apiv2.BGPFilter{Cidrs: []string{"10.240.0.0/12", "212.1.1.2/32"}},
+			},
+		},
+	}
+
+	got, err := c.buildSwitcherConfig(s)
+	require.NoError(t, err)
+
+	var machineRouteMaps []*types.RouteMap
+	for _, rm := range got.FRRConfig.RouteMaps {
+		if rm.Name == "Vrf104001-in" {
+			machineRouteMaps = append(machineRouteMaps, rm)
+		}
+	}
+	require.Len(t, machineRouteMaps, 1)
+
+	var specs []string
+	for _, pf := range got.FRRConfig.PrefixLists {
+		specs = append(specs, pf.Spec)
+	}
+	require.ElementsMatch(t, []string{
+		"permit 10.240.0.0/12 le 32",
+		"permit 212.1.1.1/32 le 32",
+		"permit 212.1.1.2/32 le 32",
+	}, specs)
+}
