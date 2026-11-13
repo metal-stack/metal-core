@@ -23,6 +23,8 @@ const (
 
 var (
 	testcoreAdditionalMgmtRoutes = []string{"10.100.0.0/16"}
+	testcoreIgnorePortsSonic     = []string{"Ethernet24"}
+	testcoreIgnorePortsCumulus   = []string{"swp24"}
 	testcoreSpineUplinksSonic    = []string{"Ethernet120", "Ethernet124"}
 	testcoreSpineUplinksCumulus  = []string{"swp31", "swp32"}
 	testcoreLog                  = slog.New(slog.NewJSONHandler(os.Stdout, nil))
@@ -147,6 +149,7 @@ var (
 		ManagementGateway:    testcoreMgmtGateway,
 		PXEVlanID:            testcorePXEVLAN,
 		AdditionalMgmtRoutes: testcoreAdditionalMgmtRoutes,
+		IgnorePorts:          testcoreIgnorePortsSonic,
 		SpineUplinks:         testcoreSpineUplinksSonic,
 		SetSrcLoopback:       testcoreSetSrcLoopback,
 		NOS:                  &sonic.Sonic{},
@@ -161,6 +164,7 @@ var (
 		ManagementGateway:    testcoreMgmtGateway,
 		PXEVlanID:            testcorePXEVLAN,
 		AdditionalMgmtRoutes: testcoreAdditionalMgmtRoutes,
+		IgnorePorts:          testcoreIgnorePortsCumulus,
 		SpineUplinks:         testcoreSpineUplinksCumulus,
 		SetSrcLoopback:       testcoreSetSrcLoopback,
 		NOS:                  &cumulus.Cumulus{},

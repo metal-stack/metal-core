@@ -84,13 +84,18 @@ func (s *Sonic) IsInitialized(ctx context.Context) (initialized bool, err error)
 	return s.db.Appl.ExistPortInitDone(ctx)
 }
 
-func (s *Sonic) GetNics(ctx context.Context) (nics []*apiv2.SwitchNic, err error) {
+func (s *Sonic) GetNics(ctx context.Context, blacklist []string) (nics []*apiv2.SwitchNic, err error) {
 	ports, err := s.getPortsConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get ports config")
 	}
 
 	for name, portConfig := range ports {
+		if slices.Contains(blacklist, name) {
+			s.log.Debug("skip interface, because it is contained in the blacklist", "interface", name, "blacklist", blacklist)
+			continue
+		}
+
 		linkStatus, err := corenet.GetLinkStatus(name)
 		if err != nil {
 			s.log.Error("failed to get link status", "port", name, "status", linkStatus, "error", err)

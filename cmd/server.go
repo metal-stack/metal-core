@@ -122,6 +122,7 @@ func Run() {
 		ReconfigureSwitch:    cfg.ReconfigureSwitch,
 		ManagementGateway:    cfg.ManagementGateway,
 		AdditionalMgmtRoutes: cfg.AdditionalMgmtRoutes,
+		IgnorePorts:          cfg.IgnorePorts,
 		SpineUplinks:         cfg.SpineUplinks,
 		SetSrcLoopback:       cfg.SetSrcLoopback,
 		NOS:                  nos,
