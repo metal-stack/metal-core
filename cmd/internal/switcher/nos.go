@@ -16,13 +16,14 @@ import (
 )
 
 type NOS interface {
-	SanitizeConfig(cfg *types.Conf)
 	Apply(ctx context.Context, cfg *types.Conf) error
 	IsInitialized(ctx context.Context) (initialized bool, err error)
 	GetNics(ctx context.Context, blacklist []string) ([]*apiv2.SwitchNic, error)
+	GetVRF(nic *apiv2.SwitchNic) *string
 	GetOS() (*apiv2.SwitchOS, error)
 	GetSwitchPorts(ctx context.Context) ([]*net.Interface, error)
 	GetManagement() (ip, user string, err error)
+	DefaultRouteMaps() []*types.RouteMap
 }
 
 func NewNOS(log *slog.Logger, frrTplFile, interfacesTplFile string, interfaceNamingSchema sonic.InterfaceNamingSchema) (NOS, error) {
