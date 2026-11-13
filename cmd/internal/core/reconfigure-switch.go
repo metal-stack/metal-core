@@ -26,6 +26,8 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 )
 
+var interfaceNumbers = regexp.MustCompile("[0-9]+")
+
 func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval, timeout time.Duration) {
 	host, _ := os.Hostname()
 
@@ -230,18 +232,7 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 			}
 		}
 
-		slices.SortFunc(bgp.Neighbors, func(a, b types.BGPNeighbor) int {
-			pgDiff := strings.Compare(pointer.SafeDeref(a.PeerGroup), pointer.SafeDeref(b.PeerGroup))
-			if pgDiff != 0 {
-				return pgDiff
-			}
-			aIfname, aFound := strings.CutSuffix(a.Name, "interface")
-			bIfname, bFound := strings.CutPrefix(b.Name, "interface")
-			if aFound && bFound {
-				return interfaceSmallerFunc(strings.TrimSpace(aIfname), strings.TrimSpace(bIfname))
-			}
-			return strings.Compare(a.Name, b.Name)
-		})
+		slices.SortFunc(bgp.Neighbors, compareBGPNeighbors)
 
 		if !found {
 			bgps = append(bgps, bgp)
@@ -432,20 +423,22 @@ func mergeBGPNeighbors(neighs1, neighs2 []types.BGPNeighbor) ([]types.BGPNeighbo
 		neighs = append(neighs, neigh)
 	}
 
-	slices.SortFunc(neighs, func(a, b types.BGPNeighbor) int {
-		pgDiff := strings.Compare(pointer.SafeDeref(a.PeerGroup), pointer.SafeDeref(b.PeerGroup))
-		if pgDiff != 0 {
-			return pgDiff
-		}
-		aIfname, aFound := strings.CutSuffix(a.Name, "interface")
-		bIfname, bFound := strings.CutPrefix(b.Name, "interface")
-		if aFound && bFound {
-			return interfaceSmallerFunc(strings.TrimSpace(aIfname), strings.TrimSpace(bIfname))
-		}
-		return strings.Compare(a.Name, b.Name)
-	})
+	slices.SortFunc(neighs, compareBGPNeighbors)
 
 	return neighs, nil
+}
+
+func compareBGPNeighbors(a, b types.BGPNeighbor) int {
+	pgDiff := strings.Compare(pointer.SafeDeref(a.PeerGroup), pointer.SafeDeref(b.PeerGroup))
+	if pgDiff != 0 {
+		return pgDiff
+	}
+	aIfname, aFound := strings.CutSuffix(a.Name, " interface")
+	bIfname, bFound := strings.CutSuffix(b.Name, " interface")
+	if aFound && bFound {
+		return interfaceSmallerFunc(aIfname, bIfname)
+	}
+	return strings.Compare(a.Name, b.Name)
 }
 
 func mergeBGPAddressFamily(af1, af2 *types.BGPAddressFamily) *types.BGPAddressFamily {
@@ -549,21 +542,21 @@ func mergePrefixLists(pfs1, pfs2 []*types.IPPrefixList) []*types.IPPrefixList {
 }
 
 func interfaceSmallerFunc(a, b string) int {
-	r := regexp.MustCompile("[0-9]+")
-	numsA := r.FindAllString(a, -1)
-	numsB := r.FindAllString(b, -1)
+	numsA := interfaceNumbers.FindAllString(a, -1)
+	numsB := interfaceNumbers.FindAllString(b, -1)
 
-	for i := range numsA {
-		numAStr := numsA[i]
-		numBStr := numsB[i]
-
-		numA, _ := strconv.Atoi(numAStr)
-		numB, _ := strconv.Atoi(numBStr)
+	for i := range min(len(numsA), len(numsB)) {
+		numA, _ := strconv.Atoi(numsA[i])
+		numB, _ := strconv.Atoi(numsB[i])
 		diff := numA - numB
 
 		if diff != 0 {
 			return diff
 		}
+	}
+
+	if len(numsA) != len(numsB) {
+		return len(numsA) - len(numsB)
 	}
 
 	return strings.Compare(a, b)

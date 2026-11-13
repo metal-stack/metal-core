@@ -1510,6 +1510,18 @@ func Test_interfaceSmallerFunc(t *testing.T) {
 			b:    "swp2s2",
 			want: -2,
 		},
+		{
+			name: "breakout port after its parent",
+			a:    "swp1s0",
+			b:    "swp1",
+			want: 1,
+		},
+		{
+			name: "only one contains digits",
+			a:    "Ethernet1",
+			b:    "lo",
+			want: 1,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1517,5 +1529,23 @@ func Test_interfaceSmallerFunc(t *testing.T) {
 				t.Errorf("interfaceSmallerFunc() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func Test_compareBGPNeighbors(t *testing.T) {
+	neighs := []types.BGPNeighbor{
+		{Name: "Ethernet10 interface"},
+		{Name: "Ethernet2 interface"},
+	}
+
+	got, err := mergeBGPNeighbors(nil, neighs)
+	require.NoError(t, err)
+
+	want := []types.BGPNeighbor{
+		{Name: "Ethernet2 interface"},
+		{Name: "Ethernet10 interface"},
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("mergeBGPNeighbors() diff = %s", diff)
 	}
 }
