@@ -97,7 +97,7 @@ func Run() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	nics, err := nos.GetNics(ctx)
+	nics, err := nos.GetNics(ctx, cfg.IgnorePorts)
 	if err != nil {
 		log.Error("failed to get switch nics", "error", err)
 		os.Exit(1)
