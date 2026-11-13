@@ -31,7 +31,10 @@ func (a *Applier) configurePort(ctx context.Context, port types.Port) error {
 
 	if p.AdminStatus != string(port.AdminStatus) && port.AdminStatus != "" {
 		a.log.Debug("set admin status to", "port", port.Name, "admin_status", port.AdminStatus)
-		return a.db.Config.SetAdminStatus(ctx, port.Name, port.AdminStatus)
+		err = a.db.Config.SetAdminStatus(ctx, port.Name, port.AdminStatus)
+		if err != nil {
+			return err
+		}
 	}
 
 	if port.VLAN != nil {

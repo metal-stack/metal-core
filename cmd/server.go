@@ -191,6 +191,9 @@ func Run() {
 
 func getStaticBGPConfig(file string) (*types.FRRConfig, error) {
 	config := &types.FRRConfig{}
+	if file == "" {
+		return config, nil
+	}
 
 	fileBytes, err := os.ReadFile(file)
 	if err != nil {
@@ -207,6 +210,12 @@ func getStaticBGPConfig(file string) (*types.FRRConfig, error) {
 }
 
 func validateStaticBGPConfig(conf *types.FRRConfig, nics []*apiv2.SwitchNic) error {
+	for _, vrf := range conf.VRFs {
+		if _, err := types.ParseVNI(vrf); err != nil {
+			return err
+		}
+	}
+
 	if err := validateUnnumberedInterfaces(conf, nics); err != nil {
 		return err
 	}
@@ -409,12 +418,12 @@ func validateRouteMaps(conf *types.FRRConfig) error {
 		}
 
 		for _, entry := range rm.Entries {
-			split := strings.Split(entry, "prefix-list")
-			if len(split) == 0 {
+			_, pf, found := strings.Cut(entry, "prefix-list")
+			if !found {
 				continue
 			}
 
-			pf := strings.TrimSpace(split[len(split)-1])
+			pf = strings.TrimSpace(pf)
 			if !slices.ContainsFunc(conf.PrefixLists, func(p *types.IPPrefixList) bool {
 				return p.Name == pf
 			}) {

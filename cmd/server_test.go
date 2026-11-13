@@ -551,3 +551,29 @@ func Test_validatePrefixLists(t *testing.T) {
 		})
 	}
 }
+
+func Test_getStaticBGPConfigWithoutFile(t *testing.T) {
+	got, err := getStaticBGPConfig("")
+	if err != nil {
+		t.Fatalf("getStaticBGPConfig() error = %v", err)
+	}
+	if diff := cmp.Diff(&types.FRRConfig{}, got); diff != "" {
+		t.Errorf("getStaticBGPConfig() diff = %s", diff)
+	}
+}
+
+func Test_validateRouteMapsIgnoresEntriesWithoutPrefixList(t *testing.T) {
+	conf := &types.FRRConfig{
+		RouteMaps: []*types.RouteMap{
+			{
+				Name:    "LOCAL_PREF",
+				Entries: []string{"match interface lo", "set local-preference 200"},
+				Policy:  types.PolicyPermit,
+				Order:   10,
+			},
+		},
+	}
+	if err := validateRouteMaps(conf); err != nil {
+		t.Errorf("validateRouteMaps() error = %v", err)
+	}
+}
