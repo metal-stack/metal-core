@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net"
 	"os"
+	"slices"
 	"strings"
 
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
@@ -44,7 +45,7 @@ func (c *Cumulus) IsInitialized(context.Context) (initialized bool, err error) {
 	return true, nil
 }
 
-func (c *Cumulus) GetNics(ctx context.Context) (nics []*apiv2.SwitchNic, err error) {
+func (c *Cumulus) GetNics(ctx context.Context, blacklist []string) (nics []*apiv2.SwitchNic, err error) {
 	ifs, err := c.GetSwitchPorts(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get all ifs: %w", err)
@@ -53,6 +54,11 @@ func (c *Cumulus) GetNics(ctx context.Context) (nics []*apiv2.SwitchNic, err err
 	for _, iface := range ifs {
 		name := iface.Name
 		mac := iface.HardwareAddr.String()
+		if slices.Contains(blacklist, name) {
+			c.log.Debug("skip interface, because it is contained in the blacklist", "interface", name, "blacklist", blacklist)
+			continue
+		}
+
 		if _, err := net.ParseMAC(mac); err != nil {
 			c.log.Debug("skip interface with invalid mac", "interface", name, "MAC", mac)
 			continue
