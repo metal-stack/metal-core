@@ -11,6 +11,8 @@ import (
 	"strings"
 
 	"go.yaml.in/yaml/v4"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	apiv2 "github.com/metal-stack/api/go/metalstack/api/v2"
 	"github.com/metal-stack/metal-core/cmd/internal"
@@ -19,6 +21,7 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
+	"github.com/metal-stack/metal-lib/pkg/pointer"
 )
 
 type (
@@ -105,8 +108,28 @@ func (s *Sonic) GetNics(ctx context.Context, blacklist []string) (nics []*apiv2.
 	return nics, nil
 }
 
-func (s *Sonic) SanitizeConfig(cfg *types.Conf) {
-	cfg.CapitalizeVrfName()
+func (s *Sonic) GetVRF(nic *apiv2.SwitchNic) *string {
+	if nic.Vrf == nil || pointer.SafeDeref(nic.Vrf) == "default" {
+		return nic.Vrf
+	}
+	caser := cases.Title(language.English)
+	return new(caser.String(pointer.SafeDeref(nic.Vrf)))
+}
+
+func (s *Sonic) DefaultRouteMaps() []*types.RouteMap {
+	return []*types.RouteMap{
+		{
+			Name:    "DENY_MGMT",
+			Entries: []string{"match interface eth0"},
+			Policy:  types.PolicyDeny,
+			Order:   10,
+		},
+		{
+			Name:   "DENY_MGMT",
+			Policy: types.PolicyPermit,
+			Order:  20,
+		},
+	}
 }
 
 func (s *Sonic) GetSwitchPorts(ctx context.Context) ([]*net.Interface, error) {
