@@ -26,8 +26,6 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 )
 
-var interfaceNumbers = regexp.MustCompile("[0-9]+")
-
 func (c *Core) ConstantlyReconfigureSwitch(ctx context.Context, interval, timeout time.Duration) {
 	host, _ := os.Hostname()
 
@@ -438,10 +436,10 @@ func compareBGPNeighbors(a, b types.BGPNeighbor) int {
 	if pgDiff != 0 {
 		return pgDiff
 	}
-	aIfname, aFound := strings.CutSuffix(a.Name, " interface")
-	bIfname, bFound := strings.CutSuffix(b.Name, " interface")
+	aIfname, aFound := strings.CutSuffix(a.Name, "interface")
+	bIfname, bFound := strings.CutSuffix(b.Name, "interface")
 	if aFound && bFound {
-		return interfaceSmallerFunc(aIfname, bIfname)
+		return interfaceSmallerFunc(strings.TrimSpace(aIfname), strings.TrimSpace(bIfname))
 	}
 	return strings.Compare(a.Name, b.Name)
 }
@@ -563,8 +561,11 @@ func mergePrefixLists(pfs1, pfs2 []*types.IPPrefixList) []*types.IPPrefixList {
 }
 
 func interfaceSmallerFunc(a, b string) int {
-	numsA := interfaceNumbers.FindAllString(a, -1)
-	numsB := interfaceNumbers.FindAllString(b, -1)
+	var (
+		r     = regexp.MustCompile("[0-9]+")
+		numsA = r.FindAllString(a, -1)
+		numsB = r.FindAllString(b, -1)
+	)
 
 	for i := range min(len(numsA), len(numsB)) {
 		numA, _ := strconv.Atoi(numsA[i])

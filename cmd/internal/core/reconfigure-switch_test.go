@@ -1537,20 +1537,49 @@ func Test_interfaceSmallerFunc(t *testing.T) {
 }
 
 func Test_compareBGPNeighbors(t *testing.T) {
-	neighs := []types.BGPNeighbor{
-		{Name: "Ethernet10 interface"},
-		{Name: "Ethernet2 interface"},
+	tests := []struct {
+		name string
+		a    types.BGPNeighbor
+		b    types.BGPNeighbor
+		want int
+	}{
+		{
+			name: "compare sonic standard interface naming",
+			a: types.BGPNeighbor{
+				Name: "Ethernet10 interface",
+			},
+			b: types.BGPNeighbor{
+				Name: "Ethernet2 interface",
+			},
+			want: 8,
+		},
+		{
+			name: "compare sonic alternative interface naming",
+			a: types.BGPNeighbor{
+				Name: "Eth21 interface",
+			},
+			b: types.BGPNeighbor{
+				Name: "Eth20/3 interface",
+			},
+			want: 1,
+		},
+		{
+			name: "compare cumulus",
+			a: types.BGPNeighbor{
+				Name: "swp2s2 interface",
+			},
+			b: types.BGPNeighbor{
+				Name: "swp2s3 interface",
+			},
+			want: -1,
+		},
 	}
-
-	got, err := mergeBGPNeighbors(nil, neighs)
-	require.NoError(t, err)
-
-	want := []types.BGPNeighbor{
-		{Name: "Ethernet2 interface"},
-		{Name: "Ethernet10 interface"},
-	}
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("mergeBGPNeighbors() diff = %s", diff)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := compareBGPNeighbors(tt.a, tt.b); got != tt.want {
+				t.Errorf("compareBGPNeighbors() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
 
