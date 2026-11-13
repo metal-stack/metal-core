@@ -89,7 +89,7 @@ func Run() {
 		os.Exit(1)
 	}
 
-	frrConf, err := getStaticBGPConfig(cfg.StatigBGPConfigFile)
+	frrConf, err := getStaticBGPConfig(cfg.StaticBGPConfigFile)
 	if err != nil {
 		log.Error("failed to get static bgp configuration", "error", err)
 		os.Exit(1)
