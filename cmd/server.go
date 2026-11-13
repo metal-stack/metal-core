@@ -417,12 +417,12 @@ func validateRouteMaps(conf *types.FRRConfig) error {
 		}
 
 		for _, entry := range rm.Entries {
-			split := strings.Split(entry, "prefix-list")
-			if len(split) == 0 {
+			_, pf, found := strings.Cut(entry, "prefix-list")
+			if !found {
 				continue
 			}
 
-			pf := strings.TrimSpace(split[len(split)-1])
+			pf = strings.TrimSpace(pf)
 			if !slices.ContainsFunc(conf.PrefixLists, func(p *types.IPPrefixList) bool {
 				return p.Name == pf
 			}) {
