@@ -206,6 +206,12 @@ func getStaticBGPConfig(file string) (*types.FRRConfig, error) {
 }
 
 func validateStaticBGPConfig(conf *types.FRRConfig, nics []*apiv2.SwitchNic) error {
+	for _, vrf := range conf.VRFs {
+		if _, err := types.ParseVNI(vrf); err != nil {
+			return err
+		}
+	}
+
 	if err := validateUnnumberedInterfaces(conf, nics); err != nil {
 		return err
 	}

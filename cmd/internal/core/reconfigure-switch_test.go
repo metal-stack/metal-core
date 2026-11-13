@@ -1635,3 +1635,16 @@ func Test_buildSwitcherConfigTwoMachinesInSameVrf(t *testing.T) {
 		"permit 212.1.1.2/32 le 32",
 	}, specs)
 }
+
+func Test_addVRFRejectsNameWithoutVNI(t *testing.T) {
+	for _, name := range []string{"v1", "Vrf", "VrfACPmgmt"} {
+		t.Run(name, func(t *testing.T) {
+			_, err := addVRF(new(name), nil)
+			require.Error(t, err)
+		})
+	}
+
+	vrfs, err := addVRF(new("Vrf104001"), nil)
+	require.NoError(t, err)
+	require.Equal(t, []*types.Vrf{{Name: "Vrf104001", VNI: 104001}}, vrfs)
+}

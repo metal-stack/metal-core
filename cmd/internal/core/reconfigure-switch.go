@@ -634,17 +634,17 @@ func addVRF(vrf *string, vrfs []*types.Vrf) ([]*types.Vrf, error) {
 		return vrfs, nil
 	}
 
-	vni, err := strconv.ParseUint(pointer.SafeDeref(vrf)[3:], 10, 32)
+	vni, err := types.ParseVNI(pointer.SafeDeref(vrf))
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse vni of vrf %s: %w", pointer.SafeDeref(vrf), err)
+		return nil, err
 	}
 
 	if !slices.ContainsFunc(vrfs, func(v *types.Vrf) bool {
-		return v.VNI == uint32(vni)
+		return v.VNI == vni
 	}) {
 		vrfs = append(vrfs, &types.Vrf{
 			Name: pointer.SafeDeref(vrf),
-			VNI:  uint32(vni),
+			VNI:  vni,
 		})
 	}
 
