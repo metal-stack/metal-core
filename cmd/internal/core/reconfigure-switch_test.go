@@ -32,6 +32,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		spineUplinks:         []string{"Ethernet120", "Ethernet124"},
 		nos:                  &sonic.Sonic{},
 		additionalMgmtRoutes: []string{"100.1.1.0/24"},
+		ignorePorts:          []string{"Ethernet24"},
 		pxeVlanID:            4000,
 		staticFRRConfig: &types.FRRConfig{
 			VRFs: []string{"Vrf300"},
@@ -162,6 +163,9 @@ func TestBuildSwitcherConfig(t *testing.T) {
 			{
 				Name: "Ethernet5",
 				Vrf:  new("vrf200"),
+			},
+			{
+				Name: "Ethernet24",
 			},
 			{
 				Name: "Ethernet120",

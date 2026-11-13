@@ -89,7 +89,7 @@ func Run() {
 		os.Exit(1)
 	}
 
-	frrConf, err := getStaticBGPConfig(cfg.StatigBGPConfigFile)
+	frrConf, err := getStaticBGPConfig(cfg.StaticBGPConfigFile)
 	if err != nil {
 		log.Error("failed to get static bgp configuration", "error", err)
 		os.Exit(1)
@@ -97,7 +97,7 @@ func Run() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	nics, err := nos.GetNics(ctx)
+	nics, err := nos.GetNics(ctx, cfg.IgnorePorts)
 	if err != nil {
 		log.Error("failed to get switch nics", "error", err)
 		os.Exit(1)
@@ -122,6 +122,7 @@ func Run() {
 		ReconfigureSwitch:    cfg.ReconfigureSwitch,
 		ManagementGateway:    cfg.ManagementGateway,
 		AdditionalMgmtRoutes: cfg.AdditionalMgmtRoutes,
+		IgnorePorts:          cfg.IgnorePorts,
 		SpineUplinks:         cfg.SpineUplinks,
 		SetSrcLoopback:       cfg.SetSrcLoopback,
 		NOS:                  nos,

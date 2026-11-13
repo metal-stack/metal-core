@@ -175,6 +175,10 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 			continue
 		}
 
+		if slices.Contains(c.ignorePorts, nic.Name) {
+			continue
+		}
+
 		port := types.Port{
 			Name: nic.Name,
 			MTU:  9000,
