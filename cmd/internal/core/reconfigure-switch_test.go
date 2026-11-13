@@ -1549,3 +1549,44 @@ func Test_compareBGPNeighbors(t *testing.T) {
 		t.Errorf("mergeBGPNeighbors() diff = %s", diff)
 	}
 }
+
+func Test_mergeBGPsKeepsInputsUntouched(t *testing.T) {
+	staticBGPs := func() []*types.BGP {
+		return []*types.BGP{
+			{
+				PeerGroups: []types.PeerGroup{{Name: "K3S"}},
+				Neighbors:  []types.BGPNeighbor{{Name: "10.1.1.10", PeerGroup: new("K3S")}},
+				AddressFamilies: types.BGPAddressFamilies{
+					IPv4Unicast: &types.BGPAddressFamily{
+						Neighbors: []*types.AddressFamilyNeighbor{
+							{Name: "K3S", Commands: []string{"route-map K3S-in in"}},
+						},
+					},
+				},
+			},
+		}
+	}
+	dynamicBGPs := []*types.BGP{
+		{
+			PeerGroups: []types.PeerGroup{{Name: "FABRIC"}},
+			Neighbors:  []types.BGPNeighbor{{Name: "Ethernet120 interface", PeerGroup: new("FABRIC")}},
+			AddressFamilies: types.BGPAddressFamilies{
+				IPv4Unicast: &types.BGPAddressFamily{
+					Neighbors: []*types.AddressFamilyNeighbor{
+						{Name: "K3S", Commands: []string{"allowas-in 2"}},
+					},
+				},
+			},
+		},
+	}
+
+	static := staticBGPs()
+	for run := range 2 {
+		_, err := mergeBGPs(static, dynamicBGPs)
+		require.NoError(t, err, "run %d", run)
+	}
+
+	if diff := cmp.Diff(staticBGPs(), static); diff != "" {
+		t.Errorf("mergeBGPs() changed its first argument, diff = %s", diff)
+	}
+}

@@ -381,7 +381,8 @@ func mergeBGPs(bgps1, bgps2 []*types.BGP) ([]*types.BGP, error) {
 		})
 
 		if !found {
-			bgps = append(bgps, bgp)
+			merged := *bgp
+			bgps = append(bgps, &merged)
 			continue
 		}
 
@@ -462,7 +463,10 @@ func mergeBGPAddressFamily(af1, af2 *types.BGPAddressFamily) *types.BGPAddressFa
 			return n.Name == neigh.Name
 		})
 		if !found {
-			af.Neighbors = append(af.Neighbors, neigh)
+			af.Neighbors = append(af.Neighbors, &types.AddressFamilyNeighbor{
+				Name:     neigh.Name,
+				Commands: slices.Clone(neigh.Commands),
+			})
 			continue
 		}
 
