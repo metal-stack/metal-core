@@ -23,7 +23,7 @@ type Config struct {
 	ReconfigureSwitch         bool          `required:"false" default:"false" desc:"let metal-core reconfigure the switch" split_words:"true"`
 	ReconfigureSwitchInterval time.Duration `required:"false" default:"10s" desc:"pull interval to fetch and apply switch configuration" split_words:"true"`
 	Timeout                   time.Duration `required:"false" default:"15s" desc:"timeout for long lasting operations during switch registration and reconfiguration"`
-	IgnorePorts               []string      `required:"false" desc:"additional switch ports that should be configured at the vlan-aware bridge" envconfig:"ignore_ports"`
+	IgnorePorts               []string      `required:"false" desc:"ports that should not be dynamically configured by the metal-core" envconfig:"ignore_ports"`
 	InterfacesTplFile         string        `required:"false" default:"" desc:"the golang template file used to render /etc/network/interfaces, a default template is included" envconfig:"interfaces_tpl_file"`
 	FrrTplFile                string        `required:"false" default:"" desc:"the golang template file used to render /etc/frr/frr.conf, a default template is included" envconfig:"frr_tpl_file"`
 	PXEVlanID                 uint16        `required:"false" default:"4000" desc:"the id of the pxe vlan" envconfig:"pxe_vlan_id"`
