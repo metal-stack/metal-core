@@ -190,6 +190,9 @@ func Run() {
 
 func getStaticBGPConfig(file string) (*types.FRRConfig, error) {
 	config := &types.FRRConfig{}
+	if file == "" {
+		return config, nil
+	}
 
 	fileBytes, err := os.ReadFile(file)
 	if err != nil {

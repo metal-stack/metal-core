@@ -551,3 +551,13 @@ func Test_validatePrefixLists(t *testing.T) {
 		})
 	}
 }
+
+func Test_getStaticBGPConfigWithoutFile(t *testing.T) {
+	got, err := getStaticBGPConfig("")
+	if err != nil {
+		t.Fatalf("getStaticBGPConfig() error = %v", err)
+	}
+	if diff := cmp.Diff(&types.FRRConfig{}, got); diff != "" {
+		t.Errorf("getStaticBGPConfig() diff = %s", diff)
+	}
+}
