@@ -1514,6 +1514,18 @@ func Test_interfaceSmallerFunc(t *testing.T) {
 			b:    "swp2s2",
 			want: -2,
 		},
+		{
+			name: "breakout port after its parent",
+			a:    "swp1s0",
+			b:    "swp1",
+			want: 1,
+		},
+		{
+			name: "only one contains digits",
+			a:    "Ethernet1",
+			b:    "lo",
+			want: 1,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1522,4 +1534,150 @@ func Test_interfaceSmallerFunc(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_compareBGPNeighbors(t *testing.T) {
+	tests := []struct {
+		name string
+		a    types.BGPNeighbor
+		b    types.BGPNeighbor
+		want int
+	}{
+		{
+			name: "compare sonic standard interface naming",
+			a: types.BGPNeighbor{
+				Name: "Ethernet10 interface",
+			},
+			b: types.BGPNeighbor{
+				Name: "Ethernet2 interface",
+			},
+			want: 8,
+		},
+		{
+			name: "compare sonic alternative interface naming",
+			a: types.BGPNeighbor{
+				Name: "Eth21 interface",
+			},
+			b: types.BGPNeighbor{
+				Name: "Eth20/3 interface",
+			},
+			want: 1,
+		},
+		{
+			name: "compare cumulus",
+			a: types.BGPNeighbor{
+				Name: "swp2s2 interface",
+			},
+			b: types.BGPNeighbor{
+				Name: "swp2s3 interface",
+			},
+			want: -1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := compareBGPNeighbors(tt.a, tt.b); got != tt.want {
+				t.Errorf("compareBGPNeighbors() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_mergeBGPsKeepsInputsUntouched(t *testing.T) {
+	staticBGPs := func() []*types.BGP {
+		return []*types.BGP{
+			{
+				PeerGroups: []types.PeerGroup{{Name: "K3S"}},
+				Neighbors:  []types.BGPNeighbor{{Name: "10.1.1.10", PeerGroup: new("K3S")}},
+				AddressFamilies: types.BGPAddressFamilies{
+					IPv4Unicast: &types.BGPAddressFamily{
+						Neighbors: []*types.AddressFamilyNeighbor{
+							{Name: "K3S", Commands: []string{"route-map K3S-in in"}},
+						},
+					},
+				},
+			},
+		}
+	}
+	dynamicBGPs := []*types.BGP{
+		{
+			PeerGroups: []types.PeerGroup{{Name: "FABRIC"}},
+			Neighbors:  []types.BGPNeighbor{{Name: "Ethernet120 interface", PeerGroup: new("FABRIC")}},
+			AddressFamilies: types.BGPAddressFamilies{
+				IPv4Unicast: &types.BGPAddressFamily{
+					Neighbors: []*types.AddressFamilyNeighbor{
+						{Name: "K3S", Commands: []string{"allowas-in 2"}},
+					},
+				},
+			},
+		},
+	}
+
+	static := staticBGPs()
+	for run := range 2 {
+		_, err := mergeBGPs(static, dynamicBGPs)
+		require.NoError(t, err, "run %d", run)
+	}
+
+	if diff := cmp.Diff(staticBGPs(), static); diff != "" {
+		t.Errorf("mergeBGPs() changed its first argument, diff = %s", diff)
+	}
+}
+
+func Test_buildSwitcherConfigTwoMachinesInSameVrf(t *testing.T) {
+	c := &Core{
+		asn:             "420000001",
+		nos:             &sonic.Sonic{},
+		pxeVlanID:       4000,
+		staticFRRConfig: &types.FRRConfig{},
+	}
+	s := &apiv2.Switch{
+		Id: "leaf01",
+		Nics: []*apiv2.SwitchNic{
+			{
+				Name:      "Ethernet1",
+				Vrf:       new("vrf104001"),
+				BgpFilter: &apiv2.BGPFilter{Cidrs: []string{"10.240.0.0/12", "212.1.1.1/32"}},
+			},
+			{
+				Name:      "Ethernet2",
+				Vrf:       new("vrf104001"),
+				BgpFilter: &apiv2.BGPFilter{Cidrs: []string{"10.240.0.0/12", "212.1.1.2/32"}},
+			},
+		},
+	}
+
+	got, err := c.buildSwitcherConfig(s)
+	require.NoError(t, err)
+
+	var machineRouteMaps []*types.RouteMap
+	for _, rm := range got.FRRConfig.RouteMaps {
+		if rm.Name == "Vrf104001-in" {
+			machineRouteMaps = append(machineRouteMaps, rm)
+		}
+	}
+	require.Len(t, machineRouteMaps, 1)
+
+	var specs []string
+	for _, pf := range got.FRRConfig.PrefixLists {
+		specs = append(specs, pf.Spec)
+	}
+	require.ElementsMatch(t, []string{
+		"permit 10.240.0.0/12 le 32",
+		"permit 212.1.1.1/32 le 32",
+		"permit 212.1.1.2/32 le 32",
+	}, specs)
+}
+
+func Test_addVRFRejectsNameWithoutVNI(t *testing.T) {
+	for _, name := range []string{"v1", "Vrf", "VrfACPmgmt"} {
+		t.Run(name, func(t *testing.T) {
+			_, err := addVRF(new(name), nil)
+			require.Error(t, err)
+		})
+	}
+
+	vrfs, err := addVRF(new("Vrf104001"), nil)
+	require.NoError(t, err)
+	require.Equal(t, []*types.Vrf{{Name: "Vrf104001", VNI: 104001}}, vrfs)
 }

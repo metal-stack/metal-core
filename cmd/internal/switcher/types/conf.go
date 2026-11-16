@@ -1,6 +1,9 @@
 package types
 
 import (
+	"fmt"
+	"strconv"
+
 	"github.com/metal-stack/metal-core/cmd/internal/vlan"
 )
 
@@ -38,4 +41,18 @@ func (c *Conf) NewWithoutDownPorts() {
 	}
 
 	c.Ports = ports
+}
+
+func ParseVNI(vrfName string) (uint32, error) {
+	const prefixLength = len("Vrf")
+	if len(vrfName) <= prefixLength {
+		return 0, fmt.Errorf("vrf name %q is too short, expected a 3 letter prefix followed by the vni like Vrf104001", vrfName)
+	}
+
+	vni, err := strconv.ParseUint(vrfName[prefixLength:], 10, 32)
+	if err != nil {
+		return 0, fmt.Errorf("vrf name %q does not end in a vni, expected a name like Vrf104001: %w", vrfName, err)
+	}
+
+	return uint32(vni), nil
 }

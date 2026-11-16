@@ -234,18 +234,7 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 			}
 		}
 
-		slices.SortFunc(bgp.Neighbors, func(a, b types.BGPNeighbor) int {
-			pgDiff := strings.Compare(pointer.SafeDeref(a.PeerGroup), pointer.SafeDeref(b.PeerGroup))
-			if pgDiff != 0 {
-				return pgDiff
-			}
-			aIfname, aFound := strings.CutSuffix(a.Name, "interface")
-			bIfname, bFound := strings.CutPrefix(b.Name, "interface")
-			if aFound && bFound {
-				return interfaceSmallerFunc(strings.TrimSpace(aIfname), strings.TrimSpace(bIfname))
-			}
-			return strings.Compare(a.Name, b.Name)
-		})
+		slices.SortFunc(bgp.Neighbors, compareBGPNeighbors)
 
 		if !found {
 			bgps = append(bgps, bgp)
@@ -268,7 +257,7 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 				return nil, fmt.Errorf("failed to make route-maps and prefix-lists for port %s: %w", nic.Name, err)
 			}
 
-			routeMaps = append(routeMaps, rms...)
+			routeMaps = appendMissingRouteMaps(routeMaps, rms)
 			prefixLists = append(prefixLists, pfs...)
 		}
 
@@ -394,7 +383,8 @@ func mergeBGPs(bgps1, bgps2 []*types.BGP) ([]*types.BGP, error) {
 		})
 
 		if !found {
-			bgps = append(bgps, bgp)
+			merged := *bgp
+			bgps = append(bgps, &merged)
 			continue
 		}
 
@@ -436,20 +426,22 @@ func mergeBGPNeighbors(neighs1, neighs2 []types.BGPNeighbor) ([]types.BGPNeighbo
 		neighs = append(neighs, neigh)
 	}
 
-	slices.SortFunc(neighs, func(a, b types.BGPNeighbor) int {
-		pgDiff := strings.Compare(pointer.SafeDeref(a.PeerGroup), pointer.SafeDeref(b.PeerGroup))
-		if pgDiff != 0 {
-			return pgDiff
-		}
-		aIfname, aFound := strings.CutSuffix(a.Name, "interface")
-		bIfname, bFound := strings.CutPrefix(b.Name, "interface")
-		if aFound && bFound {
-			return interfaceSmallerFunc(strings.TrimSpace(aIfname), strings.TrimSpace(bIfname))
-		}
-		return strings.Compare(a.Name, b.Name)
-	})
+	slices.SortFunc(neighs, compareBGPNeighbors)
 
 	return neighs, nil
+}
+
+func compareBGPNeighbors(a, b types.BGPNeighbor) int {
+	pgDiff := strings.Compare(pointer.SafeDeref(a.PeerGroup), pointer.SafeDeref(b.PeerGroup))
+	if pgDiff != 0 {
+		return pgDiff
+	}
+	aIfname, aFound := strings.CutSuffix(a.Name, "interface")
+	bIfname, bFound := strings.CutSuffix(b.Name, "interface")
+	if aFound && bFound {
+		return interfaceSmallerFunc(strings.TrimSpace(aIfname), strings.TrimSpace(bIfname))
+	}
+	return strings.Compare(a.Name, b.Name)
 }
 
 func mergeBGPAddressFamily(af1, af2 *types.BGPAddressFamily) *types.BGPAddressFamily {
@@ -473,7 +465,10 @@ func mergeBGPAddressFamily(af1, af2 *types.BGPAddressFamily) *types.BGPAddressFa
 			return n.Name == neigh.Name
 		})
 		if !found {
-			af.Neighbors = append(af.Neighbors, neigh)
+			af.Neighbors = append(af.Neighbors, &types.AddressFamilyNeighbor{
+				Name:     neigh.Name,
+				Commands: slices.Clone(neigh.Commands),
+			})
 			continue
 		}
 
@@ -533,6 +528,19 @@ func mergeRouteMaps(rms1, rms2 []*types.RouteMap) ([]*types.RouteMap, error) {
 	return rms, nil
 }
 
+func appendMissingRouteMaps(routeMaps, candidates []*types.RouteMap) []*types.RouteMap {
+	for _, candidate := range candidates {
+		if slices.ContainsFunc(routeMaps, func(rm *types.RouteMap) bool {
+			return rm.Name == candidate.Name && rm.Order == candidate.Order
+		}) {
+			continue
+		}
+		routeMaps = append(routeMaps, candidate)
+	}
+
+	return routeMaps
+}
+
 func mergePrefixLists(pfs1, pfs2 []*types.IPPrefixList) []*types.IPPrefixList {
 	var pfs []*types.IPPrefixList
 
@@ -553,21 +561,24 @@ func mergePrefixLists(pfs1, pfs2 []*types.IPPrefixList) []*types.IPPrefixList {
 }
 
 func interfaceSmallerFunc(a, b string) int {
-	r := regexp.MustCompile("[0-9]+")
-	numsA := r.FindAllString(a, -1)
-	numsB := r.FindAllString(b, -1)
+	var (
+		r     = regexp.MustCompile("[0-9]+")
+		numsA = r.FindAllString(a, -1)
+		numsB = r.FindAllString(b, -1)
+	)
 
-	for i := range numsA {
-		numAStr := numsA[i]
-		numBStr := numsB[i]
-
-		numA, _ := strconv.Atoi(numAStr)
-		numB, _ := strconv.Atoi(numBStr)
+	for i := range min(len(numsA), len(numsB)) {
+		numA, _ := strconv.Atoi(numsA[i])
+		numB, _ := strconv.Atoi(numsB[i])
 		diff := numA - numB
 
 		if diff != 0 {
 			return diff
 		}
+	}
+
+	if len(numsA) != len(numsB) {
+		return len(numsA) - len(numsB)
 	}
 
 	return strings.Compare(a, b)
@@ -628,17 +639,17 @@ func addVRF(vrf *string, vrfs []*types.Vrf) ([]*types.Vrf, error) {
 		return vrfs, nil
 	}
 
-	vni, err := strconv.ParseUint(pointer.SafeDeref(vrf)[3:], 10, 32)
+	vni, err := types.ParseVNI(pointer.SafeDeref(vrf))
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse vni of vrf %s: %w", pointer.SafeDeref(vrf), err)
+		return nil, err
 	}
 
 	if !slices.ContainsFunc(vrfs, func(v *types.Vrf) bool {
-		return v.VNI == uint32(vni)
+		return v.VNI == vni
 	}) {
 		vrfs = append(vrfs, &types.Vrf{
 			Name: pointer.SafeDeref(vrf),
-			VNI:  uint32(vni),
+			VNI:  vni,
 		})
 	}
 
