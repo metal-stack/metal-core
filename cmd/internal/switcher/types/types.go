@@ -20,6 +20,7 @@ type (
 		SetFPMAddress               bool
 		DisableNextHopGroups        bool
 		KeepUnprovisionedInterfaces bool
+		DisableVniFilter            bool
 	}
 
 	Ports struct {

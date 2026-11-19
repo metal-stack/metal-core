@@ -8,6 +8,7 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks/behaviors/frrfpm"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks/behaviors/frrkeepinterfaces"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks/behaviors/frrnexthopgroups"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks/behaviors/frrvnifilter"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks/behaviors/lldp"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks/behaviors/portstate"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks/behaviors/vrfentries"
@@ -22,6 +23,7 @@ var QuirkProfiles = map[string]func() SonicQuirks{
 			FrrUseDplaneFpmSonic:    frrfpm.Pre202411{},
 			FrrDisableNextHopGroups: frrnexthopgroups.Pre202411{},
 			FrrKeepInterfaces:       frrkeepinterfaces.Compat{},
+			FrrDisableVniFilter:     frrvnifilter.Fixed{},
 			LLDPConfiguration:       lldp.Community{},
 		}
 	},
@@ -32,6 +34,7 @@ var QuirkProfiles = map[string]func() SonicQuirks{
 			FrrUseDplaneFpmSonic:    frrfpm.Post202411{},
 			FrrDisableNextHopGroups: frrnexthopgroups.Post202411{},
 			FrrKeepInterfaces:       frrkeepinterfaces.Compat{},
+			FrrDisableVniFilter:     frrvnifilter.Fixed{},
 			LLDPConfiguration:       lldp.Community{},
 		}
 	},
@@ -42,6 +45,7 @@ var QuirkProfiles = map[string]func() SonicQuirks{
 			FrrUseDplaneFpmSonic:    frrfpm.Post202411{},
 			FrrDisableNextHopGroups: frrnexthopgroups.Post202411{},
 			FrrKeepInterfaces:       frrkeepinterfaces.Compat{},
+			FrrDisableVniFilter:     frrvnifilter.Fixed{},
 			LLDPConfiguration:       lldp.Community{},
 		}
 	},
@@ -52,6 +56,7 @@ var QuirkProfiles = map[string]func() SonicQuirks{
 			FrrUseDplaneFpmSonic:    frrfpm.Pre202411{},
 			FrrDisableNextHopGroups: frrnexthopgroups.Pre202411{},
 			FrrKeepInterfaces:       frrkeepinterfaces.Compat{},
+			FrrDisableVniFilter:     frrvnifilter.Broken{},
 			LLDPConfiguration:       lldp.Community{},
 		}
 	},
@@ -62,6 +67,7 @@ var QuirkProfiles = map[string]func() SonicQuirks{
 			FrrUseDplaneFpmSonic:    frrfpm.Pre202411{},
 			FrrDisableNextHopGroups: frrnexthopgroups.Pre202411{},
 			FrrKeepInterfaces:       frrkeepinterfaces.Compat{},
+			FrrDisableVniFilter:     frrvnifilter.Fixed{},
 			LLDPConfiguration:       lldp.Community{},
 		}
 	},
@@ -72,6 +78,7 @@ var QuirkProfiles = map[string]func() SonicQuirks{
 			FrrUseDplaneFpmSonic:    frrfpm.Post202411{},
 			FrrDisableNextHopGroups: frrnexthopgroups.Post202411{},
 			FrrKeepInterfaces:       frrkeepinterfaces.Modern{},
+			FrrDisableVniFilter:     frrvnifilter.Fixed{},
 			LLDPConfiguration:       lldp.AsterNOS{},
 		}
 	},
@@ -85,6 +92,7 @@ type SonicQuirks struct {
 	FrrUseDplaneFpmSonic    frrfpm.FrrUseDplaneFpmSonic
 	FrrDisableNextHopGroups frrnexthopgroups.FrrDisableNextHopGroups
 	FrrKeepInterfaces       frrkeepinterfaces.FrrKeepInterfaces
+	FrrDisableVniFilter     frrvnifilter.FrrDisableVniFilter
 	LLDPConfiguration       lldp.LLDPConfiguration
 }
 
@@ -102,5 +110,6 @@ func ApplyFRRTemplateQuirks(q SonicQuirks, cfg types.Conf) *types.Conf {
 	cfg.KeepUnprovisionedInterfaces = q.FrrKeepInterfaces.Enabled()
 	cfg.DisableNextHopGroups = q.FrrDisableNextHopGroups.Enabled()
 	cfg.SetFPMAddress = q.FrrUseDplaneFpmSonic.Enabled()
+	cfg.DisableVniFilter = q.FrrDisableVniFilter.Enabled()
 	return &cfg
 }

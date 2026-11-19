@@ -98,8 +98,10 @@ router bgp {{ $ASN }}
   neighbor FABRIC allowas-in 2
   neighbor FIREWALL activate
   neighbor FIREWALL allowas-in 2
+  {{- if not .DisableVniFilter }}
   {{- range $k, $f := .Ports.Firewalls }}
   neighbor {{ $f.Port }} route-map fw-{{ $k }}-vni out
+  {{- end }}
   {{- end }}
  exit-address-family
 !
@@ -113,10 +115,12 @@ route-map DENY_MGMT permit 20
 ip prefix-list {{ .Name }} {{ .Spec }}
         {{- end}}
         {{- range $f.RouteMaps }}
+        {{- if not (and $.DisableVniFilter (eq .Name (printf "fw-%s-vni" $k))) }}
 route-map {{ .Name }} {{ .Policy }} {{ .Order }}
                 {{- range .Entries }}
  {{ . }}
                 {{- end }}
+        {{- end }}
         {{- end }}
 !
 {{- end }}
