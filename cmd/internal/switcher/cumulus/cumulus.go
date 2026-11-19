@@ -31,13 +31,13 @@ func New(log *slog.Logger, frrTplFile, interfacesTplFile string) *Cumulus {
 }
 
 func (c *Cumulus) Apply(ctx context.Context, cfg *types.Conf) error {
-	withoutDownPorts := cfg.NewWithoutDownPorts()
-	err := c.interfacesApplier.Apply(ctx, withoutDownPorts)
+	cfg.NewWithoutDownPorts()
+	err := c.interfacesApplier.Apply(ctx, cfg)
 	if err != nil {
 		return err
 	}
 
-	return c.frrApplier.Apply(ctx, withoutDownPorts)
+	return c.frrApplier.Apply(ctx, cfg)
 }
 
 func (c *Cumulus) IsInitialized(context.Context) (initialized bool, err error) {
@@ -100,8 +100,19 @@ func (c *Cumulus) GetSwitchPorts(_ context.Context) ([]*net.Interface, error) {
 	return switchPorts, nil
 }
 
-func (c *Cumulus) SanitizeConfig(cfg *types.Conf) {
-	// nothing required here
+func (c *Cumulus) GetVRF(nic *apiv2.SwitchNic) *string {
+	return nic.Vrf
+}
+
+func (c *Cumulus) DefaultRouteMaps() []*types.RouteMap {
+	return []*types.RouteMap{
+		{
+			Name:    "LOOPBACKS",
+			Entries: []string{"match interface lo"},
+			Policy:  types.PolicyPermit,
+			Order:   10,
+		},
+	}
 }
 
 func (c *Cumulus) GetOS() (*apiv2.SwitchOS, error) {
@@ -124,6 +135,7 @@ func (c *Cumulus) GetOS() (*apiv2.SwitchOS, error) {
 		Version: version,
 	}, nil
 }
+
 func (c *Cumulus) GetManagement() (ip, user string, err error) {
 	ip, err = internal.GetManagementIP("eth0")
 	if err != nil {

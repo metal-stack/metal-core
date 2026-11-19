@@ -6,6 +6,7 @@ require (
 	github.com/alicebob/miniredis/v2 v2.37.0
 	github.com/avast/retry-go/v4 v4.7.0
 	github.com/coreos/go-systemd/v22 v22.7.0
+	github.com/go-jose/go-jose/v4 v4.1.9
 	github.com/google/go-cmp v0.7.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/metal-stack/api v0.8.0
@@ -13,11 +14,11 @@ require (
 	github.com/metal-stack/metal-lib v0.25.2
 	github.com/metal-stack/v v1.0.3
 	github.com/prometheus/client_golang v1.23.2
+	github.com/samber/lo v1.53.0
 	github.com/stretchr/testify v1.12.1
 	github.com/valkey-io/valkey-go v1.0.74
 	github.com/vishvananda/netlink v1.3.1
 	go.yaml.in/yaml/v4 v4.0.0-rc.6
-	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
 	golang.org/x/text v0.41.0
 	google.golang.org/protobuf v1.36.12
 )

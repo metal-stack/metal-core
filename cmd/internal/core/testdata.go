@@ -22,42 +22,153 @@ const (
 )
 
 var (
-	testcoreAdditionalMgmtRoutes         = []string{"10.100.0.0/16"}
-	testcoreAdditionalBridgePortsSonic   = []string{"Ethernet24"}
-	testcoreAdditionalBridgePortsCumulus = []string{"swp24"}
-	testcoreAdditionalBridgeVIDs         = []string{"3000"}
-	testcoreSpineUplinksSonic            = []string{"Ethernet120", "Ethernet124"}
-	testcoreSpineUplinksCumulus          = []string{"swp31", "swp32"}
-	testcoreLog                          = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	testcoreAdditionalMgmtRoutes = []string{"10.100.0.0/16"}
+	testcoreIgnorePortsSonic     = []string{"Ethernet24"}
+	testcoreIgnorePortsCumulus   = []string{"swp24"}
+	testcoreSpineUplinksSonic    = []string{"Ethernet120", "Ethernet124"}
+	testcoreSpineUplinksCumulus  = []string{"swp31", "swp32"}
+	testcoreLog                  = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
+	staticFRRConfigSonic = &types.FRRConfig{
+		VRFs: []string{"Vrf300"},
+		UnnumberedInterfaces: []*types.Interface{
+			{
+				Name: "Ethernet7",
+				Vrf:  new("Vrf300"),
+			},
+			{
+				Name: "Ethernet8",
+				Vrf:  new("Vrf100"),
+			},
+		},
+		BGPs: []*types.BGP{
+			{
+				Vrf: new("Vrf100"),
+				PeerGroups: []types.PeerGroup{
+					{
+						Name:     "EXTERNAL",
+						Commands: []string{"ebgp-multihop 2"},
+					},
+				},
+				Neighbors: []types.BGPNeighbor{
+					{
+						Name:      "Ethernet8 interface",
+						PeerGroup: new("EXTERNAL"),
+					},
+				},
+				AddressFamilies: types.BGPAddressFamilies{
+					IPv4Unicast: &types.BGPAddressFamily{
+						Neighbors: []*types.AddressFamilyNeighbor{
+							{
+								Name:     "EXTERNAL",
+								Commands: []string{"route-map Vrf100-in in"},
+							},
+						},
+					},
+				},
+			},
+		},
+		RouteMaps: []*types.RouteMap{
+			{
+				Name:    "Vrf300-in",
+				Entries: []string{"match ip address prefix-list Vrf300-in-prefixes"},
+				Policy:  types.PolicyPermit,
+				Order:   10,
+			},
+		},
+		PrefixLists: []*types.IPPrefixList{
+			{
+				AddressFamily: types.AddressFamilyIPv4,
+				Name:          "Vrf300-in-prefixes",
+				Spec:          "permit 10.0.0.0/16 le 32",
+			},
+		},
+	}
+
+	staticFRRConfigCumulus = &types.FRRConfig{
+		VRFs: []string{"vrf300"},
+		UnnumberedInterfaces: []*types.Interface{
+			{
+				Name: "swp8",
+				Vrf:  new("vrf300"),
+			},
+			{
+				Name: "swp9",
+				Vrf:  new("vrf100"),
+			},
+		},
+		BGPs: []*types.BGP{
+			{
+				Vrf: new("vrf100"),
+				PeerGroups: []types.PeerGroup{
+					{
+						Name:     "EXTERNAL",
+						Commands: []string{"ebgp-multihop 2"},
+					},
+				},
+				Neighbors: []types.BGPNeighbor{
+					{
+						Name:      "swp9 interface",
+						PeerGroup: new("EXTERNAL"),
+					},
+				},
+				AddressFamilies: types.BGPAddressFamilies{
+					IPv4Unicast: &types.BGPAddressFamily{
+						Neighbors: []*types.AddressFamilyNeighbor{
+							{
+								Name:     "EXTERNAL",
+								Commands: []string{"route-map vrf100-in in"},
+							},
+						},
+					},
+				},
+			},
+		},
+		RouteMaps: []*types.RouteMap{
+			{
+				Name:    "vrf300-in",
+				Entries: []string{"match ip address prefix-list vrf300-in-prefixes"},
+				Policy:  types.PolicyPermit,
+				Order:   10,
+			},
+		},
+		PrefixLists: []*types.IPPrefixList{
+			{
+				AddressFamily: types.AddressFamilyIPv4,
+				Name:          "vrf300-in-prefixes",
+				Spec:          "permit 10.0.0.0/16 le 32",
+			},
+		},
+	}
 
 	testcoreCfgSonic = Config{
-		Log:                   testcoreLog,
-		CIDR:                  testcoreCIDR,
-		LoopbackIP:            testcoreLoopback,
-		ASN:                   testcoreASN,
-		ManagementGateway:     testcoreMgmtGateway,
-		PXEVlanID:             testcorePXEVLAN,
-		AdditionalMgmtRoutes:  testcoreAdditionalMgmtRoutes,
-		AdditionalBridgePorts: testcoreAdditionalBridgePortsSonic,
-		AdditionalBridgeVIDs:  testcoreAdditionalBridgeVIDs,
-		SpineUplinks:          testcoreSpineUplinksSonic,
-		SetSrcLoopback:        testcoreSetSrcLoopback,
-		NOS:                   &sonic.Sonic{},
+		Log:                  testcoreLog,
+		CIDR:                 testcoreCIDR,
+		LoopbackIP:           testcoreLoopback,
+		ASN:                  testcoreASN,
+		ManagementGateway:    testcoreMgmtGateway,
+		PXEVlanID:            testcorePXEVLAN,
+		AdditionalMgmtRoutes: testcoreAdditionalMgmtRoutes,
+		IgnorePorts:          testcoreIgnorePortsSonic,
+		SpineUplinks:         testcoreSpineUplinksSonic,
+		SetSrcLoopback:       testcoreSetSrcLoopback,
+		NOS:                  &sonic.Sonic{},
+		StaticFRRConfig:      staticFRRConfigSonic,
 	}
 
 	testcoreCfgCumulus = Config{
-		Log:                   testcoreLog,
-		CIDR:                  testcoreCIDR,
-		LoopbackIP:            testcoreLoopback,
-		ASN:                   testcoreASN,
-		ManagementGateway:     testcoreMgmtGateway,
-		PXEVlanID:             testcorePXEVLAN,
-		AdditionalMgmtRoutes:  testcoreAdditionalMgmtRoutes,
-		AdditionalBridgePorts: testcoreAdditionalBridgePortsCumulus,
-		AdditionalBridgeVIDs:  testcoreAdditionalBridgeVIDs,
-		SpineUplinks:          testcoreSpineUplinksCumulus,
-		SetSrcLoopback:        testcoreSetSrcLoopback,
-		NOS:                   &cumulus.Cumulus{},
+		Log:                  testcoreLog,
+		CIDR:                 testcoreCIDR,
+		LoopbackIP:           testcoreLoopback,
+		ASN:                  testcoreASN,
+		ManagementGateway:    testcoreMgmtGateway,
+		PXEVlanID:            testcorePXEVLAN,
+		AdditionalMgmtRoutes: testcoreAdditionalMgmtRoutes,
+		IgnorePorts:          testcoreIgnorePortsCumulus,
+		SpineUplinks:         testcoreSpineUplinksCumulus,
+		SetSrcLoopback:       testcoreSetSrcLoopback,
+		NOS:                  &cumulus.Cumulus{},
+		StaticFRRConfig:      staticFRRConfigCumulus,
 	}
 
 	leaf01 = &apiv2.Switch{
@@ -178,45 +289,13 @@ var (
 	}
 
 	leaf01PreviousCfg = &types.Conf{
-		Ports: types.Ports{
-			Unprovisioned: []string{"Ethernet0", "Ethernet1", "Ethernet4", "Ethernet5"},
-			Underlay:      []string{"Ethernet120", "Ethernet124"},
-			Vrfs: types.Vrfs{
-				"Vrf300": {
-					VNI:       300,
-					VLANID:    1003,
-					Neighbors: []string{"Ethernet3"},
-				},
-				"Vrf100": {
-					VNI:       100,
-					VLANID:    1001,
-					Neighbors: []string{"Ethernet6"},
-				},
-			},
-			Firewalls: map[string]*types.Firewall{
-				"Ethernet2": {
-					Port: "Ethernet2",
-				},
-			},
-			AdminStatus: map[string]types.PortStatus{
-				"Ethernet0":   types.PortStatusUp,
-				"Ethernet1":   types.PortStatusUp,
-				"Ethernet2":   types.PortStatusUp,
-				"Ethernet3":   types.PortStatusUp,
-				"Ethernet4":   types.PortStatusUp,
-				"Ethernet5":   types.PortStatusUp,
-				"Ethernet6":   types.PortStatusUp,
-				"Ethernet120": types.PortStatusUp,
-				"Ethernet124": types.PortStatusUp,
-			},
-		},
 		Name:                 leaf01.Id,
 		Loopback:             testcoreLoopback,
 		MetalCoreCIDR:        testcoreCIDR,
-		AdditionalBridgeVIDs: testcoreAdditionalBridgeVIDs,
 		AdditionalMgmtRoutes: testcoreAdditionalMgmtRoutes,
 		PXEVlanID:            testcorePXEVLAN,
 		SetSrcLoopback:       testcoreSetSrcLoopback,
+		FRRConfig:            &types.FRRConfig{},
 	}
 
 	leaf01PreviousConfigDB = test.StringMap{
@@ -400,11 +479,17 @@ var (
 		"SUPPRESS_VLAN_NEIGH|Vlan1002": map[string]string{
 			"suppress": "on",
 		},
+		"SUPPRESS_VLAN_NEIGH|Vlan1003": map[string]string{
+			"suppress": "on",
+		},
 		"VLAN_INTERFACE|Vlan1001": map[string]string{
 			"vrf_name": "Vrf100",
 		},
 		"VLAN_INTERFACE|Vlan1002": map[string]string{
 			"vrf_name": "Vrf200",
+		},
+		"VLAN_INTERFACE|Vlan1003": map[string]string{
+			"vrf_name": "Vrf300",
 		},
 		"VLAN_MEMBER|Vlan4000|Ethernet0": map[string]string{
 			"tagging_mode": "untagged",
@@ -424,6 +509,9 @@ var (
 		"VLAN|Vlan1002": map[string]string{
 			"vlanid": "1002",
 		},
+		"VLAN|Vlan1003": map[string]string{
+			"vlanid": "1003",
+		},
 		"VLAN|Vlan4000": map[string]string{
 			"vlanid": "4000",
 		},
@@ -435,6 +523,10 @@ var (
 			"fallback": "false",
 			"vni":      "200",
 		},
+		"VRF|Vrf300": map[string]string{
+			"fallback": "false",
+			"vni":      "300",
+		},
 		"VXLAN_TUNNEL_MAP|vtep|map_100_Vlan1001": map[string]string{
 			"vlan": "Vlan1001",
 			"vni":  "100",
@@ -443,19 +535,17 @@ var (
 			"vlan": "Vlan1002",
 			"vni":  "200",
 		},
+		"VXLAN_TUNNEL_MAP|vtep|map_300_Vlan1003": map[string]string{
+			"vlan": "Vlan1003",
+			"vni":  "300",
+		},
 		"VXLAN_TUNNEL|vtep": map[string]string{
 			"src_ip": testcoreCfgSonic.LoopbackIP,
 		},
 	}
 )
 
-func injectStaticVrfVlanMapping(conf *types.Conf, mapping map[string]uint16) {
-	for vrf, vlan := range mapping {
-		conf.Ports.Vrfs[vrf].VLANID = vlan
-	}
-}
-
 func injectMgmtGateway(conf *types.Conf, gw string) {
-	conf.Ports.Eth0.Gateway = gw
-	conf.Ports.Eth0.AddressCIDR = testcoreMgmtAddr
+	conf.Eth0.Gateway = gw
+	conf.Eth0.AddressCIDR = testcoreMgmtAddr
 }
