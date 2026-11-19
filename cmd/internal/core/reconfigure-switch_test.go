@@ -8,7 +8,6 @@ import (
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/require"
 	"github.com/valkey-io/valkey-go"
 
@@ -23,41 +22,45 @@ import (
 
 func TestBuildSwitcherConfig(t *testing.T) {
 	c := &Core{
-		cidr:                 "10.255.255.2/24",
+		cidr:                 "10.255.0.1/24",
 		partitionID:          "partition1",
 		rackID:               "rack01",
 		roomID:               "room01",
 		asn:                  "420000001",
 		loopbackIP:           "10.0.0.1",
 		spineUplinks:         []string{"Ethernet120", "Ethernet124"},
-		additionalBridgeVIDs: []string{"201-256", "301-356"},
 		nos:                  &sonic.Sonic{},
-		staticVRFs: types.Vrfs{
-			"vrf200": {
-				VNI:       200,
-				Neighbors: []string{"Ethernet3"},
-				Cidrs:     []string{"10.1.2.0/24"},
-			},
-		},
+		additionalMgmtRoutes: []string{"100.1.1.0/24"},
+		ignorePorts:          []string{"Ethernet24"},
+		pxeVlanID:            4000,
 	}
 
 	s := &apiv2.Switch{
+		Id: "leaf01",
 		Nics: []*apiv2.SwitchNic{
 			{
 				Name: "Ethernet0",
+				State: &apiv2.NicState{
+					Desired: apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_DOWN.Enum(),
+				},
 			},
 			{
 				Name: "Ethernet1",
-				Vrf:  new("vrf104001"),
+				State: &apiv2.NicState{
+					Desired: apiv2.SwitchPortStatus_SWITCH_PORT_STATUS_UP.Enum(),
+				},
+				Vrf: new("vrf104001"),
 				BgpFilter: &apiv2.BGPFilter{
-					Cidrs: []string{
-						"10.240.0.0/12",
-					},
+					Cidrs: []string{"10.240.0.0/12"},
 				},
 			},
 			{
 				Name: "Ethernet2",
 				Vrf:  new("default"),
+				BgpFilter: &apiv2.BGPFilter{
+					Cidrs: []string{"10.240.1.0/24"},
+					Vnis:  []string{"104001", "200"},
+				},
 			},
 			{
 				Name: "Ethernet3",
@@ -65,6 +68,16 @@ func TestBuildSwitcherConfig(t *testing.T) {
 			{
 				Name: "Ethernet4",
 				Vrf:  new("vrf200"),
+				BgpFilter: &apiv2.BGPFilter{
+					Cidrs: []string{"10.132.0.0/24", "fe80:10e2::/64"},
+				},
+			},
+			{
+				Name: "Ethernet5",
+				Vrf:  new("vrf200"),
+			},
+			{
+				Name: "Ethernet24",
 			},
 			{
 				Name: "Ethernet120",
@@ -79,84 +92,345 @@ func TestBuildSwitcherConfig(t *testing.T) {
 	require.NoError(t, err)
 
 	expected := &types.Conf{
-		LogLevel:      "warnings",
-		Loopback:      "10.0.0.1",
-		MetalCoreCIDR: "10.255.255.2/24",
-		ASN:           420000001,
-		Ports: types.Ports{
-			AdminStatus:   map[string]types.PortStatus{},
-			Underlay:      []string{"Ethernet120", "Ethernet124"},
-			Unprovisioned: []string{"Ethernet0"},
-			Firewalls: map[string]*types.Firewall{
-				"Ethernet2": {
-					Port: "Ethernet2",
+		LogLevel:             "warnings",
+		Loopback:             "10.0.0.1",
+		MetalCoreCIDR:        "10.255.0.1/24",
+		ASN:                  420000001,
+		Name:                 s.Id,
+		AdditionalMgmtRoutes: []string{"100.1.1.0/24"},
+		PXEVlanID:            4000,
+		Ports: []types.Port{
+			{
+				Name:        "Ethernet0",
+				AdminStatus: types.PortStatusDown,
+				VLAN:        new("Vlan4000"),
+				MTU:         9000,
+			},
+			{
+				Name:        "Ethernet1",
+				AdminStatus: types.PortStatusUp,
+				VRF:         new("Vrf104001"),
+				MTU:         9000,
+			},
+			{
+				Name: "Ethernet2",
+				MTU:  9216,
+			},
+			{
+				Name: "Ethernet3",
+				MTU:  9000,
+				VLAN: new("Vlan4000"),
+			},
+			{
+				Name: "Ethernet4",
+				VRF:  new("Vrf200"),
+				MTU:  9000,
+			},
+			{
+				Name: "Ethernet5",
+				VRF:  new("Vrf200"),
+				MTU:  9000,
+			},
+			{
+				Name: "Ethernet120",
+				MTU:  9216,
+			},
+			{
+				Name: "Ethernet124",
+				MTU:  9216,
+			},
+		},
+		Vrfs: []*types.Vrf{
+			{
+				Name:   "Vrf104001",
+				VNI:    104001,
+				VLANID: 1001,
+			},
+			{
+				Name:   "Vrf200",
+				VNI:    200,
+				VLANID: 1002,
+			},
+		},
+		FRRConfig: &types.FRRConfig{
+			VRFs: []string{"Vrf104001", "Vrf200"},
+			UnnumberedInterfaces: []*types.Interface{
+				{
+					Name: "Ethernet1",
+					Vrf:  new("Vrf104001"),
+				},
+				{
+					Name: "Ethernet2",
+				},
+				{
+					Name: "Ethernet4",
+					Vrf:  new("Vrf200"),
+				},
+				{
+					Name: "Ethernet5",
+					Vrf:  new("Vrf200"),
+				},
+				{
+					Name: "Ethernet120",
+				},
+				{
+					Name: "Ethernet124",
 				},
 			},
-			Vrfs: map[string]*types.Vrf{
-				"Vrf200": {
-					VNI:       200,
-					Neighbors: []string{"Ethernet4", "Ethernet3"},
-					Cidrs:     []string{"10.1.2.0/24"},
-					Filter: types.Filter{
-						IPPrefixLists: []types.IPPrefixList{
-							{
-								AddressFamily: "ip",
-								Name:          "Vrf200-in-prefixes",
-								Spec:          "permit 10.1.2.0/24 le 32",
+			BGP: []*types.BGP{
+				{
+					PeerGroups: []types.PeerGroup{
+						{
+							Name: "FABRIC",
+							Commands: []string{
+								"remote-as external",
+								"timers 2 8",
 							},
 						},
-						RouteMaps: []types.RouteMap{
-							{
-								Name:    "Vrf200-in",
-								Entries: []string{"match ip address prefix-list Vrf200-in-prefixes"},
-								Policy:  "permit",
-								Order:   10,
+						{
+							Name: "FIREWALL",
+							Commands: []string{
+								"remote-as external",
+								"timers 2 8",
 							},
 						},
 					},
-					Has4: true,
+					Neighbors: []types.BGPNeighbor{
+						{
+							Name:      "Ethernet2 interface",
+							PeerGroup: new("FIREWALL"),
+						},
+						{
+							Name:      "Ethernet120 interface",
+							PeerGroup: new("FABRIC"),
+						},
+						{
+							Name:      "Ethernet124 interface",
+							PeerGroup: new("FABRIC"),
+						},
+					},
+					AddressFamilies: types.BGPAddressFamilies{
+						IPv4Unicast: &types.BGPAddressFamily{
+							GlobalStatements: []string{
+								"redistribute connected route-map DENY_MGMT",
+								"redistribute kernel route-map DENY_MGMT",
+							},
+							Neighbors: []types.AdressFamilyNeighbor{
+								{
+									Neighbor: "FIREWALL",
+									Commands: []string{"allowas-in 2"},
+								},
+								{
+									Neighbor:   "Ethernet2",
+									RouteMapIn: "fw-Ethernet2-in",
+								},
+							},
+						},
+						IPv6Unicast: &types.BGPAddressFamily{
+							GlobalStatements: []string{
+								"redistribute connected route-map DENY_MGMT",
+								"redistribute kernel route-map DENY_MGMT",
+							},
+							Neighbors: []types.AdressFamilyNeighbor{
+								{
+									Neighbor: "FIREWALL",
+									Commands: []string{"activate", "allowas-in 2"},
+								},
+								{
+									Neighbor:   "Ethernet2",
+									RouteMapIn: "fw-Ethernet2-in",
+								},
+							},
+						},
+						L2VPNEVPN: &types.BGPAddressFamily{
+							GlobalStatements: []string{
+								"advertise-all-vni",
+							},
+							Neighbors: []types.AdressFamilyNeighbor{
+								{
+									Neighbor: "FABRIC",
+									Commands: []string{"activate", "allowas-in 2"},
+								},
+								{
+									Neighbor: "FIREWALL",
+									Commands: []string{"activate", "allowas-in 2"},
+								},
+								{
+									Neighbor:    "Ethernet2",
+									RouteMapOut: "fw-Ethernet2-vni",
+								},
+							},
+						},
+					},
 				},
-				"Vrf104001": {
-					VNI:       104001,
-					Neighbors: []string{"Ethernet1"},
-					Filter: types.Filter{
-						IPPrefixLists: []types.IPPrefixList{
-							{
-								AddressFamily: "ip",
-								Name:          "Vrf104001-in-prefixes",
-								Spec:          "permit 10.240.0.0/12 le 32",
-							},
-						},
-						RouteMaps: []types.RouteMap{
-							{
-								Name:    "Vrf104001-in",
-								Entries: []string{"match ip address prefix-list Vrf104001-in-prefixes"},
-								Policy:  "permit",
-								Order:   10,
+				{
+					Vrf: new("Vrf104001"),
+					PeerGroups: []types.PeerGroup{
+						{
+							Name: "MACHINE",
+							Commands: []string{
+								"remote-as external",
+								"timers 2 8",
 							},
 						},
 					},
-					Cidrs: []string{"10.240.0.0/12"},
-					Has4:  true,
+					Neighbors: []types.BGPNeighbor{
+						{
+							Name:      "Ethernet1 interface",
+							PeerGroup: new("MACHINE"),
+						},
+					},
+					AddressFamilies: types.BGPAddressFamilies{
+						IPv4Unicast: &types.BGPAddressFamily{
+							GlobalStatements: []string{
+								"redistribute connected",
+							},
+							Neighbors: []types.AdressFamilyNeighbor{
+								{
+									Neighbor:   "MACHINE",
+									Commands:   []string{"maximum-prefix 24000"},
+									RouteMapIn: "Vrf104001-in",
+								},
+							},
+						},
+						L2VPNEVPN: &types.BGPAddressFamily{
+							GlobalStatements: []string{
+								"advertise ipv4 unicast",
+							},
+						},
+					},
+				},
+				{
+					Vrf: new("Vrf200"),
+					PeerGroups: []types.PeerGroup{
+						{
+							Name: "MACHINE",
+							Commands: []string{
+								"remote-as external",
+								"timers 2 8",
+							},
+						},
+					},
+					Neighbors: []types.BGPNeighbor{
+						{
+							Name:      "Ethernet4 interface",
+							PeerGroup: new("MACHINE"),
+						},
+						{
+							Name:      "Ethernet5 interface",
+							PeerGroup: new("MACHINE"),
+						},
+					},
+					AddressFamilies: types.BGPAddressFamilies{
+						IPv4Unicast: &types.BGPAddressFamily{
+							GlobalStatements: []string{
+								"redistribute connected",
+							},
+							Neighbors: []types.AdressFamilyNeighbor{
+								{
+									Neighbor:   "MACHINE",
+									Commands:   []string{"maximum-prefix 24000"},
+									RouteMapIn: "Vrf200-in",
+								},
+							},
+						},
+						IPv6Unicast: &types.BGPAddressFamily{
+							GlobalStatements: []string{
+								"redistribute connected",
+							},
+							Neighbors: []types.AdressFamilyNeighbor{
+								{
+									Neighbor:   "MACHINE",
+									Commands:   []string{"activate", "maximum-prefix 24000"},
+									RouteMapIn: "Vrf200-in6",
+								},
+							},
+						},
+						L2VPNEVPN: &types.BGPAddressFamily{
+							GlobalStatements: []string{
+								"advertise ipv4 unicast",
+								"advertise ipv6 unicast",
+							},
+						},
+					},
+				},
+			},
+			RouteMaps: []*types.RouteMap{
+				{
+					Name:    "DENY_MGMT",
+					Entries: []string{"match interface eth0"},
+					Policy:  types.PolicyDeny,
+					Order:   10,
+				},
+				{
+					Name:   "DENY_MGMT",
+					Policy: types.PolicyPermit,
+					Order:  20,
+				},
+				{
+					Name:    "Vrf104001-in",
+					Entries: []string{"match ip address prefix-list Vrf104001-in-prefixes"},
+					Policy:  types.PolicyPermit,
+					Order:   10,
+				},
+				{
+					Name:    "fw-Ethernet2-in",
+					Entries: []string{"match ip address prefix-list fw-Ethernet2-in-prefixes"},
+					Policy:  types.PolicyPermit,
+					Order:   10,
+				},
+				{
+					Name:    "fw-Ethernet2-vni",
+					Entries: []string{"match evpn vni 104001"},
+					Policy:  types.PolicyPermit,
+					Order:   10,
+				},
+				{
+					Name:    "fw-Ethernet2-vni",
+					Entries: []string{"match evpn vni 200"},
+					Policy:  types.PolicyPermit,
+					Order:   11,
+				},
+				{
+					Name:    "Vrf200-in",
+					Entries: []string{"match ip address prefix-list Vrf200-in-prefixes"},
+					Policy:  types.PolicyPermit,
+					Order:   10,
+				},
+				{
+					Name:    "Vrf200-in6",
+					Entries: []string{"match ip address prefix-list Vrf200-in6-prefixes"},
+					Policy:  types.PolicyPermit,
+					Order:   10,
+				},
+			},
+			PrefixLists: []*types.IPPrefixList{
+				{
+					AddressFamily: types.AddressFamilyIPv4,
+					Name:          "Vrf104001-in-prefixes",
+					Spec:          "permit 10.240.0.0/12 le 32",
+				},
+				{
+					AddressFamily: types.AddressFamilyIPv4,
+					Name:          "fw-Ethernet2-in-prefixes",
+					Spec:          "permit 10.240.1.0/24 le 32",
+				},
+				{
+					AddressFamily: types.AddressFamilyIPv4,
+					Name:          "Vrf200-in-prefixes",
+					Spec:          "permit 10.132.0.0/24 le 32",
+				},
+				{
+					AddressFamily: types.AddressFamilyIPv6,
+					Name:          "Vrf200-in6-prefixes",
+					Spec:          "permit fe80:10e2::/64 le 128",
 				},
 			},
 		},
-		AdditionalBridgeVIDs: []string{"201-256", "301-356"},
-	}
-	// VLANID is ignored because it is reserved dynamically and the order in which the map is iterated matters so the test becomes flaky.
-	if diff := cmp.Diff(expected, actual, cmpopts.IgnoreFields(types.Vrf{}, "VLANID")); diff != "" {
-		t.Errorf("TestBuildSwitcherConfig() diff = %s", diff)
 	}
 
-	expectedStaticVrfs := types.Vrfs{
-		"vrf200": {
-			VNI:       200,
-			Neighbors: []string{"Ethernet3"},
-			Cidrs:     []string{"10.1.2.0/24"},
-		},
-	}
-	if diff := cmp.Diff(expectedStaticVrfs, c.staticVRFs); diff != "" {
-		t.Errorf("TestBuildSwitcherConfig() Core.staticVrfs unexpectedly changed: %s", diff)
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Errorf("TestBuildSwitcherConfig() diff = %s", diff)
 	}
 }
 
@@ -220,10 +494,6 @@ func TestSonicConfig(t *testing.T) {
 	switcherCfg, err := core.buildSwitcherConfig(leaf01)
 	require.NoError(t, err)
 
-	injectStaticVrfVlanMapping(switcherCfg, map[string]uint16{
-		"Vrf100": 1001,
-		"Vrf200": 1002,
-	})
 	injectMgmtGateway(switcherCfg, core.managementGateway)
 
 	err = redisApplier.Apply(t.Context(), switcherCfg)
@@ -256,10 +526,6 @@ func TestCumulusConfig(t *testing.T) {
 	switcherCfg, err := core.buildSwitcherConfig(leaf02)
 	require.NoError(t, err)
 
-	injectStaticVrfVlanMapping(switcherCfg, map[string]uint16{
-		"vrf100": 1001,
-		"vrf200": 1002,
-	})
 	injectMgmtGateway(switcherCfg, core.managementGateway)
 
 	tpl := templates.InterfacesTemplate("")

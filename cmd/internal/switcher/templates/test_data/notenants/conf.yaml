@@ -4,14 +4,76 @@ loglevel: warnings
 loopback: 10.0.0.10
 asn: 4200000010
 metalcorecidr: 10.255.255.2/24
-ports:
-  eth0:
-    addresscidr: 192.168.0.11
-    gateway: 192.168.0.254
-  underlay:
-    - swp31
-    - swp32
-  unprovisioned:
-    - swp1
-    - swp2
 pxevlanid: 966
+eth0:
+  addresscidr: 192.168.0.11
+  gateway: 192.168.0.254
+ports:
+  - name: swp1
+    mtu: 9000
+    vlan: Vlan966
+  - name: swp2
+    mtu: 9000
+    vlan: Vlan966
+  - name: swp31
+    mtu: 9216
+  - name: swp32
+    mtu: 9216
+frrconfig:
+  unnumberedinterfaces:
+    - name: swp31
+    - name: swp32
+  bgp:
+    - peergroups:
+        - name: FABRIC
+          commands:
+            - remote-as external
+            - timers 2 8
+        - name: FIREWALL
+          commands:
+            - remote-as external
+            - timers 2 8
+      neighbors:
+        - name: swp31 interface
+          peergroup: FABRIC
+        - name: swp32 interface
+          peergroup: FABRIC
+      addressfamilies:
+        ipv4unicast:
+          globalstatements:
+            - redistribute connected route-map DENY_MGMT
+            - redistribute kernel route-map DENY_MGMT
+          neighbors:
+            - neighbor: FIREWALL
+              commands:
+                - allowas-in 2
+        ipv6unicast:
+          globalstatements:
+            - redistribute connected route-map DENY_MGMT
+            - redistribute kernel route-map DENY_MGMT
+          neighbors:
+            - neighbor: FIREWALL
+              commands:
+                - allowas-in 2
+                - activate
+        l2vpnevpn:
+          globalstatements:
+            - advertise-all-vni
+          neighbors:
+            - neighbor: FABRIC
+              commands:
+                - activate
+                - allowas-in 2
+            - neighbor: FIREWALL
+              commands:
+                - activate
+                - allowas-in 2
+  routemaps:
+    - name: DENY_MGMT
+      entries:
+        - match interface eth0
+      policy: deny
+      order: 10
+    - name: DENY_MGMT
+      policy: permit
+      order: 20

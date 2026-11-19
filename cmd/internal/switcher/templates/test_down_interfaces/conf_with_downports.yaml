@@ -4,33 +4,36 @@ loglevel: warnings
 loopback: 10.0.0.10
 asn: 4200000010
 metalcorecidr: 10.255.255.2/24
-ports:
-  vrfs:
-    vrf1:
-      vni: 1
-      vlanid: 2
-      neighbors:
-        - swp3
-        - swp4
-      cidrs:
-        - 10.255.255.1/28
-  firewalls:
-    fw1:
-      port: swp5
-    fw2:
-      port: swp6
-  eth0:
-    addresscidr: 192.168.0.11
-    gateway: 192.168.0.254
-  underlay:
-    - swp31
-    - swp32
-  unprovisioned:
-    - swp1
-    - swp2
-  adminstatus:
-    swp1: down
-    swp3: down
-    swp6: down
-    swp32: down
 pxevlanid: 966
+eth0:
+  addresscidr: 192.168.0.11
+  gateway: 192.168.0.254
+vrfs:
+  - name: vrf1
+    vni: 1
+    vlanid: 1001
+ports:
+  - name: swp1
+    mtu: 9000
+    vlan: Vlan966
+    adminstatus: down
+  - name: swp2
+    mtu: 9000
+    vlan: Vlan966
+  - name: swp3
+    mtu: 9000
+    vrf: vrf1
+    adminstatus: down
+  - name: swp4
+    mtu: 9000
+    vrf: vrf1
+  - name: swp5
+    mtu: 9216
+  - name: swp6
+    mtu: 9216
+    adminstatus: down
+  - name: swp31
+    mtu: 9216
+  - name: swp32
+    mtu: 9216
+    adminstatus: down

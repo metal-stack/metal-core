@@ -14,65 +14,56 @@ iface lo inet loopback
 # The primary network interface
 auto eth0
 iface eth0
-    address {{ .Ports.Eth0.AddressCIDR }}
-    gateway {{ .Ports.Eth0.Gateway }}
+    address {{ .Eth0.AddressCIDR }}
+    gateway {{ .Eth0.Gateway }}
     vrf mgmt
 
 auto mgmt
 iface mgmt
     address 127.0.0.1/8
     vrf-table auto
-{{- range .Ports.Underlay }}
+{{- range .Ports }}
 
-auto {{ . }}
-iface {{ . }}
-    mtu 9216
-{{- end }}
-{{- range .Ports.Firewalls }}
-
-auto {{ .Port }}
-iface {{ .Port }}
-    mtu 9216
+auto {{ .Name }}
+iface {{ .Name }}
+    mtu {{ .MTU }}
+    {{- if .VRF }}
+    post-up sysctl -w net.ipv6.conf.{{ .Name }}.disable_ipv6=0
+    vrf {{ .VRF }}
+    {{- end }}
+    {{- if .VLAN }}
+    bridge-access {{ $PXEVlanID }}
+    {{- end }}
 {{- end }}
 
 auto bridge
 iface bridge
-    bridge-ports vni{{ $PXEVni }}{{ range .Ports.Unprovisioned }} {{ . }}{{ end }}{{ range .Ports.BladePorts }} {{ . }}{{ end }}{{ range $vrf, $t := .Ports.Vrfs }} vni{{ $t.VNI }}{{ end }}
-    bridge-vids {{ $PXEVlanID }}{{ range $vrf, $t := .Ports.Vrfs }} {{ $t.VLANID }}{{ end }}{{ range $vids := .AdditionalBridgeVIDs }} {{ $vids }}{{ end }}
+    bridge-ports vni{{ $PXEVni }}{{ range .Ports }}{{ if .VLAN }} {{ .Name }}{{ end }}{{ end }}{{ range .Vrfs }} vni{{ .VNI }}{{ end }}
+    bridge-vids {{ $PXEVlanID }}{{ range .Vrfs }} {{ .VLANID }}{{ end }}
     bridge-vlan-aware yes
 
-# Tenants
-{{- range $vrf, $t := .Ports.Vrfs }}
+{{- range .Vrfs }}
 
-auto {{ $vrf }}
-iface {{ $vrf }}
+auto {{ .Name }}
+iface {{ .Name }}
     vrf-table auto
 
-{{- range $t.Neighbors }}
-
-auto {{ . }}
-iface {{ . }}
+auto vlan{{ .VLANID }}
+iface vlan{{ .VLANID }}
     mtu 9000
-    post-up sysctl -w net.ipv6.conf.{{ . }}.disable_ipv6=0
-    vrf {{ $vrf }}
-{{- end }}
-
-auto vlan{{ $t.VLANID }}
-iface vlan{{ $t.VLANID }}
-    mtu 9000
-    vlan-id {{ $t.VLANID }}
+    vlan-id {{ .VLANID }}
     vlan-raw-device bridge
-    vrf {{ $vrf }}
+    vrf {{ .Name }}
 
-auto vni{{ $t.VNI }}
-iface vni{{ $t.VNI }}
+auto vni{{ .VNI }}
+iface vni{{ .VNI }}
     mtu 9000
-    bridge-access {{ $t.VLANID }}
+    bridge-access {{ .VLANID }}
     bridge-arp-nd-suppress on
     bridge-learning off
     mstpctl-bpduguard yes
     mstpctl-portbpdufilter yes
-    vxlan-id {{ $t.VNI }}
+    vxlan-id {{ .VNI }}
     vxlan-local-tunnelip {{ $IPLoopback }}
 {{- end }}
 
@@ -93,11 +84,3 @@ iface vni{{ $PXEVni }}
     mstpctl-portbpdufilter yes
     vxlan-id {{ $PXEVni }}
     vxlan-local-tunnelip {{ $IPLoopback }}
-
-{{- range .Ports.Unprovisioned }}
-
-auto {{ . }}
-iface {{ . }}
-    mtu 9000
-    bridge-access {{ $PXEVlanID }}
-{{- end }}
