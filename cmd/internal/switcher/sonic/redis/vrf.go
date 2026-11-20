@@ -17,6 +17,12 @@ func (a *Applier) ensureInterfaceIsVrfMember(ctx context.Context, interfaceName,
 		return fmt.Errorf("interface %s already member of a different vrfName %v", interfaceName, current)
 	}
 
+	// Otherwise the interface would be moved into the vrf on top of the router interface of a previous vrf.
+	ready := append(a.portState.NotRouted(interfaceName), a.noRoutesVia("", interfaceName))
+	if err := a.waitFor(ctx, ready...); err != nil {
+		return fmt.Errorf("interface %s cannot be added to vrf %s: %w", interfaceName, vrfName, err)
+	}
+
 	a.log.Info("add interface to vrfName ", "name", interfaceName, "vrf", vrfName)
 	return a.db.Config.SetVrfMember(ctx, interfaceName, vrfName)
 }

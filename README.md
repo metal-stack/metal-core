@@ -93,5 +93,8 @@ The behaviors are implemented in [`cmd/internal/switcher/sonic/quirks/behaviors`
 Before a port changes its role, e.g. from a machine port in a VRF to an unprovisioned port in the PXE VLAN, metal-core removes the old configuration and waits until the switch has actually torn it down.
 Where metal-core looks for that state depends on the port state behavior of the selected quirk profile.
 
+Routes via a port keep its router interface referenced in orchagent, so before a port leaves its VRF, metal-core takes it down and waits until no route in the `APPL_DB` uses it. Taking it down makes FRR withdraw the routes learned from the machine while the port is still in the VRF; routes withdrawn after the port left its VRF may never be removed from the `APPL_DB`.
+Likewise, a port only joins a VRF once it has no router interface and no route uses it.
+
 - `AsicDb`: checks the SAI bridge port and router interface objects in the `ASIC_DB`, located via the OID maps in the `COUNTERS_DB`. This waits until syncd has removed the objects from the ASIC, but relies on SONiC internals that differ between vendors and releases.
 - `StateDb`: checks `VLAN_MEMBER_TABLE` and `INTERFACE_TABLE` in the `STATE_DB`, which are maintained by vlanmgrd and intfmgrd. This only depends on the state tables SONiC uses to coordinate its own daemons, but it confirms that the change was handed to orchagent, not that it reached the ASIC.
