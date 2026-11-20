@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net"
 	"slices"
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
 // PortStateChecker tells whether a port is still bridged or routed before it gets reconfigured.
@@ -20,6 +22,20 @@ type PortStateChecker interface {
 	BridgedIn(interfaceName, vlan string) []db.Condition
 	// RoutedIn returns the conditions that hold once the port is a router interface in the vrf
 	RoutedIn(interfaceName, vrf string) []db.Condition
+	// HasAdminStatus returns the conditions that hold once the port has the admin status
+	HasAdminStatus(interfaceName string, status types.PortStatus) []db.Condition
+}
+
+// kernelAdminStatus holds while the netdev of the port is administratively up or down.
+func kernelAdminStatus(interfaceName string, status types.PortStatus) db.Condition {
+	return db.NewCondition(fmt.Sprintf("kernel %s admin %s", interfaceName, status), func(context.Context) (bool, string, error) {
+		nic, err := net.InterfaceByName(interfaceName)
+		if err != nil {
+			return false, "", err
+		}
+		up := nic.Flags&net.FlagUp != 0
+		return up == (status == types.PortStatusUp), "flags " + nic.Flags.String(), nil
+	})
 }
 
 // absent holds while exists reports false.
@@ -130,6 +146,10 @@ func (s *asicDBPortState) RoutedIn(interfaceName, _ string) []db.Condition {
 	})}
 }
 
+func (s *asicDBPortState) HasAdminStatus(interfaceName string, status types.PortStatus) []db.Condition {
+	return []db.Condition{kernelAdminStatus(interfaceName, status)}
+}
+
 // stateDBPortState uses the STATE_DB to report port status
 type stateDBPortState struct {
 	db *db.DB
@@ -173,6 +193,10 @@ func (s *stateDBPortState) RoutedIn(interfaceName, _ string) []db.Condition {
 	})}
 }
 
+func (s *stateDBPortState) HasAdminStatus(interfaceName string, status types.PortStatus) []db.Condition {
+	return []db.Condition{kernelAdminStatus(interfaceName, status)}
+}
+
 // configDBPortState treats a port as bridged as long as it is a VLAN member and as routed
 // as long as it has an interface configuration in the CONFIG_DB.
 type configDBPortState struct {
@@ -205,5 +229,12 @@ func (s *configDBPortState) RoutedIn(interfaceName, vrf string) []db.Condition {
 	return []db.Condition{present(fmt.Sprintf("CONFIG_DB INTERFACE|%s in %s", interfaceName, vrf), func(ctx context.Context) (bool, error) {
 		current, err := s.db.Config.GetVrfMembership(ctx, interfaceName)
 		return current == vrf, err
+	})}
+}
+
+func (s *configDBPortState) HasAdminStatus(interfaceName string, status types.PortStatus) []db.Condition {
+	return []db.Condition{present(fmt.Sprintf("CONFIG_DB PORT|%s admin %s", interfaceName, status), func(ctx context.Context) (bool, error) {
+		p, err := s.db.Config.GetPort(ctx, interfaceName)
+		return p != nil && p.AdminStatus == string(status), err
 	})}
 }

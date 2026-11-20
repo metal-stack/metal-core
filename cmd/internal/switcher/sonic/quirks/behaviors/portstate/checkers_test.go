@@ -10,6 +10,7 @@ import (
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db/test"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
 // newTestDB loads the data into the databases, keyed by their name.
@@ -118,4 +119,9 @@ func TestPortStateCheckers(t *testing.T) {
 			require.Len(t, pending(t, checker.BridgedIn("Ethernet2", "Vlan4000")), 1)
 		})
 	}
+}
+
+func TestKernelAdminStatus(t *testing.T) {
+	require.Empty(t, pending(t, []db.Condition{kernelAdminStatus("lo", types.PortStatusUp)}))
+	require.Len(t, pending(t, []db.Condition{kernelAdminStatus("lo", types.PortStatusDown)}), 1)
 }

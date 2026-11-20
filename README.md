@@ -95,6 +95,7 @@ Where metal-core looks for that state depends on the port state behavior of the 
 
 Routes via a port keep its router interface referenced in orchagent, so before a port leaves its VRF, metal-core takes it down and waits until no route in the `APPL_DB` uses it. Taking it down makes FRR withdraw the routes learned from the machine while the port is still in the VRF; routes withdrawn after the port left its VRF may never be removed from the `APPL_DB`.
 Likewise, a port only joins a VRF once it has no router interface and no route uses it.
+The admin status of a port is checked on its netdev in the kernel.
 
 The FRR config is applied even if a port could not be configured, so a single port cannot keep FRR from removing what is no longer configured.
 VRFs are removed after the FRR config is applied, once no port is a member of them and no route in the `APPL_DB` uses them.

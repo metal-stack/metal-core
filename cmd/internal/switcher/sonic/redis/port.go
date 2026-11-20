@@ -24,10 +24,17 @@ func (a *Applier) ensurePortConfiguration(ctx context.Context, portName, mtu str
 		}
 	}
 
-	if p.AdminStatus != string(adminStatus) && adminStatus != "" {
-		a.log.Debug("set admin status to", "port", portName, "admin_status", adminStatus)
-		return a.db.Config.SetAdminStatus(ctx, portName, adminStatus)
+	if adminStatus == "" {
+		return nil
 	}
 
-	return nil
+	if p.AdminStatus != string(adminStatus) {
+		a.log.Debug("set admin status to", "port", portName, "admin_status", adminStatus)
+		if err := a.db.Config.SetAdminStatus(ctx, portName, adminStatus); err != nil {
+			return err
+		}
+	}
+
+	// also if the CONFIG_DB already has it, so a port whose admin status never got applied is reported
+	return a.waitFor(ctx, a.portState.HasAdminStatus(portName, adminStatus)...)
 }
