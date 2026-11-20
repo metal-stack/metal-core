@@ -43,12 +43,21 @@ func (a *Applier) ensureInterfaceIsVlanMember(ctx context.Context, interfaceName
 		return fmt.Errorf("could not retrieve vlan current for %s from redis: %w", interfaceName, err)
 	}
 
+	bridgedIn := a.portState.BridgedIn(interfaceName, vlan)
 	if len(current) == 1 && current[0] == vlan {
-		return nil
+		// a previous addition may still be in progress
+		return a.waitFor(ctx, bridgedIn...)
 	} else if len(current) != 0 {
 		return fmt.Errorf("interface %s already member of a different vlan %v", interfaceName, current)
 	}
 
 	a.log.Info("add interface to vlan", "name", interfaceName, "vlan", vlan)
-	return a.db.Config.SetVlanMember(ctx, interfaceName, vlan)
+	if err := a.db.Config.SetVlanMember(ctx, interfaceName, vlan); err != nil {
+		return err
+	}
+
+	if err := a.waitFor(ctx, bridgedIn...); err != nil {
+		return fmt.Errorf("interface %s was not added to vlan %s: %w", interfaceName, vlan, err)
+	}
+	return nil
 }
