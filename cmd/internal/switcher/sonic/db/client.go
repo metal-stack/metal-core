@@ -86,6 +86,40 @@ func (c *Client) HGetAll(ctx context.Context, key Key) (Val, error) {
 	return c.rdb.Do(ctx, c.rdb.B().Hgetall().Key(key.toString(c.sep)).Build()).AsStrMap()
 }
 
+// HGetAllMatching returns the fields of all keys matching the pattern, by key. The keys are not split by the
+// separator, as values like IPv6 prefixes may contain it.
+func (c *Client) HGetAllMatching(ctx context.Context, pattern Key) (map[string]Val, error) {
+	keys, err := c.rdb.Do(ctx, c.rdb.B().Keys().Pattern(pattern.toString(c.sep)).Build()).AsStrSlice()
+	if err != nil {
+		return nil, err
+	}
+	if len(keys) == 0 {
+		return map[string]Val{}, nil
+	}
+
+	cmds := make(valkey.Commands, 0, len(keys))
+	for _, key := range keys {
+		cmds = append(cmds, c.rdb.B().Hgetall().Key(key).Build())
+	}
+
+	result := make(map[string]Val, len(keys))
+	for i, res := range c.rdb.DoMulti(ctx, cmds...) {
+		val, err := res.AsStrMap()
+		if err != nil {
+			return nil, err
+		}
+		result[keys[i]] = val
+	}
+	return result, nil
+}
+
+func (c *Client) HDel(ctx context.Context, key Key, fields ...string) error {
+	if len(fields) == 0 {
+		return nil
+	}
+	return c.rdb.Do(ctx, c.rdb.B().Hdel().Key(key.toString(c.sep)).Field(fields...).Build()).Error()
+}
+
 func (c *Client) HSet(ctx context.Context, key Key, val Val) error {
 	if len(val) == 0 {
 		return nil

@@ -3,23 +3,9 @@ package redis
 import (
 	"context"
 	"fmt"
-
-	"github.com/avast/retry-go/v4"
 )
 
-func (a *Applier) EnsureNotBridged(ctx context.Context, interfaceName string) error {
-	oid, ok := a.bridgePortOidMap[interfaceName]
-	if !ok {
-		return nil
-	}
-	bridged, err := a.db.Asic.ExistBridgePort(ctx, oid)
-	if err != nil {
-		return fmt.Errorf("could not retrieve state data for interface %s: %w", interfaceName, err)
-	}
-	if !bridged {
-		return nil
-	}
-
+func (a *Applier) ensureNotBridged(ctx context.Context, interfaceName string) error {
 	vlans, err := a.db.Config.GetVlanMembership(ctx, interfaceName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve vlan membership for %s from Redis: %w", interfaceName, err)
@@ -33,18 +19,11 @@ func (a *Applier) EnsureNotBridged(ctx context.Context, interfaceName string) er
 		}
 	}
 
-	return retry.Do(
-		func() error {
-			bridged, err := a.db.Asic.ExistBridgePort(ctx, oid)
-			if err != nil {
-				return err
-			}
-			if bridged {
-				return fmt.Errorf("interface %s still bridged", interfaceName)
-			}
-			return nil
-		},
-	)
+	// also without a membership, as a previous removal may still be in progress
+	if err := a.waitFor(ctx, a.portState.NotBridged(interfaceName)...); err != nil {
+		return fmt.Errorf("interface %s is still bridged: %w", interfaceName, err)
+	}
+	return nil
 }
 
 func (a *Applier) ensureInterfaceIsVlanMember(ctx context.Context, interfaceName, vlan string) error {
@@ -53,12 +32,21 @@ func (a *Applier) ensureInterfaceIsVlanMember(ctx context.Context, interfaceName
 		return fmt.Errorf("could not retrieve vlan current for %s from redis: %w", interfaceName, err)
 	}
 
+	bridgedIn := a.portState.BridgedIn(interfaceName, vlan)
 	if len(current) == 1 && current[0] == vlan {
-		return nil
+		// a previous addition may still be in progress
+		return a.waitFor(ctx, bridgedIn...)
 	} else if len(current) != 0 {
 		return fmt.Errorf("interface %s already member of a different vlan %v", interfaceName, current)
 	}
 
 	a.log.Info("add interface to vlan", "name", interfaceName, "vlan", vlan)
-	return a.db.Config.SetVlanMember(ctx, interfaceName, vlan)
+	if err := a.db.Config.SetVlanMember(ctx, interfaceName, vlan); err != nil {
+		return err
+	}
+
+	if err := a.waitFor(ctx, bridgedIn...); err != nil {
+		return fmt.Errorf("interface %s was not added to vlan %s: %w", interfaceName, vlan, err)
+	}
+	return nil
 }

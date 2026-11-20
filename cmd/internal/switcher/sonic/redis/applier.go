@@ -5,57 +5,36 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/portstate"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
-type (
-	Applier struct {
-		db          *db.DB
-		log         *slog.Logger
-		previousCfg *types.Conf
-
-		bridgePortOidMap map[string]db.OID
-		portOidMap       map[string]db.OID
-		rifOidMap        map[string]db.OID
-		asic
-	}
-
-	asic interface {
-		EnsureNotRouted(ctx context.Context, interfaceName string) error
-		EnsureNotBridged(ctx context.Context, interfaceName string) error
-	}
-
-	testASIC struct {
-		db *db.DB
-	}
-)
-
-func NewApplier(log *slog.Logger, db *db.DB) *Applier {
-	applier := &Applier{
-		db:  db,
-		log: log,
-	}
-	applier.asic = applier
-
-	return applier
+type Applier struct {
+	db          *db.DB
+	log         *slog.Logger
+	previousCfg *types.Conf
+	quirks      quirks.SonicQuirks
+	portState   portstate.PortStateChecker
+	waitTimeout time.Duration
 }
 
-func NewTestApplier(log *slog.Logger, db *db.DB) *Applier {
-	asic := &testASIC{
-		db: db,
-	}
-
+func NewApplier(log *slog.Logger, sonicDb *db.DB, quirks quirks.SonicQuirks, portState portstate.PortStateChecker) (*Applier, error) {
 	return &Applier{
-		db:   db,
-		log:  log,
-		asic: asic,
-	}
+		db:          sonicDb,
+		log:         log,
+		quirks:      quirks,
+		portState:   portState,
+		waitTimeout: db.DefaultWaitTimeout,
+	}, nil
 }
 
 func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
@@ -75,6 +54,11 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 		return fmt.Errorf("failed to apply config: %w", err)
 	}
 
+	// LLDP is independent of the port configuration, so its failures are only logged and must not block it
+	for _, err := range a.configureLLDP(ctx, currentPorts) {
+		a.log.Error("failed to configure lldp", "error", err)
+	}
+
 	for _, port := range currentPorts {
 		if types.PortStatus(port.AdminStatus) != cfg.Ports.AdminStatus[port.Name] {
 			changed = true
@@ -87,7 +71,7 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 		return nil
 	}
 
-	if err := a.refreshOidMaps(ctx); err != nil {
+	if err := a.portState.Refresh(ctx); err != nil {
 		return err
 	}
 
@@ -125,11 +109,6 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 		}
 	}
 
-	err = a.cleanupVrfs(ctx, cfg)
-	if err != nil {
-		errs = append(errs, err)
-	}
-
 	// config is only treated as applied if no errors are encountered
 	if len(errs) == 0 {
 		a.previousCfg = cfg
@@ -137,45 +116,20 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 	return errors.Join(errs...)
 }
 
+func (a *Applier) waitFor(ctx context.Context, conds ...db.Condition) error {
+	return db.WaitFor(ctx, a.log, a.waitTimeout, conds...)
+}
+
 func (a *Applier) GetPorts(ctx context.Context) ([]*db.Port, error) {
 	return a.db.Config.GetPorts(ctx)
 }
 
-func (a *Applier) refreshOidMaps(ctx context.Context) error {
-	a.log.Debug("refresh oid maps")
-
-	oidMap, err := a.db.Counters.GetPortNameMap(ctx)
-	if err != nil {
-		return fmt.Errorf("could not update port to oid map: %w", err)
-	}
-	a.log.Debug("set port oid map", "map", oidMap)
-	a.portOidMap = oidMap
-
-	oidMap, err = a.db.Counters.GetRifNameMap(ctx)
-	if err != nil {
-		return fmt.Errorf("could not update rif to oid ma: %w", err)
-	}
-	a.log.Debug("set rif oid map", "map", oidMap)
-	a.rifOidMap = oidMap
-
-	bridgePortMap, err := a.db.Asic.GetPortIdBridgePortMap(ctx)
-	if err != nil {
-		return fmt.Errorf("could not update bridge port to oid map: %w", err)
-	}
-	oidMap = make(map[string]db.OID, len(bridgePortMap))
-	for port, oid := range a.portOidMap {
-		if bridgePort, ok := bridgePortMap[oid]; ok {
-			oidMap[port] = bridgePort
-		}
-	}
-	a.log.Debug("set bridge port oid map", "map", oidMap)
-	a.bridgePortOidMap = oidMap
-
-	return nil
+func (a *Applier) configureLLDP(ctx context.Context, ports []*db.Port) []error {
+	return a.quirks.LLDPConfiguration.Configure(ctx, a.db.Config, ports)
 }
 
 func (a *Applier) configureUnprovisionedPort(ctx context.Context, interfaceName string, adminStatus types.PortStatus, pxeVlan string) error {
-	err := a.asic.EnsureNotRouted(ctx, interfaceName)
+	err := a.ensureNotRouted(ctx, interfaceName)
 	if err != nil {
 		return err
 	}
@@ -188,7 +142,7 @@ func (a *Applier) configureUnprovisionedPort(ctx context.Context, interfaceName 
 }
 
 func (a *Applier) configureFirewallPort(ctx context.Context, interfaceName string, adminStatus types.PortStatus) error {
-	err := a.asic.EnsureNotBridged(ctx, interfaceName)
+	err := a.ensureNotBridged(ctx, interfaceName)
 	if err != nil {
 		return err
 	}
@@ -209,7 +163,7 @@ func (a *Applier) configureUnderlayPort(ctx context.Context, interfaceName strin
 }
 
 func (a *Applier) configureVrfNeighbor(ctx context.Context, interfaceName, vrfName string, adminStatus types.PortStatus) error {
-	err := a.asic.EnsureNotBridged(ctx, interfaceName)
+	err := a.ensureNotBridged(ctx, interfaceName)
 	if err != nil {
 		return err
 	}
@@ -227,60 +181,23 @@ func (a *Applier) configureVrfNeighbor(ctx context.Context, interfaceName, vrfNa
 }
 
 func (a *Applier) configureVrf(ctx context.Context, vrfName string, vrf *types.Vrf) error {
-	exist, err := a.db.Config.ExistVrf(ctx, vrfName)
+	vtep, err := a.db.Config.GetVTEPName(ctx)
 	if err != nil {
 		return err
 	}
-	if !exist {
-		if err := a.db.Config.CreateVrf(ctx, vrfName, vrf.VNI); err != nil {
-			return fmt.Errorf("could not create vrf %s: %w", vrfName, err)
+
+	for _, e := range a.quirks.VrfEntries.Entries(vrfName, vrf, vtep) {
+		if err := a.db.Config.EnsureExactEntry(ctx, e); err != nil {
+			return fmt.Errorf("could not configure %v for vrf %s: %w", e.Key, vrfName, err)
 		}
 	}
-
-	exist, err = a.db.Config.ExistVlan(ctx, vrf.VLANID)
-	if err != nil {
-		return err
-	}
-	if !exist {
-		if err := a.db.Config.CreateVlan(ctx, vrf.VLANID); err != nil {
-			return fmt.Errorf("could not create vlan %d: %w", vrf.VLANID, err)
-		}
-	}
-
-	exist, err = a.db.Config.AreNeighborsSuppressed(ctx, vrf.VLANID)
-	if err != nil {
-		return err
-	}
-	if !exist {
-		if err := a.db.Config.SuppressNeighbors(ctx, vrf.VLANID); err != nil {
-			return fmt.Errorf("could not suppress neighbors for vlan %d: %w", vrf.VLANID, err)
-		}
-	}
-
-	exist, err = a.db.Config.ExistVlanInterface(ctx, vrf.VLANID)
-	if err != nil {
-		return err
-	}
-	if !exist {
-		if err := a.db.Config.CreateVlanInterface(ctx, vrf.VLANID, vrfName); err != nil {
-			return fmt.Errorf("could not create vlan interface for vlan %d: %w", vrf.VLANID, err)
-		}
-	}
-
-	exist, err = a.db.Config.ExistVxlanTunnelMap(ctx, vrf.VLANID, vrf.VNI)
-	if err != nil {
-		return err
-	}
-	if !exist {
-		if err := a.db.Config.CreateVxlanTunnelMap(ctx, vrf.VLANID, vrf.VNI); err != nil {
-			return fmt.Errorf("could not create vxlan tunnel between vlan %d and vni %d: %w", vrf.VLANID, vrf.VNI, err)
-		}
-	}
-
 	return nil
 }
 
-func (a *Applier) cleanupVrfs(ctx context.Context, cfg *types.Conf) error {
+// CleanupVrfs removes the vrfs that are not part of the config anymore. It must run after FRR stopped using them,
+// otherwise their routes keep them referenced in orchagent. It also runs if the config did not change, so the
+// removal of a vrf that still had members or routes is retried.
+func (a *Applier) CleanupVrfs(ctx context.Context, cfg *types.Conf) error {
 	vrfs, err := a.db.Config.GetVrfs(ctx)
 	if err != nil {
 		return fmt.Errorf("could not retrieve vrfs: %w", err)
@@ -327,63 +244,42 @@ func (a *Applier) cleanupVrfs(ctx context.Context, cfg *types.Conf) error {
 }
 
 func (a *Applier) cleanupVrf(ctx context.Context, vrfName string, vrf *types.Vrf) error {
+	members, err := a.db.Config.GetVrfMembers(ctx, vrfName)
+	if err != nil {
+		return fmt.Errorf("could not retrieve members of vrf %s: %w", vrfName, err)
+	}
+	if len(members) > 0 {
+		// the members could not be removed, which is reported by them
+		a.log.Info("postpone cleanup of vrf that still has members", "vrf", vrfName, "members", members)
+		return nil
+	}
+
+	if err := a.waitFor(ctx, a.noRoutesIn(vrfName)); err != nil {
+		return fmt.Errorf("not removing vrf %s: %w", vrfName, err)
+	}
+
 	a.log.Debug("cleanup unused vrf", "vrf", vrf)
-	exists, err := a.db.Config.ExistVxlanTunnelMap(ctx, vrf.VLANID, vrf.VNI)
+	vtep, err := a.db.Config.GetVTEPName(ctx)
 	if err != nil {
 		return err
 	}
-	if exists {
-		a.log.Debug("delete vxlan tunnel map", "vlan id", vrf.VLANID, "vni", vrf.VNI)
-		err = a.db.Config.DeleteVxlanTunnelMap(ctx, vrf.VLANID, vrf.VNI)
+
+	for _, e := range slices.Backward(a.quirks.VrfEntries.Entries(vrfName, vrf, vtep)) {
+		deleted, err := a.db.Config.DeleteEntry(ctx, e.Key)
 		if err != nil {
-			return fmt.Errorf("could not remove vxlan tunnel map for vlan %d and vni %d: %w", vrf.VLANID, vrf.VNI, err)
+			return fmt.Errorf("could not delete %v of vrf %s: %w", e.Key, vrfName, err)
 		}
-	}
-
-	exists, err = a.db.Config.ExistVlanInterface(ctx, vrf.VLANID)
-	if err != nil {
-		return err
-	}
-	if exists {
-		a.log.Debug("delete vlan interface", "vlan id", vrf.VLANID)
-		err = a.db.Config.DeleteVlanInterface(ctx, vrf.VLANID)
-		if err != nil {
-			return fmt.Errorf("could not remove vlan interface %d: %w", vrf.VLANID, err)
-		}
-	}
-
-	neighborSuppression, err := a.db.Config.AreNeighborsSuppressed(ctx, vrf.VLANID)
-	if err != nil {
-		return err
-	}
-	if neighborSuppression {
-		a.log.Debug("delete neighbor suppression", "vlan id", vrf.VLANID)
-		if err := a.db.Config.DeleteNeighborSuppression(ctx, vrf.VLANID); err != nil {
-			return fmt.Errorf("could not delete neighbor suppression for vlan %d: %w", vrf.VLANID, err)
-		}
-	}
-
-	exists, err = a.db.Config.ExistVlan(ctx, vrf.VLANID)
-	if err != nil {
-		return err
-	}
-	if exists {
-		a.log.Debug("delete vlan", "vlan id", vrf.VLANID)
-		err = a.db.Config.DeleteVlan(ctx, vrf.VLANID)
-		if err != nil {
-			return fmt.Errorf("could not remove vlan %d: %w", vrf.VLANID, err)
-		}
-	}
-
-	exists, err = a.db.Config.ExistVrf(ctx, vrfName)
-	if err != nil {
-		return err
-	}
-	if exists {
-		a.log.Debug("delete vrf", "vrf", vrfName)
-		if err := a.db.Config.DeleteVrf(ctx, vrfName); err != nil {
-			return fmt.Errorf("could not delete vrf %s: %w", vrfName, err)
+		if deleted {
+			a.log.Debug("deleted vrf entry", "vrf", vrfName, "key", e.Key)
 		}
 	}
 	return nil
+}
+
+// noRoutesIn holds while the APPL_DB has no routes in the vrf.
+func (a *Applier) noRoutesIn(vrfName string) db.Condition {
+	return db.NewCondition("APPL_DB no routes in "+vrfName, func(ctx context.Context) (bool, string, error) {
+		routes, err := a.db.Appl.GetRoutes(ctx, vrfName)
+		return len(routes) == 0, strings.Join(routes, ", "), err
+	})
 }

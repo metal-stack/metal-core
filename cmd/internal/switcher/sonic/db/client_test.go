@@ -339,6 +339,28 @@ func TestClient_HGetAll(t *testing.T) {
 	}
 }
 
+func TestClient_HDel(t *testing.T) {
+	var (
+		ctx = t.Context()
+		vc  = test.StartValkey(t)
+	)
+	defer vc.Close()
+
+	err := test.LoadData(ctx, vc, clientTestData, "|")
+	require.NoError(t, err)
+
+	c := &Client{
+		rdb: vc,
+		sep: "|",
+	}
+	require.NoError(t, c.HDel(ctx, Key{"PORT", "Ethernet0"}, "alias"))
+	require.NoError(t, c.HDel(ctx, Key{"PORT", "Ethernet0"}))
+
+	data, err := test.GetData(ctx, vc, "|")
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"admin_status": "up"}, data["PORT|Ethernet0"])
+}
+
 func TestClient_HSet(t *testing.T) {
 	tests := []struct {
 		name      string

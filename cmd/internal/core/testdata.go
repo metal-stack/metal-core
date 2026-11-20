@@ -358,6 +358,9 @@ var (
 			"ipv6_use_link_local_only": "enable",
 			"vrf_name":                 "Vrf100",
 		},
+		"LLDP|GLOBAL": map[string]string{
+			"hello_time": "10",
+		},
 		"PORT|Ethernet0": map[string]string{
 			"admin_status": "up",
 			"mtu":          "9000",
