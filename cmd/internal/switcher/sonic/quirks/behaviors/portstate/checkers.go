@@ -11,8 +11,18 @@ import (
 // PortStateChecker tells whether a port is still bridged or routed before it gets reconfigured.
 type PortStateChecker interface {
 	Refresh(ctx context.Context) error
-	IsBridged(ctx context.Context, interfaceName string) (bool, error)
-	IsRouted(ctx context.Context, interfaceName string) (bool, error)
+	// NotBridged returns the conditions that hold once the port is no member of any vlan
+	NotBridged(interfaceName string) []db.Condition
+	// NotRouted returns the conditions that hold once the port has no router interface
+	NotRouted(interfaceName string) []db.Condition
+}
+
+// absent holds while exists reports false.
+func absent(desc string, exists func(ctx context.Context) (bool, error)) db.Condition {
+	return db.NewCondition(desc, func(ctx context.Context) (bool, string, error) {
+		found, err := exists(ctx)
+		return !found, "", err
+	})
 }
 
 // asicDBPortState checks the SAI objects in the ASIC_DB, i.e. waits until syncd removed the
@@ -59,20 +69,24 @@ func (s *asicDBPortState) Refresh(ctx context.Context) error {
 	return nil
 }
 
-func (s *asicDBPortState) IsBridged(ctx context.Context, interfaceName string) (bool, error) {
+func (s *asicDBPortState) NotBridged(interfaceName string) []db.Condition {
 	oid, ok := s.bridgePortOidMap[interfaceName]
 	if !ok {
-		return false, nil
+		return nil
 	}
-	return s.db.Asic.ExistBridgePort(ctx, oid)
+	return []db.Condition{absent(fmt.Sprintf("ASIC_DB bridge port %s of %s absent", oid, interfaceName), func(ctx context.Context) (bool, error) {
+		return s.db.Asic.ExistBridgePort(ctx, oid)
+	})}
 }
 
-func (s *asicDBPortState) IsRouted(ctx context.Context, interfaceName string) (bool, error) {
+func (s *asicDBPortState) NotRouted(interfaceName string) []db.Condition {
 	oid, ok := s.rifOidMap[interfaceName]
 	if !ok {
-		return false, nil
+		return nil
 	}
-	return s.db.Asic.ExistRouterInterface(ctx, oid)
+	return []db.Condition{absent(fmt.Sprintf("ASIC_DB router interface %s of %s absent", oid, interfaceName), func(ctx context.Context) (bool, error) {
+		return s.db.Asic.ExistRouterInterface(ctx, oid)
+	})}
 }
 
 // stateDBPortState uses the STATE_DB to report port status
@@ -94,12 +108,16 @@ func (s *stateDBPortState) Refresh(ctx context.Context) error {
 	return nil
 }
 
-func (s *stateDBPortState) IsBridged(ctx context.Context, interfaceName string) (bool, error) {
-	return s.db.State.ExistVlanMember(ctx, interfaceName, s.vlans)
+func (s *stateDBPortState) NotBridged(interfaceName string) []db.Condition {
+	return []db.Condition{absent(fmt.Sprintf("STATE_DB VLAN_MEMBER_TABLE of %s absent", interfaceName), func(ctx context.Context) (bool, error) {
+		return s.db.State.ExistVlanMember(ctx, interfaceName, s.vlans)
+	})}
 }
 
-func (s *stateDBPortState) IsRouted(ctx context.Context, interfaceName string) (bool, error) {
-	return s.db.State.ExistInterface(ctx, interfaceName)
+func (s *stateDBPortState) NotRouted(interfaceName string) []db.Condition {
+	return []db.Condition{absent(fmt.Sprintf("STATE_DB INTERFACE_TABLE|%s absent", interfaceName), func(ctx context.Context) (bool, error) {
+		return s.db.State.ExistInterface(ctx, interfaceName)
+	})}
 }
 
 // configDBPortState treats a port as bridged as long as it is a VLAN member and as routed
@@ -110,14 +128,15 @@ type configDBPortState struct {
 
 func (s *configDBPortState) Refresh(context.Context) error { return nil }
 
-func (s *configDBPortState) IsBridged(ctx context.Context, interfaceName string) (bool, error) {
-	vlans, err := s.db.Config.GetVlanMembership(ctx, interfaceName)
-	if err != nil {
-		return false, err
-	}
-	return len(vlans) > 0, nil
+func (s *configDBPortState) NotBridged(interfaceName string) []db.Condition {
+	return []db.Condition{absent(fmt.Sprintf("CONFIG_DB VLAN_MEMBER of %s absent", interfaceName), func(ctx context.Context) (bool, error) {
+		vlans, err := s.db.Config.GetVlanMembership(ctx, interfaceName)
+		return len(vlans) > 0, err
+	})}
 }
 
-func (s *configDBPortState) IsRouted(ctx context.Context, interfaceName string) (bool, error) {
-	return s.db.Config.ExistInterfaceConfiguration(ctx, interfaceName)
+func (s *configDBPortState) NotRouted(interfaceName string) []db.Condition {
+	return []db.Condition{absent(fmt.Sprintf("CONFIG_DB INTERFACE|%s absent", interfaceName), func(ctx context.Context) (bool, error) {
+		return s.db.Config.ExistInterfaceConfiguration(ctx, interfaceName)
+	})}
 }

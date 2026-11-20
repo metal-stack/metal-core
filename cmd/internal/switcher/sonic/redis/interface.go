@@ -4,15 +4,17 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/avast/retry-go/v4"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
 )
 
 func (a *Applier) ensureNotRouted(ctx context.Context, interfaceName string) error {
-	routed, err := a.portState.IsRouted(ctx, interfaceName)
+	notRouted := a.portState.NotRouted(interfaceName)
+
+	pending, err := db.Pending(ctx, notRouted...)
 	if err != nil {
 		return fmt.Errorf("could not retrieve state data for interface %s: %w", interfaceName, err)
 	}
-	if !routed {
+	if len(pending) == 0 {
 		return nil
 	}
 
@@ -22,17 +24,8 @@ func (a *Applier) ensureNotRouted(ctx context.Context, interfaceName string) err
 		return fmt.Errorf("could not remove configuration for interface %s: %w", interfaceName, err)
 	}
 
-	return retry.Do(
-		func() error {
-			configured, err := a.portState.IsRouted(ctx, interfaceName)
-			if err != nil {
-				return err
-			}
-			if configured {
-				a.log.Debug("interface is still routed", "name", interfaceName)
-				return fmt.Errorf("interface %s is still routed", interfaceName)
-			}
-			return nil
-		},
-	)
+	if err := a.waitFor(ctx, notRouted...); err != nil {
+		return fmt.Errorf("interface %s is still routed: %w", interfaceName, err)
+	}
+	return nil
 }

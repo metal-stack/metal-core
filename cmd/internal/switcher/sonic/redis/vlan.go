@@ -4,15 +4,17 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/avast/retry-go/v4"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
 )
 
 func (a *Applier) ensureNotBridged(ctx context.Context, interfaceName string) error {
-	bridged, err := a.portState.IsBridged(ctx, interfaceName)
+	notBridged := a.portState.NotBridged(interfaceName)
+
+	pending, err := db.Pending(ctx, notBridged...)
 	if err != nil {
 		return fmt.Errorf("could not retrieve state data for interface %s: %w", interfaceName, err)
 	}
-	if !bridged {
+	if len(pending) == 0 {
 		return nil
 	}
 
@@ -29,18 +31,10 @@ func (a *Applier) ensureNotBridged(ctx context.Context, interfaceName string) er
 		}
 	}
 
-	return retry.Do(
-		func() error {
-			bridged, err := a.portState.IsBridged(ctx, interfaceName)
-			if err != nil {
-				return err
-			}
-			if bridged {
-				return fmt.Errorf("interface %s still bridged", interfaceName)
-			}
-			return nil
-		},
-	)
+	if err := a.waitFor(ctx, notBridged...); err != nil {
+		return fmt.Errorf("interface %s is still bridged: %w", interfaceName, err)
+	}
+	return nil
 }
 
 func (a *Applier) ensureInterfaceIsVlanMember(ctx context.Context, interfaceName, vlan string) error {

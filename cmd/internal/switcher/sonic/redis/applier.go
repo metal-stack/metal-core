@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 
@@ -23,14 +24,16 @@ type Applier struct {
 	previousCfg *types.Conf
 	quirks      quirks.SonicQuirks
 	portState   portstate.PortStateChecker
+	waitTimeout time.Duration
 }
 
 func NewApplier(log *slog.Logger, sonicDb *db.DB, quirks quirks.SonicQuirks) (*Applier, error) {
 	return &Applier{
-		db:        sonicDb,
-		log:       log,
-		quirks:    quirks,
-		portState: quirks.PortState.NewChecker(log, sonicDb),
+		db:          sonicDb,
+		log:         log,
+		quirks:      quirks,
+		portState:   quirks.PortState.NewChecker(log, sonicDb),
+		waitTimeout: db.DefaultWaitTimeout,
 	}, nil
 }
 
@@ -116,6 +119,10 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 		a.previousCfg = cfg
 	}
 	return errors.Join(errs...)
+}
+
+func (a *Applier) waitFor(ctx context.Context, conds ...db.Condition) error {
+	return db.WaitFor(ctx, a.log, a.waitTimeout, conds...)
 }
 
 func (a *Applier) GetPorts(ctx context.Context) ([]*db.Port, error) {
