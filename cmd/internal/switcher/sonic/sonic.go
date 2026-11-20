@@ -3,6 +3,7 @@ package sonic
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -76,12 +77,20 @@ func New(log *slog.Logger, frrTplFile string, interfaceNamingSchema InterfaceNam
 }
 
 func (s *Sonic) Apply(ctx context.Context, cfg *types.Conf) error {
-	err := s.redisApplier.Apply(ctx, cfg)
-	if err != nil {
-		return err
+	// A port that could not be configured stays in a state FRR can be configured for,
+	// so it must not keep FRR from removing what is no longer configured.
+	redisErr := s.redisApplier.Apply(ctx, cfg)
+	if redisErr != nil {
+		s.log.Error("failed to apply redis config, applying frr config anyway", "error", redisErr)
 	}
 
-	return s.frrApplier.Apply(ctx, quirks.ApplyFRRTemplateQuirks(s.quirks, *cfg))
+	err := s.frrApplier.Apply(ctx, quirks.ApplyFRRTemplateQuirks(s.quirks, *cfg))
+	if err != nil {
+		return errors.Join(redisErr, err)
+	}
+
+	// a vrf can only be removed once FRR no longer uses it
+	return errors.Join(redisErr, s.redisApplier.CleanupVrfs(ctx, cfg))
 }
 
 func (s *Sonic) IsInitialized(ctx context.Context) (initialized bool, err error) {

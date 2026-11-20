@@ -137,3 +137,34 @@ func TestApplier_configureVrfNeighbor_routesViaPort(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "Vrf46", s.configData(t)["INTERFACE|Ethernet1"]["vrf_name"])
 }
+
+func TestApplier_CleanupVrfs(t *testing.T) {
+	s := newTestSwitch(t, test.StringMap{
+		"VXLAN_TUNNEL": test.StringMap{
+			"vtep": test.StringMap{"src_ip": "10.1.1.1"},
+		},
+		"VRF": test.StringMap{
+			"Vrf20": test.StringMap{"fallback": "false", "vni": "20"},
+		},
+		"INTERFACE": test.StringMap{
+			"Ethernet1": test.StringMap{"vrf_name": "Vrf20", "ipv6_use_link_local_only": "enable"},
+		},
+	}, routesViaEthernet1)
+	cfg := &types.Conf{Ports: types.Ports{Vrfs: map[string]*types.Vrf{}}}
+
+	err := s.applier.CleanupVrfs(t.Context(), cfg)
+	require.NoError(t, err, "postponed while the vrf has members")
+	require.Contains(t, s.configData(t), "VRF|Vrf20")
+
+	s.del(t, s.configDB, "INTERFACE|Ethernet1")
+
+	err = s.applier.CleanupVrfs(t.Context(), cfg)
+	require.ErrorContains(t, err, "ROUTE_TABLE:Vrf20:10.128.0.2")
+	require.Contains(t, s.configData(t), "VRF|Vrf20")
+
+	s.del(t, s.applDB, "ROUTE_TABLE:Vrf20:10.128.0.2")
+
+	err = s.applier.CleanupVrfs(t.Context(), cfg)
+	require.NoError(t, err)
+	require.NotContains(t, s.configData(t), "VRF|Vrf20")
+}

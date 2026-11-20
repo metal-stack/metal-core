@@ -109,11 +109,6 @@ func (a *Applier) Apply(ctx context.Context, cfg *types.Conf) error {
 		}
 	}
 
-	err = a.cleanupVrfs(ctx, cfg)
-	if err != nil {
-		errs = append(errs, err)
-	}
-
 	// config is only treated as applied if no errors are encountered
 	if len(errs) == 0 {
 		a.previousCfg = cfg
@@ -199,7 +194,10 @@ func (a *Applier) configureVrf(ctx context.Context, vrfName string, vrf *types.V
 	return nil
 }
 
-func (a *Applier) cleanupVrfs(ctx context.Context, cfg *types.Conf) error {
+// CleanupVrfs removes the vrfs that are not part of the config anymore. It must run after FRR stopped using them,
+// otherwise their routes keep them referenced in orchagent. It also runs if the config did not change, so the
+// removal of a vrf that still had members or routes is retried.
+func (a *Applier) CleanupVrfs(ctx context.Context, cfg *types.Conf) error {
 	vrfs, err := a.db.Config.GetVrfs(ctx)
 	if err != nil {
 		return fmt.Errorf("could not retrieve vrfs: %w", err)
@@ -246,6 +244,20 @@ func (a *Applier) cleanupVrfs(ctx context.Context, cfg *types.Conf) error {
 }
 
 func (a *Applier) cleanupVrf(ctx context.Context, vrfName string, vrf *types.Vrf) error {
+	members, err := a.db.Config.GetVrfMembers(ctx, vrfName)
+	if err != nil {
+		return fmt.Errorf("could not retrieve members of vrf %s: %w", vrfName, err)
+	}
+	if len(members) > 0 {
+		// the members could not be removed, which is reported by them
+		a.log.Info("postpone cleanup of vrf that still has members", "vrf", vrfName, "members", members)
+		return nil
+	}
+
+	if err := a.waitFor(ctx, a.noRoutesIn(vrfName)); err != nil {
+		return fmt.Errorf("not removing vrf %s: %w", vrfName, err)
+	}
+
 	a.log.Debug("cleanup unused vrf", "vrf", vrf)
 	vtep, err := a.db.Config.GetVTEPName(ctx)
 	if err != nil {
@@ -262,4 +274,12 @@ func (a *Applier) cleanupVrf(ctx context.Context, vrfName string, vrf *types.Vrf
 		}
 	}
 	return nil
+}
+
+// noRoutesIn holds while the APPL_DB has no routes in the vrf.
+func (a *Applier) noRoutesIn(vrfName string) db.Condition {
+	return db.NewCondition("APPL_DB no routes in "+vrfName, func(ctx context.Context) (bool, string, error) {
+		routes, err := a.db.Appl.GetRoutes(ctx, vrfName)
+		return len(routes) == 0, strings.Join(routes, ", "), err
+	})
 }

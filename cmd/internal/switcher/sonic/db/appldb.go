@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"maps"
 	"slices"
 	"strings"
 
@@ -22,6 +23,18 @@ func (d *ApplDB) ExistPortInitDone(ctx context.Context) (bool, error) {
 	key := Key{"PORT_TABLE", "PortInitDone"}
 
 	return d.c.Exists(ctx, key)
+}
+
+// GetRoutes returns the keys of the routes fpmsyncd installed in the vrf.
+func (d *ApplDB) GetRoutes(ctx context.Context, vrf string) ([]string, error) {
+	routes, err := d.c.HGetAllMatching(ctx, Key{"ROUTE_TABLE", vrf, "*"})
+	if err != nil {
+		return nil, err
+	}
+
+	keys := slices.Collect(maps.Keys(routes))
+	slices.Sort(keys)
+	return keys, nil
 }
 
 // GetRoutesVia returns the keys of the routes fpmsyncd installed in the vrf that use the interface as next hop.

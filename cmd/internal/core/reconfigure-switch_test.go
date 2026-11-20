@@ -223,6 +223,8 @@ func TestSonicConfig(t *testing.T) {
 	require.NoError(t, err)
 	err = redisApplier.Apply(t.Context(), leaf01PreviousCfg)
 	require.NoError(t, err)
+	err = redisApplier.CleanupVrfs(t.Context(), leaf01PreviousCfg)
+	require.NoError(t, err)
 
 	switcherCfg, err := core.buildSwitcherConfig(leaf01)
 	require.NoError(t, err)
@@ -234,6 +236,8 @@ func TestSonicConfig(t *testing.T) {
 	injectMgmtGateway(switcherCfg, core.managementGateway)
 
 	err = redisApplier.Apply(t.Context(), switcherCfg)
+	require.NoError(t, err)
+	err = redisApplier.CleanupVrfs(t.Context(), switcherCfg)
 	require.NoError(t, err)
 
 	configDB, err := test.GetData(t.Context(), vc, "|")

@@ -186,6 +186,30 @@ func (d *ConfigDB) SetVrfMember(ctx context.Context, interfaceName string, vrf s
 	return d.c.HSet(ctx, key, Val{linkLocalOnly: enable, vrfName: vrf})
 }
 
+// GetVrfMembers returns the interfaces that are configured as members of the vrf.
+func (d *ConfigDB) GetVrfMembers(ctx context.Context, vrf string) ([]string, error) {
+	keys, err := d.c.Keys(ctx, Key{interfaceTable, "*"})
+	if err != nil {
+		return nil, err
+	}
+
+	var members []string
+	for _, key := range keys {
+		// INTERFACE|<name>|<ip> keys hold the addresses of an interface
+		if len(key) != 2 {
+			continue
+		}
+		v, err := d.c.HGet(ctx, key, vrfName)
+		if err != nil {
+			return nil, err
+		}
+		if v == vrf {
+			members = append(members, key[1])
+		}
+	}
+	return members, nil
+}
+
 func (d *ConfigDB) GetVrfMembership(ctx context.Context, interfaceName string) (string, error) {
 	key := Key{interfaceTable, interfaceName}
 
