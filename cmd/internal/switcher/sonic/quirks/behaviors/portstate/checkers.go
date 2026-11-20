@@ -151,12 +151,17 @@ func (s *sonicPortState) BridgedIn(interfaceName, vlan string) []db.Condition {
 	}
 }
 
-// RoutedIn looks up the router interface of the port again, as it does not exist when the oid maps are refreshed.
-// The ASIC_DB does not tell the vrf of a router interface, so only its existence is checked.
-func (s *sonicPortState) RoutedIn(interfaceName, _ string) []db.Condition {
+// RoutedIn checks the vrf in the STATE_DB, as the router interface of a previous vrf may still exist.
+// The ASIC_DB does not tell the vrf of a router interface, so only its existence is checked there.
+// The router interface is looked up again, as it does not exist when the oid maps are refreshed.
+func (s *sonicPortState) RoutedIn(interfaceName, vrf string) []db.Condition {
 	return []db.Condition{
-		present(fmt.Sprintf("STATE_DB INTERFACE_TABLE|%s exists", interfaceName), func(ctx context.Context) (bool, error) {
-			return s.db.State.ExistInterface(ctx, interfaceName)
+		db.NewCondition(fmt.Sprintf("STATE_DB INTERFACE_TABLE|%s in %s", interfaceName, vrf), func(ctx context.Context) (bool, string, error) {
+			current, exists, err := s.db.State.GetInterfaceVrf(ctx, interfaceName)
+			if err != nil || !exists {
+				return false, "absent", err
+			}
+			return current == vrf, fmt.Sprintf("in %q", current), nil
 		}),
 		present(fmt.Sprintf("ASIC_DB router interface of %s exists", interfaceName), func(ctx context.Context) (bool, error) {
 			rifs, err := s.db.Counters.GetRifNameMap(ctx)

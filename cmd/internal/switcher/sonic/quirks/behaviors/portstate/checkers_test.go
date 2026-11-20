@@ -131,6 +131,39 @@ func TestAsicDb_RouterInterfaceLeft(t *testing.T) {
 		"ASIC_DB router interface oid:0x6000000000daa of Ethernet0 absent",
 	}, pending(t, checker.NotRouted("Ethernet0")))
 	require.Equal(t, []string{
-		"STATE_DB INTERFACE_TABLE|Ethernet0 exists",
+		"STATE_DB INTERFACE_TABLE|Ethernet0 in Vrf46 (absent)",
 	}, pending(t, checker.RoutedIn("Ethernet0", "Vrf46")))
+}
+
+// leaf03 Ethernet1 after it was moved into Vrf46 on top of the router interface of Vrf20, which orchagent could not remove
+func TestPortStateCheckers_RoutedInPreviousVrf(t *testing.T) {
+	checker := AsicDb{}.NewChecker(slog.Default(), newTestDB(t, map[string]test.StringMap{
+		"COUNTERS_DB": {
+			"COUNTERS_PORT_NAME_MAP": test.StringMap{"Ethernet1": "oid:0x10000000003c7"},
+			"COUNTERS_RIF_NAME_MAP":  test.StringMap{"Ethernet1": "oid:0x6000000000544"},
+		},
+		"ASIC_DB": {
+			"ASIC_STATE": test.StringMap{
+				"SAI_OBJECT_TYPE_ROUTER_INTERFACE": test.StringMap{
+					"oid": test.StringMap{
+						"0x6000000000544": test.StringMap{
+							"SAI_ROUTER_INTERFACE_ATTR_PORT_ID":           "oid:0x10000000003c7",
+							"SAI_ROUTER_INTERFACE_ATTR_VIRTUAL_ROUTER_ID": "oid:0x300000000050d",
+						},
+					},
+				},
+			},
+		},
+		"STATE_DB": {
+			"INTERFACE_TABLE": test.StringMap{
+				"Ethernet1": test.StringMap{"mac_addr": "50:7c:6f:3e:8d:90", "vrf": "Vrf20"},
+			},
+		},
+	}))
+	require.NoError(t, checker.Refresh(t.Context()))
+
+	require.Equal(t, []string{
+		`STATE_DB INTERFACE_TABLE|Ethernet1 in Vrf46 (in "Vrf20")`,
+	}, pending(t, checker.RoutedIn("Ethernet1", "Vrf46")))
+	require.Contains(t, pending(t, checker.RoutedIn("Ethernet2", "Vrf46")), "STATE_DB INTERFACE_TABLE|Ethernet2 in Vrf46 (absent)", "an interface intfmgrd did not set up is in no vrf")
 }

@@ -25,6 +25,15 @@ func (d *StateDB) ExistInterface(ctx context.Context, interfaceName string) (boo
 	return d.c.Exists(ctx, key)
 }
 
+// GetInterfaceVrf returns the vrf intfmgrd has bound the interface to, and whether it has set up the interface at all.
+func (d *StateDB) GetInterfaceVrf(ctx context.Context, interfaceName string) (vrf string, exists bool, err error) {
+	val, err := d.c.HGetAll(ctx, Key{"INTERFACE_TABLE", interfaceName})
+	if err != nil {
+		return "", false, err
+	}
+	return val["vrf"], len(val) > 0, nil
+}
+
 // GetVlans returns the vlans vlanmgrd has set up.
 func (d *StateDB) GetVlans(ctx context.Context) ([]string, error) {
 	view, err := d.c.GetView(ctx, "VLAN_TABLE")
