@@ -10,7 +10,8 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
-// PortStateChecker tells whether a port is still bridged or routed before it gets reconfigured.
+// PortStateChecker returns the conditions that hold once SONiC has applied the configuration of a port.
+// There is one implementation, NewChecker; the interface allows for experimenting with others.
 type PortStateChecker interface {
 	Refresh(ctx context.Context) error
 	// NotBridged returns the conditions that hold once the port is no member of any vlan

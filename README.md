@@ -82,7 +82,6 @@ metal-core logs the selected behaviors on startup and refuses to start with an u
 The behaviors are implemented in [`cmd/internal/switcher/sonic/quirks/behaviors`](cmd/internal/switcher/sonic/quirks/behaviors):
 
 - **VRF entries**: `Community` creates the VRF, VLAN, SVI, ARP suppression and VXLAN tunnel map of an L2 VNI as described in the [SONiC EVPN HLD](https://github.com/sonic-net/SONiC/blob/master/doc/vxlan/EVPN/EVPN_VXLAN_HLD.md#511-configuration-commands). `L3Only` binds the VRF to the VTEP directly for platforms that cannot map the VRF VNI to a VLAN.
-- **Port state**: see [Port State Checks](#port-state-checks-on-sonic-switches).
 - **FRR dplane_fpm_sonic**: zebra syncs with the Forwarding Plane Manager via the [dplane_fpm_sonic module](https://github.com/sonic-net/SONiC/blob/master/doc/sonic-fpm-module/frr_sonic_communication_channel.md), so the FPM address is set in `frr.conf`.
 - **FRR disable next hop groups**: next hop groups are disabled in `frr.conf`, as they are not supported together with dplane_fpm_sonic.
 - **FRR keep interfaces**: unprovisioned interfaces stay in `frr.conf` with their configuration removed instead of being deleted, since newer FRR versions refuse to apply a config that deletes active interfaces.
@@ -91,7 +90,9 @@ The behaviors are implemented in [`cmd/internal/switcher/sonic/quirks/behaviors`
 ## Port State Checks on SONiC Switches
 
 Before a port changes its role, e.g. from a machine port in a VRF to an unprovisioned port in the PXE VLAN, metal-core removes the old configuration and waits until the switch has actually torn it down.
-Where metal-core looks for that state depends on the port state behavior of the selected quirk profile.
+After it configures a port, metal-core also waits until the switch has applied the configuration.
+It checks `VLAN_MEMBER_TABLE` and `INTERFACE_TABLE` in the `STATE_DB`, which are maintained by vlanmgrd and intfmgrd, and the SAI bridge port and router interface objects in the `ASIC_DB`, located via the OID maps in the `COUNTERS_DB`.
+The `STATE_DB` alone may only confirm that a change was handed to orchagent; the `ASIC_DB` confirms that syncd has created or removed the objects in the ASIC.
 
 Routes via a port keep its router interface referenced in orchagent, so before a port leaves its VRF, metal-core takes it down and waits until no route in the `APPL_DB` uses it. Taking it down makes FRR withdraw the routes learned from the machine while the port is still in the VRF; routes withdrawn after the port left its VRF may never be removed from the `APPL_DB`.
 Likewise, a port only joins a VRF once it has no router interface and no route uses it.
@@ -99,5 +100,3 @@ The admin status of a port is checked on its netdev in the kernel.
 
 The FRR config is applied even if a port could not be configured, so a single port cannot keep FRR from removing what is no longer configured.
 VRFs are removed after the FRR config is applied, once no port is a member of them and no route in the `APPL_DB` uses them.
-
-- `AsicDb`: checks `VLAN_MEMBER_TABLE` and `INTERFACE_TABLE` in the `STATE_DB`, which are maintained by vlanmgrd and intfmgrd, and the SAI bridge port and router interface objects in the `ASIC_DB`, located via the OID maps in the `COUNTERS_DB`. The `STATE_DB` alone may only confirm that a change was handed to orchagent; the `ASIC_DB` confirms that syncd has created or removed the objects in the ASIC.

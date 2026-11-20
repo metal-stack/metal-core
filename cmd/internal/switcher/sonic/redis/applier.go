@@ -13,8 +13,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/portstate"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks/behaviors/portstate"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
@@ -27,12 +27,12 @@ type Applier struct {
 	waitTimeout time.Duration
 }
 
-func NewApplier(log *slog.Logger, sonicDb *db.DB, quirks quirks.SonicQuirks) (*Applier, error) {
+func NewApplier(log *slog.Logger, sonicDb *db.DB, quirks quirks.SonicQuirks, portState portstate.PortStateChecker) (*Applier, error) {
 	return &Applier{
 		db:          sonicDb,
 		log:         log,
 		quirks:      quirks,
-		portState:   quirks.PortState.NewChecker(log, sonicDb),
+		portState:   portState,
 		waitTimeout: db.DefaultWaitTimeout,
 	}, nil
 }

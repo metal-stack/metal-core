@@ -11,6 +11,7 @@ import (
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db/test"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/portstate"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
@@ -59,7 +60,7 @@ func newTestSwitch(t *testing.T, configDB, applDB test.StringMap) *testSwitch {
 
 	sonicDb, err := db.New(cfg, slog.Default(), db.SchemeRedis)
 	require.NoError(t, err)
-	s.applier, err = NewApplier(slog.Default(), sonicDb, quirks.NewTestQuirks())
+	s.applier, err = NewApplier(slog.Default(), sonicDb, quirks.QuirkProfiles["community_old"](), portstate.NewTestChecker())
 	require.NoError(t, err)
 	s.applier.waitTimeout = 300 * time.Millisecond
 

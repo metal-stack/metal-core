@@ -17,6 +17,7 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal"
 	corenet "github.com/metal-stack/metal-core/cmd/internal/net"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/portstate"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
@@ -61,7 +62,7 @@ func New(log *slog.Logger, frrTplFile string, interfaceNamingSchema InterfaceNam
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to SONiC databases: %w", err)
 	}
-	redisApplier, err := redis.NewApplier(log, sonicDb, quirks)
+	redisApplier, err := redis.NewApplier(log, sonicDb, quirks, portstate.NewChecker(log, sonicDb))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create redis applier: %w", err)
 	}

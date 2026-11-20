@@ -99,7 +99,7 @@ var testData = map[string]test.StringMap{
 }
 
 func TestPortStateCheckers(t *testing.T) {
-	checker := AsicDb{}.NewChecker(slog.Default(), newTestDB(t, testData))
+	checker := NewChecker(slog.Default(), newTestDB(t, testData))
 	require.NoError(t, checker.Refresh(t.Context()))
 
 	require.NotEmpty(t, pending(t, checker.NotRouted("Ethernet0")))
@@ -124,7 +124,7 @@ func TestAsicDb_RouterInterfaceLeft(t *testing.T) {
 		"COUNTERS_DB": testData["COUNTERS_DB"],
 		"ASIC_DB":     testData["ASIC_DB"],
 	}
-	checker := AsicDb{}.NewChecker(slog.Default(), newTestDB(t, data))
+	checker := NewChecker(slog.Default(), newTestDB(t, data))
 	require.NoError(t, checker.Refresh(t.Context()))
 
 	require.Equal(t, []string{
@@ -137,7 +137,7 @@ func TestAsicDb_RouterInterfaceLeft(t *testing.T) {
 
 // leaf03 Ethernet1 after it was moved into Vrf46 on top of the router interface of Vrf20, which orchagent could not remove
 func TestPortStateCheckers_RoutedInPreviousVrf(t *testing.T) {
-	checker := AsicDb{}.NewChecker(slog.Default(), newTestDB(t, map[string]test.StringMap{
+	checker := NewChecker(slog.Default(), newTestDB(t, map[string]test.StringMap{
 		"COUNTERS_DB": {
 			"COUNTERS_PORT_NAME_MAP": test.StringMap{"Ethernet1": "oid:0x10000000003c7"},
 			"COUNTERS_RIF_NAME_MAP":  test.StringMap{"Ethernet1": "oid:0x6000000000544"},
