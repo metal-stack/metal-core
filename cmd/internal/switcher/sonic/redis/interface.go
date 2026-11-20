@@ -14,17 +14,6 @@ import (
 const restoreTimeout = 5 * time.Second
 
 func (a *Applier) ensureNotRouted(ctx context.Context, interfaceName string) error {
-	notRouted := a.portState.NotRouted(interfaceName)
-
-	pending, err := db.Pending(ctx, notRouted...)
-	if err != nil {
-		return fmt.Errorf("could not retrieve state data for interface %s: %w", interfaceName, err)
-	}
-	if len(pending) == 0 {
-		return nil
-	}
-
-	// without a configuration a previous removal is still in progress
 	configured, err := a.db.Config.ExistInterfaceConfiguration(ctx, interfaceName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve configuration for interface %s: %w", interfaceName, err)
@@ -35,7 +24,8 @@ func (a *Applier) ensureNotRouted(ctx context.Context, interfaceName string) err
 		}
 	}
 
-	if err := a.waitFor(ctx, notRouted...); err != nil {
+	// also without a configuration, as a previous removal may still be in progress
+	if err := a.waitFor(ctx, a.portState.NotRouted(interfaceName)...); err != nil {
 		return fmt.Errorf("interface %s is still routed: %w", interfaceName, err)
 	}
 	return nil

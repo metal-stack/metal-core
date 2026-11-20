@@ -3,21 +3,9 @@ package redis
 import (
 	"context"
 	"fmt"
-
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
 )
 
 func (a *Applier) ensureNotBridged(ctx context.Context, interfaceName string) error {
-	notBridged := a.portState.NotBridged(interfaceName)
-
-	pending, err := db.Pending(ctx, notBridged...)
-	if err != nil {
-		return fmt.Errorf("could not retrieve state data for interface %s: %w", interfaceName, err)
-	}
-	if len(pending) == 0 {
-		return nil
-	}
-
 	vlans, err := a.db.Config.GetVlanMembership(ctx, interfaceName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve vlan membership for %s from Redis: %w", interfaceName, err)
@@ -31,7 +19,8 @@ func (a *Applier) ensureNotBridged(ctx context.Context, interfaceName string) er
 		}
 	}
 
-	if err := a.waitFor(ctx, notBridged...); err != nil {
+	// also without a membership, as a previous removal may still be in progress
+	if err := a.waitFor(ctx, a.portState.NotBridged(interfaceName)...); err != nil {
 		return fmt.Errorf("interface %s is still bridged: %w", interfaceName, err)
 	}
 	return nil

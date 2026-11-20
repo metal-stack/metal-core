@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
-	"slices"
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
@@ -179,46 +178,4 @@ func (s *sonicPortState) RoutedIn(interfaceName, vrf string) []db.Condition {
 
 func (s *sonicPortState) HasAdminStatus(interfaceName string, status types.PortStatus) []db.Condition {
 	return []db.Condition{kernelAdminStatus(interfaceName, status)}
-}
-
-// configDBPortState treats a port as bridged as long as it is a VLAN member and as routed
-// as long as it has an interface configuration in the CONFIG_DB.
-type configDBPortState struct {
-	db *db.DB
-}
-
-func (s *configDBPortState) Refresh(context.Context) error { return nil }
-
-func (s *configDBPortState) NotBridged(interfaceName string) []db.Condition {
-	return []db.Condition{absent(fmt.Sprintf("CONFIG_DB VLAN_MEMBER of %s absent", interfaceName), func(ctx context.Context) (bool, error) {
-		vlans, err := s.db.Config.GetVlanMembership(ctx, interfaceName)
-		return len(vlans) > 0, err
-	})}
-}
-
-func (s *configDBPortState) NotRouted(interfaceName string) []db.Condition {
-	return []db.Condition{absent(fmt.Sprintf("CONFIG_DB INTERFACE|%s absent", interfaceName), func(ctx context.Context) (bool, error) {
-		return s.db.Config.ExistInterfaceConfiguration(ctx, interfaceName)
-	})}
-}
-
-func (s *configDBPortState) BridgedIn(interfaceName, vlan string) []db.Condition {
-	return []db.Condition{present(fmt.Sprintf("CONFIG_DB VLAN_MEMBER|%s|%s exists", vlan, interfaceName), func(ctx context.Context) (bool, error) {
-		vlans, err := s.db.Config.GetVlanMembership(ctx, interfaceName)
-		return slices.Contains(vlans, vlan), err
-	})}
-}
-
-func (s *configDBPortState) RoutedIn(interfaceName, vrf string) []db.Condition {
-	return []db.Condition{present(fmt.Sprintf("CONFIG_DB INTERFACE|%s in %s", interfaceName, vrf), func(ctx context.Context) (bool, error) {
-		current, err := s.db.Config.GetVrfMembership(ctx, interfaceName)
-		return current == vrf, err
-	})}
-}
-
-func (s *configDBPortState) HasAdminStatus(interfaceName string, status types.PortStatus) []db.Condition {
-	return []db.Condition{present(fmt.Sprintf("CONFIG_DB PORT|%s admin %s", interfaceName, status), func(ctx context.Context) (bool, error) {
-		p, err := s.db.Config.GetPort(ctx, interfaceName)
-		return p != nil && p.AdminStatus == string(status), err
-	})}
 }
