@@ -100,5 +100,4 @@ The admin status of a port is checked on its netdev in the kernel.
 The FRR config is applied even if a port could not be configured, so a single port cannot keep FRR from removing what is no longer configured.
 VRFs are removed after the FRR config is applied, once no port is a member of them and no route in the `APPL_DB` uses them.
 
-- `AsicDb`: checks the SAI bridge port and router interface objects in the `ASIC_DB`, located via the OID maps in the `COUNTERS_DB`. This waits until syncd has removed the objects from the ASIC, but relies on SONiC internals that differ between vendors and releases.
-- `StateDb`: checks `VLAN_MEMBER_TABLE` and `INTERFACE_TABLE` in the `STATE_DB`, which are maintained by vlanmgrd and intfmgrd. This only depends on the state tables SONiC uses to coordinate its own daemons, but it confirms that the change was handed to orchagent, not that it reached the ASIC.
+- `AsicDb`: checks `VLAN_MEMBER_TABLE` and `INTERFACE_TABLE` in the `STATE_DB`, which are maintained by vlanmgrd and intfmgrd, and the SAI bridge port and router interface objects in the `ASIC_DB`, located via the OID maps in the `COUNTERS_DB`. The `STATE_DB` alone may only confirm that a change was handed to orchagent; the `ASIC_DB` confirms that syncd has created or removed the objects in the ASIC.

@@ -20,5 +20,5 @@ func TestQuirkProfiles(t *testing.T) {
 
 func TestSonicQuirks_LogValue(t *testing.T) {
 	got := QuirkProfiles["asternos"]().LogValue().String()
-	require.Equal(t, "[VrfEntries=vrfentries.L3Only PortState=portstate.StateDb FrrUseDplaneFpmSonic=frrfpm.Post202411 FrrDisableNextHopGroups=frrnexthopgroups.Post202411 FrrKeepInterfaces=frrkeepinterfaces.Modern FrrDisableVniFilter=frrvnifilter.Fixed LLDPConfiguration=lldp.AsterNOS]", got)
+	require.Equal(t, "[VrfEntries=vrfentries.L3Only PortState=portstate.AsicDb FrrUseDplaneFpmSonic=frrfpm.Post202411 FrrDisableNextHopGroups=frrnexthopgroups.Post202411 FrrKeepInterfaces=frrkeepinterfaces.Modern FrrDisableVniFilter=frrvnifilter.Fixed LLDPConfiguration=lldp.AsterNOS]", got)
 }

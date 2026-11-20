@@ -99,29 +99,38 @@ var testData = map[string]test.StringMap{
 }
 
 func TestPortStateCheckers(t *testing.T) {
-	sonicDb := newTestDB(t, testData)
+	checker := AsicDb{}.NewChecker(slog.Default(), newTestDB(t, testData))
+	require.NoError(t, checker.Refresh(t.Context()))
 
-	for name, checker := range map[string]PortStateChecker{
-		"asic":  AsicDb{}.NewChecker(slog.Default(), sonicDb),
-		"state": StateDb{}.NewChecker(slog.Default(), sonicDb),
-	} {
-		t.Run(name, func(t *testing.T) {
-			require.NoError(t, checker.Refresh(t.Context()))
+	require.NotEmpty(t, pending(t, checker.NotRouted("Ethernet0")))
+	require.Empty(t, pending(t, checker.RoutedIn("Ethernet0", "Vrf46")))
+	require.Empty(t, pending(t, checker.NotRouted("Ethernet2")))
+	require.NotEmpty(t, pending(t, checker.RoutedIn("Ethernet2", "Vrf46")))
 
-			require.Len(t, pending(t, checker.NotRouted("Ethernet0")), 1)
-			require.Empty(t, pending(t, checker.RoutedIn("Ethernet0", "Vrf46")))
-			require.Empty(t, pending(t, checker.NotRouted("Ethernet2")))
-			require.Len(t, pending(t, checker.RoutedIn("Ethernet2", "Vrf46")), 1)
-
-			require.Len(t, pending(t, checker.NotBridged("Ethernet1")), 1)
-			require.Empty(t, pending(t, checker.BridgedIn("Ethernet1", "Vlan4000")))
-			require.Empty(t, pending(t, checker.NotBridged("Ethernet2")))
-			require.Len(t, pending(t, checker.BridgedIn("Ethernet2", "Vlan4000")), 1)
-		})
-	}
+	require.NotEmpty(t, pending(t, checker.NotBridged("Ethernet1")))
+	require.Empty(t, pending(t, checker.BridgedIn("Ethernet1", "Vlan4000")))
+	require.Empty(t, pending(t, checker.NotBridged("Ethernet2")))
+	require.NotEmpty(t, pending(t, checker.BridgedIn("Ethernet2", "Vlan4000")))
 }
 
 func TestKernelAdminStatus(t *testing.T) {
 	require.Empty(t, pending(t, []db.Condition{kernelAdminStatus("lo", types.PortStatusUp)}))
 	require.Len(t, pending(t, []db.Condition{kernelAdminStatus("lo", types.PortStatusDown)}), 1)
+}
+
+// leaf03 after the vrf teardown race: intfmgrd removed the interface, but orchagent still holds its router interface.
+func TestAsicDb_RouterInterfaceLeft(t *testing.T) {
+	data := map[string]test.StringMap{
+		"COUNTERS_DB": testData["COUNTERS_DB"],
+		"ASIC_DB":     testData["ASIC_DB"],
+	}
+	checker := AsicDb{}.NewChecker(slog.Default(), newTestDB(t, data))
+	require.NoError(t, checker.Refresh(t.Context()))
+
+	require.Equal(t, []string{
+		"ASIC_DB router interface oid:0x6000000000daa of Ethernet0 absent",
+	}, pending(t, checker.NotRouted("Ethernet0")))
+	require.Equal(t, []string{
+		"STATE_DB INTERFACE_TABLE|Ethernet0 exists",
+	}, pending(t, checker.RoutedIn("Ethernet0", "Vrf46")))
 }

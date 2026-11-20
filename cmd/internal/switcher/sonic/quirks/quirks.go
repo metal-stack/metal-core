@@ -74,7 +74,7 @@ var QuirkProfiles = map[string]func() SonicQuirks{
 	"asternos": func() SonicQuirks {
 		return SonicQuirks{
 			VrfEntries:              vrfentries.L3Only{},
-			PortState:               portstate.StateDb{},
+			PortState:               portstate.AsicDb{},
 			FrrUseDplaneFpmSonic:    frrfpm.Post202411{},
 			FrrDisableNextHopGroups: frrnexthopgroups.Post202411{},
 			FrrKeepInterfaces:       frrkeepinterfaces.Modern{},
