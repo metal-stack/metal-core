@@ -17,7 +17,7 @@ debug zebra rib detailed
 debug zebra nht detailed
 {{- range $vrf, $t := .Ports.Vrfs }}
 !
-vrf Vrf{{ $t.VNI }}
+vrf {{ $vrf }}
  vni {{ $t.VNI }}
  exit-vrf
 {{- end }}

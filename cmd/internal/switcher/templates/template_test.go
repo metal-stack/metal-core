@@ -130,3 +130,15 @@ func listTestCases() []string {
 	}
 	return r
 }
+
+func TestSonicFrrTemplateConfiguredVrfName(t *testing.T) {
+	c := readConf(t, "test_data/notenants/conf.yaml")
+	c.Ports.Vrfs = map[string]*types.Vrf{
+		"VrfTenant": {VNI: 102, Neighbors: []string{"Ethernet0"}, Has4: true, Has6: true},
+	}
+	rendered := renderToString(t, SonicFrrTemplate(""), &c)
+	require.Contains(t, rendered, "\nvrf VrfTenant\n vni 102\n exit-vrf\n")
+	require.Contains(t, rendered, "\ninterface Ethernet0 vrf VrfTenant\n")
+	require.Contains(t, rendered, " vrf VrfTenant\n bgp router-id ")
+	require.NotContains(t, rendered, "Vrf102")
+}
