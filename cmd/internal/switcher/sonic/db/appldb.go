@@ -64,3 +64,8 @@ func (d *ApplDB) GetRoutes(ctx context.Context, vrf string) ([]Route, error) {
 	}
 	return routes, nil
 }
+
+// Dump reads all entries of the tables from the APPL_DB.
+func (d *ApplDB) Dump(ctx context.Context, tables ...Key) (Dump, error) {
+	return d.c.Dump(ctx, tables...)
+}

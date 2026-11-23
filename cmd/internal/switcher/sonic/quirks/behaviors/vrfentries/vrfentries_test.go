@@ -38,25 +38,13 @@ func TestVrfEntries(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := tt.vrfEntries.Entries("Vrf104001", vrf, "vtep")
+			var got []db.Entry
+			for _, o := range tt.vrfEntries.Objects("Vrf104001", vrf, "vtep") {
+				got = append(got, db.Entry{Key: o.Key(), Val: o.Fields()})
+			}
 			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("Entries() diff = %s", diff)
+				t.Errorf("Objects() diff = %s", diff)
 			}
 		})
-	}
-}
-
-// TestVrfObjects checks that the objects are the entries the VRF consisted of so far.
-func TestVrfObjects(t *testing.T) {
-	vrf := &types.Vrf{VNI: 104001, VLANID: 1001}
-
-	for _, vrfEntries := range []VrfEntries{Community{}, L3Only{}} {
-		var got []db.Entry
-		for _, o := range vrfEntries.Objects("Vrf104001", vrf, "vtep") {
-			got = append(got, db.Entry{Key: o.Key(), Val: o.Fields()})
-		}
-		if diff := cmp.Diff(vrfEntries.Entries("Vrf104001", vrf, "vtep"), got); diff != "" {
-			t.Errorf("%T.Objects() diff = %s", vrfEntries, diff)
-		}
 	}
 }
