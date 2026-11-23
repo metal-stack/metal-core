@@ -29,8 +29,12 @@ func NewClient(rdb valkey.Client, sep string) *Client {
 	}
 }
 
-func (c *Client) Del(ctx context.Context, key Key) error {
-	return c.rdb.Do(ctx, c.rdb.B().Del().Key(key.toString(c.sep)).Build()).Error()
+func (c *Client) Del(ctx context.Context, key Key, additionalKeys ...Key) error {
+	cmd := c.rdb.B().Del().Key(key.toString(c.sep))
+	for _, k := range additionalKeys {
+		cmd = cmd.Key(k.toString(c.sep))
+	}
+	return c.rdb.Do(ctx, cmd.Build()).Error()
 }
 
 func (c *Client) Exists(ctx context.Context, key Key) (bool, error) {
