@@ -124,6 +124,21 @@ func (d *ConfigDB) EnsureExactEntry(ctx context.Context, e Entry) error {
 	return d.c.HDel(ctx, e.Key, stale...)
 }
 
+// SetFields sets and deletes fields of the entry. An entry without fields gets the NULL placeholder of SONiC,
+// which is removed once the entry has fields.
+func (d *ConfigDB) SetFields(ctx context.Context, key Key, set Val, del []string) error {
+	if len(set) == 0 && len(del) == 0 {
+		return d.c.HSet(ctx, key, Val{null: null})
+	}
+	if err := d.c.HSet(ctx, key, set); err != nil {
+		return err
+	}
+	if len(set) > 0 {
+		del = append(del, null)
+	}
+	return d.c.HDel(ctx, key, del...)
+}
+
 // DeleteEntry deletes the entry and reports whether it existed.
 func (d *ConfigDB) DeleteEntry(ctx context.Context, key Key) (bool, error) {
 	exists, err := d.c.Exists(ctx, key)

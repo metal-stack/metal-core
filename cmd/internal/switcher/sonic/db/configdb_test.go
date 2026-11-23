@@ -1260,3 +1260,60 @@ func TestConfigDB_SetAdminStatusUp(t *testing.T) {
 		})
 	}
 }
+
+func TestConfigDB_SetFields(t *testing.T) {
+	tests := []struct {
+		name string
+		data test.StringMap
+		key  Key
+		set  Val
+		del  []string
+		want map[string]string
+	}{
+		{
+			name: "new entry",
+			key:  Key{"VRF", "Vrf46"},
+			set:  Val{"vni": "46"},
+			want: map[string]string{"vni": "46"},
+		},
+		{
+			name: "new entry without fields",
+			key:  Key{"VRF", "Vrf46"},
+			want: map[string]string{"NULL": "NULL"},
+		},
+		{
+			name: "fields replace the NULL placeholder",
+			data: test.StringMap{"VRF": test.StringMap{"Vrf46": test.StringMap{}}},
+			key:  Key{"VRF", "Vrf46"},
+			set:  Val{"vni": "46"},
+			want: map[string]string{"vni": "46"},
+		},
+		{
+			name: "set and delete fields, others are kept",
+			data: test.StringMap{"PORT": test.StringMap{"Ethernet0": test.StringMap{"alias": "Eth1/1", "mtu": "9216", "fec": "rs"}}},
+			key:  Key{"PORT", "Ethernet0"},
+			set:  Val{"mtu": "9000"},
+			del:  []string{"fec"},
+			want: map[string]string{"alias": "Eth1/1", "mtu": "9000"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				ctx = t.Context()
+				sep = "|"
+				vc  = test.StartValkey(t)
+			)
+			defer vc.Close()
+
+			require.NoError(t, test.LoadData(ctx, vc, tt.data, sep))
+			d := &ConfigDB{log: slog.Default(), c: &Client{rdb: vc, sep: sep}}
+
+			require.NoError(t, d.SetFields(ctx, tt.key, tt.set, tt.del))
+
+			data, err := test.GetData(ctx, vc, sep)
+			require.NoError(t, err)
+			require.Equal(t, tt.want, data[tt.key.toString(sep)])
+		})
+	}
+}
