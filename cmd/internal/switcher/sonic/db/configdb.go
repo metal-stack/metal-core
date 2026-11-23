@@ -36,6 +36,7 @@ const (
 	alias               = "alias"
 	enable              = "enable"
 	interfaceTable      = "INTERFACE"
+	null                = "NULL"
 	linkLocalOnly       = "ipv6_use_link_local_only" // nolint:gosec
 	mtu                 = "mtu"
 	portTable           = "PORT"
@@ -293,6 +294,36 @@ func (d *ConfigDB) DeleteInterfaceConfiguration(ctx context.Context, interfaceNa
 		return err
 	}
 	return d.c.Del(ctx, Key{interfaceTable, interfaceName}, keys...)
+}
+
+func (d *ConfigDB) GetInterfaceAddresses(ctx context.Context, interfaceName string) ([]string, error) {
+	pattern := Key{interfaceTable, interfaceName, "*"}
+
+	keys, err := d.c.Keys(ctx, pattern)
+	if err != nil {
+		return nil, err
+	}
+
+	addresses := make([]string, 0, len(keys))
+	for _, key := range keys {
+		if len(key) != 3 {
+			return nil, fmt.Errorf("could not parse key %v", key)
+		}
+		addresses = append(addresses, key[2])
+	}
+	return addresses, nil
+}
+
+func (d *ConfigDB) SetInterfaceAddress(ctx context.Context, interfaceName, address string) error {
+	key := Key{interfaceTable, interfaceName, address}
+
+	return d.c.HSet(ctx, key, Val{null: null})
+}
+
+func (d *ConfigDB) DeleteInterfaceAddress(ctx context.Context, interfaceName, address string) error {
+	key := Key{interfaceTable, interfaceName, address}
+
+	return d.c.Del(ctx, key)
 }
 
 func (d *ConfigDB) GetACLTables(ctx context.Context) ([]string, error) {
