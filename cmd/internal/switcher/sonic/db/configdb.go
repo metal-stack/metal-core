@@ -3,7 +3,9 @@ package db
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/valkey-io/valkey-go"
@@ -28,6 +30,8 @@ type (
 )
 
 const (
+	aclTable            = "ACL_TABLE"
+	aclTablePorts       = "ports@"
 	adminStatusField    = "admin_status"
 	alias               = "alias"
 	enable              = "enable"
@@ -289,6 +293,96 @@ func (d *ConfigDB) DeleteInterfaceConfiguration(ctx context.Context, interfaceNa
 		return err
 	}
 	return d.c.Del(ctx, Key{interfaceTable, interfaceName}, keys...)
+}
+
+func (d *ConfigDB) GetACLTables(ctx context.Context) ([]string, error) {
+	t := d.c.GetTable(Key{aclTable})
+
+	res, err := t.GetView(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	tables := make([]string, 0, len(res))
+	for name := range res {
+		tables = append(tables, name)
+	}
+	slices.Sort(tables)
+	return tables, nil
+}
+
+func (d *ConfigDB) GetACLTablePorts(ctx context.Context, table string) ([]string, error) {
+	key := Key{aclTable, table}
+
+	value, err := d.c.HGet(ctx, key, aclTablePorts)
+	if err != nil {
+		return nil, err
+	}
+
+	ports := make([]string, 0)
+	for _, port := range strings.Split(value, ",") {
+		port = strings.TrimSpace(port)
+		if port == "" {
+			continue
+		}
+		ports = append(ports, port)
+	}
+	slices.Sort(ports)
+	return ports, nil
+}
+
+func (d *ConfigDB) AddACLTablePorts(ctx context.Context, table string, ports []string) error {
+	if len(ports) == 0 {
+		return nil
+	}
+	if err := validateACLTablePorts(ports); err != nil {
+		return err
+	}
+
+	existing, err := d.GetACLTablePorts(ctx, table)
+	if err != nil {
+		return err
+	}
+
+	key := Key{aclTable, table}
+
+	ports = slices.Concat(existing, ports)
+	slices.Sort(ports)
+	ports = slices.Compact(ports)
+	return d.c.HSet(ctx, key, Val{aclTablePorts: strings.Join(ports, ",")})
+}
+
+func (d *ConfigDB) DeleteACLTablePorts(ctx context.Context, table string, ports []string) error {
+	if len(ports) == 0 {
+		return nil
+	}
+	if err := validateACLTablePorts(ports); err != nil {
+		return err
+	}
+
+	existing, err := d.GetACLTablePorts(ctx, table)
+	if err != nil {
+		return err
+	}
+	count := len(existing)
+	remaining := slices.DeleteFunc(existing, func(port string) bool {
+		return slices.Contains(ports, port)
+	})
+	if len(remaining) == count {
+		return nil
+	}
+	key := Key{aclTable, table}
+
+	return d.c.HSet(ctx, key, Val{aclTablePorts: strings.Join(remaining, ",")})
+}
+
+func validateACLTablePorts(ports []string) error {
+	for _, port := range ports {
+		if port == "" || strings.TrimSpace(port) != port || strings.Contains(port, ",") {
+			return fmt.Errorf("invalid ACL port name %q: must be non-empty without surrounding whitespace or commas", port)
+		}
+	}
+	return nil
 }
 
 func (d *ConfigDB) IsLinkLocalOnly(ctx context.Context, interfaceName string) (bool, error) {
