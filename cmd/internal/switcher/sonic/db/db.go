@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -117,4 +118,24 @@ func newRedisClient(redisInstance Instance, redisDatabase int, scheme Scheme) (v
 	}
 
 	return valkeyClient, nil
+}
+
+// Dump reads all entries of the tables from the CONFIG_DB.
+func (d *ConfigDB) Dump(ctx context.Context, tables ...Key) (Dump, error) {
+	return d.c.Dump(ctx, tables...)
+}
+
+// Dump reads all entries of the tables from the APPL_DB.
+func (d *ApplDB) Dump(ctx context.Context, tables ...Key) (Dump, error) {
+	return d.c.Dump(ctx, tables...)
+}
+
+// Dump reads all entries of the tables from the ASIC_DB.
+func (d *AsicDB) Dump(ctx context.Context, tables ...Key) (Dump, error) {
+	return d.c.Dump(ctx, tables...)
+}
+
+// Dump reads all entries of the tables from the STATE_DB.
+func (d *StateDB) Dump(ctx context.Context, tables ...Key) (Dump, error) {
+	return d.c.Dump(ctx, tables...)
 }
