@@ -155,7 +155,7 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 	p := types.Ports{
 		Underlay:      c.spineUplinks,
 		BladePorts:    c.additionalBridgePorts,
-		Unprovisioned: []string{},
+		Unprovisioned: map[string]*types.UnprovisionedPort{},
 		Vrfs:          types.Vrfs{},
 		Firewalls:     map[string]*types.Firewall{},
 		AdminStatus:   map[string]types.PortStatus{},
@@ -196,9 +196,7 @@ func (c *Core) buildSwitcherConfig(s *apiv2.Switch) (*types.Conf, error) {
 		}
 
 		if pointer.SafeDeref(nic.Vrf) == "" {
-			if !slices.Contains(p.Unprovisioned, port) {
-				p.Unprovisioned = append(p.Unprovisioned, port)
-			}
+			p.Unprovisioned[port] = &types.UnprovisionedPort{Port: port}
 			continue
 		}
 

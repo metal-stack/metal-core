@@ -86,7 +86,7 @@ func TestBuildSwitcherConfig(t *testing.T) {
 		Ports: types.Ports{
 			AdminStatus:   map[string]types.PortStatus{},
 			Underlay:      []string{"Ethernet120", "Ethernet124"},
-			Unprovisioned: []string{"Ethernet0"},
+			Unprovisioned: map[string]*types.UnprovisionedPort{"Ethernet0": {Port: "Ethernet0"}},
 			Firewalls: map[string]*types.Firewall{
 				"Ethernet2": {
 					Port: "Ethernet2",

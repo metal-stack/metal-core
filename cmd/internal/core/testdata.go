@@ -179,8 +179,13 @@ var (
 
 	leaf01PreviousCfg = &types.Conf{
 		Ports: types.Ports{
-			Unprovisioned: []string{"Ethernet0", "Ethernet1", "Ethernet4", "Ethernet5"},
-			Underlay:      []string{"Ethernet120", "Ethernet124"},
+			Unprovisioned: map[string]*types.UnprovisionedPort{
+				"Ethernet0": {Port: "Ethernet0"},
+				"Ethernet1": {Port: "Ethernet1"},
+				"Ethernet4": {Port: "Ethernet4"},
+				"Ethernet5": {Port: "Ethernet5"},
+			},
+			Underlay: []string{"Ethernet120", "Ethernet124"},
 			Vrfs: types.Vrfs{
 				"Vrf300": {
 					VNI:       300,

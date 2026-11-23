@@ -90,7 +90,7 @@ func (c *Conf) CapitalizeVrfName() {
 func (c *Conf) NewWithoutDownPorts() *Conf {
 	var (
 		underlay      []string
-		unprovisioned []string
+		unprovisioned = map[string]*UnprovisionedPort{}
 		bladePorts    []string
 		vrfs          = map[string]*Vrf{}
 		firewalls     = map[string]*Firewall{}
@@ -103,9 +103,9 @@ func (c *Conf) NewWithoutDownPorts() *Conf {
 		}
 	}
 
-	for _, port := range ports.Unprovisioned {
-		if ports.AdminStatus[port] != PortStatusDown {
-			unprovisioned = append(unprovisioned, port)
+	for name, port := range ports.Unprovisioned {
+		if ports.AdminStatus[port.Port] != PortStatusDown {
+			unprovisioned[name] = &UnprovisionedPort{Port: port.Port}
 		}
 	}
 
