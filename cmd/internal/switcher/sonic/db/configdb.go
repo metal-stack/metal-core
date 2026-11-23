@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 	"github.com/valkey-io/valkey-go"
@@ -167,6 +168,21 @@ func (d *ConfigDB) CreateVrf(ctx context.Context, vrf string, vni uint32) error 
 	key := Key{vrfTable, vrf}
 
 	return d.c.HSet(ctx, key, Val{"fallback": "false", "vni": fmt.Sprintf("%d", vni)})
+}
+
+// GetVrfVni returns the VNI stored in the given VRF's configuration.
+func (d *ConfigDB) GetVrfVni(ctx context.Context, vrf string) (uint32, error) {
+	key := Key{vrfTable, vrf}
+
+	value, err := d.c.HGet(ctx, key, "vni")
+	if err != nil {
+		return 0, err
+	}
+	parsed, err := strconv.ParseUint(value, 10, 32)
+	if err != nil {
+		return 0, fmt.Errorf("could not determine vni of vrf %s: %w", vrf, err)
+	}
+	return uint32(parsed), nil // nolint:gosec
 }
 
 func (d *ConfigDB) DeleteVrf(ctx context.Context, vrf string) error {
