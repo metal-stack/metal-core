@@ -16,20 +16,18 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal"
 	corenet "github.com/metal-stack/metal-core/cmd/internal/net"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/observe"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/reconcile"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
 
 type (
 	Sonic struct {
 		db                    *db.DB
-		frrApplier            *templates.Applier
 		log                   *slog.Logger
-		redisApplier          *redis.Applier
+		reconciler            *reconcile.Reconciler
 		interfaceNamingSchema InterfaceNamingSchema
-		quirks                quirks.SonicQuirks
 	}
 
 	PortInfo struct {
@@ -60,28 +58,17 @@ func New(log *slog.Logger, frrTplFile string, interfaceNamingSchema InterfaceNam
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to SONiC databases: %w", err)
 	}
-	redisApplier, err := redis.NewApplier(log, sonicDb, quirks)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create redis applier: %w", err)
-	}
 
 	return &Sonic{
 		db:                    sonicDb,
-		frrApplier:            NewFrrApplier(log, frrTplFile),
 		log:                   log,
-		redisApplier:          redisApplier,
+		reconciler:            reconcile.New(log, sonicDb, observe.NetKernel{}, quirks, NewFrrApplier(log, frrTplFile)),
 		interfaceNamingSchema: interfaceNamingSchema,
-		quirks:                quirks,
 	}, nil
 }
 
 func (s *Sonic) Apply(ctx context.Context, cfg *types.Conf) error {
-	err := s.redisApplier.Apply(ctx, cfg)
-	if err != nil {
-		return err
-	}
-
-	return s.frrApplier.Apply(ctx, quirks.ApplyFRRTemplateQuirks(s.quirks, *cfg))
+	return s.reconciler.Apply(ctx, cfg)
 }
 
 func (s *Sonic) IsInitialized(ctx context.Context) (initialized bool, err error) {
@@ -181,7 +168,7 @@ func portsToInterfaces(ports map[string]PortInfo) []*net.Interface {
 }
 
 func (s *Sonic) getPortsConfig(ctx context.Context) (map[string]PortInfo, error) {
-	ports, err := s.redisApplier.GetPorts(ctx)
+	ports, err := s.db.Config.GetPorts(ctx)
 	if err != nil {
 		return nil, err
 	}
