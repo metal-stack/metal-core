@@ -20,40 +20,7 @@ func newAsicDB(rdb valkey.Client, sep string) *AsicDB {
 	}
 }
 
-func (d *AsicDB) GetPortIdBridgePortMap(ctx context.Context) (map[OID]OID, error) {
-	t := d.c.GetTable(Key{"ASIC_STATE", "SAI_OBJECT_TYPE_BRIDGE_PORT"})
-
-	bridges, err := t.GetView(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	m := make(map[OID]OID, len(bridges))
-	for bridge := range bridges {
-		port, err := t.HGet(ctx, bridge, "SAI_BRIDGE_PORT_ATTR_PORT_ID")
-
-		if err != nil {
-			if valkey.IsValkeyNil(err) {
-				continue
-			}
-			return nil, err
-		}
-		if len(port) == 0 {
-			continue
-		}
-		m[OID(port)] = OID(bridge)
-	}
-	return m, nil
-}
-
-func (d *AsicDB) ExistBridgePort(ctx context.Context, bridgePort OID) (bool, error) {
-	key := Key{"ASIC_STATE", "SAI_OBJECT_TYPE_BRIDGE_PORT", string(bridgePort)}
-
-	return d.c.Exists(ctx, key)
-}
-
-func (d *AsicDB) ExistRouterInterface(ctx context.Context, rif OID) (bool, error) {
-	key := Key{"ASIC_STATE", "SAI_OBJECT_TYPE_ROUTER_INTERFACE", string(rif)}
-
-	return d.c.Exists(ctx, key)
+// Dump reads all entries of the tables from the ASIC_DB.
+func (d *AsicDB) Dump(ctx context.Context, tables ...Key) (Dump, error) {
+	return d.c.Dump(ctx, tables...)
 }

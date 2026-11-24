@@ -10,7 +10,6 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks/behaviors/frrnexthopgroups"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks/behaviors/frrvnifilter"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks/behaviors/lldp"
-	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks/behaviors/portstate"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks/behaviors/vrfentries"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
 )
@@ -19,7 +18,6 @@ var QuirkProfiles = map[string]func() SonicQuirks{
 	"community_old": func() SonicQuirks {
 		return SonicQuirks{
 			VrfEntries:              vrfentries.Community{},
-			PortState:               portstate.AsicDb{},
 			FrrUseDplaneFpmSonic:    frrfpm.Pre202411{},
 			FrrDisableNextHopGroups: frrnexthopgroups.Pre202411{},
 			FrrKeepInterfaces:       frrkeepinterfaces.Compat{},
@@ -30,7 +28,6 @@ var QuirkProfiles = map[string]func() SonicQuirks{
 	"community_2025": func() SonicQuirks {
 		return SonicQuirks{
 			VrfEntries:              vrfentries.Community{},
-			PortState:               portstate.AsicDb{},
 			FrrUseDplaneFpmSonic:    frrfpm.Post202411{},
 			FrrDisableNextHopGroups: frrnexthopgroups.Post202411{},
 			FrrKeepInterfaces:       frrkeepinterfaces.Compat{},
@@ -41,7 +38,6 @@ var QuirkProfiles = map[string]func() SonicQuirks{
 	"community_vpp": func() SonicQuirks {
 		return SonicQuirks{
 			VrfEntries:              vrfentries.Community{},
-			PortState:               portstate.AsicDb{},
 			FrrUseDplaneFpmSonic:    frrfpm.Post202411{},
 			FrrDisableNextHopGroups: frrnexthopgroups.Post202411{},
 			FrrKeepInterfaces:       frrkeepinterfaces.Compat{},
@@ -52,7 +48,6 @@ var QuirkProfiles = map[string]func() SonicQuirks{
 	"edgecore": func() SonicQuirks {
 		return SonicQuirks{
 			VrfEntries:              vrfentries.Community{},
-			PortState:               portstate.AsicDb{},
 			FrrUseDplaneFpmSonic:    frrfpm.Pre202411{},
 			FrrDisableNextHopGroups: frrnexthopgroups.Pre202411{},
 			FrrKeepInterfaces:       frrkeepinterfaces.Compat{},
@@ -63,7 +58,6 @@ var QuirkProfiles = map[string]func() SonicQuirks{
 	"broadcom_enterprise_2022": func() SonicQuirks {
 		return SonicQuirks{
 			VrfEntries:              vrfentries.Community{},
-			PortState:               portstate.AsicDb{},
 			FrrUseDplaneFpmSonic:    frrfpm.Pre202411{},
 			FrrDisableNextHopGroups: frrnexthopgroups.Pre202411{},
 			FrrKeepInterfaces:       frrkeepinterfaces.Compat{},
@@ -74,7 +68,6 @@ var QuirkProfiles = map[string]func() SonicQuirks{
 	"asternos": func() SonicQuirks {
 		return SonicQuirks{
 			VrfEntries:              vrfentries.L3Only{},
-			PortState:               portstate.StateDb{},
 			FrrUseDplaneFpmSonic:    frrfpm.Post202411{},
 			FrrDisableNextHopGroups: frrnexthopgroups.Post202411{},
 			FrrKeepInterfaces:       frrkeepinterfaces.Modern{},
@@ -88,7 +81,6 @@ var QuirkProfiles = map[string]func() SonicQuirks{
 // Check the Quirks directly for more information about what they allow you to configure
 type SonicQuirks struct {
 	VrfEntries              vrfentries.VrfEntries
-	PortState               portstate.PortState
 	FrrUseDplaneFpmSonic    frrfpm.FrrUseDplaneFpmSonic
 	FrrDisableNextHopGroups frrnexthopgroups.FrrDisableNextHopGroups
 	FrrKeepInterfaces       frrkeepinterfaces.FrrKeepInterfaces
