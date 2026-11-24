@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"strings"
 	"testing"
 	"text/template"
 
@@ -60,6 +61,30 @@ func TestSonicFrrTpl(t *testing.T) {
 			tpl := SonicFrrTemplate("")
 			verifyTemplate(t, tpl, &c, path.Join("test_data", tt, "sonic_frr.conf"))
 		})
+	}
+}
+
+func TestSonicFrrTplWithDisabledVniFilter(t *testing.T) {
+	c := readConf(t, path.Join("test_data", "dev", "conf.yaml"))
+	c.CapitalizeVrfName()
+	err := c.FillRouteMapsAndIPPrefixLists()
+	require.NoError(t, err)
+	c.DisableVniFilter = true
+
+	expected := readExpected(t, path.Join("test_data", "dev", "sonic_frr.conf"))
+	for _, line := range []string{
+		"  neighbor swp3 route-map fw-swp3-vni out\n",
+		"route-map fw-swp3-vni permit 10\n match evpn vni 104001\n",
+		"route-map fw-swp3-vni permit 11\n match evpn vni 104009\n",
+		"route-map fw-swp3-vni permit 12\n match evpn vni 104010\n",
+	} {
+		require.Contains(t, expected, line)
+		expected = strings.Replace(expected, line, "", 1)
+	}
+
+	actual := renderToString(t, SonicFrrTemplate(""), &c)
+	if diff := cmp.Diff(expected, actual); diff != "" {
+		t.Errorf("render differs:%s", diff)
 	}
 }
 

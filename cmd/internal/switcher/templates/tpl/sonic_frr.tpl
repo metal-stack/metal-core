@@ -1,5 +1,11 @@
 {{- $ASN := .ASN -}}{{- $RouterId := .Loopback -}}! The frr version is not rendered since it seems to be optional.
 frr defaults datacenter
+{{- if .SetFPMAddress }}
+fpm address 127.0.0.1
+{{- end }}
+{{- if .DisableNextHopGroups }}
+no fpm use-next-hop-groups
+{{- end }}
 hostname {{ .Name }}
 password zebra
 enable password zebra
@@ -15,6 +21,13 @@ debug zebra events
 debug zebra nexthop detail
 debug zebra rib detailed
 debug zebra nht detailed
+{{- if .KeepUnprovisionedInterfaces }}
+{{- range .Ports.Unprovisioned }}
+!
+interface {{ . }}
+ ipv6 nd suppress-ra
+{{- end }}
+{{- end }}
 {{- range $vrf, $t := .Ports.Vrfs }}
 !
 vrf Vrf{{ $t.VNI }}
@@ -85,8 +98,10 @@ router bgp {{ $ASN }}
   neighbor FABRIC allowas-in 2
   neighbor FIREWALL activate
   neighbor FIREWALL allowas-in 2
+  {{- if not .DisableVniFilter }}
   {{- range $k, $f := .Ports.Firewalls }}
   neighbor {{ $f.Port }} route-map fw-{{ $k }}-vni out
+  {{- end }}
   {{- end }}
  exit-address-family
 !
@@ -100,10 +115,12 @@ route-map DENY_MGMT permit 20
 ip prefix-list {{ .Name }} {{ .Spec }}
         {{- end}}
         {{- range $f.RouteMaps }}
+        {{- if not (and $.DisableVniFilter (eq .Name (printf "fw-%s-vni" $k))) }}
 route-map {{ .Name }} {{ .Policy }} {{ .Order }}
                 {{- range .Entries }}
  {{ . }}
                 {{- end }}
+        {{- end }}
         {{- end }}
 !
 {{- end }}

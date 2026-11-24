@@ -1,6 +1,7 @@
 package db
 
 import (
+	"log/slog"
 	"slices"
 	"strings"
 	"testing"
@@ -104,261 +105,64 @@ var (
 	}
 )
 
-func TestConfigDB_ExistVlan(t *testing.T) {
+func TestConfigDB_MergeEntry(t *testing.T) {
 	tests := []struct {
-		name string
-		data test.StringMap
-		vid  uint16
-		want bool
+		name  string
+		data  test.StringMap
+		entry Entry
+		mods  func(test.HashMap)
 	}{
 		{
-			name: "not existing",
-			data: configDBTestData,
-			vid:  2000,
-			want: false,
-		},
-		{
-			name: "existing",
-			data: configDBTestData,
-			vid:  4000,
-			want: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var (
-				ctx = t.Context()
-				sep = "|"
-				vc  = test.StartValkey(t)
-			)
-			defer vc.Close()
-
-			err := test.LoadData(ctx, vc, tt.data, sep)
-			require.NoError(t, err)
-
-			c := &Client{
-				rdb: vc,
-				sep: sep,
-			}
-			d := &ConfigDB{
-				c: c,
-			}
-			got, err := d.ExistVlan(ctx, tt.vid)
-			require.NoError(t, err)
-			if got != tt.want {
-				t.Errorf("ConfigDB.ExistVlan() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestConfigDB_ExistVlanInterface(t *testing.T) {
-	tests := []struct {
-		name string
-		data test.StringMap
-		vid  uint16
-		want bool
-	}{
-		{
-			name: "not existing",
-			data: configDBTestData,
-			vid:  2000,
-			want: false,
-		},
-		{
-			name: "existing",
-			data: configDBTestData,
-			vid:  1001,
-			want: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var (
-				ctx = t.Context()
-				sep = "|"
-				vc  = test.StartValkey(t)
-			)
-			defer vc.Close()
-
-			err := test.LoadData(ctx, vc, tt.data, sep)
-			require.NoError(t, err)
-
-			c := &Client{
-				rdb: vc,
-				sep: sep,
-			}
-			d := &ConfigDB{
-				c: c,
-			}
-			got, err := d.ExistVlanInterface(ctx, tt.vid)
-			require.NoError(t, err)
-			if got != tt.want {
-				t.Errorf("ConfigDB.ExistVlanInterface() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestConfigDB_CreateVlan(t *testing.T) {
-	tests := []struct {
-		name string
-		data test.StringMap
-		mods func(test.HashMap)
-		vid  uint16
-	}{
-		{
-			name: "create existing",
-			data: configDBTestData,
-			vid:  4000,
-		},
-		{
-			name: "create new",
-			data: configDBTestData,
+			name:  "create new",
+			data:  configDBTestData,
+			entry: Entry{Key: Key{"VRF", "Vrf200"}, Val: Val{"fallback": "false", "vni": "200"}},
 			mods: func(data test.HashMap) {
-				data["VLAN|Vlan2000"] = map[string]string{
-					"vlanid": "2000",
-				}
-			},
-			vid: 2000,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var (
-				ctx = t.Context()
-				sep = "|"
-				vc  = test.StartValkey(t)
-			)
-			defer vc.Close()
-
-			err := test.LoadData(ctx, vc, tt.data, sep)
-			require.NoError(t, err)
-			initData, err := test.GetData(ctx, vc, sep)
-			require.NoError(t, err)
-			if tt.mods != nil {
-				tt.mods(initData)
-			}
-
-			c := &Client{
-				rdb: vc,
-				sep: sep,
-			}
-			d := &ConfigDB{
-				c: c,
-			}
-			err = d.CreateVlan(ctx, tt.vid)
-			require.NoError(t, err)
-			data, err := test.GetData(ctx, vc, sep)
-			require.NoError(t, err)
-
-			if diff := cmp.Diff(initData, data); diff != "" {
-				t.Errorf("ConfigDB.CreateVlan() data differs = %s", diff)
-			}
-		})
-	}
-}
-
-func TestConfigDB_CreateVlanInterface(t *testing.T) {
-	tests := []struct {
-		name string
-		data test.StringMap
-		vid  uint16
-		vrf  string
-		mods func(test.HashMap)
-	}{
-		{
-			name: "create existing",
-			data: configDBTestData,
-			vid:  1001,
-			vrf:  "Vrf50",
-			mods: func(test.HashMap) {},
-		},
-		{
-			name: "change existing",
-			data: configDBTestData,
-			vid:  1001,
-			vrf:  "Vrf40",
-			mods: func(data test.HashMap) {
-				data["VLAN_INTERFACE|Vlan1001"]["vrf_name"] = "Vrf40"
-			},
-		},
-		{
-			name: "empty vrf",
-			data: configDBTestData,
-			vid:  1001,
-			vrf:  "",
-			mods: func(data test.HashMap) {
-				data["VLAN_INTERFACE|Vlan1001"]["vrf_name"] = ""
-			},
-		},
-		{
-			name: "new",
-			data: configDBTestData,
-			vid:  2000,
-			vrf:  "Vrf100",
-			mods: func(data test.HashMap) {
-				data["VLAN_INTERFACE|Vlan2000"] = map[string]string{
-					"vrf_name": "Vrf100",
+				data["VRF|Vrf200"] = map[string]string{
+					"fallback": "false",
+					"vni":      "200",
 				}
 			},
 		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var (
-				ctx = t.Context()
-				sep = "|"
-				vc  = test.StartValkey(t)
-			)
-			defer vc.Close()
-
-			err := test.LoadData(ctx, vc, tt.data, sep)
-			require.NoError(t, err)
-			initData, err := test.GetData(ctx, vc, sep)
-			require.NoError(t, err)
-			if tt.mods != nil {
-				tt.mods(initData)
-			}
-
-			c := &Client{
-				rdb: vc,
-				sep: sep,
-			}
-			d := &ConfigDB{
-				c: c,
-			}
-			err = d.CreateVlanInterface(ctx, tt.vid, tt.vrf)
-			require.NoError(t, err)
-			data, err := test.GetData(ctx, vc, sep)
-			require.NoError(t, err)
-
-			if diff := cmp.Diff(initData, data); diff != "" {
-				t.Errorf("ConfigDB.CreateVlan() data differs = %s", diff)
-			}
-		})
-	}
-}
-
-func TestConfigDB_DeleteVlan(t *testing.T) {
-	tests := []struct {
-		name string
-		data test.StringMap
-		vid  uint16
-		mods func(test.HashMap)
-	}{
 		{
-			name: "delete non-existing",
-			data: configDBTestData,
-			vid:  3000,
-			mods: func(test.HashMap) {},
+			name:  "existing with same fields",
+			data:  configDBTestData,
+			entry: Entry{Key: Key{"VRF", "Vrf102"}, Val: Val{"fallback": "false", "vni": "102"}},
+			mods:  func(test.HashMap) {},
 		},
 		{
-			name: "delete existing",
-			data: configDBTestData,
-			vid:  4000,
+			name:  "existing with subset of fields",
+			data:  configDBTestData,
+			entry: Entry{Key: Key{"VRF", "Vrf102"}, Val: Val{"vni": "102"}},
+			mods:  func(test.HashMap) {},
+		},
+		{
+			name:  "existing with different field",
+			data:  configDBTestData,
+			entry: Entry{Key: Key{"VRF", "Vrf102"}, Val: Val{"vni": "103"}},
 			mods: func(data test.HashMap) {
-				delete(data, "VLAN|Vlan4000")
+				data["VRF|Vrf102"]["vni"] = "103"
+			},
+		},
+		{
+			name:  "existing without desired field",
+			data:  configDBTestData,
+			entry: Entry{Key: Key{"SUPPRESS_VLAN_NEIGH", "Vlan1004"}, Val: Val{"suppress": "on"}},
+			mods: func(data test.HashMap) {
+				data["SUPPRESS_VLAN_NEIGH|Vlan1004"] = map[string]string{"suppress": "on"}
+			},
+		},
+		{
+			name:  "empty value is a no-op",
+			data:  configDBTestData,
+			entry: Entry{Key: Key{"VLAN_INTERFACE", "Vlan2000"}},
+			mods:  func(test.HashMap) {},
+		},
+		{
+			name:  "replace null placeholder with real fields",
+			data:  configDBTestData,
+			entry: Entry{Key: Key{"VLAN_INTERFACE", "Vlan4000"}, Val: Val{"vrf_name": "Vrf4000"}},
+			mods: func(data test.HashMap) {
+				data["VLAN_INTERFACE|Vlan4000"] = map[string]string{"vrf_name": "Vrf4000"}
 			},
 		},
 	}
@@ -384,39 +188,142 @@ func TestConfigDB_DeleteVlan(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
-			err = d.DeleteVlan(ctx, tt.vid)
+			err = d.MergeEntry(ctx, tt.entry)
 			require.NoError(t, err)
 			data, err := test.GetData(ctx, vc, sep)
 			require.NoError(t, err)
 
 			if diff := cmp.Diff(initData, data); diff != "" {
-				t.Errorf("ConfigDB.DeleteVlan() data differs = %s", diff)
+				t.Errorf("ConfigDB.MergeEntry() data differs = %s", diff)
 			}
 		})
 	}
 }
 
-func TestConfigDB_DeleteVlanInterface(t *testing.T) {
+func TestConfigDB_EnsureExactEntry(t *testing.T) {
 	tests := []struct {
-		name string
-		data test.StringMap
-		vid  uint16
-		mods func(test.HashMap)
+		name  string
+		data  test.StringMap
+		entry Entry
+		mods  func(test.HashMap)
 	}{
 		{
-			name: "delete non-existing",
-			data: configDBTestData,
-			vid:  3000,
-			mods: func(test.HashMap) {},
+			name:  "create new",
+			data:  configDBTestData,
+			entry: Entry{Key: Key{"VRF", "Vrf200"}, Val: Val{"fallback": "false", "vni": "200"}},
+			mods: func(data test.HashMap) {
+				data["VRF|Vrf200"] = map[string]string{
+					"fallback": "false",
+					"vni":      "200",
+				}
+			},
 		},
 		{
-			name: "delete existing",
-			data: configDBTestData,
-			vid:  1001,
+			name:  "existing with same fields",
+			data:  configDBTestData,
+			entry: Entry{Key: Key{"VRF", "Vrf102"}, Val: Val{"fallback": "false", "vni": "102"}},
+			mods:  func(test.HashMap) {},
+		},
+		{
+			name:  "remove fields outside desired value",
+			data:  configDBTestData,
+			entry: Entry{Key: Key{"VRF", "Vrf102"}, Val: Val{"vni": "102"}},
 			mods: func(data test.HashMap) {
-				delete(data, "VLAN_INTERFACE|Vlan1001")
+				data["VRF|Vrf102"] = map[string]string{"vni": "102"}
+			},
+		},
+		{
+			name:  "update and remove fields",
+			data:  configDBTestData,
+			entry: Entry{Key: Key{"VRF", "Vrf102"}, Val: Val{"vni": "103"}},
+			mods: func(data test.HashMap) {
+				data["VRF|Vrf102"] = map[string]string{"vni": "103"}
+			},
+		},
+		{
+			name:  "create new without fields",
+			data:  configDBTestData,
+			entry: Entry{Key: Key{"VLAN_INTERFACE", "Vlan2000"}},
+			mods: func(data test.HashMap) {
+				data["VLAN_INTERFACE|Vlan2000"] = map[string]string{null: null}
+			},
+		},
+		{
+			name:  "replace fields with null placeholder",
+			data:  configDBTestData,
+			entry: Entry{Key: Key{"VLAN_INTERFACE", "Vlan1001"}},
+			mods: func(data test.HashMap) {
+				data["VLAN_INTERFACE|Vlan1001"] = map[string]string{null: null}
+			},
+		},
+		{
+			name:  "existing without fields",
+			data:  configDBTestData,
+			entry: Entry{Key: Key{"VLAN_INTERFACE", "Vlan4000"}},
+			mods:  func(test.HashMap) {},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var (
+				ctx = t.Context()
+				sep = "|"
+				vc  = test.StartValkey(t)
+			)
+			defer vc.Close()
+
+			err := test.LoadData(ctx, vc, tt.data, sep)
+			require.NoError(t, err)
+			initData, err := test.GetData(ctx, vc, sep)
+			require.NoError(t, err)
+			if tt.mods != nil {
+				tt.mods(initData)
+			}
+
+			d := &ConfigDB{
+				log: slog.Default(),
+				c: &Client{
+					rdb: vc,
+					sep: sep,
+				},
+			}
+			err = d.EnsureExactEntry(ctx, tt.entry)
+			require.NoError(t, err)
+			data, err := test.GetData(ctx, vc, sep)
+			require.NoError(t, err)
+
+			if diff := cmp.Diff(initData, data); diff != "" {
+				t.Errorf("ConfigDB.EnsureExactEntry() data differs = %s", diff)
+			}
+		})
+	}
+}
+
+func TestConfigDB_DeleteEntry(t *testing.T) {
+	tests := []struct {
+		name        string
+		data        test.StringMap
+		key         Key
+		wantDeleted bool
+		mods        func(test.HashMap)
+	}{
+		{
+			name:        "delete non-existing",
+			data:        configDBTestData,
+			key:         Key{"VRF", "Vrf200"},
+			wantDeleted: false,
+			mods:        func(test.HashMap) {},
+		},
+		{
+			name:        "delete existing",
+			data:        configDBTestData,
+			key:         Key{"VXLAN_TUNNEL_MAP", "vtep", "map_102_Vlan1005"},
+			wantDeleted: true,
+			mods: func(data test.HashMap) {
+				delete(data, "VXLAN_TUNNEL_MAP|vtep|map_102_Vlan1005")
 			},
 		},
 	}
@@ -442,15 +349,17 @@ func TestConfigDB_DeleteVlanInterface(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
-			err = d.DeleteVlanInterface(ctx, tt.vid)
+			deleted, err := d.DeleteEntry(ctx, tt.key)
 			require.NoError(t, err)
+			require.Equal(t, tt.wantDeleted, deleted)
 			data, err := test.GetData(ctx, vc, sep)
 			require.NoError(t, err)
 
 			if diff := cmp.Diff(initData, data); diff != "" {
-				t.Errorf("ConfigDB.DeleteVlanInterface() data differs = %s", diff)
+				t.Errorf("ConfigDB.DeleteEntry() data differs = %s", diff)
 			}
 		})
 	}
@@ -510,7 +419,8 @@ func TestConfigDB_DeleteVlanMember(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			err = d.DeleteVlanMember(ctx, tt.interfaceName, tt.vlan)
 			require.NoError(t, err)
@@ -519,209 +429,6 @@ func TestConfigDB_DeleteVlanMember(t *testing.T) {
 
 			if diff := cmp.Diff(initData, data); diff != "" {
 				t.Errorf("ConfigDB.DeleteVlanMember() data differs = %s", diff)
-			}
-		})
-	}
-}
-
-func TestConfigDB_AreNeighborsSuppressed(t *testing.T) {
-	tests := []struct {
-		name string
-		data test.StringMap
-		vid  uint16
-		want bool
-	}{
-		{
-			name: "non-existing vlan",
-			data: configDBTestData,
-			vid:  3000,
-			want: false,
-		},
-		{
-			name: "vlan neighbor suppression off",
-			data: configDBTestData,
-			vid:  1003,
-			want: false,
-		},
-		{
-			name: "vlan neighbor suppression field does not exist",
-			data: configDBTestData,
-			vid:  1004,
-			want: false,
-		},
-		{
-			name: "vlan neighbor suppression on",
-			data: configDBTestData,
-			vid:  1001,
-			want: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var (
-				ctx = t.Context()
-				sep = "|"
-				vc  = test.StartValkey(t)
-			)
-			defer vc.Close()
-
-			err := test.LoadData(ctx, vc, tt.data, sep)
-			require.NoError(t, err)
-
-			c := &Client{
-				rdb: vc,
-				sep: sep,
-			}
-			d := &ConfigDB{
-				c: c,
-			}
-			got, err := d.AreNeighborsSuppressed(ctx, tt.vid)
-			require.NoError(t, err)
-			if got != tt.want {
-				t.Errorf("ConfigDB.AreNeighborsSuppressed() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestConfigDB_SuppressNeighbors(t *testing.T) {
-	tests := []struct {
-		name string
-		data test.StringMap
-		vid  uint16
-		mods func(test.HashMap)
-	}{
-		{
-			name: "suppress existing suppressed",
-			data: configDBTestData,
-			vid:  1001,
-		},
-		{
-			name: "suppress existing not suppressed",
-			data: configDBTestData,
-			vid:  1003,
-			mods: func(data test.HashMap) {
-				data["SUPPRESS_VLAN_NEIGH|Vlan1003"]["suppress"] = "on"
-			},
-		},
-		{
-			name: "suppress existing with not suppression set",
-			data: configDBTestData,
-			vid:  1004,
-			mods: func(data test.HashMap) {
-				data["SUPPRESS_VLAN_NEIGH|Vlan1004"]["suppress"] = "on"
-			},
-		},
-		{
-			name: "suppress existing vlan that does not exist in suppression map",
-			data: configDBTestData,
-			vid:  4000,
-			mods: func(data test.HashMap) {
-				data["SUPPRESS_VLAN_NEIGH|Vlan4000"] = map[string]string{
-					"suppress": "on",
-				}
-			},
-		},
-		{
-			name: "suppress non-existing vlan",
-			data: configDBTestData,
-			vid:  2000,
-			mods: func(data test.HashMap) {
-				data["SUPPRESS_VLAN_NEIGH|Vlan2000"] = map[string]string{
-					"suppress": "on",
-				}
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var (
-				ctx = t.Context()
-				sep = "|"
-				vc  = test.StartValkey(t)
-			)
-			defer vc.Close()
-
-			err := test.LoadData(ctx, vc, tt.data, sep)
-			require.NoError(t, err)
-			initData, err := test.GetData(ctx, vc, sep)
-			require.NoError(t, err)
-			if tt.mods != nil {
-				tt.mods(initData)
-			}
-
-			c := &Client{
-				rdb: vc,
-				sep: sep,
-			}
-			d := &ConfigDB{
-				c: c,
-			}
-			err = d.SuppressNeighbors(ctx, tt.vid)
-			require.NoError(t, err)
-			data, err := test.GetData(ctx, vc, sep)
-			require.NoError(t, err)
-
-			if diff := cmp.Diff(initData, data); diff != "" {
-				t.Errorf("ConfigDB.SuppressNeighbors() data differs = %s", diff)
-			}
-		})
-	}
-}
-
-func TestConfigDB_DeleteNeighborSuppression(t *testing.T) {
-	tests := []struct {
-		name string
-		data test.StringMap
-		vid  uint16
-		mods func(test.HashMap)
-	}{
-		{
-			name: "delete non-existing",
-			data: configDBTestData,
-			vid:  4000,
-			mods: func(test.HashMap) {},
-		},
-		{
-			name: "delete existing",
-			data: configDBTestData,
-			vid:  1001,
-			mods: func(data test.HashMap) {
-				delete(data, "SUPPRESS_VLAN_NEIGH|Vlan1001")
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var (
-				ctx = t.Context()
-				sep = "|"
-				vc  = test.StartValkey(t)
-			)
-			defer vc.Close()
-
-			err := test.LoadData(ctx, vc, tt.data, sep)
-			require.NoError(t, err)
-			initData, err := test.GetData(ctx, vc, sep)
-			require.NoError(t, err)
-			if tt.mods != nil {
-				tt.mods(initData)
-			}
-
-			c := &Client{
-				rdb: vc,
-				sep: sep,
-			}
-			d := &ConfigDB{
-				c: c,
-			}
-			err = d.DeleteNeighborSuppression(ctx, tt.vid)
-			require.NoError(t, err)
-			data, err := test.GetData(ctx, vc, sep)
-			require.NoError(t, err)
-
-			if diff := cmp.Diff(initData, data); diff != "" {
-				t.Errorf("ConfigDB.DeleteNeighborSuppression() data differs = %s", diff)
 			}
 		})
 	}
@@ -764,7 +471,8 @@ func TestConfigDB_GetVlanMembership(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			got, err := d.GetVlanMembership(ctx, tt.interfaceName)
 			require.NoError(t, err)
@@ -846,7 +554,8 @@ func TestConfigDB_SetVlanMember(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			err = d.SetVlanMember(ctx, tt.interfaceName, tt.vlan)
 			require.NoError(t, err)
@@ -889,192 +598,14 @@ func TestConfigDB_GetVrfs(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			got, err := d.GetVrfs(ctx)
 			slices.Sort(got)
 			require.NoError(t, err)
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("ConfigDB.GetVrfs() diff = %s", diff)
-			}
-		})
-	}
-}
-
-func TestConfigDB_ExistVrf(t *testing.T) {
-	tests := []struct {
-		name string
-		data test.StringMap
-		vrf  string
-		want bool
-	}{
-		{
-			name: "exists",
-			data: configDBTestData,
-			vrf:  "Vrf102",
-			want: true,
-		},
-		{
-			name: "not exists",
-			data: configDBTestData,
-			vrf:  "Vrf122",
-			want: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var (
-				ctx = t.Context()
-				sep = "|"
-				vc  = test.StartValkey(t)
-			)
-			defer vc.Close()
-
-			err := test.LoadData(ctx, vc, tt.data, sep)
-			require.NoError(t, err)
-
-			c := &Client{
-				rdb: vc,
-				sep: sep,
-			}
-			d := &ConfigDB{
-				c: c,
-			}
-			got, err := d.ExistVrf(ctx, tt.vrf)
-			require.NoError(t, err)
-			if got != tt.want {
-				t.Errorf("ConfigDB.ExistVrf() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestConfigDB_CreateVrf(t *testing.T) {
-	tests := []struct {
-		name string
-		data test.StringMap
-		vrf  string
-		vni  uint32
-		mods func(test.HashMap)
-	}{
-		{
-			name: "create existing",
-			data: configDBTestData,
-			vrf:  "Vrf102",
-			vni:  102,
-			mods: func(test.HashMap) {},
-		},
-		{
-			name: "create existing with different vni",
-			data: configDBTestData,
-			vrf:  "Vrf102",
-			vni:  103,
-			mods: func(data test.HashMap) {
-				data["VRF|Vrf102"]["vni"] = "103"
-			},
-		},
-		{
-			name: "create new",
-			data: configDBTestData,
-			vrf:  "Vrf200",
-			vni:  200,
-			mods: func(data test.HashMap) {
-				data["VRF|Vrf200"] = map[string]string{
-					"fallback": "false",
-					"vni":      "200",
-				}
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var (
-				ctx = t.Context()
-				sep = "|"
-				vc  = test.StartValkey(t)
-			)
-			defer vc.Close()
-
-			err := test.LoadData(ctx, vc, tt.data, sep)
-			require.NoError(t, err)
-			initData, err := test.GetData(ctx, vc, sep)
-			require.NoError(t, err)
-			if tt.mods != nil {
-				tt.mods(initData)
-			}
-
-			c := &Client{
-				rdb: vc,
-				sep: sep,
-			}
-			d := &ConfigDB{
-				c: c,
-			}
-			err = d.CreateVrf(ctx, tt.vrf, tt.vni)
-			require.NoError(t, err)
-			data, err := test.GetData(ctx, vc, sep)
-			require.NoError(t, err)
-
-			if diff := cmp.Diff(initData, data); diff != "" {
-				t.Errorf("ConfigDB.CreateVrf() data differs = %s", diff)
-			}
-		})
-	}
-}
-
-func TestConfigDB_DeleteVrf(t *testing.T) {
-	tests := []struct {
-		name string
-		data test.StringMap
-		vrf  string
-		mods func(test.HashMap)
-	}{
-		{
-			name: "delete non-existing",
-			data: configDBTestData,
-			vrf:  "Vrf200",
-			mods: func(test.HashMap) {},
-		},
-		{
-			name: "delete existing",
-			data: configDBTestData,
-			vrf:  "Vrf102",
-			mods: func(data test.HashMap) {
-				delete(data, "VRF|Vrf102")
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var (
-				ctx = t.Context()
-				sep = "|"
-				vc  = test.StartValkey(t)
-			)
-			defer vc.Close()
-
-			err := test.LoadData(ctx, vc, tt.data, sep)
-			require.NoError(t, err)
-			initData, err := test.GetData(ctx, vc, sep)
-			require.NoError(t, err)
-			if tt.mods != nil {
-				tt.mods(initData)
-			}
-
-			c := &Client{
-				rdb: vc,
-				sep: sep,
-			}
-			d := &ConfigDB{
-				c: c,
-			}
-			err = d.DeleteVrf(ctx, tt.vrf)
-			require.NoError(t, err)
-			data, err := test.GetData(ctx, vc, sep)
-			require.NoError(t, err)
-
-			if diff := cmp.Diff(initData, data); diff != "" {
-				t.Errorf("ConfigDB.DeleteVrf() data differs = %s", diff)
 			}
 		})
 	}
@@ -1141,7 +672,8 @@ func TestConfigDB_SetVrfMember(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			err = d.SetVrfMember(ctx, tt.interfaceName, tt.vrf)
 			require.NoError(t, err)
@@ -1192,187 +724,13 @@ func TestConfigDB_GetVrfMembership(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			got, err := d.GetVrfMembership(ctx, tt.interfaceName)
 			require.NoError(t, err)
 			if got != tt.want {
 				t.Errorf("ConfigDB.GetVrfMembership() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestConfigDB_ExistVxlanTunnelMap(t *testing.T) {
-	tests := []struct {
-		name string
-		data test.StringMap
-		vid  uint16
-		vni  uint32
-		want bool
-	}{
-		{
-			name: "not exists",
-			data: configDBTestData,
-			vid:  1001,
-			vni:  102,
-			want: false,
-		},
-		{
-			name: "exists",
-			data: configDBTestData,
-			vid:  1005,
-			vni:  102,
-			want: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var (
-				ctx = t.Context()
-				sep = "|"
-				vc  = test.StartValkey(t)
-			)
-			defer vc.Close()
-
-			err := test.LoadData(ctx, vc, tt.data, sep)
-			require.NoError(t, err)
-
-			c := &Client{
-				rdb: vc,
-				sep: sep,
-			}
-			d := &ConfigDB{
-				c: c,
-			}
-			got, err := d.ExistVxlanTunnelMap(ctx, tt.vid, tt.vni)
-			require.NoError(t, err)
-			if got != tt.want {
-				t.Errorf("ConfigDB.ExistVxlanTunnelMap() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestConfigDB_CreateVxlanTunnelMap(t *testing.T) {
-	tests := []struct {
-		name string
-		data test.StringMap
-		vid  uint16
-		vni  uint32
-		mods func(test.HashMap)
-	}{
-		{
-			name: "create existing",
-			data: configDBTestData,
-			vid:  1005,
-			vni:  102,
-			mods: func(test.HashMap) {},
-		},
-		{
-			name: "create new",
-			data: configDBTestData,
-			vid:  1001,
-			vni:  200,
-			mods: func(data test.HashMap) {
-				data["VXLAN_TUNNEL_MAP|vtep|map_200_Vlan1001"] = map[string]string{
-					"vlan": "Vlan1001",
-					"vni":  "200",
-				}
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var (
-				ctx = t.Context()
-				sep = "|"
-				vc  = test.StartValkey(t)
-			)
-			defer vc.Close()
-
-			err := test.LoadData(ctx, vc, tt.data, sep)
-			require.NoError(t, err)
-			initData, err := test.GetData(ctx, vc, sep)
-			require.NoError(t, err)
-			if tt.mods != nil {
-				tt.mods(initData)
-			}
-
-			c := &Client{
-				rdb: vc,
-				sep: sep,
-			}
-			d := &ConfigDB{
-				c: c,
-			}
-			err = d.CreateVxlanTunnelMap(ctx, tt.vid, tt.vni)
-			require.NoError(t, err)
-			data, err := test.GetData(ctx, vc, sep)
-			require.NoError(t, err)
-
-			if diff := cmp.Diff(initData, data); diff != "" {
-				t.Errorf("ConfigDB.CreateVxlanTunnelMap() data differs = %s", diff)
-			}
-		})
-	}
-}
-
-func TestConfigDB_DeleteVxlanTunnelMap(t *testing.T) {
-	tests := []struct {
-		name string
-		data test.StringMap
-		vid  uint16
-		vni  uint32
-		mods func(test.HashMap)
-	}{
-		{
-			name: "delete non-existing",
-			data: configDBTestData,
-			vid:  1000,
-			vni:  100,
-			mods: func(test.HashMap) {},
-		},
-		{
-			name: "delete existing",
-			data: configDBTestData,
-			vid:  1005,
-			vni:  102,
-			mods: func(data test.HashMap) {
-				delete(data, "VXLAN_TUNNEL_MAP|vtep|map_102_Vlan1005")
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var (
-				ctx = t.Context()
-				sep = "|"
-				vc  = test.StartValkey(t)
-			)
-			defer vc.Close()
-
-			err := test.LoadData(ctx, vc, tt.data, sep)
-			require.NoError(t, err)
-			initData, err := test.GetData(ctx, vc, sep)
-			require.NoError(t, err)
-			if tt.mods != nil {
-				tt.mods(initData)
-			}
-
-			c := &Client{
-				rdb: vc,
-				sep: sep,
-			}
-			d := &ConfigDB{
-				c: c,
-			}
-			err = d.DeleteVxlanTunnelMap(ctx, tt.vid, tt.vni)
-			require.NoError(t, err)
-			data, err := test.GetData(ctx, vc, sep)
-			require.NoError(t, err)
-			if diff := cmp.Diff(initData, data); diff != "" {
-				t.Errorf("ConfigDB.DeleteVxlanTunnelMap() data differs = %s", diff)
 			}
 		})
 	}
@@ -1418,7 +776,8 @@ func TestConfigDB_FindVxlanTunnelMapByVni(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			got, err := d.FindVxlanTunnelMapByVni(ctx, tt.vni)
 			require.NoError(t, err)
@@ -1429,7 +788,7 @@ func TestConfigDB_FindVxlanTunnelMapByVni(t *testing.T) {
 	}
 }
 
-func TestConfigDB_getVTEPName(t *testing.T) {
+func TestConfigDB_GetVTEPName(t *testing.T) {
 	tests := []struct {
 		name string
 		data test.StringMap
@@ -1458,12 +817,13 @@ func TestConfigDB_getVTEPName(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
-			got, err := d.getVTEPName(ctx)
+			got, err := d.GetVTEPName(ctx)
 			require.NoError(t, err)
 			if got != tt.want {
-				t.Errorf("ConfigDB.getVTEPName() = %v, want %v", got, tt.want)
+				t.Errorf("ConfigDB.GetVTEPName() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -1513,7 +873,8 @@ func TestConfigDB_DeleteInterfaceConfiguration(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			err = d.DeleteInterfaceConfiguration(ctx, tt.interfaceName)
 			require.NoError(t, err)
@@ -1563,7 +924,8 @@ func TestConfigDB_IsLinkLocalOnly(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			got, err := d.IsLinkLocalOnly(ctx, tt.interfaceName)
 			require.NoError(t, err)
@@ -1620,7 +982,8 @@ func TestConfigDB_EnableLinkLocalOnly(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			err = d.EnableLinkLocalOnly(ctx, tt.interfaceName)
 			require.NoError(t, err)
@@ -1675,7 +1038,8 @@ func TestConfigDB_GetPort(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			got, err := d.GetPort(ctx, tt.interfaceName)
 			require.NoError(t, err)
@@ -1728,7 +1092,8 @@ func TestConfigDB_GetPorts(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			got, err := d.GetPorts(ctx)
 			require.NoError(t, err)
@@ -1800,7 +1165,8 @@ func TestConfigDB_SetPortMtu(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			err = d.SetPortMtu(ctx, tt.interfaceName, tt.val)
 			require.NoError(t, err)
@@ -1879,7 +1245,8 @@ func TestConfigDB_SetAdminStatusUp(t *testing.T) {
 				sep: sep,
 			}
 			d := &ConfigDB{
-				c: c,
+				log: slog.Default(),
+				c:   c,
 			}
 			err = d.SetAdminStatus(ctx, tt.interfaceName, tt.status)
 			if (err != nil) != tt.wantErr {

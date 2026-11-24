@@ -16,6 +16,7 @@ import (
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/db/test"
+	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/quirks"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/sonic/redis"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/templates"
 	"github.com/metal-stack/metal-core/cmd/internal/switcher/types"
@@ -187,6 +188,11 @@ func TestSonicConfig(t *testing.T) {
 					Instance:  "redis",
 					Separator: "|",
 				},
+				"STATE_DB": {
+					Id:        6,
+					Instance:  "redis",
+					Separator: "|",
+				},
 			},
 		}
 	)
@@ -210,10 +216,11 @@ func TestSonicConfig(t *testing.T) {
 	err = test.LoadData(t.Context(), vc, leaf01PreviousConfigDB, "|")
 	require.NoError(t, err)
 
-	database, err := db.New(dbcfg, db.SchemeRedis)
+	database, err := db.New(dbcfg, testcoreLog, db.SchemeRedis)
 	require.NoError(t, err)
 
-	redisApplier := redis.NewTestApplier(testcoreLog, database)
+	redisApplier, err := redis.NewApplier(testcoreLog, database, quirks.NewTestQuirks())
+	require.NoError(t, err)
 	err = redisApplier.Apply(t.Context(), leaf01PreviousCfg)
 	require.NoError(t, err)
 
