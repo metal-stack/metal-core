@@ -1,0 +1,6 @@
+[NetDev]
+Name=Vrf104001
+Kind=vrf
+
+[VRF]
+Table=104001

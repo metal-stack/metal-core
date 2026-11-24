@@ -1,0 +1,7 @@
+[NetDev]
+Name=vlan2
+Kind=vlan
+MTUBytes=9000
+
+[VLAN]
+Id=2

@@ -72,3 +72,17 @@ If they match the correct value for `InterfaceNamingSchema` is `default`.
 If not, check if `portdescription` matches the alias and `portidsubtype` matches the name.
 In that case you can use `swap`.
 If you need to have both of the fields to have the same value, use either `name` or `alias`.
+
+## BISDN Linux
+
+On switches running [BISDN Linux](https://www.bisdn.de) (detected by `ID=bisdn-linux` in `/etc/os-release`), metal-core's `bisdn` switcher:
+
+- renders one systemd-networkd file per interface, `NN-metal-core-<interface>.netdev|network`, into `/etc/systemd/network`, from the templates in `cmd/internal/switcher/templates/tpl/bisdn` (one per file kind). Files of VRFs, VLANs, VNIs and ports that are gone are removed, their netdevs deleted and freed ports released with netlink; files without the `NN-metal-core-` prefix, such as metal-roles' mgmt VRF, are never touched. networkd is reloaded via D-Bus (`org.freedesktop.network1.Manager.Reload`, since BISDN Linux's `systemd-networkd.service` has no reload command)
+- `METAL_CORE_INTERFACES_TPL_FILE` names a directory on BISDN Linux: its `*.tpl` files replace the embedded templates with the same name
+- renders `/etc/frr/frr.conf`, validates it with `frr-validation@` and reloads `frr.service` (frr-reload.py)
+- reports the front panel ports `port1`..`portN` with their names as identifiers, and uses `enp0` as management interface (`METAL_CORE_MANAGEMENT_INTERFACE` overrides it)
+- sends LLDP for metal-hammer itself with `METAL_CORE_LLDP_SEND=true`, since BISDN Linux has no suitable LLDP agent: chassis ID = port MAC, port ID = port name (locally assigned), port description = port name, system name = hostname
+
+Port breakouts and FEC are not set by metal-core: they live in the Broadcom SDK configuration and need an ofdpa restart. The metal-roles `bisdn-config` role configures them.
+
+The FRR template renders `use-underlays-nexthop-weight` in every `router bgp`. FRR 10.7.1 (BISDN Linux 6.0.0) shows that line in the running config whenever `bgp deterministic-med` is set (FRRouting/frr#22939, fixed by #22552), so without it every reload would flip the setting. The flag only affects underlay link-bandwidth weights, which metal-stack does not use.

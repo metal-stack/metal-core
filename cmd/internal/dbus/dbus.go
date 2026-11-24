@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/coreos/go-systemd/v22/dbus"
+	godbus "github.com/godbus/dbus/v5"
 )
 
 const done = "done"
@@ -57,5 +58,24 @@ func Start(ctx context.Context, unitName string) error {
 		return fmt.Errorf("start of %s failed: %w", unitName, ctx.Err())
 	}
 
+	return nil
+}
+
+// ReloadNetworkd makes systemd-networkd reload its .netdev and .network files,
+// like networkctl reload. It creates new netdevs and reconfigures the links
+// whose files changed.
+func ReloadNetworkd(ctx context.Context) error {
+	conn, err := godbus.ConnectSystemBus(godbus.WithContext(ctx))
+	if err != nil {
+		return fmt.Errorf("unable to connect to dbus: %w", err)
+	}
+	defer func() {
+		_ = conn.Close()
+	}()
+
+	obj := conn.Object("org.freedesktop.network1", "/org/freedesktop/network1")
+	if err := obj.CallWithContext(ctx, "org.freedesktop.network1.Manager.Reload", 0).Err; err != nil {
+		return fmt.Errorf("reloading systemd-networkd failed: %w", err)
+	}
 	return nil
 }

@@ -1,0 +1,12 @@
+[Match]
+Name=swp32
+
+[Link]
+MTUBytes=9216
+ActivationPolicy=always-down
+
+[Network]
+LinkLocalAddressing=ipv6
+IPv6AcceptRA=no
+LLDP=no
+EmitLLDP=no

@@ -1,0 +1,11 @@
+[Match]
+Name=swp3
+
+[Link]
+MTUBytes=9000
+ActivationPolicy=always-down
+
+[Network]
+VRF=Vrf1
+LinkLocalAddressing=ipv6
+IPv6AcceptRA=no

@@ -1,0 +1,7 @@
+[NetDev]
+Name=vlan966
+Kind=vlan
+MTUBytes=9000
+
+[VLAN]
+Id=966

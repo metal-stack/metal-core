@@ -22,6 +22,7 @@ type (
 		roomID                  string
 		enableReconfigureSwitch bool
 		managementGateway       string
+		managementInterface     string
 		additionalMgmtRoutes    []string
 		additionalBridgePorts   []string
 		additionalBridgeVIDs    []string
@@ -48,6 +49,7 @@ type (
 		RoomID                string
 		ReconfigureSwitch     bool
 		ManagementGateway     string
+		ManagementInterface   string
 		PXEVlanID             uint16
 		BGPNeighborStateFile  string
 		AdditionalMgmtRoutes  []string
@@ -75,6 +77,7 @@ func New(c Config) *Core {
 		roomID:                  c.RoomID,
 		enableReconfigureSwitch: c.ReconfigureSwitch,
 		managementGateway:       c.ManagementGateway,
+		managementInterface:     c.ManagementInterface,
 		additionalMgmtRoutes:    c.AdditionalMgmtRoutes,
 		additionalBridgePorts:   c.AdditionalBridgePorts,
 		additionalBridgeVIDs:    c.AdditionalBridgeVIDs,

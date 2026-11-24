@@ -1,0 +1,11 @@
+[NetDev]
+Name=vni104001
+Kind=vxlan
+MTUBytes=9000
+
+[VXLAN]
+VNI=104001
+Local=10.0.0.10
+DestinationPort=4789
+MacLearning=no
+Independent=yes

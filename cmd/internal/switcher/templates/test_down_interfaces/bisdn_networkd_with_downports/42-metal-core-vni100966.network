@@ -1,0 +1,15 @@
+[Match]
+Name=vni100966
+
+[Network]
+Bridge=bridge
+LinkLocalAddressing=no
+
+[Bridge]
+Learning=no
+NeighborSuppression=no
+
+[BridgeVLAN]
+VLAN=966
+PVID=966
+EgressUntagged=966
